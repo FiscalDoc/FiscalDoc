@@ -38,6 +38,8 @@ export interface ContadorDto {
   fotoUrl?: string;
   // Cobrança do mês
   cobrancaAtual?: CobrancaDto;
+  // Plano do tenant (Trial, Starter, etc.)
+  plano: string;
 }
 
 export interface CreateContadorResponse {

@@ -20,7 +20,9 @@ public record ContadorDto(
     decimal ValorXmlExcedente,
     string? FotoUrl,
     // Cobrança do mês corrente (pode ser null se não gerada ainda)
-    CobrancaDto? CobrancaAtual
+    CobrancaDto? CobrancaAtual,
+    // Plano do tenant (Trial, Starter, etc.)
+    string Plano
 );
 
 public record CobrancaDto(

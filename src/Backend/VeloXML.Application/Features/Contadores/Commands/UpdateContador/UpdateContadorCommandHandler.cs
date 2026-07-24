@@ -43,6 +43,7 @@ public sealed class UpdateContadorCommandHandler(IUnitOfWork uow)
                 cobranca.TotalClientes, cobranca.ValorPorCliente, cobranca.ValorBase,
                 cobranca.LimiteXmlTotal, cobranca.XmlsProcessados, cobranca.XmlsExcedentes,
                 cobranca.ValorExcedente, cobranca.ValorTotal,
-                cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao)));
+                cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao),
+            full?.Tenant?.Plano ?? "Starter"));
     }
 }

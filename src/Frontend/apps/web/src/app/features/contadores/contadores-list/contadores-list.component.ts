@@ -114,9 +114,14 @@ type ModalMode = 'create';
               <!-- Licença -->
               <td>
                 <div class="licenca-cell">
-                  <span class="badge" [class.badge-green]="c.statusLicenca === 'Ativo'" [class.badge-red]="c.statusLicenca === 'Bloqueado'">
-                    {{ c.statusLicenca === 'Ativo' ? 'Ativo' : 'Bloqueado' }}
-                  </span>
+                  <div class="badge-row">
+                    @if (c.plano === 'Trial') {
+                      <span class="badge badge-yellow">Teste</span>
+                    }
+                    <span class="badge" [class.badge-green]="c.statusLicenca === 'Ativo'" [class.badge-red]="c.statusLicenca === 'Bloqueado'">
+                      {{ c.statusLicenca === 'Ativo' ? 'Ativo' : 'Bloqueado' }}
+                    </span>
+                  </div>
                   @if (c.dataLimiteAcesso) {
                     <div class="expiry-row"
                       [class.expiry-critico]="(diasParaVencer(c) ?? 999) <= 7 && (diasParaVencer(c) ?? 999) > 0"
@@ -375,6 +380,7 @@ type ModalMode = 'create';
     .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
 
     .licenca-cell { display: flex; flex-direction: column; gap: 5px; }
+    .badge-row { display: flex; gap: 4px; flex-wrap: wrap; }
 
     .expiry-row {
       display: inline-flex; align-items: center; gap: 4px;

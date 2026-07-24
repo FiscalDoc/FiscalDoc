@@ -31,6 +31,7 @@ public sealed class GetContadorByIdQueryHandler(IUnitOfWork uow)
                 cobranca.TotalClientes, cobranca.ValorPorCliente, cobranca.ValorBase,
                 cobranca.LimiteXmlTotal, cobranca.XmlsProcessados, cobranca.XmlsExcedentes,
                 cobranca.ValorExcedente, cobranca.ValorTotal,
-                cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao)));
+                cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao),
+            contador.Tenant?.Plano ?? "Starter"));
     }
 }

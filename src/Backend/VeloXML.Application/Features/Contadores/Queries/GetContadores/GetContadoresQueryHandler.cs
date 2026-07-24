@@ -38,7 +38,8 @@ public sealed class GetContadoresQueryHandler(IUnitOfWork uow)
                     cb.TotalClientes, cb.ValorPorCliente, cb.ValorBase,
                     cb.LimiteXmlTotal, cb.XmlsProcessados, cb.XmlsExcedentes,
                     cb.ValorExcedente, cb.ValorTotal,
-                    cb.Status.ToString(), cb.DataVencimento, cb.DataPagamento, cb.Observacao)
+                    cb.Status.ToString(), cb.DataVencimento, cb.DataPagamento, cb.Observacao),
+                c.Tenant?.Plano ?? "Starter"
             );
         }).ToList();
 

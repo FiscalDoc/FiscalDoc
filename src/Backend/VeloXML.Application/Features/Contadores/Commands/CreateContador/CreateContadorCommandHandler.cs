@@ -73,7 +73,8 @@ public sealed class CreateContadorCommandHandler(
             contador.DataLimiteAcesso,
             contador.ValorPorCliente, contador.LimiteXmlPorCliente, contador.ValorXmlExcedente,
             FotoUrl: null,
-            CobrancaAtual: null);
+            CobrancaAtual: null,
+            Plano: "Starter");
 
         return Result.Success(new CreateContadorResponse(Contador: dto, SenhaTemporaria: senhaTemporaria));
     }
