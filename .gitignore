@@ -6,7 +6,7 @@ obj/
 .vs/
 *.nupkg
 TestResults/
-logs/
+/logs/
 
 # EF Migrations snapshot (keep migration files, ignore snapshot during dev)
 # Uncomment to ignore snapshots: **/*ModelSnapshot.cs
