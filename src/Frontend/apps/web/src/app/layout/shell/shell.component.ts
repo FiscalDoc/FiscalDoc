@@ -95,7 +95,7 @@ interface NavItem {
                 <span>✓ XMLs ilimitados</span>
                 <span>✓ Suporte incluso</span>
               </div>
-              <button class="btn-upgrade">
+              <button class="btn-upgrade" (click)="showUpgradeModal.set(true)">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
                 </svg>
@@ -138,6 +138,28 @@ interface NavItem {
         <router-outlet />
       </main>
     </div>
+
+    <!-- ── Modal de upgrade de plano ── -->
+    @if (showUpgradeModal()) {
+      <div class="overlay" (click)="showUpgradeModal.set(false)">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <header class="modal-header">
+            <h3 class="modal-title font-heading">Fazer upgrade do plano</h3>
+            <button class="modal-close" (click)="showUpgradeModal.set(false)">✕</button>
+          </header>
+          <div class="modal-body">
+            <p class="upgrade-text">
+              Fale com a gente pelo WhatsApp para escolher o melhor plano pago para o seu escritório e continuar usando o FiscalDoc sem interrupções.
+            </p>
+            <a class="btn-whatsapp" [href]="whatsappUpgradeUrl()" target="_blank" rel="noopener">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.07 1.2 4.73 1.2h.01c5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.05c-.24.68-1.4 1.3-1.93 1.38-.5.08-1.12.11-1.8-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.13-4.9-4.32-.14-.19-1.17-1.56-1.17-2.98s.74-2.11 1-2.4c.26-.29.57-.36.76-.36h.55c.18 0 .42-.03.65.5.24.53.81 1.85.88 1.99.07.14.12.3.02.48-.1.19-.15.3-.29.46-.15.17-.31.38-.45.51-.15.14-.3.3-.13.58.17.29.76 1.25 1.63 2.02 1.12.99 2.06 1.3 2.35 1.44.29.15.46.13.63-.07.17-.19.72-.83.91-1.12.19-.29.38-.24.63-.14.26.1 1.63.77 1.91.91.29.14.48.22.55.34.07.13.07.72-.17 1.4z"/></svg>
+              Chamar no WhatsApp
+            </a>
+            <span class="upgrade-hint">Ou envie mensagem direto: {{ whatsappNumberFormatted }}</span>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .shell {
@@ -379,6 +401,24 @@ interface NavItem {
     }
     .billing-alert strong { color: var(--yellow); }
     .alert-link { color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+    /* ── Modal de upgrade ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 420px; }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); gap: 1rem; }
+    .modal-title { margin: 0; font-size: 1rem; }
+    .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center; }
+    .upgrade-text { margin: 0; font-size: 13.5px; color: var(--text2); line-height: 1.6; }
+    .btn-whatsapp {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #25D366; color: #06301a; border: none; border-radius: 8px;
+      padding: .625rem 1.25rem; font-size: 14px; font-weight: 700; cursor: pointer;
+      text-decoration: none; white-space: nowrap;
+    }
+    .btn-whatsapp:hover { opacity: .9; }
+    .upgrade-hint { font-size: 12px; color: var(--text3); }
   `],
 })
 export class ShellComponent implements OnInit {
@@ -387,6 +427,16 @@ export class ShellComponent implements OnInit {
 
   cobrancasAtrasadas = signal(0);
   isAdmin = signal(false);
+  showUpgradeModal = signal(false);
+
+  private readonly _whatsappNumber = '5511973982559';
+  readonly whatsappNumberFormatted = '+55 11 97398-2559';
+
+  whatsappUpgradeUrl(): string {
+    const nome = this.auth.currentUser()?.nome ?? '';
+    const msg = `Olá! Sou ${nome} e quero fazer upgrade do meu plano no FiscalDoc.`;
+    return `https://wa.me/${this._whatsappNumber}?text=${encodeURIComponent(msg)}`;
+  }
 
   readonly navItems: NavItem[] = [
     {
