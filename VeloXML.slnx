@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Backend/">
+    <Project Path="src/Backend/VeloXML.API/VeloXML.API.csproj" />
+    <Project Path="src/Backend/VeloXML.Application/VeloXML.Application.csproj" />
+    <Project Path="src/Backend/VeloXML.Domain/VeloXML.Domain.csproj" />
+    <Project Path="src/Backend/VeloXML.Infrastructure/VeloXML.Infrastructure.csproj" />
+    <Project Path="src/Backend/VeloXML.Persistence/VeloXML.Persistence.csproj" />
+    <Project Path="src/Backend/VeloXML.SharedKernel/VeloXML.SharedKernel.csproj" />
+    <Project Path="src/Backend/VeloXML.Tests.Unit/VeloXML.Tests.Unit.csproj" />
+  </Folder>
+</Solution>

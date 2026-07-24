@@ -1,0 +1,23 @@
+namespace VeloXML.Application.Features.Clientes.Queries.GetClientes;
+
+public record ClienteDto(
+    Guid Id,
+    string RazaoSocial,
+    string? NomeFantasia,
+    string Cnpj,
+    string? Email,
+    string? Telefone,
+    string? Cidade,
+    string? Estado,
+    bool Ativo,
+    Guid ContadorId,
+    string? NomeContador,
+    int TotalDocumentos,
+    string AppKey,
+    bool WebhookHabilitado,
+    string? WebhookUrl,
+    bool ImapHabilitado,
+    string? ImapHost,
+    int ImapPort,
+    string? ImapEmail
+);

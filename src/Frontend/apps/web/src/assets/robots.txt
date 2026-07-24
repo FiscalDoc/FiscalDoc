@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /clientes
+Disallow: /documentos
+Disallow: /alertas
+Disallow: /contadores
+Disallow: /logs
+Disallow: /usuarios
+Disallow: /configuracoes
+Disallow: /perfil
+Disallow: /auth/
+
+Sitemap: https://fiscaldoc.com.br/sitemap.xml

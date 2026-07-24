@@ -1,0 +1,45 @@
+:root {
+  // Background layers
+  --bg:          #0d0f14;
+  --bg2:         #13161e;
+  --bg3:         #1a1e28;
+  --bg4:         #222636;
+
+  // Borders
+  --border:      rgba(255, 255, 255, 0.07);
+  --border2:     rgba(255, 255, 255, 0.12);
+
+  // Accent colors
+  --accent:      #00e5a0;
+  --accent2:     #0066ff;
+  --accent-dim:  rgba(0, 229, 160, 0.12);
+  --accent2-dim: rgba(0, 102, 255, 0.12);
+
+  // Text
+  --text:        #e8eaf0;
+  --text2:       #7c8299;
+  --text3:       #4a5068;
+
+  // Status
+  --red:         #ff4d6d;
+  --red-dim:     rgba(255, 77, 109, 0.12);
+  --yellow:      #ffd166;
+  --yellow-dim:  rgba(255, 209, 102, 0.12);
+  --green:       #00e5a0;
+  --green-dim:   rgba(0, 229, 160, 0.12);
+
+  // Layout
+  --radius:      12px;
+  --radius-sm:   8px;
+  --radius-lg:   16px;
+  --sidebar:     220px;
+  --header:      60px;
+
+  // Shadows
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 8px 32px rgba(0, 0, 0, 0.5);
+
+  // Transitions
+  --transition:  200ms cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -1,0 +1,27 @@
+**/.git
+**/.vs
+**/.vscode
+**/.idea
+
+# .NET build artifacts (contain Windows-specific paths from local restore)
+**/obj/
+**/bin/
+
+# Node modules
+**/node_modules/
+
+# Angular dist
+src/Frontend/dist/
+
+# Test projects
+src/Backend/VeloXML.Tests.Unit/
+
+# Logs
+logs/
+*.log
+
+# Env
+.env
+
+# Docker
+docker-compose.override.yml

@@ -1,0 +1,599 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ClienteService } from '@veloxml/services';
+import { ClienteDto, CriarContaClienteResponse } from '@veloxml/models';
+
+type Tab = 'cadastro' | 'integracao';
+
+@Component({
+  selector: 'app-cliente-detail',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    @if (loading()) {
+      <div class="loading-state">Carregando...</div>
+    } @else if (!cliente()) {
+      <div class="loading-state">Cliente não encontrado.</div>
+    } @else {
+      <div class="page">
+        <!-- Header -->
+        <div class="profile-header">
+          <button class="back-btn" (click)="goBack()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Clientes
+          </button>
+          <div class="profile-info">
+            <div class="profile-avatar">{{ initials() }}</div>
+            <div>
+              <div class="profile-name">{{ cliente()!.razaoSocial }}</div>
+              @if (cliente()!.nomeFantasia) {
+                <div class="profile-sub">{{ cliente()!.nomeFantasia }}</div>
+              }
+              <div class="profile-meta">
+                <span class="mono">{{ formatCnpj(cliente()!.cnpj) }}</span>
+                <span class="badge" [class.badge-green]="cliente()!.ativo" [class.badge-red]="!cliente()!.ativo">
+                  {{ cliente()!.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <nav class="tabs">
+          <button class="tab-btn" [class.active]="tab() === 'cadastro'" (click)="tab.set('cadastro')">Cadastro</button>
+          <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="tab.set('integracao')">Integração</button>
+        </nav>
+
+        <!-- ── Cadastro Tab ── -->
+        @if (tab() === 'cadastro') {
+          <div class="card section">
+            <h4 class="section-title">Dados do Cliente</h4>
+            <div class="form-grid">
+              <div class="field col-2">
+                <label class="label">Razão Social</label>
+                <input class="input" [(ngModel)]="edit.razaoSocial" placeholder="Razão Social"/>
+              </div>
+              <div class="field col-2">
+                <label class="label">Nome Fantasia</label>
+                <input class="input" [(ngModel)]="edit.nomeFantasia" placeholder="Opcional"/>
+              </div>
+              <div class="field">
+                <label class="label">E-mail</label>
+                <input class="input" [(ngModel)]="edit.email" type="email" placeholder="email@empresa.com"/>
+              </div>
+              <div class="field">
+                <label class="label">Telefone</label>
+                <input class="input" [(ngModel)]="edit.telefone" placeholder="(11) 99999-9999"/>
+              </div>
+              <div class="field">
+                <label class="label">Cidade</label>
+                <input class="input" [(ngModel)]="edit.cidade" placeholder="São Paulo"/>
+              </div>
+              <div class="field">
+                <label class="label">UF</label>
+                <input class="input" [(ngModel)]="edit.estado" placeholder="SP" maxlength="2"/>
+              </div>
+              <div class="field">
+                <label class="label">Status</label>
+                <select class="input" [(ngModel)]="edit.ativo">
+                  <option [ngValue]="true">Ativo</option>
+                  <option [ngValue]="false">Inativo</option>
+                </select>
+              </div>
+            </div>
+
+            @if (erroSave()) { <div class="alert-error">{{ erroSave() }}</div> }
+            @if (sucessoSave()) { <div class="alert-ok">Salvo com sucesso!</div> }
+
+            <div class="form-actions">
+              <button class="btn-danger-ghost" (click)="confirmDelete()">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Excluir cliente
+              </button>
+              <button class="btn-primary" [disabled]="salvando()" (click)="salvarCadastro()">
+                {{ salvando() ? 'Salvando...' : 'Salvar alterações' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── Integração Tab ── -->
+        @if (tab() === 'integracao') {
+          <!-- API Key -->
+          <div class="card section">
+            <h4 class="section-title">API Key</h4>
+            <p class="section-desc">Use esta chave no header <code>X-App-Key</code> para enviar documentos fiscais via API.</p>
+            <div class="appkey-box">
+              <code class="appkey-value">{{ cliente()!.appKey }}</code>
+              <div class="appkey-actions">
+                <button class="appkey-btn" (click)="copyAppKey()" [class.copied]="keyCopied()">
+                  @if (keyCopied()) {
+                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Copiado
+                  } @else {
+                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    Copiar
+                  }
+                </button>
+                <button class="appkey-btn appkey-btn-warn" (click)="regenerarKey()" [disabled]="keyLoading()">
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  {{ keyLoading() ? 'Gerando...' : 'Regenerar' }}
+                </button>
+              </div>
+            </div>
+            <p class="warn-text">Ao regenerar, a chave anterior deixará de funcionar imediatamente.</p>
+            <div class="endpoint-info">
+              <span class="method-badge">POST</span>
+              <code class="endpoint-path">/api/v1/ingest/xml</code>
+              <span class="endpoint-sub">Header: <code>X-App-Key: &lt;sua-chave&gt;</code></span>
+            </div>
+          </div>
+
+          <!-- Webhook Config -->
+          <div class="card section">
+            <div class="imap-header">
+              <div>
+                <h4 class="section-title" style="margin-bottom:4px">Webhook de Documentos</h4>
+                <p class="section-desc" style="margin:0">Quando habilitado, o sistema envia um POST ao URL configurado sempre que um novo documento for recebido.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="webhook.habilitado"/>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+
+            @if (webhook.habilitado) {
+              <div class="form-grid" style="margin-top:1rem">
+                <div class="field col-2">
+                  <label class="label">URL do Webhook</label>
+                  <input class="input" [(ngModel)]="webhook.url" type="url" placeholder="https://meu-sistema.com/webhook"/>
+                </div>
+              </div>
+            }
+
+            @if (erroWebhook()) { <div class="alert-error" style="margin-top:.75rem">{{ erroWebhook() }}</div> }
+            @if (sucessoWebhook()) { <div class="alert-ok" style="margin-top:.75rem">Webhook salvo!</div> }
+
+            <div class="form-actions" style="margin-top:1rem">
+              <span></span>
+              <button class="btn-primary" [disabled]="salvandoWebhook()" (click)="salvarWebhook()">
+                {{ salvandoWebhook() ? 'Salvando...' : 'Salvar Webhook' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- IMAP Config -->
+          <div class="card section">
+            <div class="imap-header">
+              <div>
+                <h4 class="section-title" style="margin-bottom:4px">Importação de XML por E-mail</h4>
+                <p class="section-desc" style="margin:0">Quando habilitado, o sistema lê a caixa de entrada configurada a cada 5 minutos e importa anexos XML automaticamente.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="imap.habilitado"/>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+
+            @if (imap.habilitado) {
+              <div class="form-grid" style="margin-top:1rem">
+                <div class="field col-2" style="grid-column:span 1">
+                  <label class="label">Host IMAP</label>
+                  <input class="input" [(ngModel)]="imap.host" placeholder="imap.gmail.com"/>
+                </div>
+                <div class="field" style="max-width:140px">
+                  <label class="label">Porta</label>
+                  <input class="input" type="number" [(ngModel)]="imap.port" placeholder="993"/>
+                </div>
+                <div class="field col-2">
+                  <label class="label">E-mail</label>
+                  <input class="input" [(ngModel)]="imap.email" type="email" placeholder="fiscal@empresa.com"/>
+                </div>
+                <div class="field col-2">
+                  <label class="label">Senha</label>
+                  <input class="input" [(ngModel)]="imap.senha" type="password" placeholder="{{ cliente()!.imapEmail ? '••••••••' : 'Senha do e-mail' }}"/>
+                  @if (cliente()!.imapEmail) {
+                    <span class="field-hint">Deixe em branco para manter a senha atual.</span>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (erroImap()) { <div class="alert-error" style="margin-top:.75rem">{{ erroImap() }}</div> }
+            @if (sucessoImap()) { <div class="alert-ok" style="margin-top:.75rem">Configuração salva!</div> }
+
+            <div class="form-actions" style="margin-top:1rem">
+              <span></span>
+              <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
+                {{ salvandoImap() ? 'Salvando...' : 'Salvar configuração IMAP' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Portal do Cliente -->
+          <div class="card section">
+            <h4 class="section-title">Portal do Cliente</h4>
+            <p class="section-desc">Crie uma conta de acesso para que o cliente possa visualizar seus documentos diretamente no portal.</p>
+
+            @if (!contaCriada()) {
+              <div class="form-grid" style="margin-top:.25rem">
+                <div class="field col-2">
+                  <label class="label">Nome</label>
+                  <input class="input" [(ngModel)]="conta.nome" placeholder="Nome do responsável"/>
+                </div>
+                <div class="field">
+                  <label class="label">E-mail de acesso</label>
+                  <input class="input" [(ngModel)]="conta.email" type="email" placeholder="responsavel@empresa.com"/>
+                </div>
+                <div class="field">
+                  <label class="label">Senha</label>
+                  <input class="input" [(ngModel)]="conta.senha" type="password" placeholder="Senha inicial"/>
+                </div>
+              </div>
+
+              @if (erroConta()) { <div class="alert-error">{{ erroConta() }}</div> }
+
+              <div class="form-actions">
+                <span></span>
+                <button class="btn-primary" [disabled]="criandoConta()" (click)="criarConta()">
+                  {{ criandoConta() ? 'Criando...' : 'Criar conta de acesso' }}
+                </button>
+              </div>
+            } @else {
+              <div class="alert-ok">
+                Conta criada! E-mail: <strong>{{ contaCriada()!.email }}</strong>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  `,
+  styles: [`
+    .loading-state { text-align: center; color: var(--text2); padding: 4rem; font-size: 14px; }
+    .page { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* Header */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; margin-bottom: .25rem;
+    }
+    .back-btn:hover { color: var(--accent); }
+    .profile-header { display: flex; flex-direction: column; gap: .5rem; }
+    .profile-info { display: flex; align-items: center; gap: 1rem; }
+    .profile-avatar {
+      width: 52px; height: 52px; border-radius: 50%; background: var(--accent-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: var(--accent); flex-shrink: 0; text-transform: uppercase;
+    }
+    .profile-name { font-size: 1.25rem; font-weight: 700; color: var(--text); }
+    .profile-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .profile-meta { display: flex; align-items: center; gap: .5rem; margin-top: 4px; flex-wrap: wrap; }
+    .mono { font-family: monospace; font-size: 12px; color: var(--text2); }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer;
+      padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 120ms, border-color 120ms;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Cards */
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
+    .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .section-title { margin: 0 0 .25rem; font-size: .95rem; font-weight: 600; color: var(--text); }
+    .section-desc { margin: 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+    /* Form */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+    .col-2 { grid-column: span 2; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+    .input {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit;
+    }
+    .input:focus { border-color: var(--accent); }
+    select.input { cursor: pointer; }
+    .field-hint { font-size: 11px; color: var(--text2); }
+
+    .form-actions { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); }
+
+    .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-ok { background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent); color: #0d0f14; border: none; border-radius: 8px;
+      padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-danger-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--red); border: 1px solid rgba(255,77,109,.3);
+      border-radius: 8px; padding: .45rem .875rem; font-size: 13px; cursor: pointer;
+    }
+    .btn-danger-ghost:hover { background: rgba(255,77,109,.08); border-color: var(--red); }
+
+    /* AppKey */
+    .appkey-box { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .appkey-value { font-family: monospace; font-size: 13px; color: var(--accent); flex: 1; word-break: break-all; }
+    .appkey-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .appkey-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--bg2); border: 1px solid var(--border); color: var(--text2);
+      border-radius: 6px; padding: 5px 10px; font-size: 11.5px; cursor: pointer; white-space: nowrap;
+    }
+    .appkey-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .appkey-btn.copied { color: var(--accent); border-color: var(--accent); }
+    .appkey-btn-warn:hover { color: var(--yellow); border-color: var(--yellow); }
+    .appkey-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .warn-text { margin: 0; font-size: 11px; color: var(--yellow); background: rgba(255,209,102,.07); border: 1px solid rgba(255,209,102,.2); border-radius: 6px; padding: 6px 10px; }
+    .endpoint-info { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text2); flex-wrap: wrap; }
+    .method-badge { background: rgba(0,102,255,.15); color: #4d94ff; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
+    .endpoint-path { font-family: monospace; font-size: 12px; color: var(--text); }
+    .endpoint-sub { color: var(--text2); font-size: 11px; }
+
+    /* IMAP */
+    .imap-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+
+    /* Toggle */
+    .toggle { display: inline-flex; cursor: pointer; flex-shrink: 0; }
+    .toggle input { display: none; }
+    .toggle-track {
+      width: 40px; height: 22px; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 999px; position: relative; transition: background 200ms, border-color 200ms;
+    }
+    .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
+    .toggle-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; background: var(--text2); border-radius: 50%;
+      transition: transform 200ms, background 200ms;
+    }
+    .toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); background: #0d0f14; }
+  `],
+})
+export class ClienteDetailComponent implements OnInit {
+  private readonly _svc   = inject(ClienteService);
+  private readonly _route = inject(ActivatedRoute);
+  private readonly _router = inject(Router);
+
+  readonly cliente      = signal<ClienteDto | null>(null);
+  readonly loading      = signal(true);
+  readonly tab          = signal<Tab>('cadastro');
+
+  readonly salvando     = signal(false);
+  readonly erroSave     = signal<string | null>(null);
+  readonly sucessoSave  = signal(false);
+
+  readonly keyLoading   = signal(false);
+  readonly keyCopied    = signal(false);
+
+  readonly salvandoImap   = signal(false);
+  readonly erroImap       = signal<string | null>(null);
+  readonly sucessoImap    = signal(false);
+
+  readonly salvandoWebhook = signal(false);
+  readonly erroWebhook     = signal<string | null>(null);
+  readonly sucessoWebhook  = signal(false);
+
+  readonly criandoConta    = signal(false);
+  readonly erroConta       = signal<string | null>(null);
+  readonly contaCriada     = signal<CriarContaClienteResponse | null>(null);
+
+  edit    = { razaoSocial: '', nomeFantasia: '', email: '', telefone: '', cidade: '', estado: '', ativo: true };
+  imap    = { habilitado: false, host: '', port: 993, email: '', senha: '' };
+  webhook = { habilitado: false, url: '' };
+  conta   = { nome: '', email: '', senha: '' };
+
+  ngOnInit(): void {
+    const id = this._route.snapshot.paramMap.get('id')!;
+    this._svc.getById(id).subscribe({
+      next: c => { this.cliente.set(c); this._syncEdit(c); this._syncImap(c); this._syncWebhook(c); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  private _syncEdit(c: ClienteDto): void {
+    this.edit = {
+      razaoSocial: c.razaoSocial,
+      nomeFantasia: c.nomeFantasia ?? '',
+      email: c.email ?? '',
+      telefone: c.telefone ?? '',
+      cidade: c.cidade ?? '',
+      estado: c.estado ?? '',
+      ativo: c.ativo,
+    };
+  }
+
+  private _syncImap(c: ClienteDto): void {
+    this.imap = {
+      habilitado: c.imapHabilitado,
+      host: c.imapHost ?? '',
+      port: c.imapPort || 993,
+      email: c.imapEmail ?? '',
+      senha: '',
+    };
+  }
+
+  private _syncWebhook(c: ClienteDto): void {
+    this.webhook = {
+      habilitado: c.webhookHabilitado,
+      url: c.webhookUrl ?? '',
+    };
+  }
+
+  initials(): string {
+    const c = this.cliente();
+    if (!c) return '';
+    return c.razaoSocial.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  formatCnpj(cnpj: string): string {
+    if (cnpj.length !== 14) return cnpj;
+    return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+
+  goBack(): void { this._router.navigate(['/clientes']); }
+
+  salvarCadastro(): void {
+    const c = this.cliente();
+    if (!c || this.salvando()) return;
+    this.salvando.set(true);
+    this.erroSave.set(null);
+    this.sucessoSave.set(false);
+
+    this._svc.update(c.id, {
+      id: c.id,
+      razaoSocial: this.edit.razaoSocial,
+      nomeFantasia: this.edit.nomeFantasia || undefined,
+      email: this.edit.email || undefined,
+      telefone: this.edit.telefone || undefined,
+      cidade: this.edit.cidade || undefined,
+      estado: this.edit.estado || undefined,
+      ativo: this.edit.ativo,
+    }).subscribe({
+      next: updated => {
+        this.cliente.set(updated);
+        this._syncEdit(updated);
+        this.salvando.set(false);
+        this.sucessoSave.set(true);
+        setTimeout(() => this.sucessoSave.set(false), 3000);
+      },
+      error: () => {
+        this.salvando.set(false);
+        this.erroSave.set('Erro ao salvar. Verifique os dados.');
+      },
+    });
+  }
+
+  confirmDelete(): void {
+    const c = this.cliente();
+    if (!c) return;
+    if (!confirm(`Excluir "${c.razaoSocial}"? Esta ação não pode ser desfeita.`)) return;
+    this._svc.delete(c.id).subscribe({
+      next: () => this._router.navigate(['/clientes']),
+    });
+  }
+
+  copyAppKey(): void {
+    const key = this.cliente()?.appKey;
+    if (!key) return;
+    navigator.clipboard.writeText(key).then(() => {
+      this.keyCopied.set(true);
+      setTimeout(() => this.keyCopied.set(false), 2000);
+    });
+  }
+
+  regenerarKey(): void {
+    const c = this.cliente();
+    if (!c) return;
+    if (!confirm('A chave atual deixará de funcionar. Confirmar?')) return;
+    this.keyLoading.set(true);
+    this._svc.regenerarAppKey(c.id).subscribe({
+      next: res => {
+        this.cliente.update(cur => cur ? { ...cur, appKey: res.appKey } : cur);
+        this.keyLoading.set(false);
+      },
+      error: () => this.keyLoading.set(false),
+    });
+  }
+
+  salvarImap(): void {
+    const c = this.cliente();
+    if (!c || this.salvandoImap()) return;
+    this.salvandoImap.set(true);
+    this.erroImap.set(null);
+    this.sucessoImap.set(false);
+
+    this._svc.configurarImap(c.id, {
+      habilitado: this.imap.habilitado,
+      host: this.imap.host || undefined,
+      port: this.imap.port || 993,
+      email: this.imap.email || undefined,
+      senha: this.imap.senha || undefined,
+    }).subscribe({
+      next: updated => {
+        this.cliente.set(updated);
+        this._syncImap(updated);
+        this.salvandoImap.set(false);
+        this.sucessoImap.set(true);
+        setTimeout(() => this.sucessoImap.set(false), 3000);
+      },
+      error: () => {
+        this.salvandoImap.set(false);
+        this.erroImap.set('Erro ao salvar configuração IMAP.');
+      },
+    });
+  }
+
+  salvarWebhook(): void {
+    const c = this.cliente();
+    if (!c || this.salvandoWebhook()) return;
+    this.salvandoWebhook.set(true);
+    this.erroWebhook.set(null);
+    this.sucessoWebhook.set(false);
+
+    this._svc.configurarWebhook(c.id, {
+      habilitado: this.webhook.habilitado,
+      url: this.webhook.url || undefined,
+    }).subscribe({
+      next: updated => {
+        this.cliente.set(updated);
+        this._syncWebhook(updated);
+        this.salvandoWebhook.set(false);
+        this.sucessoWebhook.set(true);
+        setTimeout(() => this.sucessoWebhook.set(false), 3000);
+      },
+      error: () => {
+        this.salvandoWebhook.set(false);
+        this.erroWebhook.set('Erro ao salvar webhook.');
+      },
+    });
+  }
+
+  criarConta(): void {
+    const c = this.cliente();
+    if (!c || this.criandoConta()) return;
+    this.criandoConta.set(true);
+    this.erroConta.set(null);
+
+    this._svc.criarConta(c.id, {
+      nome: this.conta.nome,
+      email: this.conta.email,
+      senha: this.conta.senha,
+    }).subscribe({
+      next: res => {
+        this.contaCriada.set(res);
+        this.criandoConta.set(false);
+      },
+      error: (err) => {
+        this.criandoConta.set(false);
+        const msg = err?.error?.message ?? err?.error ?? 'Erro ao criar conta.';
+        this.erroConta.set(typeof msg === 'string' ? msg : 'Erro ao criar conta.');
+      },
+    });
+  }
+}

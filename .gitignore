@@ -1,0 +1,43 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.nupkg
+TestResults/
+logs/
+
+# EF Migrations snapshot (keep migration files, ignore snapshot during dev)
+# Uncomment to ignore snapshots: **/*ModelSnapshot.cs
+
+# Secrets
+.env
+appsettings.*.local.json
+**/secrets.json
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+
+# Docker volumes (if bind-mounted locally)
+postgres-data/
+redis-data/
+minio-data/
+pgadmin-data/

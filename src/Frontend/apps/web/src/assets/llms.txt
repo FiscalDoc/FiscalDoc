@@ -1,0 +1,48 @@
+# FiscalDoc — Sistema para Escritórios Contábeis
+# https://fiscaldoc.com.br/
+
+## O que é o FiscalDoc
+
+FiscalDoc é um sistema SaaS multi-tenant desenvolvido para escritórios contábeis brasileiros.
+Permite que contadores recebam, organizem e monitorem documentos fiscais eletrônicos (NF-e,
+CT-e, MDF-e, NFS-e) de múltiplos clientes em uma única plataforma.
+
+## Público-alvo
+
+- Escritórios de contabilidade
+- Contadores autônomos
+- Gestores fiscais de empresas
+
+## Funcionalidades principais
+
+- Recepção automática de XMLs via API (AppKey por cliente)
+- Painel multi-cliente com visualização unificada
+- Alertas automáticos: duplicatas, cancelamentos, inconsistências
+- Download individual e em lote por período
+- Gestão de usuários com controle de acesso por perfil (Admin, Contador, Cliente)
+- Auditoria completa de todas as ações
+- Configuração de SMTP via painel administrativo
+- Suporte a NF-e, CT-e, MDF-e, NFS-e
+
+## Tecnologia
+
+- Backend: ASP.NET Core 10, PostgreSQL, Redis, MinIO (object storage)
+- Frontend: Angular 19 (standalone components, signals)
+- Autenticação: JWT + Refresh Token + 2FA (TOTP)
+- Arquitetura: Clean Architecture + CQRS (MediatR)
+
+## Planos
+
+- Trial: 30 dias grátis, sem cartão de crédito
+- Starter: R$ 99/mês por cliente (até 100 XMLs/mês)
+- Professional: R$ 149/mês por cliente (até 200 XMLs/mês)
+- Enterprise: R$ 249/mês por cliente (até 500 XMLs/mês)
+
+## Como começar
+
+Acesse https://fiscaldoc.com.br e crie sua conta gratuitamente.
+O trial de 30 dias começa imediatamente após o cadastro, sem necessidade de cartão.
+
+## Contato
+
+Site: https://fiscaldoc.com.br

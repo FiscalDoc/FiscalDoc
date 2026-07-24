@@ -1,0 +1,6 @@
+@VeloXML.API_HostAddress = http://localhost:5028
+
+GET {{VeloXML.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
