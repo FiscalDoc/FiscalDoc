@@ -58,3 +58,14 @@ jobs:
           file: docker/frontend/Dockerfile
           push: true
           tags: ghcr.io/${{ env.ORG }}/fiscaldoc-web:latest
+
+  deploy:
+    name: Deploy via Coolify
+    needs: [build-api, build-web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify redeploy
+        run: |
+          curl --fail-with-body -sS \
+            "http://179.197.239.81:8000/api/v1/deploy?uuid=en18rc3zpcyfyvpzy3krgkim&force=false" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
