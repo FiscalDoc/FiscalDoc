@@ -31,7 +31,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           <a href="#plans">Planos</a>
           <a href="#contact">Contato</a>
         </nav>
-        <a routerLink="/auth/login" class="btn btn-outline">Acessar sistema</a>
+        <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline">Acessar sistema</a>
       </div>
     </header>
 
@@ -56,7 +56,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
             </svg>
             Falar no WhatsApp
           </a>
-          <a routerLink="/auth/login" class="btn btn-ghost btn-lg">
+          <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-ghost btn-lg">
             Acessar sistema →
           </a>
         </div>
@@ -339,7 +339,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
                   </svg>
                   <h4>Conta criada com sucesso!</h4>
                   <p>Você tem 30 dias grátis. Acesse agora e comece a usar.</p>
-                  <a routerLink="/auth/login" class="btn btn-primary btn-full">Acessar o sistema →</a>
+                  <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-primary btn-full">Acessar o sistema →</a>
                 </div>
               }
             </div>
@@ -363,7 +363,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
               </svg>
               Falar no WhatsApp
             </a>
-            <a routerLink="/auth/login" class="btn btn-ghost btn-lg">Já tenho acesso →</a>
+            <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-ghost btn-lg">Já tenho acesso →</a>
           </div>
         </div>
       </div>
@@ -383,7 +383,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
             <span class="brand-fiscal">Fiscal</span><span class="brand-doc">Doc</span>
           </div>
           <p class="footer-copy">© 2025 FiscalDoc. Hub Fiscal para Contadores.</p>
-          <a routerLink="/auth/login" class="btn btn-outline btn-sm">Acessar sistema</a>
+          <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline btn-sm">Acessar sistema</a>
         </div>
       </div>
     </footer>

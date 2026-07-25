@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '@veloxml/guards';
+import { authGuard, landingDomainGuard } from '@veloxml/guards';
 
 export const routes: Routes = [
   {
     path: '',
+    canActivate: [landingDomainGuard],
     loadComponent: () =>
       import('./features/landing/landing.component').then((m) => m.LandingComponent),
     pathMatch: 'full',
