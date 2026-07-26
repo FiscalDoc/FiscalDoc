@@ -64,7 +64,7 @@ public sealed class DocumentosController(
     }
 
     private static string MontarNomeArquivo(VeloXML.Domain.Entities.Documento doc)
-        => $"{doc.Numero ?? doc.Id.ToString()}_{doc.ChaveAcesso ?? "sem-chave"}";
+        => doc.ChaveAcesso ?? doc.Numero ?? doc.Id.ToString();
 
     private static string GerarXmlSintetico(VeloXML.Domain.Entities.Documento doc)
     {

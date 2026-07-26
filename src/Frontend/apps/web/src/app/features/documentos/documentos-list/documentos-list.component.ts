@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { from, concatMap, catchError, of } from 'rxjs';
-import { DocumentoService, ClienteService, extractErrorMessage } from '@veloxml/services';
+import { DocumentoService, ClienteService, extractErrorMessage, extractBlobErrorMessage } from '@veloxml/services';
 import { DocumentoDto, ClienteDto } from '@veloxml/models';
 
 interface UploadItem { file: File; tipo: string; }
@@ -690,7 +690,7 @@ export class DocumentosListComponent implements OnInit {
     this.downloading.set(true);
     this._docSvc.downloadArquivo(doc.id).subscribe({
       next: (blob) => {
-        this._triggerDownload(blob, `${this.tipoLabel(doc.tipo)}_${doc.numero || doc.id}.xml`);
+        this._triggerDownload(blob, `${doc.chaveAcesso || doc.numero || doc.id}.xml`);
         this.downloading.set(false);
       },
       error: () => this.downloading.set(false),
@@ -733,8 +733,8 @@ export class DocumentosListComponent implements OnInit {
         this._triggerDownload(blob, `${nomeCliente}_${mes}_${this.loteAno}.zip`);
         this.loteLoading.set(false);
       },
-      error: () => {
-        this.loteError.set('Nenhum documento encontrado para o período selecionado.');
+      error: (err) => {
+        extractBlobErrorMessage(err, 'Erro ao gerar o ZIP.').then(msg => this.loteError.set(msg));
         this.loteLoading.set(false);
       },
     });
