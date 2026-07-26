@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { ClienteDto, ConfigurarImapRequest, ConfigurarWebhookRequest, CriarContaClienteRequest, CriarContaClienteResponse, CreateClienteRequest, UpdateClienteRequest } from '@veloxml/models';
+import { ClienteDto, ConfigurarImapRequest, ConfigurarWebhookRequest, CriarContaClienteRequest, CriarContaClienteResponse, CreateClienteRequest, UpdateClienteRequest, UpdateClienteFiscalRequest } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -42,5 +42,9 @@ export class ClienteService {
 
   criarConta(id: string, req: CriarContaClienteRequest): Observable<CriarContaClienteResponse> {
     return this._api.post<CriarContaClienteResponse>(`/clientes/${id}/criar-conta`, req);
+  }
+
+  updateFiscal(id: string, req: UpdateClienteFiscalRequest): Observable<void> {
+    return this._api.put<void>(`/clientes/${id}/fiscal`, req);
   }
 }

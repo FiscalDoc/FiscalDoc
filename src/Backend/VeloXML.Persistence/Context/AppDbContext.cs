@@ -22,6 +22,10 @@ public class AppDbContext(
     public DbSet<CobrancaContador> CobrancasContador => Set<CobrancaContador>();
     public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Produto> Produtos => Set<Produto>();
+    public DbSet<Destinatario> Destinatarios => Set<Destinatario>();
+    public DbSet<Pedido> Pedidos => Set<Pedido>();
+    public DbSet<PedidoItem> PedidoItens => Set<PedidoItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

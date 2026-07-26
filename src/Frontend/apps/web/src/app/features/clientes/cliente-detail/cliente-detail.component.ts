@@ -1,16 +1,16 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClienteService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse } from '@veloxml/models';
 
-type Tab = 'cadastro' | 'integracao';
+type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
 @Component({
   selector: 'app-cliente-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
@@ -26,8 +26,9 @@ type Tab = 'cadastro' | 'integracao';
             </svg>
             Clientes
           </button>
-          <div class="profile-info">
-            <div class="profile-avatar">{{ initials() }}</div>
+          <div class="profile-top">
+            <div class="profile-info">
+              <div class="profile-avatar">{{ initials() }}</div>
             <div>
               <div class="profile-name">{{ cliente()!.razaoSocial }}</div>
               @if (cliente()!.nomeFantasia) {
@@ -41,11 +42,27 @@ type Tab = 'cadastro' | 'integracao';
               </div>
             </div>
           </div>
+            <div class="quick-links">
+              <a [routerLink]="['/clientes', cliente()!.id, 'cadastros']" class="quick-link">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
+                </svg>
+                Cadastros
+              </a>
+              <a [routerLink]="['/clientes', cliente()!.id, 'pedidos']" class="quick-link">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Pedidos / NF-e
+              </a>
+            </div>
+          </div>
         </div>
 
         <!-- Tabs -->
         <nav class="tabs">
           <button class="tab-btn" [class.active]="tab() === 'cadastro'" (click)="tab.set('cadastro')">Cadastro</button>
+          <button class="tab-btn" [class.active]="tab() === 'fiscal'" (click)="tab.set('fiscal')">Fiscal</button>
           <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="tab.set('integracao')">Integração</button>
         </nav>
 
@@ -99,6 +116,62 @@ type Tab = 'cadastro' | 'integracao';
               </button>
               <button class="btn-primary" [disabled]="salvando()" (click)="salvarCadastro()">
                 {{ salvando() ? 'Salvando...' : 'Salvar alterações' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── Fiscal Tab ── -->
+        @if (tab() === 'fiscal') {
+          <div class="card section">
+            <h4 class="section-title">Configuração Fiscal</h4>
+            <div class="form-grid">
+              <div class="field col-2">
+                <label class="label">Regime Tributário</label>
+                <select class="input" [(ngModel)]="fiscal.regimeTributario">
+                  <option value="">Não informado</option>
+                  <option value="SimplesNacional">Simples Nacional</option>
+                  <option value="LucroPresumido">Lucro Presumido</option>
+                  <option value="LucroReal">Lucro Real</option>
+                  <option value="Mei">MEI</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label">Inscrição Estadual</label>
+                <input class="input" [(ngModel)]="fiscal.inscricaoEstadual" placeholder="Opcional"/>
+              </div>
+              <div class="field">
+                <label class="label">Inscrição Municipal</label>
+                <input class="input" [(ngModel)]="fiscal.inscricaoMunicipal" placeholder="Opcional"/>
+              </div>
+              <div class="field">
+                <label class="label">CNAE Principal</label>
+                <input class="input" [(ngModel)]="fiscal.cnaePrincipal" placeholder="0000-0/00"/>
+              </div>
+              <div class="field">
+                <label class="label">Série NF-e</label>
+                <input class="input" [(ngModel)]="fiscal.serieNfe" placeholder="1"/>
+              </div>
+            </div>
+
+            <div class="imap-header" style="margin-top:.5rem">
+              <div>
+                <h4 class="section-title" style="margin-bottom:4px">Emissão de NF-e</h4>
+                <p class="section-desc" style="margin:0">Habilite para liberar a emissão de NF-e para este cliente.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="fiscal.nfeHabilitado"/>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+
+            @if (erroFiscal()) { <div class="alert-error">{{ erroFiscal() }}</div> }
+            @if (sucessoFiscal()) { <div class="alert-ok">Configuração fiscal salva!</div> }
+
+            <div class="form-actions">
+              <span></span>
+              <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
+                {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
               </button>
             </div>
           </div>
@@ -273,7 +346,11 @@ type Tab = 'cadastro' | 'integracao';
     }
     .back-btn:hover { color: var(--accent); }
     .profile-header { display: flex; flex-direction: column; gap: .5rem; }
+    .profile-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
     .profile-info { display: flex; align-items: center; gap: 1rem; }
+    .quick-links { display: flex; gap: .5rem; flex-shrink: 0; }
+    .quick-link { display: inline-flex; align-items: center; gap: 5px; background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; text-decoration: none; }
+    .quick-link:hover { color: var(--accent); border-color: var(--accent); }
     .profile-avatar {
       width: 52px; height: 52px; border-radius: 50%; background: var(--accent-dim);
       display: flex; align-items: center; justify-content: center;
@@ -403,7 +480,12 @@ export class ClienteDetailComponent implements OnInit {
   readonly erroConta       = signal<string | null>(null);
   readonly contaCriada     = signal<CriarContaClienteResponse | null>(null);
 
+  readonly salvandoFiscal  = signal(false);
+  readonly erroFiscal      = signal<string | null>(null);
+  readonly sucessoFiscal   = signal(false);
+
   edit    = { razaoSocial: '', nomeFantasia: '', email: '', telefone: '', cidade: '', estado: '', ativo: true };
+  fiscal  = { regimeTributario: '', inscricaoEstadual: '', inscricaoMunicipal: '', cnaePrincipal: '', serieNfe: '1', nfeHabilitado: false };
   imap    = { habilitado: false, host: '', port: 993, email: '', senha: '' };
   webhook = { habilitado: false, url: '' };
   conta   = { nome: '', email: '', senha: '' };
@@ -411,7 +493,7 @@ export class ClienteDetailComponent implements OnInit {
   ngOnInit(): void {
     const id = this._route.snapshot.paramMap.get('id')!;
     this._svc.getById(id).subscribe({
-      next: c => { this.cliente.set(c); this._syncEdit(c); this._syncImap(c); this._syncWebhook(c); this.loading.set(false); },
+      next: c => { this.cliente.set(c); this._syncEdit(c); this._syncFiscal(c); this._syncImap(c); this._syncWebhook(c); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
@@ -425,6 +507,17 @@ export class ClienteDetailComponent implements OnInit {
       cidade: c.cidade ?? '',
       estado: c.estado ?? '',
       ativo: c.ativo,
+    };
+  }
+
+  private _syncFiscal(c: ClienteDto): void {
+    this.fiscal = {
+      regimeTributario: c.regimeTributario ?? '',
+      inscricaoEstadual: c.inscricaoEstadual ?? '',
+      inscricaoMunicipal: c.inscricaoMunicipal ?? '',
+      cnaePrincipal: c.cnaePrincipal ?? '',
+      serieNfe: c.serieNfe ?? '1',
+      nfeHabilitado: c.nfeHabilitado ?? false,
     };
   }
 
@@ -518,6 +611,33 @@ export class ClienteDetailComponent implements OnInit {
         this.keyLoading.set(false);
       },
       error: () => this.keyLoading.set(false),
+    });
+  }
+
+  salvarFiscal(): void {
+    const c = this.cliente();
+    if (!c || this.salvandoFiscal()) return;
+    this.salvandoFiscal.set(true);
+    this.erroFiscal.set(null);
+    this.sucessoFiscal.set(false);
+
+    this._svc.updateFiscal(c.id, {
+      regimeTributario: this.fiscal.regimeTributario || undefined,
+      inscricaoEstadual: this.fiscal.inscricaoEstadual || undefined,
+      inscricaoMunicipal: this.fiscal.inscricaoMunicipal || undefined,
+      cnaePrincipal: this.fiscal.cnaePrincipal || undefined,
+      serieNfe: this.fiscal.serieNfe || '1',
+      nfeHabilitado: this.fiscal.nfeHabilitado,
+    }).subscribe({
+      next: () => {
+        this.salvandoFiscal.set(false);
+        this.sucessoFiscal.set(true);
+        setTimeout(() => this.sucessoFiscal.set(false), 3000);
+      },
+      error: (err) => {
+        this.salvandoFiscal.set(false);
+        this.erroFiscal.set(extractErrorMessage(err, 'Erro ao salvar configuração fiscal.'));
+      },
     });
   }
 

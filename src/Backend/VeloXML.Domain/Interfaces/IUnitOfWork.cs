@@ -12,6 +12,9 @@ public interface IUnitOfWork : IDisposable
     ICobrancaRepository Cobrancas { get; }
     IAuditLogRepository Logs { get; }
     IConfiguracaoRepository Configuracoes { get; }
+    IProdutoRepository Produtos { get; }
+    IDestinatarioRepository Destinatarios { get; }
+    IPedidoRepository Pedidos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
     Task BeginTransactionAsync(CancellationToken ct = default);

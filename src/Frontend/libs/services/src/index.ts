@@ -9,3 +9,6 @@ export * from './lib/log.service';
 export * from './lib/usuario.service';
 export * from './lib/configuracao.service';
 export * from './lib/error-message.util';
+export * from './lib/produto.service';
+export * from './lib/destinatario.service';
+export * from './lib/pedido.service';

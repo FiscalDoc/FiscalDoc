@@ -10,6 +10,7 @@ using VeloXML.Application.Features.Clientes.Commands.CriarContaCliente;
 using VeloXML.Application.Features.Clientes.Commands.RegenerarAppKey;
 using VeloXML.Application.Features.Clientes.Queries.GetClienteById;
 using VeloXML.Application.Features.Clientes.Queries.GetClientes;
+using VeloXML.Application.Features.Clientes.Commands.UpdateClienteFiscal;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -82,8 +83,25 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
             id, body.Habilitado, body.Host, body.Port, body.Email, body.Senha), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
+
+    [HttpPut("{id:guid}/fiscal")]
+    public async Task<IActionResult> UpdateFiscal(Guid id, [FromBody] UpdateClienteFiscalRequest body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new UpdateClienteFiscalCommand(
+            id, body.RegimeTributario, body.InscricaoEstadual, body.InscricaoMunicipal,
+            body.CnaePrincipal, body.SerieNfe ?? "1", body.NfeHabilitado), ct);
+        return result.IsSuccess ? NoContent() : NotFound(result.Error);
+    }
 }
 
 public record ConfigurarWebhookRequest(bool Habilitado, string? Url);
 public record ConfigurarImapRequest(bool Habilitado, string? Host, int Port = 993, string? Email = null, string? Senha = null);
 public record CriarContaClienteRequest(string Nome, string Email, string Senha);
+public record UpdateClienteFiscalRequest(
+    string? RegimeTributario,
+    string? InscricaoEstadual,
+    string? InscricaoMunicipal,
+    string? CnaePrincipal,
+    string? SerieNfe,
+    bool NfeHabilitado
+);

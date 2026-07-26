@@ -1,0 +1,55 @@
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Features.Pedidos.Commands.CancelarPedido;
+using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
+using VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
+using VeloXML.Application.Features.Pedidos.Queries.GetPedidoById;
+using VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
+
+namespace VeloXML.API.Controllers.v1;
+
+[ApiController]
+[Route("api/v1/clientes/{clienteId:guid}/pedidos")]
+[Authorize]
+public sealed class PedidosController(IMediator mediator) : ControllerBase
+{
+    [HttpGet]
+    public async Task<IActionResult> GetAll(Guid clienteId, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetPedidosQuery(clienteId, status, page, pageSize), ct);
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetPedidoByIdQuery(id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(Guid clienteId, [FromBody] CreatePedidoCommand command, CancellationToken ct)
+    {
+        var cmd = command with { ClienteId = clienteId };
+        var result = await mediator.Send(cmd, ct);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetById), new { clienteId, id = result.Value.Id }, result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid clienteId, Guid id, [FromBody] UpdatePedidoCommand command, CancellationToken ct)
+    {
+        var cmd = command with { Id = id };
+        var result = await mediator.Send(cmd, ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
+    }
+
+    [HttpPost("{id:guid}/cancelar")]
+    public async Task<IActionResult> Cancelar(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CancelarPedidoCommand(id), ct);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+}

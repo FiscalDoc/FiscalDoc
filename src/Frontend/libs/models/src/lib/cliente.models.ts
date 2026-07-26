@@ -18,6 +18,13 @@ export interface ClienteDto {
   imapHost?: string;
   imapPort: number;
   imapEmail?: string;
+  // Fiscal
+  regimeTributario?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  cnaePrincipal?: string;
+  serieNfe?: string;
+  nfeHabilitado?: boolean;
 }
 
 export interface CreateClienteRequest {
@@ -67,4 +74,13 @@ export interface CriarContaClienteResponse {
   userId: string;
   email: string;
   nome: string;
+}
+
+export interface UpdateClienteFiscalRequest {
+  regimeTributario?: string;
+  inscricaoEstadual?: string;
+  inscricaoMunicipal?: string;
+  cnaePrincipal?: string;
+  serieNfe: string;
+  nfeHabilitado: boolean;
 }

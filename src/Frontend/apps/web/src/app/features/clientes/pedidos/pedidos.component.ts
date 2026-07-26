@@ -1,0 +1,148 @@
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PedidoService } from '@veloxml/services';
+import { PedidoDto } from '@veloxml/models';
+
+@Component({
+  selector: 'app-pedidos',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="page">
+      <div class="page-header">
+        <button class="back-btn" (click)="goBack()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar ao cliente
+        </button>
+        <div class="header-row">
+          <h2 class="page-title">Pedidos / Nota Fiscal</h2>
+          <button class="btn-primary" (click)="novoPedido()">+ Novo Pedido</button>
+        </div>
+      </div>
+
+      <!-- Filtro de status -->
+      <div class="filter-bar">
+        <button class="filter-btn" [class.active]="statusFiltro() === null" (click)="filtrar(null)">Todos</button>
+        <button class="filter-btn" [class.active]="statusFiltro() === 'Rascunho'" (click)="filtrar('Rascunho')">Rascunho</button>
+        <button class="filter-btn" [class.active]="statusFiltro() === 'Emitido'" (click)="filtrar('Emitido')">Emitido</button>
+        <button class="filter-btn" [class.active]="statusFiltro() === 'Cancelado'" (click)="filtrar('Cancelado')">Cancelado</button>
+      </div>
+
+      <div class="card section">
+        @if (loading()) {
+          <div class="empty">Carregando...</div>
+        } @else if (pedidos().length === 0) {
+          <div class="empty">Nenhum pedido encontrado.</div>
+        } @else {
+          <table class="table">
+            <thead>
+              <tr><th>#</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              @for (p of pedidos(); track p.id) {
+                <tr>
+                  <td class="mono">{{ p.id.slice(0, 8) }}...</td>
+                  <td>{{ p.destinatarioNome }}</td>
+                  <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
+                  <td>
+                    <span class="badge" [class]="statusClass(p.status)">{{ p.status }}</span>
+                  </td>
+                  <td>
+                    <button class="row-btn" (click)="editarPedido(p)" [disabled]="p.status !== 'Rascunho'">Editar</button>
+                    <button class="row-btn danger" (click)="cancelarPedido(p)" [disabled]="p.status === 'Cancelado'">Cancelar</button>
+                    <button class="btn-nfe" disabled title="Em breve">Gerar NF-e</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  `,
+  styles: [`
+    .page { display: flex; flex-direction: column; gap: 1.25rem; }
+    .page-header { display: flex; flex-direction: column; gap: .5rem; }
+    .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; }
+    .back-btn:hover { color: var(--accent); }
+    .header-row { display: flex; align-items: center; justify-content: space-between; }
+    .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .filter-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer; }
+    .filter-btn:hover { border-color: var(--text2); color: var(--text); }
+    .filter-btn.active { background: var(--accent); color: #0d0f14; border-color: var(--accent); font-weight: 600; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
+    .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .table td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+    .table tr:last-child td { border-bottom: none; }
+    .mono { font-family: monospace; font-size: 12px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
+    .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .row-btn { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; margin-right: 4px; }
+    .row-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
+    .row-btn.danger:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+    .row-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-nfe {
+      background: none; border: 1px dashed var(--border); color: var(--text2);
+      border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: not-allowed; opacity: .45;
+    }
+  `],
+})
+export class PedidosComponent implements OnInit {
+  private readonly _svc    = inject(PedidoService);
+  private readonly _route  = inject(ActivatedRoute);
+  private readonly _router = inject(Router);
+
+  private clienteId = '';
+
+  readonly pedidos       = signal<PedidoDto[]>([]);
+  readonly loading       = signal(false);
+  readonly statusFiltro  = signal<string | null>(null);
+
+  ngOnInit(): void {
+    this.clienteId = this._route.snapshot.paramMap.get('id')!;
+    this.carregar();
+  }
+
+  goBack(): void { this._router.navigate(['/clientes', this.clienteId]); }
+  novoPedido(): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos', 'novo']); }
+  editarPedido(p: PedidoDto): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos', p.id]); }
+
+  filtrar(status: string | null): void {
+    this.statusFiltro.set(status);
+    this.carregar();
+  }
+
+  carregar(): void {
+    this.loading.set(true);
+    this._svc.getAll(this.clienteId, { status: this.statusFiltro() ?? undefined }).subscribe({
+      next: r => { this.pedidos.set(r.items as PedidoDto[]); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  cancelarPedido(p: PedidoDto): void {
+    if (!confirm(`Cancelar pedido de "${p.destinatarioNome}"?`)) return;
+    this._svc.cancelar(this.clienteId, p.id).subscribe({ next: () => this.carregar() });
+  }
+
+  statusClass(status: string): string {
+    return {
+      Rascunho: 'badge badge-rascunho',
+      Emitido: 'badge badge-emitido',
+      Cancelado: 'badge badge-cancelado',
+    }[status] ?? 'badge';
+  }
+}
