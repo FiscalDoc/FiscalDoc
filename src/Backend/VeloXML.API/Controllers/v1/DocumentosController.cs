@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Common.DTOs;
 using VeloXML.Application.Common.Interfaces;
+using VeloXML.Application.Features.Documentos.Commands.DeleteDocumento;
 using VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentoById;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
@@ -55,12 +56,15 @@ public sealed class DocumentosController(
             // Gera XML sintético quando não há arquivo armazenado (modo demo / seed)
             var xml = GerarXmlSintetico(doc);
             var bytes = System.Text.Encoding.UTF8.GetBytes(xml);
-            return File(bytes, "application/xml", $"{doc.Numero ?? doc.Id.ToString()}.xml");
+            return File(bytes, "application/xml", $"{MontarNomeArquivo(doc)}.xml");
         }
 
         var stream = await storage.DownloadAsync(arquivo.ObjectKey, arquivo.Bucket, ct);
         return File(stream, arquivo.MimeType ?? "application/octet-stream", arquivo.NomeOriginal);
     }
+
+    private static string MontarNomeArquivo(VeloXML.Domain.Entities.Documento doc)
+        => $"{doc.Numero ?? doc.Id.ToString()}_{doc.ChaveAcesso ?? "sem-chave"}";
 
     private static string GerarXmlSintetico(VeloXML.Domain.Entities.Documento doc)
     {
@@ -122,14 +126,14 @@ public sealed class DocumentosController(
                 {
                     var xmlContent = GerarXmlSintetico(doc);
                     var bytes = System.Text.Encoding.UTF8.GetBytes(xmlContent);
-                    var syntheticEntry = zip.CreateEntry($"{doc.Numero ?? doc.Id.ToString()}.xml", CompressionLevel.Fastest);
+                    var syntheticEntry = zip.CreateEntry($"{MontarNomeArquivo(doc)}.xml", CompressionLevel.Fastest);
                     await using var syntheticStream = syntheticEntry.Open();
                     await syntheticStream.WriteAsync(bytes, ct);
                     continue;
                 }
                 foreach (var arquivo in doc.Arquivos)
                 {
-                    var entryName = $"{doc.Numero ?? doc.Id.ToString()}_{arquivo.NomeOriginal}";
+                    var entryName = $"{MontarNomeArquivo(doc)}_{arquivo.NomeOriginal}";
                     var entry = zip.CreateEntry(entryName, CompressionLevel.Fastest);
                     await using var entryStream = entry.Open();
                     var fileStream = await storage.DownloadAsync(arquivo.ObjectKey, arquivo.Bucket, ct);
@@ -147,7 +151,7 @@ public sealed class DocumentosController(
     [HttpPost("upload")]
     [RequestSizeLimit(52_428_800)]
     public async Task<IActionResult> Upload(
-        [FromForm] Guid clienteId,
+        [FromForm] Guid? clienteId,
         [FromForm] TipoDocumentoEnum tipo,
         IFormFile file,
         CancellationToken ct)
@@ -157,5 +161,12 @@ public sealed class DocumentosController(
         var dto = new FileUploadDto(file.OpenReadStream(), file.FileName, file.ContentType, file.Length);
         var result = await mediator.Send(new UploadDocumentoCommand(clienteId, tipo, dto), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeleteDocumentoCommand(id), ct);
+        return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 }

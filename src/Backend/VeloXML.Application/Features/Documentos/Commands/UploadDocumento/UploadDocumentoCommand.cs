@@ -7,7 +7,7 @@ using VeloXML.SharedKernel;
 namespace VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
 
 public record UploadDocumentoCommand(
-    Guid ClienteId,
+    Guid? ClienteId,
     TipoDocumentoEnum Tipo,
     FileUploadDto Arquivo
 ) : IRequest<Result<DocumentoDto>>;

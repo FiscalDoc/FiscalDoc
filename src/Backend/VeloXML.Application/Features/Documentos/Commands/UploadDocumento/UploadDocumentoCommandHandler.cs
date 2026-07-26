@@ -20,66 +20,70 @@ public sealed class UploadDocumentoCommandHandler(
 
     public async Task<Result<DocumentoDto>> Handle(UploadDocumentoCommand request, CancellationToken ct)
     {
-        var cliente = await uow.Clientes.GetByIdAsync(request.ClienteId, ct);
-        if (cliente is null)
-            return Result.Failure<DocumentoDto>(ResultError.NotFound("Cliente"));
+        // Parse XML metadata primeiro (precisamos do CNPJ do destinatário pra resolver o cliente)
+        var isXml = request.Arquivo.ContentType.Contains("xml", StringComparison.OrdinalIgnoreCase)
+                 || request.Arquivo.FileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase);
+
+        ParsedDocumento? parsed = null;
+        if (isXml)
+        {
+            request.Arquivo.Content.Position = 0;
+            parsed = NfeXmlParser.Parse(request.Arquivo.Content);
+            request.Arquivo.Content.Position = 0;
+        }
+
+        var cliente = await ResolverClienteAsync(request.ClienteId, parsed, ct);
+        if (cliente.IsFailure)
+            return Result.Failure<DocumentoDto>(cliente.Error);
+
+        if (!cliente.Value.Ativo)
+            return Result.Failure<DocumentoDto>(ResultError.Validation("Cliente", "Não é possível importar notas fiscais para um cliente inativo."));
 
         await storage.EnsureBucketExistsAsync(BucketName, ct);
 
         var hash = await ComputeHashAsync(request.Arquivo.Content, ct);
         request.Arquivo.Content.Position = 0;
 
-        var objectKey = $"documentos/{request.ClienteId}/{request.Tipo.ToString().ToLower()}/{Guid.NewGuid()}/{request.Arquivo.FileName}";
+        var objectKey = $"documentos/{cliente.Value.Id}/{request.Tipo.ToString().ToLower()}/{Guid.NewGuid()}/{request.Arquivo.FileName}";
         var url = await storage.UploadAsync(request.Arquivo.Content, objectKey, BucketName, request.Arquivo.ContentType, ct);
 
         var documento = new Documento
         {
             TenantId    = currentUser.TenantId!.Value,
-            ClienteId   = request.ClienteId,
+            ClienteId   = cliente.Value.Id,
             Tipo        = request.Tipo,
             Numero      = Path.GetFileNameWithoutExtension(request.Arquivo.FileName),
             DataEmissao = DateTime.UtcNow,
             CreatedBy   = currentUser.Email
         };
 
-        // Parse XML metadata when applicable
-        var isXml = request.Arquivo.ContentType.Contains("xml", StringComparison.OrdinalIgnoreCase)
-                 || request.Arquivo.FileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase);
-
-        if (isXml)
+        if (parsed != null)
         {
-            request.Arquivo.Content.Position = 0;
-            var parsed = NfeXmlParser.Parse(request.Arquivo.Content);
-            request.Arquivo.Content.Position = 0;
+            documento.Numero           = parsed.Numero.TrimStart('0').PadLeft(1, '0');
+            documento.ChaveAcesso      = parsed.ChaveAcesso;
+            documento.CnpjEmitente     = parsed.CnpjEmitente;
+            documento.NomeEmitente     = parsed.NomeEmitente;
+            documento.CnpjDestinatario = parsed.CnpjDestinatario;
+            documento.NomeDestinatario = parsed.NomeDestinatario;
+            documento.DataEmissao      = parsed.DataEmissao;
+            documento.ValorTotal       = parsed.ValorTotal;
 
-            if (parsed != null)
+            if (!string.IsNullOrEmpty(parsed.ChaveAcesso))
             {
-                documento.Numero           = parsed.Numero.TrimStart('0').PadLeft(1, '0');
-                documento.ChaveAcesso      = parsed.ChaveAcesso;
-                documento.CnpjEmitente     = parsed.CnpjEmitente;
-                documento.NomeEmitente     = parsed.NomeEmitente;
-                documento.CnpjDestinatario = parsed.CnpjDestinatario;
-                documento.NomeDestinatario = parsed.NomeDestinatario;
-                documento.DataEmissao      = parsed.DataEmissao;
-                documento.ValorTotal       = parsed.ValorTotal;
-
-                if (!string.IsNullOrEmpty(parsed.ChaveAcesso))
+                var existente = await uow.Documentos.GetByChaveAcessoAsync(parsed.ChaveAcesso, ct);
+                if (existente != null)
                 {
-                    var existente = await uow.Documentos.GetByChaveAcessoAsync(parsed.ChaveAcesso, ct);
-                    if (existente != null)
-                    {
-                        documento.Status     = Domain.Enums.StatusDocumentoEnum.Duplicado;
-                        documento.Observacao = $"Duplicata do documento {existente.Id}";
-                    }
-                    else
-                    {
-                        documento.Status = Domain.Enums.StatusDocumentoEnum.Valido;
-                    }
+                    documento.Status     = Domain.Enums.StatusDocumentoEnum.Duplicado;
+                    documento.Observacao = $"Duplicata do documento {existente.Id}";
                 }
                 else
                 {
                     documento.Status = Domain.Enums.StatusDocumentoEnum.Valido;
                 }
+            }
+            else
+            {
+                documento.Status = Domain.Enums.StatusDocumentoEnum.Valido;
             }
         }
 
@@ -102,7 +106,7 @@ public sealed class UploadDocumentoCommandHandler(
         await uow.SaveChangesAsync(ct);
 
         var dto = mapper.Map<DocumentoDto>(documento);
-        _ = webhook.NotifyDocumentoAsync(request.ClienteId, new
+        _ = webhook.NotifyDocumentoAsync(cliente.Value.Id, new
         {
             evento      = "documento.recebido",
             documentoId = documento.Id,
@@ -116,6 +120,41 @@ public sealed class UploadDocumentoCommandHandler(
         }, CancellationToken.None);
 
         return Result.Success(dto);
+    }
+
+    private async Task<Result<Cliente>> ResolverClienteAsync(Guid? clienteId, ParsedDocumento? parsed, CancellationToken ct)
+    {
+        if (clienteId.HasValue)
+        {
+            var cliente = await uow.Clientes.GetByIdAsync(clienteId.Value, ct);
+            return cliente is null
+                ? Result.Failure<Cliente>(ResultError.NotFound("Cliente"))
+                : Result.Success(cliente);
+        }
+
+        var cnpjDestinatario = parsed?.CnpjDestinatario;
+        if (string.IsNullOrWhiteSpace(cnpjDestinatario))
+            return Result.Failure<Cliente>(ResultError.Validation("ClienteId", "Selecione o cliente para este arquivo."));
+
+        var cnpjLimpo = new string(cnpjDestinatario.Where(char.IsDigit).ToArray());
+        var existente = await uow.Clientes.GetByCnpjAsync(cnpjLimpo, ct);
+        if (existente != null)
+            return Result.Success(existente);
+
+        if (currentUser.ContadorId is null)
+            return Result.Failure<Cliente>(ResultError.Validation(
+                "ClienteId", "Não foi possível identificar o cliente. Selecione manualmente ou peça para um contador importar."));
+
+        var novoCliente = new Cliente
+        {
+            TenantId     = currentUser.TenantId!.Value,
+            RazaoSocial  = parsed!.NomeDestinatario ?? cnpjLimpo,
+            Cnpj         = cnpjLimpo,
+            ContadorId   = currentUser.ContadorId.Value,
+            CreatedBy    = currentUser.Email
+        };
+        await uow.Clientes.AddAsync(novoCliente, ct);
+        return Result.Success(novoCliente);
     }
 
     private static async Task<string> ComputeHashAsync(Stream stream, CancellationToken ct)

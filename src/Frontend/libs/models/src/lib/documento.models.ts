@@ -29,7 +29,7 @@ export interface DocumentoDownloadResponse {
 }
 
 export interface UploadDocumentoRequest {
-  clienteId: string;
+  clienteId?: string;
   tipo: string;
   arquivo: File;
 }

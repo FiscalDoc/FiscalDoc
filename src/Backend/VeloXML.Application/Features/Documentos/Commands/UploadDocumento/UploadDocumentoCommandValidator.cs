@@ -10,7 +10,6 @@ public class UploadDocumentoCommandValidator : AbstractValidator<UploadDocumento
 
     public UploadDocumentoCommandValidator()
     {
-        RuleFor(x => x.ClienteId).NotEmpty();
         RuleFor(x => x.Tipo).IsInEnum();
         RuleFor(x => x.Arquivo).NotNull();
         RuleFor(x => x.Arquivo.Size)

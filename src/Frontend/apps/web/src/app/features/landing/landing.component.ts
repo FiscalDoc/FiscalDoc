@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { extractErrorMessage } from '@veloxml/services';
 
 const WPP_NUMBER = '5511973982559';
 const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o FiscalDoc.');
@@ -648,7 +649,7 @@ export class LandingComponent {
       next: () => { this.registering.set(false); this.registerSuccess.set(true); },
       error: (err) => {
         this.registering.set(false);
-        this.registerError.set(err?.error?.detail ?? err?.error?.title ?? 'Erro ao criar conta. Tente novamente.');
+        this.registerError.set(extractErrorMessage(err, 'Erro ao criar conta. Tente novamente.'));
       },
     });
   }

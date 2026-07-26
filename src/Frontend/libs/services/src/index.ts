@@ -8,3 +8,4 @@ export * from './lib/dashboard.service';
 export * from './lib/log.service';
 export * from './lib/usuario.service';
 export * from './lib/configuracao.service';
+export * from './lib/error-message.util';

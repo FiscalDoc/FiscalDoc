@@ -1,8 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DocumentoService, ClienteService } from '@veloxml/services';
+import { from, concatMap, catchError, of } from 'rxjs';
+import { DocumentoService, ClienteService, extractErrorMessage } from '@veloxml/services';
 import { DocumentoDto, ClienteDto } from '@veloxml/models';
+
+interface UploadItem { file: File; tipo: string; }
 
 @Component({
   selector: 'app-documentos-list',
@@ -30,7 +33,7 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
           </svg>
           Upload
         </button>
-        <input #fileInput type="file" style="display:none" (change)="onFileSelected($event)" accept=".xml,.pdf,.png,.jpg,.jpeg" />
+        <input #fileInput type="file" multiple style="display:none" (change)="onFileSelected($event)" accept=".xml,.pdf,.png,.jpg,.jpeg" />
       </header>
 
       <!-- Toolbar: busca + filtros -->
@@ -135,25 +138,32 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            {{ uploadFile()?.name }}
+            {{ uploadItems().length }} arquivo(s) selecionado(s)
           </span>
+          <div class="upload-file-list">
+            @for (item of uploadItems(); track item.file.name + $index) {
+              <div class="upload-file-row">
+                <span class="upload-file-name">{{ item.file.name }}</span>
+                <select class="filter-select" [(ngModel)]="item.tipo">
+                  <option value="NFe">NF-e</option>
+                  <option value="CTe">CT-e</option>
+                  <option value="MDFe">MDF-e</option>
+                  <option value="NFSe">NFS-e</option>
+                  <option value="PDF">PDF</option>
+                  <option value="Imagem">Imagem</option>
+                  <option value="XML">XML</option>
+                </select>
+              </div>
+            }
+          </div>
           <div class="upload-controls">
             <select class="filter-select" [(ngModel)]="uploadClienteId">
-              <option value="">Selecione o cliente...</option>
+              <option value="">Detectar automaticamente pelo CNPJ (NF-e) ou selecione...</option>
               @for (c of clientes(); track c.id) {
                 <option [value]="c.id">{{ c.razaoSocial }}</option>
               }
             </select>
-            <select class="filter-select" [(ngModel)]="uploadTipo">
-              <option value="NFe">NF-e</option>
-              <option value="CTe">CT-e</option>
-              <option value="MDFe">MDF-e</option>
-              <option value="NFSe">NFS-e</option>
-              <option value="PDF">PDF</option>
-              <option value="Imagem">Imagem</option>
-              <option value="XML">XML</option>
-            </select>
-            <button class="btn-primary" [disabled]="!uploadClienteId || uploading()" (click)="doUpload()">
+            <button class="btn-primary" [disabled]="!uploadItems().length || uploading()" (click)="doUpload()">
               {{ uploading() ? 'Enviando...' : 'Enviar' }}
             </button>
             <button class="btn-ghost-sm" (click)="cancelUpload()">Cancelar</button>
@@ -208,6 +218,11 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                       </svg>
                     </button>
+                    <button class="icon-btn icon-btn-red" title="Excluir nota fiscal" (click)="excluirDocumento(d)">
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               }
@@ -245,6 +260,12 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
                 {{ downloading() ? 'Aguarde...' : 'Baixar' }}
+              </button>
+              <button class="btn-danger btn-sm" (click)="excluirDocumento(detail()!)">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Excluir
               </button>
               <button class="modal-close" (click)="closeDetail()">
                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -412,6 +433,19 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
       display: flex; align-items: center; gap: 6px;
       font-size: 13px; color: var(--text2);
     }
+    .upload-file-list {
+      display: flex; flex-direction: column; gap: 6px;
+      max-height: 220px; overflow-y: auto;
+    }
+    .upload-file-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 10px;
+    }
+    .upload-file-name {
+      font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; flex: 1;
+    }
     .upload-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 
     /* ── Table ── */
@@ -429,7 +463,7 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
     .row-clickable:hover td { background: var(--bg3); }
     .mono { font-family: monospace; font-size: 12px; }
     .cell-muted { color: var(--text2); }
-    .actions { width: 40px; }
+    .actions { width: 70px; display: flex; gap: 2px; }
     .icon-btn {
       background: none; border: none; color: var(--text2);
       cursor: pointer; padding: 4px 6px; border-radius: 6px;
@@ -437,6 +471,16 @@ import { DocumentoDto, ClienteDto } from '@veloxml/models';
       transition: color 120ms, background 120ms;
     }
     .icon-btn:hover { color: var(--accent); background: var(--accent-dim); }
+    .icon-btn-red:hover { color: var(--red); background: rgba(255,77,109,0.1); }
+
+    .btn-danger {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--red); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 0.5rem 1rem; font-size: 13.5px; font-weight: 600;
+      cursor: pointer; transition: opacity 120ms; white-space: nowrap;
+    }
+    .btn-danger:hover { opacity: 0.88; }
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-tipo    { background: var(--bg3); color: var(--text2); }
@@ -581,9 +625,8 @@ export class DocumentosListComponent implements OnInit {
   filters = { tipo: '', status: '', clienteId: '' };
 
   readonly showUploadForm = signal(false);
-  readonly uploadFile     = signal<File | null>(null);
+  readonly uploadItems    = signal<UploadItem[]>([]);
   uploadClienteId = '';
-  uploadTipo = 'NFe';
   readonly uploading    = signal(false);
   readonly uploadStatus = signal<string | null>(null);
 
@@ -654,6 +697,14 @@ export class DocumentosListComponent implements OnInit {
     });
   }
 
+  excluirDocumento(doc: DocumentoDto): void {
+    if (!confirm(`Excluir a nota fiscal "${doc.numero || doc.id}"? Esta ação não pode ser desfeita.`)) return;
+    this._docSvc.delete(doc.id).subscribe({
+      next: () => { this.closeDetail(); this.load(); },
+      error: (err) => alert(extractErrorMessage(err, 'Erro ao excluir documento.')),
+    });
+  }
+
   private _triggerDownload(blob: Blob, filename: string): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -694,40 +745,58 @@ export class DocumentosListComponent implements OnInit {
   triggerUpload(): void { document.querySelector<HTMLInputElement>('input[type="file"]')?.click(); }
 
   onFileSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    this.uploadFile.set(file);
+    const files = (event.target as HTMLInputElement).files;
+    if (!files || files.length === 0) return;
+    this.uploadItems.set(Array.from(files).map(file => ({ file, tipo: this._detectarTipo(file) })));
     this.showUploadForm.set(true);
     this.uploadStatus.set(null);
-    // Auto-detect tipo from filename
-    if (file.name.match(/NFe|NF-e/i))      this.uploadTipo = 'NFe';
-    else if (file.name.match(/CTe|CT-e/i)) this.uploadTipo = 'CTe';
-    else if (file.name.match(/MDF/i))       this.uploadTipo = 'MDFe';
-    else if (file.name.match(/NFS/i))       this.uploadTipo = 'NFSe';
-    else if (file.name.endsWith('.pdf'))    this.uploadTipo = 'PDF';
-    else if (file.name.match(/\.(png|jpe?g)$/i)) this.uploadTipo = 'Imagem';
-    else                                    this.uploadTipo = 'XML';
+  }
+
+  private _detectarTipo(file: File): string {
+    if (file.name.match(/NFe|NF-e/i))            return 'NFe';
+    if (file.name.match(/CTe|CT-e/i))             return 'CTe';
+    if (file.name.match(/MDF/i))                  return 'MDFe';
+    if (file.name.match(/NFS/i))                  return 'NFSe';
+    if (file.name.endsWith('.pdf'))               return 'PDF';
+    if (file.name.match(/\.(png|jpe?g)$/i))       return 'Imagem';
+    return 'XML';
   }
 
   doUpload(): void {
-    const file = this.uploadFile();
-    if (!file || !this.uploadClienteId) return;
+    const items = this.uploadItems();
+    if (!items.length) return;
     this.uploading.set(true);
-    this._docSvc.upload({ clienteId: this.uploadClienteId, tipo: this.uploadTipo, arquivo: file }).subscribe({
-      next: () => {
+    this.uploadStatus.set(null);
+
+    let sucesso = 0;
+    const falhas: string[] = [];
+
+    from(items).pipe(
+      concatMap(item =>
+        this._docSvc.upload({ clienteId: this.uploadClienteId || undefined, tipo: item.tipo, arquivo: item.file }).pipe(
+          catchError(err => {
+            falhas.push(`${item.file.name}: ${extractErrorMessage(err, 'erro desconhecido')}`);
+            return of(null);
+          })
+        )
+      )
+    ).subscribe({
+      next: (result) => { if (result) sucesso++; },
+      complete: () => {
         this.uploading.set(false);
-        this.uploadStatus.set('Documento enviado com sucesso!');
-        this.cancelUpload();
+        const total = items.length;
+        if (falhas.length === 0) {
+          this.uploadStatus.set(total === 1 ? 'Documento enviado com sucesso!' : `${sucesso} de ${total} notas importadas com sucesso!`);
+          this.cancelUpload();
+        } else {
+          this.uploadStatus.set(`${sucesso} de ${total} importado(s). Falhas: ${falhas.join(' | ')}`);
+        }
         this.load();
-      },
-      error: () => {
-        this.uploading.set(false);
-        this.uploadStatus.set('Erro ao enviar documento. Verifique o arquivo e o cliente selecionado.');
       },
     });
   }
 
-  cancelUpload(): void { this.showUploadForm.set(false); this.uploadFile.set(null); this.uploadClienteId = ''; }
+  cancelUpload(): void { this.showUploadForm.set(false); this.uploadItems.set([]); this.uploadClienteId = ''; }
 
   tipoLabel(tipo: string): string {
     const map: Record<string, string> = { NFe:'NF-e', CTe:'CT-e', MDFe:'MDF-e', NFSe:'NFS-e', PDF:'PDF', Imagem:'Imagem', XML:'XML' };

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ConfiguracaoService } from '@veloxml/services';
+import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
 
 @Component({
   selector: 'app-configuracoes',
@@ -233,7 +233,7 @@ export class ConfiguracoesComponent implements OnInit {
       },
       error: err => {
         this.saving.set(false);
-        this.submitError.set(err?.error?.detail ?? 'Erro ao salvar configurações.');
+        this.submitError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
       },
     });
   }

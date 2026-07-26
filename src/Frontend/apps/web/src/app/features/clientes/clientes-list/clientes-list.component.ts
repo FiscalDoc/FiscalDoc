@@ -2,8 +2,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ClienteService } from '@veloxml/services';
-import { ClienteDto, CreateClienteRequest } from '@veloxml/models';
+import { ClienteService, ContadorService, AuthService, extractErrorMessage } from '@veloxml/services';
+import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
 
 @Component({
   selector: 'app-clientes-list',
@@ -14,6 +14,14 @@ import { ClienteDto, CreateClienteRequest } from '@veloxml/models';
       <header class="page-header">
         <h2 class="font-heading">Clientes</h2>
         <div class="header-actions">
+          @if (isAdmin) {
+            <select class="input filter-select" [(ngModel)]="filtroContadorId" (ngModelChange)="onFiltroContadorChange()">
+              <option [ngValue]="undefined">Todos os contadores</option>
+              @for (c of contadores(); track c.id) {
+                <option [ngValue]="c.id">{{ c.nome }}</option>
+              }
+            </select>
+          }
           <div class="search-wrap">
             <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
@@ -85,6 +93,20 @@ import { ClienteDto, CreateClienteRequest } from '@veloxml/models';
 
             <form [formGroup]="form" (ngSubmit)="onSave()" class="modal-body">
               <div class="form-grid">
+                @if (isAdmin) {
+                  <div class="field col-2">
+                    <label class="label">Contador Responsável *</label>
+                    <select class="input" formControlName="contadorId">
+                      <option value="" disabled>Selecione o contador...</option>
+                      @for (c of contadores(); track c.id) {
+                        <option [value]="c.id">{{ c.nome }}</option>
+                      }
+                    </select>
+                    @if (form.controls['contadorId'].touched && form.controls['contadorId'].errors?.['required']) {
+                      <span class="field-error">Selecione o contador responsável.</span>
+                    }
+                  </div>
+                }
                 <div class="field col-2">
                   <label class="label">Razão Social *</label>
                   <input class="input" formControlName="razaoSocial" placeholder="Nome completo da empresa"/>
@@ -150,6 +172,12 @@ import { ClienteDto, CreateClienteRequest } from '@veloxml/models';
       padding: .45rem .75rem .45rem 2rem; color: var(--text); font-size: 13px; outline: none; width: 220px;
     }
     .search-input:focus { border-color: var(--accent); }
+
+    .filter-select {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: .45rem .75rem; font-size: 13px; outline: none; cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--accent); }
 
     .btn-primary {
       display: inline-flex; align-items: center; gap: 6px;
@@ -217,9 +245,11 @@ import { ClienteDto, CreateClienteRequest } from '@veloxml/models';
   `],
 })
 export class ClientesListComponent implements OnInit {
-  private readonly _svc    = inject(ClienteService);
-  private readonly _fb     = inject(FormBuilder);
-  private readonly _router = inject(Router);
+  private readonly _svc         = inject(ClienteService);
+  private readonly _contadorSvc = inject(ContadorService);
+  private readonly _fb          = inject(FormBuilder);
+  private readonly _router      = inject(Router);
+  readonly auth = inject(AuthService);
 
   readonly clientes     = signal<ClienteDto[]>([]);
   readonly loading      = signal(true);
@@ -229,11 +259,17 @@ export class ClientesListComponent implements OnInit {
   readonly totalPages   = signal(1);
   searchTerm = '';
 
+  readonly contadores       = signal<ContadorDto[]>([]);
+  filtroContadorId: string | undefined = undefined;
+
   readonly showModal  = signal(false);
   readonly saving     = signal(false);
   readonly saveError  = signal<string | null>(null);
 
+  get isAdmin(): boolean { return this.auth.currentUser()?.perfil === 'Administrador'; }
+
   form = this._fb.nonNullable.group({
+    contadorId: [''],
     razaoSocial: ['', Validators.required],
     nomeFantasia: [''],
     cnpj: [''],
@@ -245,11 +281,19 @@ export class ClientesListComponent implements OnInit {
     ativo: [true],
   });
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    if (this.isAdmin) {
+      this._contadorSvc.getAll({ page: 1, pageSize: 200 }).subscribe({
+        next: r => this.contadores.set(r.items),
+        error: () => {},
+      });
+    }
+  }
 
   load(): void {
     this.loading.set(true);
-    this._svc.getAll({ page: this.page(), pageSize: this.pageSize, termo: this.searchTerm || undefined }).subscribe({
+    this._svc.getAll({ page: this.page(), pageSize: this.pageSize, termo: this.searchTerm || undefined, contadorId: this.filtroContadorId }).subscribe({
       next: r => {
         this.clientes.set(r.items);
         this.total.set(r.totalCount);
@@ -261,6 +305,7 @@ export class ClientesListComponent implements OnInit {
   }
 
   onSearch(): void { this.page.set(1); this.load(); }
+  onFiltroContadorChange(): void { this.page.set(1); this.load(); }
   prevPage(): void { this.page.update(p => p - 1); this.load(); }
   nextPage(): void { this.page.update(p => p + 1); this.load(); }
 
@@ -271,6 +316,12 @@ export class ClientesListComponent implements OnInit {
     this.form.reset();
     this.form.controls.cnpj.setValidators([Validators.required, Validators.minLength(14)]);
     this.form.controls.cnpj.updateValueAndValidity();
+    if (this.isAdmin) {
+      this.form.controls.contadorId.setValidators([Validators.required]);
+    } else {
+      this.form.controls.contadorId.clearValidators();
+    }
+    this.form.controls.contadorId.updateValueAndValidity();
     this.showModal.set(true);
   }
 
@@ -283,6 +334,7 @@ export class ClientesListComponent implements OnInit {
     const v = this.form.getRawValue();
 
     this._svc.create({
+      contadorId: v.contadorId || undefined,
       razaoSocial: v.razaoSocial,
       nomeFantasia: v.nomeFantasia || undefined,
       cnpj: v.cnpj,
@@ -292,7 +344,7 @@ export class ClientesListComponent implements OnInit {
       estado: v.estado || undefined,
     } as CreateClienteRequest).subscribe({
       next: (c) => { this.saving.set(false); this.closeModal(); this._router.navigate(['/clientes', c.id]); },
-      error: () => { this.saving.set(false); this.saveError.set('Erro ao salvar. Verifique os dados.'); },
+      error: (err) => { this.saving.set(false); this.saveError.set(extractErrorMessage(err, 'Erro ao salvar. Verifique os dados.')); },
     });
   }
 

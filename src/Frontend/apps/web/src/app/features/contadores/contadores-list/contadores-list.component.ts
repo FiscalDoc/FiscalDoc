@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ContadorService } from '@veloxml/services';
+import { ContadorService, extractErrorMessage } from '@veloxml/services';
 import { ContadorDto } from '@veloxml/models';
 
 interface SuccessInfo { nome: string; email: string; senha: string; }
@@ -471,7 +471,7 @@ export class ContadoresListComponent implements OnInit {
     const v = this.form.value;
     this._svc.create({ nome: v.nome!, email: v.email!, telefone: v.telefone || undefined, crc: v.crc || undefined, empresa: v.empresa || undefined, canalNotificacao: v.canalNotificacao ?? 'ambos', notifNovasNotas: v.notifNovasNotas ?? true, notifAlertas: v.notifAlertas ?? true, notifResumoSemanal: v.notifResumoSemanal ?? false, notifConsolidadoMensal: v.notifConsolidadoMensal ?? false }).subscribe({
       next: res => { this.submitting.set(false); this.successInfo.set({ nome: res.contador.nome, email: res.contador.email, senha: res.senhaTemporaria }); },
-      error: err => { this.submitting.set(false); this.submitError.set(err?.error?.detail ?? 'Erro ao cadastrar.'); },
+      error: err => { this.submitting.set(false); this.submitError.set(extractErrorMessage(err, 'Erro ao cadastrar.')); },
     });
   }
 

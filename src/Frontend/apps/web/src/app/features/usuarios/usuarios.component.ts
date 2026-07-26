@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { UsuarioService, ContadorService } from '@veloxml/services';
+import { UsuarioService, ContadorService, extractErrorMessage } from '@veloxml/services';
 import { UsuarioDto, ContadorDto } from '@veloxml/models';
 
 type ModalMode = 'create' | 'edit';
@@ -418,12 +418,12 @@ export class UsuariosComponent implements OnInit {
     if (this.mode() === 'create') {
       this._svc.create({ nome: v.nome!, email: v.email!, senha: v.senha!, perfil: v.perfil!, contadorId: v.contadorId || undefined }).subscribe({
         next: () => { this.submitting.set(false); this.closeModal(); this.load(); },
-        error: err => { this.submitting.set(false); this.submitError.set(err?.error?.detail ?? 'Erro ao criar usuário.'); },
+        error: err => { this.submitting.set(false); this.submitError.set(extractErrorMessage(err, 'Erro ao criar usuário.')); },
       });
     } else {
       this._svc.update(this.editId()!, { nome: v.nome!, ativo: v.ativo ?? true, novaSenha: v.novaSenha || undefined }).subscribe({
         next: () => { this.submitting.set(false); this.closeModal(); this.load(); },
-        error: err => { this.submitting.set(false); this.submitError.set(err?.error?.detail ?? 'Erro ao atualizar.'); },
+        error: err => { this.submitting.set(false); this.submitError.set(extractErrorMessage(err, 'Erro ao atualizar.')); },
       });
     }
   }

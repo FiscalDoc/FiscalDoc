@@ -26,7 +26,7 @@ export class DocumentoService {
 
   upload(req: UploadDocumentoRequest): Observable<DocumentoDto> {
     const form = new FormData();
-    form.append('clienteId', req.clienteId);
+    if (req.clienteId) form.append('clienteId', req.clienteId);
     form.append('tipo', req.tipo);
     form.append('file', req.arquivo, req.arquivo.name);
     return this._api.postForm<DocumentoDto>('/documentos/upload', form);

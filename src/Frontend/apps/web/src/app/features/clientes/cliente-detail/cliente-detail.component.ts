@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ClienteService } from '@veloxml/services';
+import { ClienteService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'integracao';
@@ -482,9 +482,9 @@ export class ClienteDetailComponent implements OnInit {
         this.sucessoSave.set(true);
         setTimeout(() => this.sucessoSave.set(false), 3000);
       },
-      error: () => {
+      error: (err) => {
         this.salvando.set(false);
-        this.erroSave.set('Erro ao salvar. Verifique os dados.');
+        this.erroSave.set(extractErrorMessage(err, 'Erro ao salvar. Verifique os dados.'));
       },
     });
   }
@@ -542,9 +542,9 @@ export class ClienteDetailComponent implements OnInit {
         this.sucessoImap.set(true);
         setTimeout(() => this.sucessoImap.set(false), 3000);
       },
-      error: () => {
+      error: (err) => {
         this.salvandoImap.set(false);
-        this.erroImap.set('Erro ao salvar configuração IMAP.');
+        this.erroImap.set(extractErrorMessage(err, 'Erro ao salvar configuração IMAP.'));
       },
     });
   }
@@ -567,9 +567,9 @@ export class ClienteDetailComponent implements OnInit {
         this.sucessoWebhook.set(true);
         setTimeout(() => this.sucessoWebhook.set(false), 3000);
       },
-      error: () => {
+      error: (err) => {
         this.salvandoWebhook.set(false);
-        this.erroWebhook.set('Erro ao salvar webhook.');
+        this.erroWebhook.set(extractErrorMessage(err, 'Erro ao salvar webhook.'));
       },
     });
   }
@@ -591,8 +591,7 @@ export class ClienteDetailComponent implements OnInit {
       },
       error: (err) => {
         this.criandoConta.set(false);
-        const msg = err?.error?.message ?? err?.error ?? 'Erro ao criar conta.';
-        this.erroConta.set(typeof msg === 'string' ? msg : 'Erro ao criar conta.');
+        this.erroConta.set(extractErrorMessage(err, 'Erro ao criar conta.'));
       },
     });
   }

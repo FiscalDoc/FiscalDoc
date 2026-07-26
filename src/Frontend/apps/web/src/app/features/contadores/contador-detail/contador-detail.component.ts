@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ContadorService, ClienteService } from '@veloxml/services';
+import { ContadorService, ClienteService, extractErrorMessage } from '@veloxml/services';
 import { ContadorDto, CobrancaDto, ClienteDto } from '@veloxml/models';
 import { environment } from '../../../../environments/environment';
 
@@ -820,7 +820,7 @@ export class ContadorDetailComponent implements OnInit {
         this.sucessoCadastro.set('Cadastro atualizado com sucesso!');
         setTimeout(() => this.sucessoCadastro.set(null), 3000);
       },
-      error: (e) => { this.salvandoCadastro.set(false); this.erroCadastro.set(e?.error?.message ?? 'Erro ao salvar.'); },
+      error: (e) => { this.salvandoCadastro.set(false); this.erroCadastro.set(extractErrorMessage(e, 'Erro ao salvar.')); },
     });
   }
 
@@ -847,7 +847,7 @@ export class ContadorDetailComponent implements OnInit {
     this.bloqueandoAcesso.set(true);
     this._contSvc.bloquear(id, this.bloquearMotivo || undefined).subscribe({
       next: () => { this.bloqueandoAcesso.set(false); this.bloquearMotivo = ''; this._reload(); },
-      error: (e) => { this.bloqueandoAcesso.set(false); this.erroBloqueio.set(e?.error?.message ?? 'Erro ao bloquear o acesso.'); },
+      error: (e) => { this.bloqueandoAcesso.set(false); this.erroBloqueio.set(extractErrorMessage(e, 'Erro ao bloquear o acesso.')); },
     });
   }
 
@@ -855,7 +855,7 @@ export class ContadorDetailComponent implements OnInit {
     const id = this._route.snapshot.paramMap.get('id')!;
     this._contSvc.liberar(id).subscribe({
       next: () => this._reload(),
-      error: (e) => this.erroBloqueio.set(e?.error?.message ?? 'Erro ao liberar o acesso.'),
+      error: (e) => this.erroBloqueio.set(extractErrorMessage(e, 'Erro ao liberar o acesso.')),
     });
   }
 
@@ -872,7 +872,7 @@ export class ContadorDetailComponent implements OnInit {
         this._reload();
         setTimeout(() => this.sucessoData.set(null), 3000);
       },
-      error: (e) => { this.salvandoData.set(false); this.erroData.set(e?.error?.message ?? 'Erro ao salvar a data.'); },
+      error: (e) => { this.salvandoData.set(false); this.erroData.set(extractErrorMessage(e, 'Erro ao salvar a data.')); },
     });
   }
 
@@ -881,7 +881,7 @@ export class ContadorDetailComponent implements OnInit {
     const id = this._route.snapshot.paramMap.get('id')!;
     this._contSvc.setDataLimiteAcesso(id, null).subscribe({
       next: () => { this.sucessoData.set('Limite removido.'); this._reload(); setTimeout(() => this.sucessoData.set(null), 3000); },
-      error: (e) => this.erroData.set(e?.error?.message ?? 'Erro ao remover o limite.'),
+      error: (e) => this.erroData.set(extractErrorMessage(e, 'Erro ao remover o limite.')),
     });
   }
 
@@ -890,7 +890,7 @@ export class ContadorDetailComponent implements OnInit {
     const id = this._route.snapshot.paramMap.get('id')!;
     this._contSvc.resetSenha(id).subscribe({
       next: (r) => this.novaSenha.set(r.senha),
-      error: (e) => this.erroSenha.set(e?.error?.message ?? 'Erro ao gerar nova senha.'),
+      error: (e) => this.erroSenha.set(extractErrorMessage(e, 'Erro ao gerar nova senha.')),
     });
   }
 
@@ -904,7 +904,7 @@ export class ContadorDetailComponent implements OnInit {
         this.sucessoEmail.set(`E-mail enviado para ${this.contador()!.email}`);
         setTimeout(() => this.sucessoEmail.set(null), 4000);
       },
-      error: (e) => { this.enviandoEmail.set(false); this.erroEmail.set(e?.error?.message ?? 'Erro ao enviar o e-mail.'); },
+      error: (e) => { this.enviandoEmail.set(false); this.erroEmail.set(extractErrorMessage(e, 'Erro ao enviar o e-mail.')); },
     });
   }
 
@@ -925,7 +925,7 @@ export class ContadorDetailComponent implements OnInit {
         this._reload();
         setTimeout(() => this.sucessoPlano.set(null), 3000);
       },
-      error: (e) => { this.salvandoPlano.set(false); this.erroPlano.set(e?.error?.message ?? 'Erro ao salvar o plano.'); },
+      error: (e) => { this.salvandoPlano.set(false); this.erroPlano.set(extractErrorMessage(e, 'Erro ao salvar o plano.')); },
     });
   }
 
