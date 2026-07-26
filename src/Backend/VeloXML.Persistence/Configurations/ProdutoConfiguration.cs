@@ -14,6 +14,7 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         b.Property(e => e.TenantId).HasColumnName("tenant_id");
         b.Property(e => e.CreatedAt).HasColumnName("created_at");
         b.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+        b.Property(e => e.DeletedAt).HasColumnName("deleted_at");
         b.Property(e => e.CreatedBy).HasColumnName("created_by").HasMaxLength(256);
         b.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(256);
 

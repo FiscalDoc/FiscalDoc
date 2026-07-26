@@ -14,6 +14,7 @@ public class PedidoItemConfiguration : IEntityTypeConfiguration<PedidoItem>
         b.Property(e => e.TenantId).HasColumnName("tenant_id");
         b.Property(e => e.CreatedAt).HasColumnName("created_at");
         b.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+        b.Property(e => e.DeletedAt).HasColumnName("deleted_at");
 
         b.Property(e => e.PedidoId).HasColumnName("pedido_id");
         b.Property(e => e.ProdutoId).HasColumnName("produto_id");
