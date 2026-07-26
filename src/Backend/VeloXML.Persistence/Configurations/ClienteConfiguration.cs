@@ -39,6 +39,16 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.Property(e => e.ImapEmail).HasColumnName("imap_email").HasMaxLength(256);
         b.Property(e => e.ImapSenha).HasColumnName("imap_senha").HasMaxLength(512);
 
+        b.Property(e => e.RegimeTributario).HasColumnName("regime_tributario").HasMaxLength(50);
+        b.Property(e => e.InscricaoEstadual).HasColumnName("inscricao_estadual").HasMaxLength(30);
+        b.Property(e => e.InscricaoMunicipal).HasColumnName("inscricao_municipal").HasMaxLength(30);
+        b.Property(e => e.CnaePrincipal).HasColumnName("cnae_principal").HasMaxLength(10);
+        b.Property(e => e.SerieNfe).HasColumnName("serie_nfe").HasMaxLength(3).HasDefaultValue("1");
+        b.Property(e => e.NfeHabilitado).HasColumnName("nfe_habilitado").HasDefaultValue(false);
+        b.Property(e => e.CertificadoA1Key).HasColumnName("certificado_a1_key").HasMaxLength(500);
+        b.Property(e => e.CertificadoA1Senha).HasColumnName("certificado_a1_senha").HasMaxLength(500);
+        b.Property(e => e.CertificadoA1Validade).HasColumnName("certificado_a1_validade");
+
         b.HasIndex(e => new { e.TenantId, e.Cnpj }).IsUnique().HasFilter("deleted_at IS NULL");
         b.HasIndex(e => e.TenantId);
         b.HasIndex(e => e.ContadorId);
@@ -46,5 +56,8 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.HasOne(e => e.Tenant).WithMany(t => t.Clientes).HasForeignKey(e => e.TenantId).OnDelete(DeleteBehavior.Restrict);
         b.HasMany(e => e.Documentos).WithOne(d => d.Cliente).HasForeignKey(d => d.ClienteId).OnDelete(DeleteBehavior.Restrict);
         b.HasMany(e => e.Configuracoes).WithOne(c => c.Cliente).HasForeignKey(c => c.ClienteId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(e => e.Produtos).WithOne(p => p.Cliente).HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(e => e.Destinatarios).WithOne(d => d.Cliente).HasForeignKey(d => d.ClienteId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(e => e.Pedidos).WithOne(p => p.Cliente).HasForeignKey(p => p.ClienteId).OnDelete(DeleteBehavior.Cascade);
     }
 }
