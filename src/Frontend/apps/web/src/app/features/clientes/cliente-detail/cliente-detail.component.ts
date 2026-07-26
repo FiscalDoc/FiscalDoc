@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ClienteService, extractErrorMessage } from '@veloxml/services';
+import { AuthService, ClienteService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
@@ -29,34 +29,51 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
           <div class="profile-top">
             <div class="profile-info">
               <div class="profile-avatar">{{ initials() }}</div>
-            <div>
-              <div class="profile-name">{{ cliente()!.razaoSocial }}</div>
-              @if (cliente()!.nomeFantasia) {
-                <div class="profile-sub">{{ cliente()!.nomeFantasia }}</div>
-              }
-              <div class="profile-meta">
-                <span class="mono">{{ formatCnpj(cliente()!.cnpj) }}</span>
-                <span class="badge" [class.badge-green]="cliente()!.ativo" [class.badge-red]="!cliente()!.ativo">
-                  {{ cliente()!.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
+              <div>
+                <div class="profile-name">{{ cliente()!.razaoSocial }}</div>
+                @if (cliente()!.nomeFantasia) {
+                  <div class="profile-sub">{{ cliente()!.nomeFantasia }}</div>
+                }
+                <div class="profile-meta">
+                  <span class="mono">{{ formatCnpj(cliente()!.cnpj) }}</span>
+                  <span class="badge" [class.badge-green]="cliente()!.ativo" [class.badge-red]="!cliente()!.ativo">
+                    {{ cliente()!.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-            <div class="quick-links">
-              <a [routerLink]="['/clientes', cliente()!.id, 'cadastros']" class="quick-link">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h7"/>
-                </svg>
-                Cadastros
-              </a>
-              <a [routerLink]="['/clientes', cliente()!.id, 'pedidos']" class="quick-link">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Pedidos / NF-e
-              </a>
+        </div>
+
+        <!-- Módulos -->
+        <div class="modules-row">
+          <a [routerLink]="['/clientes', cliente()!.id, 'cadastros']" class="module-card">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <div>
+              <div class="module-title">Produtos &amp; Destinatários</div>
+              <div class="module-sub">Cadastrar produtos e destinatários de NF-e</div>
             </div>
-          </div>
+            <svg class="module-arrow" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a [routerLink]="['/clientes', cliente()!.id, 'pedidos']" class="module-card" [class.module-disabled]="!cliente()!.nfeHabilitado">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <div>
+              <div class="module-title">Pedidos / NF-e</div>
+              <div class="module-sub">
+                @if (cliente()!.nfeHabilitado) { Montar pedidos e gerar notas fiscais }
+                @else { NF-e não habilitada para este cliente }
+              </div>
+            </div>
+            <svg class="module-arrow" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
         </div>
 
         <!-- Tabs -->
@@ -66,7 +83,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
           <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="tab.set('integracao')">Integração</button>
         </nav>
 
-        <!-- ── Cadastro Tab ── -->
+        <!-- ── Cadastro ── -->
         @if (tab() === 'cadastro') {
           <div class="card section">
             <h4 class="section-title">Dados do Cliente</h4>
@@ -103,10 +120,8 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </select>
               </div>
             </div>
-
             @if (erroSave()) { <div class="alert-error">{{ erroSave() }}</div> }
             @if (sucessoSave()) { <div class="alert-ok">Salvo com sucesso!</div> }
-
             <div class="form-actions">
               <button class="btn-danger-ghost" (click)="confirmDelete()">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -121,7 +136,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
           </div>
         }
 
-        <!-- ── Fiscal Tab ── -->
+        <!-- ── Fiscal ── -->
         @if (tab() === 'fiscal') {
           <div class="card section">
             <h4 class="section-title">Configuração Fiscal</h4>
@@ -154,20 +169,30 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
               </div>
             </div>
 
-            <div class="imap-header" style="margin-top:.5rem">
-              <div>
-                <h4 class="section-title" style="margin-bottom:4px">Emissão de NF-e</h4>
-                <p class="section-desc" style="margin:0">Habilite para liberar a emissão de NF-e para este cliente.</p>
+            <!-- NF-e toggle: somente Admin -->
+            @if (isAdmin()) {
+              <div class="imap-header" style="margin-top:.5rem">
+                <div>
+                  <h4 class="section-title" style="margin-bottom:4px">Emissão de NF-e</h4>
+                  <p class="section-desc" style="margin:0">Habilite para liberar a emissão de NF-e para este cliente.</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [(ngModel)]="fiscal.nfeHabilitado"/>
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
               </div>
-              <label class="toggle">
-                <input type="checkbox" [(ngModel)]="fiscal.nfeHabilitado"/>
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </label>
-            </div>
+            } @else {
+              <div class="nfe-info">
+                <span class="label">Status NF-e</span>
+                <span class="badge" [class.badge-green]="cliente()!.nfeHabilitado" [class.badge-gray]="!cliente()!.nfeHabilitado">
+                  {{ cliente()!.nfeHabilitado ? 'Habilitada' : 'Não habilitada' }}
+                </span>
+                <span class="field-hint">Apenas o administrador pode alterar.</span>
+              </div>
+            }
 
             @if (erroFiscal()) { <div class="alert-error">{{ erroFiscal() }}</div> }
             @if (sucessoFiscal()) { <div class="alert-ok">Configuração fiscal salva!</div> }
-
             <div class="form-actions">
               <span></span>
               <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
@@ -177,9 +202,8 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
           </div>
         }
 
-        <!-- ── Integração Tab ── -->
+        <!-- ── Integração ── -->
         @if (tab() === 'integracao') {
-          <!-- API Key -->
           <div class="card section">
             <h4 class="section-title">API Key</h4>
             <p class="section-desc">Use esta chave no header <code>X-App-Key</code> para enviar documentos fiscais via API.</p>
@@ -215,7 +239,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
             </div>
           </div>
 
-          <!-- Webhook Config -->
           <div class="card section">
             <div class="imap-header">
               <div>
@@ -227,7 +250,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 <span class="toggle-track"><span class="toggle-thumb"></span></span>
               </label>
             </div>
-
             @if (webhook.habilitado) {
               <div class="form-grid" style="margin-top:1rem">
                 <div class="field col-2">
@@ -236,10 +258,8 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </div>
               </div>
             }
-
             @if (erroWebhook()) { <div class="alert-error" style="margin-top:.75rem">{{ erroWebhook() }}</div> }
             @if (sucessoWebhook()) { <div class="alert-ok" style="margin-top:.75rem">Webhook salvo!</div> }
-
             <div class="form-actions" style="margin-top:1rem">
               <span></span>
               <button class="btn-primary" [disabled]="salvandoWebhook()" (click)="salvarWebhook()">
@@ -248,7 +268,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
             </div>
           </div>
 
-          <!-- IMAP Config -->
           <div class="card section">
             <div class="imap-header">
               <div>
@@ -260,7 +279,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 <span class="toggle-track"><span class="toggle-thumb"></span></span>
               </label>
             </div>
-
             @if (imap.habilitado) {
               <div class="form-grid" style="margin-top:1rem">
                 <div class="field col-2" style="grid-column:span 1">
@@ -284,10 +302,8 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </div>
               </div>
             }
-
             @if (erroImap()) { <div class="alert-error" style="margin-top:.75rem">{{ erroImap() }}</div> }
             @if (sucessoImap()) { <div class="alert-ok" style="margin-top:.75rem">Configuração salva!</div> }
-
             <div class="form-actions" style="margin-top:1rem">
               <span></span>
               <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
@@ -296,7 +312,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
             </div>
           </div>
 
-          <!-- Portal do Cliente -->
           <div class="card section">
             <h4 class="section-title">Portal do Cliente</h4>
             <p class="section-desc">Crie uma conta de acesso para que o cliente possa visualizar seus documentos diretamente no portal.</p>
@@ -313,12 +328,10 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </div>
                 <div class="field">
                   <label class="label">Senha</label>
-                  <input class="input" [(ngModel)]="conta.senha" type="password" placeholder="Senha inicial"/>
+                  <input class="input" [(ngModel)]="conta.senha" type="password" placeholder="Mínimo 6 caracteres"/>
                 </div>
               </div>
-
-              @if (erroConta()) { <div class="alert-error">{{ erroConta() }}</div> }
-
+              @if (erroConta()) { <div class="alert-error" style="margin-top:.5rem">{{ erroConta() }}</div> }
               <div class="form-actions">
                 <span></span>
                 <button class="btn-primary" [disabled]="criandoConta()" (click)="criarConta()">
@@ -339,90 +352,76 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .loading-state { text-align: center; color: var(--text2); padding: 4rem; font-size: 14px; }
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
 
-    /* Header */
-    .back-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; margin-bottom: .25rem;
-    }
+    .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; margin-bottom: .25rem; }
     .back-btn:hover { color: var(--accent); }
     .profile-header { display: flex; flex-direction: column; gap: .5rem; }
-    .profile-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .profile-top { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
     .profile-info { display: flex; align-items: center; gap: 1rem; }
-    .quick-links { display: flex; gap: .5rem; flex-shrink: 0; }
-    .quick-link { display: inline-flex; align-items: center; gap: 5px; background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; text-decoration: none; }
-    .quick-link:hover { color: var(--accent); border-color: var(--accent); }
-    .profile-avatar {
-      width: 52px; height: 52px; border-radius: 50%; background: var(--accent-dim);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 700; color: var(--accent); flex-shrink: 0; text-transform: uppercase;
-    }
+    .profile-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--accent); flex-shrink: 0; text-transform: uppercase; }
     .profile-name { font-size: 1.25rem; font-weight: 700; color: var(--text); }
     .profile-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
     .profile-meta { display: flex; align-items: center; gap: .5rem; margin-top: 4px; flex-wrap: wrap; }
     .mono { font-family: monospace; font-size: 12px; color: var(--text2); }
 
+    /* Modules */
+    .modules-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    @media (max-width: 600px) { .modules-row { grid-template-columns: 1fr; } }
+    .module-card {
+      display: flex; align-items: center; gap: .875rem;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem 1.25rem; text-decoration: none; color: var(--text);
+      transition: border-color 150ms, background 150ms; cursor: pointer;
+    }
+    .module-card:hover { border-color: var(--accent); background: var(--bg3); }
+    .module-card svg:first-child { color: var(--accent); flex-shrink: 0; }
+    .module-card > div { flex: 1; }
+    .module-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .module-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .module-arrow { color: var(--text2); flex-shrink: 0; }
+    .module-disabled { opacity: .5; pointer-events: none; }
+    .module-disabled svg:first-child { color: var(--text2); }
+
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
     .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
+    .badge-gray { background: rgba(124,130,153,.12); color: var(--text2); }
 
-    /* Tabs */
     .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
-    .tab-btn {
-      background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer;
-      padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px;
-      transition: color 120ms, border-color 120ms;
-    }
+    .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms, border-color 120ms; }
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-    /* Cards */
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .section-title { margin: 0 0 .25rem; font-size: .95rem; font-weight: 600; color: var(--text); }
     .section-desc { margin: 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
 
-    /* Form */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
     .col-2 { grid-column: span 2; }
     .field { display: flex; flex-direction: column; gap: 4px; }
     .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
-    .input {
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit;
-    }
+    .input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; }
     .input:focus { border-color: var(--accent); }
     select.input { cursor: pointer; }
     .field-hint { font-size: 11px; color: var(--text2); }
 
     .form-actions { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); }
 
+    .nfe-info { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .75rem 0; }
+
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
-    /* Buttons */
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--accent); color: #0d0f14; border: none; border-radius: 8px;
-      padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer;
-    }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-danger-ghost {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--red); border: 1px solid rgba(255,77,109,.3);
-      border-radius: 8px; padding: .45rem .875rem; font-size: 13px; cursor: pointer;
-    }
+    .btn-danger-ghost { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--red); border: 1px solid rgba(255,77,109,.3); border-radius: 8px; padding: .45rem .875rem; font-size: 13px; cursor: pointer; }
     .btn-danger-ghost:hover { background: rgba(255,77,109,.08); border-color: var(--red); }
 
-    /* AppKey */
     .appkey-box { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
     .appkey-value { font-family: monospace; font-size: 13px; color: var(--accent); flex: 1; word-break: break-all; }
     .appkey-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .appkey-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--bg2); border: 1px solid var(--border); color: var(--text2);
-      border-radius: 6px; padding: 5px 10px; font-size: 11.5px; cursor: pointer; white-space: nowrap;
-    }
+    .appkey-btn { display: inline-flex; align-items: center; gap: 5px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 5px 10px; font-size: 11.5px; cursor: pointer; white-space: nowrap; }
     .appkey-btn:hover { color: var(--accent); border-color: var(--accent); }
     .appkey-btn.copied { color: var(--accent); border-color: var(--accent); }
     .appkey-btn-warn:hover { color: var(--yellow); border-color: var(--yellow); }
@@ -432,30 +431,22 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .method-badge { background: rgba(0,102,255,.15); color: #4d94ff; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
     .endpoint-path { font-family: monospace; font-size: 12px; color: var(--text); }
     .endpoint-sub { color: var(--text2); font-size: 11px; }
-
-    /* IMAP */
     .imap-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-
-    /* Toggle */
     .toggle { display: inline-flex; cursor: pointer; flex-shrink: 0; }
     .toggle input { display: none; }
-    .toggle-track {
-      width: 40px; height: 22px; background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 999px; position: relative; transition: background 200ms, border-color 200ms;
-    }
+    .toggle-track { width: 40px; height: 22px; background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; position: relative; transition: background 200ms, border-color 200ms; }
     .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
-    .toggle-thumb {
-      position: absolute; top: 2px; left: 2px;
-      width: 16px; height: 16px; background: var(--text2); border-radius: 50%;
-      transition: transform 200ms, background 200ms;
-    }
+    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--text2); border-radius: 50%; transition: transform 200ms, background 200ms; }
     .toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); background: #0d0f14; }
   `],
 })
 export class ClienteDetailComponent implements OnInit {
-  private readonly _svc   = inject(ClienteService);
-  private readonly _route = inject(ActivatedRoute);
+  private readonly _svc    = inject(ClienteService);
+  private readonly _auth   = inject(AuthService);
+  private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
+
+  readonly isAdmin = computed(() => this._auth.currentUser()?.perfil === 'Administrador');
 
   readonly cliente      = signal<ClienteDto | null>(null);
   readonly loading      = signal(true);
@@ -476,13 +467,13 @@ export class ClienteDetailComponent implements OnInit {
   readonly erroWebhook     = signal<string | null>(null);
   readonly sucessoWebhook  = signal(false);
 
-  readonly criandoConta    = signal(false);
-  readonly erroConta       = signal<string | null>(null);
-  readonly contaCriada     = signal<CriarContaClienteResponse | null>(null);
+  readonly criandoConta  = signal(false);
+  readonly erroConta     = signal<string | null>(null);
+  readonly contaCriada   = signal<CriarContaClienteResponse | null>(null);
 
-  readonly salvandoFiscal  = signal(false);
-  readonly erroFiscal      = signal<string | null>(null);
-  readonly sucessoFiscal   = signal(false);
+  readonly salvandoFiscal = signal(false);
+  readonly erroFiscal     = signal<string | null>(null);
+  readonly sucessoFiscal  = signal(false);
 
   edit    = { razaoSocial: '', nomeFantasia: '', email: '', telefone: '', cidade: '', estado: '', ativo: true };
   fiscal  = { regimeTributario: '', inscricaoEstadual: '', inscricaoMunicipal: '', cnaePrincipal: '', serieNfe: '1', nfeHabilitado: false };
@@ -493,49 +484,32 @@ export class ClienteDetailComponent implements OnInit {
   ngOnInit(): void {
     const id = this._route.snapshot.paramMap.get('id')!;
     this._svc.getById(id).subscribe({
-      next: c => { this.cliente.set(c); this._syncEdit(c); this._syncFiscal(c); this._syncImap(c); this._syncWebhook(c); this.loading.set(false); },
+      next: c => {
+        this.cliente.set(c);
+        this._syncEdit(c);
+        this._syncFiscal(c);
+        this._syncImap(c);
+        this._syncWebhook(c);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false),
     });
   }
 
   private _syncEdit(c: ClienteDto): void {
-    this.edit = {
-      razaoSocial: c.razaoSocial,
-      nomeFantasia: c.nomeFantasia ?? '',
-      email: c.email ?? '',
-      telefone: c.telefone ?? '',
-      cidade: c.cidade ?? '',
-      estado: c.estado ?? '',
-      ativo: c.ativo,
-    };
+    this.edit = { razaoSocial: c.razaoSocial, nomeFantasia: c.nomeFantasia ?? '', email: c.email ?? '', telefone: c.telefone ?? '', cidade: c.cidade ?? '', estado: c.estado ?? '', ativo: c.ativo };
   }
 
   private _syncFiscal(c: ClienteDto): void {
-    this.fiscal = {
-      regimeTributario: c.regimeTributario ?? '',
-      inscricaoEstadual: c.inscricaoEstadual ?? '',
-      inscricaoMunicipal: c.inscricaoMunicipal ?? '',
-      cnaePrincipal: c.cnaePrincipal ?? '',
-      serieNfe: c.serieNfe ?? '1',
-      nfeHabilitado: c.nfeHabilitado ?? false,
-    };
+    this.fiscal = { regimeTributario: c.regimeTributario ?? '', inscricaoEstadual: c.inscricaoEstadual ?? '', inscricaoMunicipal: c.inscricaoMunicipal ?? '', cnaePrincipal: c.cnaePrincipal ?? '', serieNfe: c.serieNfe ?? '1', nfeHabilitado: c.nfeHabilitado ?? false };
   }
 
   private _syncImap(c: ClienteDto): void {
-    this.imap = {
-      habilitado: c.imapHabilitado,
-      host: c.imapHost ?? '',
-      port: c.imapPort || 993,
-      email: c.imapEmail ?? '',
-      senha: '',
-    };
+    this.imap = { habilitado: c.imapHabilitado, host: c.imapHost ?? '', port: c.imapPort || 993, email: c.imapEmail ?? '', senha: '' };
   }
 
   private _syncWebhook(c: ClienteDto): void {
-    this.webhook = {
-      habilitado: c.webhookHabilitado,
-      url: c.webhookUrl ?? '',
-    };
+    this.webhook = { habilitado: c.webhookHabilitado, url: c.webhookUrl ?? '' };
   }
 
   initials(): string {
@@ -557,61 +531,16 @@ export class ClienteDetailComponent implements OnInit {
     this.salvando.set(true);
     this.erroSave.set(null);
     this.sucessoSave.set(false);
-
-    this._svc.update(c.id, {
-      id: c.id,
-      razaoSocial: this.edit.razaoSocial,
-      nomeFantasia: this.edit.nomeFantasia || undefined,
-      email: this.edit.email || undefined,
-      telefone: this.edit.telefone || undefined,
-      cidade: this.edit.cidade || undefined,
-      estado: this.edit.estado || undefined,
-      ativo: this.edit.ativo,
-    }).subscribe({
-      next: updated => {
-        this.cliente.set(updated);
-        this._syncEdit(updated);
-        this.salvando.set(false);
-        this.sucessoSave.set(true);
-        setTimeout(() => this.sucessoSave.set(false), 3000);
-      },
-      error: (err) => {
-        this.salvando.set(false);
-        this.erroSave.set(extractErrorMessage(err, 'Erro ao salvar. Verifique os dados.'));
-      },
+    this._svc.update(c.id, { id: c.id, razaoSocial: this.edit.razaoSocial, nomeFantasia: this.edit.nomeFantasia || undefined, email: this.edit.email || undefined, telefone: this.edit.telefone || undefined, cidade: this.edit.cidade || undefined, estado: this.edit.estado || undefined, ativo: this.edit.ativo }).subscribe({
+      next: updated => { this.cliente.set(updated); this._syncEdit(updated); this.salvando.set(false); this.sucessoSave.set(true); setTimeout(() => this.sucessoSave.set(false), 3000); },
+      error: err => { this.salvando.set(false); this.erroSave.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
 
   confirmDelete(): void {
     const c = this.cliente();
-    if (!c) return;
-    if (!confirm(`Excluir "${c.razaoSocial}"? Esta ação não pode ser desfeita.`)) return;
-    this._svc.delete(c.id).subscribe({
-      next: () => this._router.navigate(['/clientes']),
-    });
-  }
-
-  copyAppKey(): void {
-    const key = this.cliente()?.appKey;
-    if (!key) return;
-    navigator.clipboard.writeText(key).then(() => {
-      this.keyCopied.set(true);
-      setTimeout(() => this.keyCopied.set(false), 2000);
-    });
-  }
-
-  regenerarKey(): void {
-    const c = this.cliente();
-    if (!c) return;
-    if (!confirm('A chave atual deixará de funcionar. Confirmar?')) return;
-    this.keyLoading.set(true);
-    this._svc.regenerarAppKey(c.id).subscribe({
-      next: res => {
-        this.cliente.update(cur => cur ? { ...cur, appKey: res.appKey } : cur);
-        this.keyLoading.set(false);
-      },
-      error: () => this.keyLoading.set(false),
-    });
+    if (!c || !confirm(`Excluir "${c.razaoSocial}"? Esta ação não pode ser desfeita.`)) return;
+    this._svc.delete(c.id).subscribe({ next: () => this._router.navigate(['/clientes']) });
   }
 
   salvarFiscal(): void {
@@ -620,24 +549,32 @@ export class ClienteDetailComponent implements OnInit {
     this.salvandoFiscal.set(true);
     this.erroFiscal.set(null);
     this.sucessoFiscal.set(false);
-
     this._svc.updateFiscal(c.id, {
       regimeTributario: this.fiscal.regimeTributario || undefined,
       inscricaoEstadual: this.fiscal.inscricaoEstadual || undefined,
       inscricaoMunicipal: this.fiscal.inscricaoMunicipal || undefined,
       cnaePrincipal: this.fiscal.cnaePrincipal || undefined,
       serieNfe: this.fiscal.serieNfe || '1',
-      nfeHabilitado: this.fiscal.nfeHabilitado,
+      nfeHabilitado: this.isAdmin() ? this.fiscal.nfeHabilitado : (c.nfeHabilitado ?? false),
     }).subscribe({
-      next: () => {
-        this.salvandoFiscal.set(false);
-        this.sucessoFiscal.set(true);
-        setTimeout(() => this.sucessoFiscal.set(false), 3000);
-      },
-      error: (err) => {
-        this.salvandoFiscal.set(false);
-        this.erroFiscal.set(extractErrorMessage(err, 'Erro ao salvar configuração fiscal.'));
-      },
+      next: () => { this.salvandoFiscal.set(false); this.sucessoFiscal.set(true); setTimeout(() => this.sucessoFiscal.set(false), 3000); },
+      error: err => { this.salvandoFiscal.set(false); this.erroFiscal.set(extractErrorMessage(err, 'Erro ao salvar.')); },
+    });
+  }
+
+  copyAppKey(): void {
+    const key = this.cliente()?.appKey;
+    if (!key) return;
+    navigator.clipboard.writeText(key).then(() => { this.keyCopied.set(true); setTimeout(() => this.keyCopied.set(false), 2000); });
+  }
+
+  regenerarKey(): void {
+    const c = this.cliente();
+    if (!c || !confirm('A chave atual deixará de funcionar. Confirmar?')) return;
+    this.keyLoading.set(true);
+    this._svc.regenerarAppKey(c.id).subscribe({
+      next: res => { this.cliente.update(cur => cur ? { ...cur, appKey: res.appKey } : cur); this.keyLoading.set(false); },
+      error: () => this.keyLoading.set(false),
     });
   }
 
@@ -647,25 +584,9 @@ export class ClienteDetailComponent implements OnInit {
     this.salvandoImap.set(true);
     this.erroImap.set(null);
     this.sucessoImap.set(false);
-
-    this._svc.configurarImap(c.id, {
-      habilitado: this.imap.habilitado,
-      host: this.imap.host || undefined,
-      port: this.imap.port || 993,
-      email: this.imap.email || undefined,
-      senha: this.imap.senha || undefined,
-    }).subscribe({
-      next: updated => {
-        this.cliente.set(updated);
-        this._syncImap(updated);
-        this.salvandoImap.set(false);
-        this.sucessoImap.set(true);
-        setTimeout(() => this.sucessoImap.set(false), 3000);
-      },
-      error: (err) => {
-        this.salvandoImap.set(false);
-        this.erroImap.set(extractErrorMessage(err, 'Erro ao salvar configuração IMAP.'));
-      },
+    this._svc.configurarImap(c.id, { habilitado: this.imap.habilitado, host: this.imap.host || undefined, port: this.imap.port || 993, email: this.imap.email || undefined, senha: this.imap.senha || undefined }).subscribe({
+      next: updated => { this.cliente.set(updated); this._syncImap(updated); this.salvandoImap.set(false); this.sucessoImap.set(true); setTimeout(() => this.sucessoImap.set(false), 3000); },
+      error: err => { this.salvandoImap.set(false); this.erroImap.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
 
@@ -675,44 +596,24 @@ export class ClienteDetailComponent implements OnInit {
     this.salvandoWebhook.set(true);
     this.erroWebhook.set(null);
     this.sucessoWebhook.set(false);
-
-    this._svc.configurarWebhook(c.id, {
-      habilitado: this.webhook.habilitado,
-      url: this.webhook.url || undefined,
-    }).subscribe({
-      next: updated => {
-        this.cliente.set(updated);
-        this._syncWebhook(updated);
-        this.salvandoWebhook.set(false);
-        this.sucessoWebhook.set(true);
-        setTimeout(() => this.sucessoWebhook.set(false), 3000);
-      },
-      error: (err) => {
-        this.salvandoWebhook.set(false);
-        this.erroWebhook.set(extractErrorMessage(err, 'Erro ao salvar webhook.'));
-      },
+    this._svc.configurarWebhook(c.id, { habilitado: this.webhook.habilitado, url: this.webhook.url || undefined }).subscribe({
+      next: updated => { this.cliente.set(updated); this._syncWebhook(updated); this.salvandoWebhook.set(false); this.sucessoWebhook.set(true); setTimeout(() => this.sucessoWebhook.set(false), 3000); },
+      error: err => { this.salvandoWebhook.set(false); this.erroWebhook.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
 
   criarConta(): void {
     const c = this.cliente();
     if (!c || this.criandoConta()) return;
+    if (!this.conta.nome || !this.conta.email || !this.conta.senha) {
+      this.erroConta.set('Preencha nome, e-mail e senha.');
+      return;
+    }
     this.criandoConta.set(true);
     this.erroConta.set(null);
-
-    this._svc.criarConta(c.id, {
-      nome: this.conta.nome,
-      email: this.conta.email,
-      senha: this.conta.senha,
-    }).subscribe({
-      next: res => {
-        this.contaCriada.set(res);
-        this.criandoConta.set(false);
-      },
-      error: (err) => {
-        this.criandoConta.set(false);
-        this.erroConta.set(extractErrorMessage(err, 'Erro ao criar conta.'));
-      },
+    this._svc.criarConta(c.id, { nome: this.conta.nome, email: this.conta.email, senha: this.conta.senha }).subscribe({
+      next: res => { this.contaCriada.set(res); this.criandoConta.set(false); },
+      error: err => { this.criandoConta.set(false); this.erroConta.set(extractErrorMessage(err, 'Erro ao criar conta. Verifique se o e-mail já está em uso.')); },
     });
   }
 }

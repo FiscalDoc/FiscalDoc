@@ -518,10 +518,31 @@ export class ShellComponent implements OnInit {
   }
 
   get visibleNavItems(): NavItem[] {
-    const perfil = this.auth.currentUser()?.perfil ?? '';
-    return this.navItems.filter(item =>
-      !item.roles || item.roles.includes(perfil)
-    );
+    const user = this.auth.currentUser();
+    const perfil = user?.perfil ?? '';
+    const base = this.navItems.filter(item => !item.roles || item.roles.includes(perfil));
+
+    if (perfil === 'Cliente' && user?.clienteId) {
+      const id = user.clienteId;
+      base.push(
+        {
+          label: 'Cadastros',
+          route: `/clientes/${id}/cadastros`,
+          icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>`,
+        },
+        {
+          label: 'Pedidos / NF-e',
+          route: `/clientes/${id}/pedidos`,
+          icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>`,
+        },
+      );
+    }
+
+    return base;
   }
 
   userInitials(): string {

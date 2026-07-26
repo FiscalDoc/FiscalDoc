@@ -47,6 +47,14 @@ public class AppDbContext(
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<CobrancaContador>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
+        builder.Entity<Produto>().HasQueryFilter(e =>
+            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+        builder.Entity<Destinatario>().HasQueryFilter(e =>
+            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+        builder.Entity<Pedido>().HasQueryFilter(e =>
+            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+        builder.Entity<PedidoItem>().HasQueryFilter(e =>
+            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
 
         base.OnModelCreating(builder);
     }

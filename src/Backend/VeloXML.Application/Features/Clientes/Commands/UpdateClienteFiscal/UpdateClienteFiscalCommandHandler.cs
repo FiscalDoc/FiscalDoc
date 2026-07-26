@@ -5,7 +5,7 @@ using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Clientes.Commands.UpdateClienteFiscal;
 
-public sealed class UpdateClienteFiscalCommandHandler(IUnitOfWork uow)
+public sealed class UpdateClienteFiscalCommandHandler(IUnitOfWork uow, ICurrentUser currentUser)
     : IRequestHandler<UpdateClienteFiscalCommand, Result>
 {
     public async Task<Result> Handle(UpdateClienteFiscalCommand request, CancellationToken ct)
@@ -18,7 +18,10 @@ public sealed class UpdateClienteFiscalCommandHandler(IUnitOfWork uow)
         cliente.InscricaoMunicipal = request.InscricaoMunicipal;
         cliente.CnaePrincipal = request.CnaePrincipal;
         cliente.SerieNfe = request.SerieNfe;
-        cliente.NfeHabilitado = request.NfeHabilitado;
+
+        // Somente Admin pode habilitar/desabilitar emissão de NF-e
+        if (currentUser.Role == "Administrador")
+            cliente.NfeHabilitado = request.NfeHabilitado;
 
         uow.Clientes.Update(cliente);
         await uow.SaveChangesAsync(ct);
