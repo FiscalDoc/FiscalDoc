@@ -67,5 +67,5 @@ jobs:
       - name: Trigger Coolify redeploy
         run: |
           curl --fail-with-body -sS \
-            "http://179.197.239.81:8000/api/v1/deploy?uuid=en18rc3zpcyfyvpzy3krgkim&force=false" \
+            "http://179.197.239.81:8000/api/v1/deploy?uuid=en18rc3zpcyfyvpzy3krgkim&force=true" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
