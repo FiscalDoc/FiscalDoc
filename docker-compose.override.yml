@@ -1,0 +1,10 @@
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./logs:/app/logs
+
+  web:
+    environment:
+      - NODE_ENV=development
