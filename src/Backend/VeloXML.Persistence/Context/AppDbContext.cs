@@ -74,15 +74,10 @@ public class AppDbContext(
                 entry.Entity.TenantId = currentTenant.TenantId.Value;
         }
 
-        var result = await base.SaveChangesAsync(ct);
-
         if (auditEntries.Count > 0)
-        {
             AuditLogs.AddRange(auditEntries);
-            await base.SaveChangesAsync(ct);
-        }
 
-        return result;
+        return await base.SaveChangesAsync(ct);
     }
 
     private List<AuditLog> CaptureAuditEntries()

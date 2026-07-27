@@ -17,7 +17,9 @@ public static class DependencyInjection
             options
                 .UseNpgsql(config.GetConnectionString("DefaultConnection"),
                     npgsql => npgsql.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName))
-                .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
+                .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
+                .EnableDetailedErrors()
+                .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Warning));
 
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
