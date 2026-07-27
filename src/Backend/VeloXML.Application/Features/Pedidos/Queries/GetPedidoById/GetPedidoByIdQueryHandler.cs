@@ -11,8 +11,9 @@ public sealed class GetPedidoByIdQueryHandler(IUnitOfWork uow)
 {
     public async Task<Result<PedidoDto>> Handle(GetPedidoByIdQuery request, CancellationToken ct)
     {
-        var pedido = await uow.Pedidos.GetWithItensAsync(request.Id, ct)
-            ?? throw new NotFoundException("Pedido", request.Id);
+        var pedido = await uow.Pedidos.GetWithItensAsync(request.Id, ct);
+        if (pedido is null || pedido.ClienteId != request.ClienteId)
+            throw new NotFoundException("Pedido", request.Id);
 
         return Result.Success(CreatePedidoCommandHandler.ToDto(pedido));
     }

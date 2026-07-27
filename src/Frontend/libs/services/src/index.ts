@@ -12,3 +12,4 @@ export * from './lib/error-message.util';
 export * from './lib/produto.service';
 export * from './lib/destinatario.service';
 export * from './lib/pedido.service';
+export * from './lib/cliente-usuario.service';

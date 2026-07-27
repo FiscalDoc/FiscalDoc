@@ -90,7 +90,7 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new UpdateClienteFiscalCommand(
             id, body.RegimeTributario, body.InscricaoEstadual, body.InscricaoMunicipal,
             body.CnaePrincipal, body.SerieNfe ?? "1", body.NfeHabilitado), ct);
-        return result.IsSuccess ? NoContent() : NotFound(result.Error);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 }
 

@@ -1,15 +1,34 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
 
-public sealed class CreatePedidoCommandHandler(IUnitOfWork uow)
+public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePedidoCommandHandler> logger)
     : IRequestHandler<CreatePedidoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(CreatePedidoCommand request, CancellationToken ct)
     {
+        var destinatarioValido = await uow.Destinatarios.ExistsAsync(
+            d => d.Id == request.DestinatarioId && d.ClienteId == request.ClienteId, ct);
+        if (!destinatarioValido)
+        {
+            logger.LogWarning("Pedido rejeitado: destinatário {DestinatarioId} não encontrado para o cliente {ClienteId}", request.DestinatarioId, request.ClienteId);
+            return Result.Failure<PedidoDto>(ResultError.Validation("DestinatarioId", "Destinatário não encontrado ou não pertence a este cliente."));
+        }
+
+        var produtoIds = request.Itens.Select(i => i.ProdutoId).Distinct().ToList();
+        var produtosValidos = await uow.Produtos.FindAsync(
+            p => p.ClienteId == request.ClienteId && produtoIds.Contains(p.Id), ct);
+        var produtoIdsFaltando = produtoIds.Except(produtosValidos.Select(p => p.Id)).ToList();
+        if (produtoIdsFaltando.Count > 0)
+        {
+            logger.LogWarning("Pedido rejeitado: produto(s) {ProdutoIds} não encontrado(s) para o cliente {ClienteId}", produtoIdsFaltando, request.ClienteId);
+            return Result.Failure<PedidoDto>(ResultError.Validation("ProdutoId", "Um ou mais produtos não foram encontrados ou não pertencem a este cliente."));
+        }
+
         var itens = request.Itens.Select(i =>
         {
             var total = (i.Quantidade * i.PrecoUnitario) - i.Desconto;
@@ -41,6 +60,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow)
 
         await uow.Pedidos.AddAsync(pedido, ct);
         await uow.SaveChangesAsync(ct);
+        logger.LogInformation("Pedido {PedidoId} criado para o cliente {ClienteId} com {ItemCount} item(ns)", pedido.Id, request.ClienteId, itens.Count);
 
         var withDest = await uow.Pedidos.GetWithItensAsync(pedido.Id, ct);
         return Result.Success(ToDto(withDest!));

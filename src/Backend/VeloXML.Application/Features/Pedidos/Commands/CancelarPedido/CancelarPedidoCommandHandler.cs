@@ -10,8 +10,9 @@ public sealed class CancelarPedidoCommandHandler(IUnitOfWork uow)
 {
     public async Task<Result> Handle(CancelarPedidoCommand request, CancellationToken ct)
     {
-        var pedido = await uow.Pedidos.GetByIdAsync(request.Id, ct)
-            ?? throw new NotFoundException("Pedido", request.Id);
+        var pedido = await uow.Pedidos.GetByIdAsync(request.Id, ct);
+        if (pedido is null || pedido.ClienteId != request.ClienteId)
+            throw new NotFoundException("Pedido", request.Id);
 
         if (pedido.Status == "Cancelado")
             throw new DomainException("PEDIDO_JA_CANCELADO", "Pedido já está cancelado.");

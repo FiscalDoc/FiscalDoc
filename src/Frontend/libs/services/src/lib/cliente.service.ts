@@ -44,7 +44,7 @@ export class ClienteService {
     return this._api.post<CriarContaClienteResponse>(`/clientes/${id}/criar-conta`, req);
   }
 
-  updateFiscal(id: string, req: UpdateClienteFiscalRequest): Observable<void> {
-    return this._api.put<void>(`/clientes/${id}/fiscal`, req);
+  updateFiscal(id: string, req: UpdateClienteFiscalRequest): Observable<ClienteDto> {
+    return this._api.put<ClienteDto>(`/clientes/${id}/fiscal`, req);
   }
 }

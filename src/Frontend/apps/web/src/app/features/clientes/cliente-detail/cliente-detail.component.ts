@@ -557,7 +557,13 @@ export class ClienteDetailComponent implements OnInit {
       serieNfe: this.fiscal.serieNfe || '1',
       nfeHabilitado: this.isAdmin() ? this.fiscal.nfeHabilitado : (c.nfeHabilitado ?? false),
     }).subscribe({
-      next: () => { this.salvandoFiscal.set(false); this.sucessoFiscal.set(true); setTimeout(() => this.sucessoFiscal.set(false), 3000); },
+      next: updated => {
+        this.cliente.set(updated);
+        this._syncFiscal(updated);
+        this.salvandoFiscal.set(false);
+        this.sucessoFiscal.set(true);
+        setTimeout(() => this.sucessoFiscal.set(false), 3000);
+      },
       error: err => { this.salvandoFiscal.set(false); this.erroFiscal.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }

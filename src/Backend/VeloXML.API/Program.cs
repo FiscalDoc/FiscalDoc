@@ -1,5 +1,6 @@
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using VeloXML.API.Middleware;
 using VeloXML.API.Startup;
@@ -28,6 +29,26 @@ try
         {
             o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
             o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        })
+        .ConfigureApiBehaviorOptions(o =>
+        {
+            o.InvalidModelStateResponseFactory = ctx =>
+            {
+                var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                var errors = ctx.ModelState
+                    .Where(kv => kv.Value?.Errors.Count > 0)
+                    .ToDictionary(
+                        kv => char.ToLowerInvariant(kv.Key[0]) + kv.Key[1..],
+                        kv => kv.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                var message = errors.Count > 0
+                    ? string.Join("; ", errors.SelectMany(e => e.Value))
+                    : "Requisição inválida.";
+
+                logger.LogWarning("Invalid model state on {Path}: {Message}", ctx.HttpContext.Request.Path, message);
+
+                return new BadRequestObjectResult(new { code = "VALIDATION_ERROR", message, errors });
+            };
         });
     builder.Services.AddOpenApi(options =>
     {

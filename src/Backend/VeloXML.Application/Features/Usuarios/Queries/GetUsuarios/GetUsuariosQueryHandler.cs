@@ -20,6 +20,9 @@ public sealed class GetUsuariosQueryHandler(IApplicationDbContext db)
         if (!string.IsNullOrWhiteSpace(request.Perfil))
             q = q.Where(u => u.Perfil.ToString() == request.Perfil);
 
+        if (request.ClienteId is not null)
+            q = q.Where(u => u.ClienteId == request.ClienteId);
+
         var total = await q.CountAsync(ct);
 
         var items = await q

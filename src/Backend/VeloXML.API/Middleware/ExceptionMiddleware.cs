@@ -16,8 +16,11 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
         catch (ValidationException ex)
         {
             logger.LogWarning("Validation error: {Message}", ex.Message);
+            var errors = ex.Errors
+                .GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..])
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
             await WriteAsync(ctx, HttpStatusCode.UnprocessableEntity, "VALIDATION_ERROR",
-                string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)));
+                string.Join("; ", ex.Errors.Select(e => e.ErrorMessage)), errors);
         }
         catch (Domain.Exceptions.NotFoundException ex)
         {
@@ -45,11 +48,12 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
         }
     }
 
-    private static Task WriteAsync(HttpContext ctx, HttpStatusCode status, string code, string message)
+    private static Task WriteAsync(HttpContext ctx, HttpStatusCode status, string code, string message,
+        Dictionary<string, string[]>? errors = null)
     {
         ctx.Response.StatusCode = (int)status;
         ctx.Response.ContentType = "application/json";
-        var body = JsonSerializer.Serialize(new { code, message });
+        var body = JsonSerializer.Serialize(new { code, message, errors });
         return ctx.Response.WriteAsync(body);
     }
 }

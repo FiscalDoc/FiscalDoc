@@ -57,15 +57,15 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
               @for (item of itens(); track $index; let i = $index) {
                 <tr>
                   <td>
-                    <select class="input-sm" [(ngModel)]="item.produtoId" (change)="preencherProduto(i)">
+                    <select class="input-sm" [class.error]="rowErrors().has(i)" [(ngModel)]="item.produtoId" (change)="preencherProduto(i)">
                       <option value="">Selecione...</option>
                       @for (p of produtos(); track p.id) {
                         <option [value]="p.id">{{ p.codigo }} — {{ p.descricao }}</option>
                       }
                     </select>
                   </td>
-                  <td><input class="input-sm num" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
-                  <td><input class="input-sm num" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
                   <td><input class="input-sm num" type="number" [(ngModel)]="item.desconto" (input)="calcTotal(i)" min="0" step="0.01"/></td>
                   <td class="total-cell">{{ itemTotal(item) | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td><button class="row-btn danger" (click)="removerItem(i)">✕</button></td>
@@ -119,6 +119,7 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .input-sm { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 8px; font-size: 12.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
     .input-sm:focus { border-color: var(--accent); }
     .input-sm.num { text-align: right; }
+    .input-sm.error, select.input-sm.error { border-color: var(--red); }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 1.5rem; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
@@ -164,6 +165,7 @@ export class PedidoFormComponent implements OnInit {
   readonly destinatarios  = signal<DestinatarioDto[]>([]);
 
   itens = signal<PedidoItemInput[]>([]);
+  readonly rowErrors = signal<Set<number>>(new Set());
 
   form = { destinatarioId: '', observacoes: '' };
 
@@ -240,10 +242,32 @@ export class PedidoFormComponent implements OnInit {
     return Math.max(0, (+item.quantidade * +item.precoUnitario) - +item.desconto);
   }
 
+  private _validarItens(): boolean {
+    const invalidas = new Set<number>();
+    let primeiraMensagem: string | null = null;
+
+    this.itens().forEach((item, i) => {
+      let msg: string | null = null;
+      if (!item.produtoId) msg = `Selecione o produto do item ${i + 1}.`;
+      else if (!item.quantidade || item.quantidade <= 0) msg = `Informe uma quantidade válida para o item ${i + 1}.`;
+      else if (item.precoUnitario < 0) msg = `Preço unitário do item ${i + 1} não pode ser negativo.`;
+
+      if (msg) {
+        invalidas.add(i);
+        primeiraMensagem ??= msg;
+      }
+    });
+
+    this.rowErrors.set(invalidas);
+    if (primeiraMensagem) { this.erro.set(primeiraMensagem); return false; }
+    return true;
+  }
+
   salvar(): void {
     if (this.salvando()) return;
     if (!this.form.destinatarioId) { this.erro.set('Selecione um destinatário.'); return; }
     if (this.itens().length === 0) { this.erro.set('Adicione pelo menos um item.'); return; }
+    if (!this._validarItens()) return;
 
     this.salvando.set(true);
     this.erro.set(null);

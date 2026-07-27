@@ -1,4 +1,5 @@
 using MediatR;
+using VeloXML.Application.Features.Clientes.Queries.GetClientes;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Clientes.Commands.UpdateClienteFiscal;
@@ -11,4 +12,4 @@ public record UpdateClienteFiscalCommand(
     string? CnaePrincipal,
     string SerieNfe,
     bool NfeHabilitado
-) : IRequest<Result>;
+) : IRequest<Result<ClienteDto>>;

@@ -24,7 +24,7 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid clienteId, Guid id, CancellationToken ct)
     {
-        var result = await mediator.Send(new GetPedidoByIdQuery(id), ct);
+        var result = await mediator.Send(new GetPedidoByIdQuery(id, clienteId), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
@@ -41,7 +41,7 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid clienteId, Guid id, [FromBody] UpdatePedidoCommand command, CancellationToken ct)
     {
-        var cmd = command with { Id = id };
+        var cmd = command with { Id = id, ClienteId = clienteId };
         var result = await mediator.Send(cmd, ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
@@ -49,7 +49,7 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     [HttpPost("{id:guid}/cancelar")]
     public async Task<IActionResult> Cancelar(Guid clienteId, Guid id, CancellationToken ct)
     {
-        var result = await mediator.Send(new CancelarPedidoCommand(id), ct);
+        var result = await mediator.Send(new CancelarPedidoCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 }

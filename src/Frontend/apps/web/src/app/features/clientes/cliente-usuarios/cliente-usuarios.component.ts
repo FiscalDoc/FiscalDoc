@@ -1,24 +1,23 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
-import { UsuarioService, ContadorService, ClienteService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
-import { UsuarioDto, ContadorDto, ClienteDto } from '@veloxml/models';
+import { ClienteUsuarioService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { UsuarioDto } from '@veloxml/models';
 
 type ModalMode = 'create' | 'edit';
 
 @Component({
-  selector: 'app-usuarios',
+  selector: 'app-cliente-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe],
   template: `
 <div class="page">
 
-  <!-- ── Header ── -->
   <header class="page-header">
     <div>
       <h2 class="font-heading">Usuários</h2>
-      <p class="page-sub">{{ total() }} usuário(s) cadastrado(s)</p>
+      <p class="page-sub">{{ total() }} usuário(s) da sua empresa</p>
     </div>
     <button class="btn-primary" (click)="openCreate()">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -28,7 +27,6 @@ type ModalMode = 'create' | 'edit';
     </button>
   </header>
 
-  <!-- ── Toolbar ── -->
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -37,31 +35,19 @@ type ModalMode = 'create' | 'edit';
       <input class="search-input" type="text" placeholder="Buscar por nome ou e-mail..."
         [value]="termo()" (input)="onSearch($event)" />
     </div>
-    <select class="search-input" style="max-width:200px;cursor:pointer;"
-      [value]="filtroPerfil()" (change)="onPerfilChange($event)">
-      <option value="">Todos os perfis</option>
-      <option value="Administrador">Administrador</option>
-      <option value="Contador">Contador</option>
-      <option value="UsuarioContador">Usuário Contador</option>
-      <option value="Cliente">Cliente</option>
-    </select>
   </div>
 
-  <!-- ── Tabela ── -->
   <div class="card">
     @if (loading()) {
       <div class="empty-state">Carregando...</div>
     } @else if (usuarios().length === 0) {
-      <div class="empty-state">Nenhum usuário encontrado.</div>
+      <div class="empty-state">Nenhum usuário cadastrado.</div>
     } @else {
       <table class="table">
         <thead>
           <tr>
             <th>Usuário</th>
-            <th>Perfil</th>
-            <th>Contador</th>
             <th>Status</th>
-            <th>2FA</th>
             <th>Cadastro</th>
             <th></th>
           </tr>
@@ -79,28 +65,20 @@ type ModalMode = 'create' | 'edit';
                 </div>
               </td>
               <td>
-                <span class="badge" [ngClass]="perfilClass(u.perfil)">{{ u.perfil }}</span>
-              </td>
-              <td>
-                <span class="cell-muted">{{ u.nomeContador ?? '—' }}</span>
-              </td>
-              <td>
                 <span class="badge" [class.badge-green]="u.ativo" [class.badge-red]="!u.ativo">
                   {{ u.ativo ? 'Ativo' : 'Inativo' }}
                 </span>
               </td>
-              <td>
-                @if (u.twoFactorHabilitado) {
-                  <span class="badge badge-green">Ativo</span>
-                } @else {
-                  <span class="cell-muted">—</span>
-                }
-              </td>
               <td class="cell-muted">{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
-              <td>
+              <td class="actions-cell">
                 <button class="icon-btn" title="Editar" (click)="openEdit(u)">
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                  </svg>
+                </button>
+                <button class="icon-btn danger" title="Excluir" (click)="excluir(u)">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
                   </svg>
                 </button>
               </td>
@@ -120,7 +98,6 @@ type ModalMode = 'create' | 'edit';
   </div>
 </div>
 
-<!-- ── Modal ── -->
 @if (showModal()) {
   <div class="overlay" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
@@ -132,31 +109,24 @@ type ModalMode = 'create' | 'edit';
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
 
-        <div class="form-row">
-          <div class="field">
-            <label class="label">Nome *</label>
-            <input class="input" type="text" formControlName="nome" placeholder="Nome completo"
-              [class.error]="f['nome'].touched && f['nome'].errors?.['required'] || fieldErrors()['nome']" />
-            @if (f['nome'].touched && f['nome'].errors?.['required']) {
-              <span class="field-error">Obrigatório</span>
-            } @else if (fieldErrors()['nome']) {
-              <span class="field-error">{{ fieldErrors()['nome'] }}</span>
-            }
-          </div>
-          @if (mode() === 'create') {
+        <div class="field">
+          <label class="label">Nome *</label>
+          <input class="input" type="text" formControlName="nome" placeholder="Nome completo"
+            [class.error]="(f['nome'].touched && f['nome'].errors?.['required']) || fieldErrors()['nome']" />
+          @if (f['nome'].touched && f['nome'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
+          @if (fieldErrors()['nome']) { <span class="field-error">{{ fieldErrors()['nome'] }}</span> }
+        </div>
+
+        @if (mode() === 'create') {
+          <div class="form-row">
             <div class="field">
               <label class="label">E-mail *</label>
-              <input class="input" type="email" formControlName="email" placeholder="email@exemplo.com"
+              <input class="input" type="email" formControlName="email" placeholder="email@empresa.com"
                 [class.error]="(f['email'].touched && f['email'].invalid) || fieldErrors()['email']" />
               @if (f['email'].touched && f['email'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
               @if (f['email'].touched && f['email'].errors?.['email']) { <span class="field-error">E-mail inválido</span> }
               @if (fieldErrors()['email']) { <span class="field-error">{{ fieldErrors()['email'] }}</span> }
             </div>
-          }
-        </div>
-
-        @if (mode() === 'create') {
-          <div class="form-row">
             <div class="field">
               <label class="label">Senha *</label>
               <input class="input" type="password" formControlName="senha" placeholder="Mínimo 8 caracteres"
@@ -165,54 +135,7 @@ type ModalMode = 'create' | 'edit';
               @if (f['senha'].touched && f['senha'].errors?.['minlength']) { <span class="field-error">Mínimo 8 caracteres</span> }
               @if (fieldErrors()['senha']) { <span class="field-error">{{ fieldErrors()['senha'] }}</span> }
             </div>
-            <div class="field">
-              <label class="label">Perfil *</label>
-              <select class="input" formControlName="perfil" (change)="onPerfilFormChange()"
-                [class.error]="(f['perfil'].touched && f['perfil'].errors?.['required']) || fieldErrors()['perfil']">
-                <option value="">Selecione</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Contador">Contador</option>
-                <option value="UsuarioContador">Usuário Contador</option>
-                <option value="Cliente">Cliente</option>
-              </select>
-              @if (f['perfil'].touched && f['perfil'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-              @if (fieldErrors()['perfil']) { <span class="field-error">{{ fieldErrors()['perfil'] }}</span> }
-            </div>
           </div>
-
-          @if (perfilSelecionado() === 'UsuarioContador') {
-            <div class="field">
-              <label class="label">Contador *</label>
-              <select class="input" formControlName="contadorId"
-                [class.error]="(f['contadorId'].touched && f['contadorId'].errors?.['required']) || fieldErrors()['contadorid']">
-                <option value="">Selecione o contador</option>
-                @for (c of contadores(); track c.id) {
-                  <option [value]="c.id">{{ c.nome }}</option>
-                }
-              </select>
-              @if (f['contadorId'].touched && f['contadorId'].errors?.['required']) {
-                <span class="field-error">Contador obrigatório para Usuário Contador</span>
-              }
-              @if (fieldErrors()['contadorid']) { <span class="field-error">{{ fieldErrors()['contadorid'] }}</span> }
-            </div>
-          }
-
-          @if (perfilSelecionado() === 'Cliente') {
-            <div class="field">
-              <label class="label">Cliente *</label>
-              <select class="input" formControlName="clienteId"
-                [class.error]="(f['clienteId'].touched && f['clienteId'].errors?.['required']) || fieldErrors()['clienteid']">
-                <option value="">Selecione o cliente</option>
-                @for (c of clientes(); track c.id) {
-                  <option [value]="c.id">{{ c.razaoSocial }}</option>
-                }
-              </select>
-              @if (f['clienteId'].touched && f['clienteId'].errors?.['required']) {
-                <span class="field-error">Cliente obrigatório para perfil Cliente</span>
-              }
-              @if (fieldErrors()['clienteid']) { <span class="field-error">{{ fieldErrors()['clienteid'] }}</span> }
-            </div>
-          }
         }
 
         @if (mode() === 'edit') {
@@ -274,7 +197,6 @@ type ModalMode = 'create' | 'edit';
       border-radius: 8px; color: var(--text); padding: .45rem .75rem .45rem 2rem; font-size: 13px; outline: none;
     }
     .search-input:focus { border-color: var(--accent); }
-    select.search-input { padding-left: .75rem; }
 
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -298,18 +220,17 @@ type ModalMode = 'create' | 'edit';
     }
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-green  { background: rgba(0,229,160,.12); color: var(--accent); }
-    .badge-red    { background: rgba(255,77,109,.12); color: var(--red); }
-    .badge-blue   { background: rgba(0,102,255,.12);  color: #4d94ff; }
-    .badge-yellow { background: rgba(255,209,102,.15); color: var(--yellow); }
-    .badge-gray   { background: var(--bg3); color: var(--text2); }
+    .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-red   { background: rgba(255,77,109,.12); color: var(--red); }
 
+    .actions-cell { display: flex; gap: 6px; }
     .icon-btn {
       background: none; border: 1px solid var(--border); color: var(--text2);
       border-radius: 6px; padding: 5px; cursor: pointer; display: flex; align-items: center;
       transition: color 120ms, background 120ms, border-color 120ms;
     }
     .icon-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+    .icon-btn.danger:hover { color: var(--red); border-color: var(--red); background: rgba(255,77,109,.1); }
 
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
     .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: .875rem 1rem; border-top: 1px solid var(--border); }
@@ -318,7 +239,7 @@ type ModalMode = 'create' | 'edit';
     .page-info { font-size: 13px; color: var(--text2); }
 
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; }
     .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); gap: 1rem; }
     .modal-title { margin: 0; font-size: 1rem; }
     .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; }
@@ -335,57 +256,49 @@ type ModalMode = 'create' | 'edit';
     }
     .input:focus { border-color: var(--accent); }
     .input.error { border-color: var(--red); }
-    select.input { cursor: pointer; }
     .field-error { font-size: 11px; color: var(--red); }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
   `]
 })
-export class UsuariosComponent implements OnInit {
-  private readonly _svc    = inject(UsuarioService);
-  private readonly _cntSvc = inject(ContadorService);
-  private readonly _cliSvc = inject(ClienteService);
-  private readonly _fb     = inject(FormBuilder);
+export class ClienteUsuariosComponent implements OnInit {
+  private readonly _svc   = inject(ClienteUsuarioService);
+  private readonly _route = inject(ActivatedRoute);
+  private readonly _fb    = inject(FormBuilder);
 
-  usuarios      = signal<UsuarioDto[]>([]);
-  contadores    = signal<ContadorDto[]>([]);
-  clientes      = signal<ClienteDto[]>([]);
-  loading       = signal(true);
-  submitting    = signal(false);
-  showModal     = signal(false);
-  mode          = signal<ModalMode>('create');
-  submitError   = signal<string | null>(null);
-  fieldErrors   = signal<Record<string, string>>({});
-  termo         = signal('');
-  filtroPerfil  = signal('');
-  total         = signal(0);
-  page          = signal(1);
-  totalPages    = signal(1);
-  editId        = signal<string | null>(null);
-  perfilSelecionado = signal('');
+  private clienteId = '';
+
+  usuarios     = signal<UsuarioDto[]>([]);
+  loading      = signal(true);
+  submitting   = signal(false);
+  showModal    = signal(false);
+  mode         = signal<ModalMode>('create');
+  submitError  = signal<string | null>(null);
+  fieldErrors  = signal<Record<string, string>>({});
+  termo        = signal('');
+  total        = signal(0);
+  page         = signal(1);
+  totalPages   = signal(1);
+  editId       = signal<string | null>(null);
 
   form = this._fb.group({
-    nome:       ['', Validators.required],
-    email:      ['', [Validators.required, Validators.email]],
-    senha:      ['', [Validators.required, Validators.minLength(8)]],
-    perfil:     ['', Validators.required],
-    contadorId: [''],
-    clienteId:  [''],
-    novaSenha:  [''],
-    ativo:      [true],
+    nome:      ['', Validators.required],
+    email:     ['', [Validators.required, Validators.email]],
+    senha:     ['', [Validators.required, Validators.minLength(8)]],
+    novaSenha: [''],
+    ativo:     [true],
   });
   get f() { return this.form.controls; }
 
   private _timer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
+    this.clienteId = this._route.snapshot.paramMap.get('id')!;
     this.load();
-    this._cntSvc.getAll({ pageSize: 500 }).subscribe({ next: r => this.contadores.set(r.items) });
-    this._cliSvc.getAll({ pageSize: 500 }).subscribe({ next: r => this.clientes.set(r.items) });
   }
 
   load(): void {
     this.loading.set(true);
-    this._svc.getAll({ termo: this.termo() || undefined, perfil: this.filtroPerfil() || undefined, page: this.page(), pageSize: 50 })
+    this._svc.getAll(this.clienteId, { termo: this.termo() || undefined, page: this.page(), pageSize: 50 })
       .subscribe({
         next: r => { this.usuarios.set(r.items); this.total.set(r.totalCount); this.totalPages.set(r.totalPages); this.loading.set(false); },
         error: () => this.loading.set(false),
@@ -399,12 +312,6 @@ export class UsuariosComponent implements OnInit {
     this._timer = setTimeout(() => this.load(), 350);
   }
 
-  onPerfilChange(e: Event): void {
-    this.filtroPerfil.set((e.target as HTMLSelectElement).value);
-    this.page.set(1);
-    this.load();
-  }
-
   changePage(p: number): void { this.page.set(p); this.load(); }
 
   openCreate(): void {
@@ -412,12 +319,8 @@ export class UsuariosComponent implements OnInit {
     this.editId.set(null);
     this.submitError.set(null);
     this.fieldErrors.set({});
-    this.perfilSelecionado.set('');
     this.form.reset({ ativo: true });
-    this.form.get('senha')?.setValidators([Validators.required, Validators.minLength(8)]);
-    this.form.get('perfil')?.setValidators(Validators.required);
-    this.form.get('email')?.setValidators([Validators.required, Validators.email]);
-    ['senha', 'perfil', 'email', 'contadorId', 'clienteId'].forEach(c => { this.form.get(c)?.enable(); this.form.get(c)?.updateValueAndValidity(); });
+    ['email', 'senha'].forEach(c => { this.form.get(c)?.enable(); this.form.get(c)?.setValidators(c === 'email' ? [Validators.required, Validators.email] : [Validators.required, Validators.minLength(8)]); this.form.get(c)?.updateValueAndValidity(); });
     this.showModal.set(true);
   }
 
@@ -427,24 +330,8 @@ export class UsuariosComponent implements OnInit {
     this.submitError.set(null);
     this.fieldErrors.set({});
     this.form.patchValue({ nome: u.nome, ativo: u.ativo, novaSenha: '' });
-    ['email', 'senha', 'perfil', 'contadorId', 'clienteId'].forEach(c => { this.form.get(c)?.disable(); });
-    this.form.get('senha')?.clearValidators(); this.form.get('senha')?.updateValueAndValidity();
+    ['email', 'senha'].forEach(c => this.form.get(c)?.disable());
     this.showModal.set(true);
-  }
-
-  onPerfilFormChange(): void {
-    const p = this.form.get('perfil')?.value ?? '';
-    this.perfilSelecionado.set(p);
-
-    this.form.get('contadorId')?.clearValidators();
-    this.form.get('clienteId')?.clearValidators();
-    if (p === 'UsuarioContador') {
-      this.form.get('contadorId')?.setValidators(Validators.required);
-    } else if (p === 'Cliente') {
-      this.form.get('clienteId')?.setValidators(Validators.required);
-    }
-    this.form.get('contadorId')?.updateValueAndValidity();
-    this.form.get('clienteId')?.updateValueAndValidity();
   }
 
   closeModal(): void { this.showModal.set(false); }
@@ -457,10 +344,7 @@ export class UsuariosComponent implements OnInit {
     const v = this.form.getRawValue();
 
     if (this.mode() === 'create') {
-      this._svc.create({
-        nome: v.nome!, email: v.email!, senha: v.senha!, perfil: v.perfil!,
-        contadorId: v.contadorId || undefined, clienteId: v.clienteId || undefined,
-      }).subscribe({
+      this._svc.create(this.clienteId, { nome: v.nome!, email: v.email!, senha: v.senha! }).subscribe({
         next: () => { this.submitting.set(false); this.closeModal(); this.load(); },
         error: err => {
           this.submitting.set(false);
@@ -469,7 +353,7 @@ export class UsuariosComponent implements OnInit {
         },
       });
     } else {
-      this._svc.update(this.editId()!, { nome: v.nome!, ativo: v.ativo ?? true, novaSenha: v.novaSenha || undefined }).subscribe({
+      this._svc.update(this.clienteId, this.editId()!, { nome: v.nome!, ativo: v.ativo ?? true, novaSenha: v.novaSenha || undefined }).subscribe({
         next: () => { this.submitting.set(false); this.closeModal(); this.load(); },
         error: err => {
           this.submitting.set(false);
@@ -480,15 +364,13 @@ export class UsuariosComponent implements OnInit {
     }
   }
 
-  initial(nome: string): string { return nome?.charAt(0)?.toUpperCase() ?? '?'; }
-
-  perfilClass(p: string): string {
-    const map: Record<string, string> = {
-      Administrador: 'badge-red',
-      Contador: 'badge-green',
-      UsuarioContador: 'badge-blue',
-      Cliente: 'badge-yellow',
-    };
-    return map[p] ?? 'badge-gray';
+  excluir(u: UsuarioDto): void {
+    if (!confirm(`Excluir o usuário "${u.nome}"? Esta ação não pode ser desfeita.`)) return;
+    this._svc.delete(this.clienteId, u.id).subscribe({
+      next: () => this.load(),
+      error: err => alert(extractErrorMessage(err, 'Erro ao excluir usuário.')),
+    });
   }
+
+  initial(nome: string): string { return nome?.charAt(0)?.toUpperCase() ?? '?'; }
 }
