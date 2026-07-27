@@ -17,6 +17,16 @@ export const CLIENTES_ROUTES: Routes = [
     loadComponent: () => import('./cadastros/cadastros.component').then((m) => m.CadastrosComponent),
   },
   {
+    path: ':id/cadastros/produtos/:produtoId',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./cadastros/produto-detail/produto-detail.component').then((m) => m.ProdutoDetailComponent),
+  },
+  {
+    path: ':id/cadastros/destinatarios/:destinatarioId',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./cadastros/destinatario-detail/destinatario-detail.component').then((m) => m.DestinatarioDetailComponent),
+  },
+  {
     path: ':id/pedidos',
     canActivate: [clienteScopeGuard],
     loadComponent: () => import('./pedidos/pedidos.component').then((m) => m.PedidosComponent),

@@ -11,8 +11,9 @@ public sealed class UpdateProdutoCommandHandler(IUnitOfWork uow)
 {
     public async Task<Result<ProdutoDto>> Handle(UpdateProdutoCommand request, CancellationToken ct)
     {
-        var produto = await uow.Produtos.GetByIdAsync(request.Id, ct)
-            ?? throw new NotFoundException("Produto", request.Id);
+        var produto = await uow.Produtos.GetByIdAsync(request.Id, ct);
+        if (produto is null || produto.ClienteId != request.ClienteId)
+            throw new NotFoundException("Produto", request.Id);
 
         produto.Codigo = request.Codigo;
         produto.Descricao = request.Descricao;

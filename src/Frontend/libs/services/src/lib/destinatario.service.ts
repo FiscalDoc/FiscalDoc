@@ -12,6 +12,10 @@ export class DestinatarioService {
     return this._api.get<PagedResult<DestinatarioDto>>(`/clientes/${clienteId}/destinatarios`, q as Record<string, unknown>);
   }
 
+  getById(clienteId: string, id: string): Observable<DestinatarioDto> {
+    return this._api.get<DestinatarioDto>(`/clientes/${clienteId}/destinatarios/${id}`);
+  }
+
   create(clienteId: string, req: CreateDestinatarioRequest): Observable<DestinatarioDto> {
     return this._api.post<DestinatarioDto>(`/clientes/${clienteId}/destinatarios`, req);
   }

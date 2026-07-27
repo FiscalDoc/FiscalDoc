@@ -3,4 +3,4 @@ using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Destinatarios.Commands.DeleteDestinatario;
 
-public record DeleteDestinatarioCommand(Guid Id) : IRequest<Result>;
+public record DeleteDestinatarioCommand(Guid Id, Guid ClienteId) : IRequest<Result>;

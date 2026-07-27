@@ -10,8 +10,9 @@ public sealed class DeleteDestinatarioCommandHandler(IUnitOfWork uow)
 {
     public async Task<Result> Handle(DeleteDestinatarioCommand request, CancellationToken ct)
     {
-        var dest = await uow.Destinatarios.GetByIdAsync(request.Id, ct)
-            ?? throw new NotFoundException("Destinatario", request.Id);
+        var dest = await uow.Destinatarios.GetByIdAsync(request.Id, ct);
+        if (dest is null || dest.ClienteId != request.ClienteId)
+            throw new NotFoundException("Destinatario", request.Id);
 
         uow.Destinatarios.Remove(dest);
         await uow.SaveChangesAsync(ct);

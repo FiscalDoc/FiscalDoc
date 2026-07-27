@@ -6,6 +6,7 @@ namespace VeloXML.Application.Features.Destinatarios.Commands.UpdateDestinatario
 
 public record UpdateDestinatarioCommand(
     Guid Id,
+    Guid ClienteId,
     string RazaoSocial,
     string? NomeFantasia,
     string? CpfCnpj,

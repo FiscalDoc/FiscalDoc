@@ -12,6 +12,10 @@ export class ProdutoService {
     return this._api.get<PagedResult<ProdutoDto>>(`/clientes/${clienteId}/produtos`, q as Record<string, unknown>);
   }
 
+  getById(clienteId: string, id: string): Observable<ProdutoDto> {
+    return this._api.get<ProdutoDto>(`/clientes/${clienteId}/produtos/${id}`);
+  }
+
   create(clienteId: string, req: CreateProdutoRequest): Observable<ProdutoDto> {
     return this._api.post<ProdutoDto>(`/clientes/${clienteId}/produtos`, req);
   }

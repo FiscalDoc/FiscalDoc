@@ -66,7 +66,14 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePe
         foreach (var item in novosItens) pedido.Itens.Add(item);
         pedido.ValorTotal = novosItens.Sum(i => i.ValorTotal);
 
-        uow.Pedidos.Update(pedido);
+        // Não chamar uow.Pedidos.Update(pedido) aqui: a entidade já está rastreada
+        // (foi carregada nesta mesma unidade de trabalho via GetWithItensAsync).
+        // DbSet.Update() percorre todo o grafo e, como os novos PedidoItem já têm
+        // um Guid não-vazio gerado em memória, os classifica como "Modified" em vez
+        // de "Added" — o EF então tenta fazer UPDATE de linhas que ainda não existem
+        // no banco, afetando 0 linhas e lançando DbUpdateConcurrencyException.
+        // Com o grafo já rastreado, o SaveChangesAsync detecta sozinho os itens
+        // adicionados/removidos corretamente.
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Pedido {PedidoId} atualizado com {ItemCount} item(ns)", pedido.Id, novosItens.Count);
 

@@ -63,12 +63,11 @@ type ModalMode = 'create' | 'edit';
             <th>Status</th>
             <th>2FA</th>
             <th>Cadastro</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           @for (u of usuarios(); track u.id) {
-            <tr>
+            <tr class="row-link" (click)="openEdit(u)">
               <td>
                 <div class="cell-name">
                   <div class="avatar">{{ initial(u.nome) }}</div>
@@ -97,13 +96,6 @@ type ModalMode = 'create' | 'edit';
                 }
               </td>
               <td class="cell-muted">{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
-              <td>
-                <button class="icon-btn" title="Editar" (click)="openEdit(u)">
-                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                  </svg>
-                </button>
-              </td>
             </tr>
           }
         </tbody>
@@ -286,6 +278,7 @@ type ModalMode = 'create' | 'edit';
     .table td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
     .table tr:last-child td { border-bottom: none; }
     .table tr:hover td { background: rgba(255,255,255,.02); }
+    .row-link { cursor: pointer; }
 
     .cell-name { display: flex; align-items: center; gap: .625rem; }
     .cell-title { font-weight: 500; }

@@ -11,8 +11,9 @@ public sealed class UpdateDestinatarioCommandHandler(IUnitOfWork uow)
 {
     public async Task<Result<DestinatarioDto>> Handle(UpdateDestinatarioCommand request, CancellationToken ct)
     {
-        var dest = await uow.Destinatarios.GetByIdAsync(request.Id, ct)
-            ?? throw new NotFoundException("Destinatario", request.Id);
+        var dest = await uow.Destinatarios.GetByIdAsync(request.Id, ct);
+        if (dest is null || dest.ClienteId != request.ClienteId)
+            throw new NotFoundException("Destinatario", request.Id);
 
         dest.RazaoSocial = request.RazaoSocial;
         dest.NomeFantasia = request.NomeFantasia;

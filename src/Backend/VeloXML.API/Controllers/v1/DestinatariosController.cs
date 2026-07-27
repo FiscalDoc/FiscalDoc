@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Destinatarios.Commands.CreateDestinatario;
 using VeloXML.Application.Features.Destinatarios.Commands.DeleteDestinatario;
 using VeloXML.Application.Features.Destinatarios.Commands.UpdateDestinatario;
+using VeloXML.Application.Features.Destinatarios.Queries.GetDestinatarioById;
 using VeloXML.Application.Features.Destinatarios.Queries.GetDestinatarios;
 
 namespace VeloXML.API.Controllers.v1;
@@ -18,6 +19,13 @@ public sealed class DestinatariosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, page, pageSize), ct);
         return Ok(result.Value);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetDestinatarioByIdQuery(id, clienteId), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
     [HttpPost]
@@ -35,7 +43,7 @@ public sealed class DestinatariosController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Update(Guid clienteId, Guid id, [FromBody] UpdateDestinatarioRequest body, CancellationToken ct)
     {
         var result = await mediator.Send(new UpdateDestinatarioCommand(
-            id, body.RazaoSocial, body.NomeFantasia, body.CpfCnpj,
+            id, clienteId, body.RazaoSocial, body.NomeFantasia, body.CpfCnpj,
             body.InscricaoEstadual, body.Email, body.Telefone,
             body.Logradouro, body.Numero, body.Complemento,
             body.Bairro, body.Cidade, body.Estado, body.Cep,
@@ -46,7 +54,7 @@ public sealed class DestinatariosController(IMediator mediator) : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid clienteId, Guid id, CancellationToken ct)
     {
-        var result = await mediator.Send(new DeleteDestinatarioCommand(id), ct);
+        var result = await mediator.Send(new DeleteDestinatarioCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 }

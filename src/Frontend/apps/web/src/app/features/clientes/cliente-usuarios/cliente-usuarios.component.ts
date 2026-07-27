@@ -54,7 +54,7 @@ type ModalMode = 'create' | 'edit';
         </thead>
         <tbody>
           @for (u of usuarios(); track u.id) {
-            <tr>
+            <tr class="row-link" (click)="openEdit(u)">
               <td>
                 <div class="cell-name">
                   <div class="avatar">{{ initial(u.nome) }}</div>
@@ -71,12 +71,7 @@ type ModalMode = 'create' | 'edit';
               </td>
               <td class="cell-muted">{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
               <td class="actions-cell">
-                <button class="icon-btn" title="Editar" (click)="openEdit(u)">
-                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                  </svg>
-                </button>
-                <button class="icon-btn danger" title="Excluir" (click)="excluir(u)">
+                <button class="icon-btn danger" title="Excluir" (click)="$event.stopPropagation(); excluir(u)">
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
                   </svg>
@@ -208,6 +203,7 @@ type ModalMode = 'create' | 'edit';
     .table td { padding: .75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
     .table tr:last-child td { border-bottom: none; }
     .table tr:hover td { background: rgba(255,255,255,.02); }
+    .row-link { cursor: pointer; }
 
     .cell-name { display: flex; align-items: center; gap: .625rem; }
     .cell-title { font-weight: 500; }

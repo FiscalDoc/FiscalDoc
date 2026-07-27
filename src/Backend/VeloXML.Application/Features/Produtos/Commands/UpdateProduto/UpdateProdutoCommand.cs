@@ -6,6 +6,7 @@ namespace VeloXML.Application.Features.Produtos.Commands.UpdateProduto;
 
 public record UpdateProdutoCommand(
     Guid Id,
+    Guid ClienteId,
     string Codigo,
     string Descricao,
     string? Ncm,
