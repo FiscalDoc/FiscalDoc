@@ -20,7 +20,7 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
 
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.DestinatarioId).HasColumnName("destinatario_id");
-        b.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).HasDefaultValue("Rascunho");
+        b.Property(e => e.Status).HasColumnName("status").HasMaxLength(20);
         b.Property(e => e.Observacoes).HasColumnName("observacoes");
         b.Property(e => e.ValorTotal).HasColumnName("valor_total").HasPrecision(18, 2);
 

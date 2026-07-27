@@ -19,7 +19,7 @@ public class PedidoItemConfiguration : IEntityTypeConfiguration<PedidoItem>
         b.Property(e => e.PedidoId).HasColumnName("pedido_id");
         b.Property(e => e.ProdutoId).HasColumnName("produto_id");
         b.Property(e => e.Descricao).HasColumnName("descricao").HasMaxLength(200).IsRequired();
-        b.Property(e => e.Unidade).HasColumnName("unidade").HasMaxLength(10).HasDefaultValue("UN");
+        b.Property(e => e.Unidade).HasColumnName("unidade").HasMaxLength(10);
         b.Property(e => e.Quantidade).HasColumnName("quantidade").HasPrecision(18, 4);
         b.Property(e => e.PrecoUnitario).HasColumnName("preco_unitario").HasPrecision(18, 4);
         b.Property(e => e.Desconto).HasColumnName("desconto").HasPrecision(18, 2);

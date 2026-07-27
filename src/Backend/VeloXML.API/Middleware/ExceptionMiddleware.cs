@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 namespace VeloXML.API.Middleware;
 
@@ -30,10 +31,17 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
         {
             await WriteAsync(ctx, HttpStatusCode.BadRequest, ex.Code, ex.Message);
         }
+        catch (DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            logger.LogError(ex, "Database update error");
+            await WriteAsync(ctx, HttpStatusCode.BadRequest, "DB_ERROR", $"Erro ao salvar no banco: {inner}");
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception");
-            await WriteAsync(ctx, HttpStatusCode.InternalServerError, "INTERNAL_ERROR", "Ocorreu um erro interno. Tente novamente.");
+            await WriteAsync(ctx, HttpStatusCode.InternalServerError, "INTERNAL_ERROR",
+                $"Erro interno: {ex.Message}");
         }
     }
 

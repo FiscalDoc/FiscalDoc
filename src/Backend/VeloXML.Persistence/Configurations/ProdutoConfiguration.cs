@@ -28,7 +28,7 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         b.Property(e => e.AliquotaIcms).HasColumnName("aliquota_icms").HasPrecision(5, 2);
         b.Property(e => e.AliquotaPis).HasColumnName("aliquota_pis").HasPrecision(5, 2);
         b.Property(e => e.AliquotaCofins).HasColumnName("aliquota_cofins").HasPrecision(5, 2);
-        b.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true);
+        b.Property(e => e.Ativo).HasColumnName("ativo");
 
         b.HasIndex(e => e.ClienteId).HasDatabaseName("ix_produtos_cliente_id");
         b.HasIndex(e => e.TenantId).HasDatabaseName("ix_produtos_tenant_id");
