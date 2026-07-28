@@ -45,7 +45,8 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePe
         pedido.FormaPagamento = request.FormaPagamento;
         pedido.MeioPagamento = request.MeioPagamento;
         pedido.InformacoesComplementares = request.InformacoesComplementares;
-        pedido.Itens.Clear();
+
+        var itensAntigos = pedido.Itens.ToList();
 
         var novosItens = request.Itens.Select(i =>
         {
@@ -68,17 +69,16 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePe
             };
         }).ToList();
 
-        foreach (var item in novosItens) pedido.Itens.Add(item);
+        // Marca Remove/Add explicitamente no repositório em vez de Itens.Clear()+Add():
+        // nesse fluxo (troca de coleção junto com outras mudanças no Pedido pai no
+        // mesmo SaveChanges), o EF Core pode classificar os itens novos como
+        // "Modified" em vez de "Added", gerando UPDATE de linhas inexistentes
+        // (DbUpdateConcurrencyException: 0 rows affected).
+        uow.Pedidos.SubstituirItens(itensAntigos, novosItens);
+
+        pedido.Itens = novosItens;
         pedido.ValorTotal = novosItens.Sum(i => i.ValorTotal);
 
-        // Não chamar uow.Pedidos.Update(pedido) aqui: a entidade já está rastreada
-        // (foi carregada nesta mesma unidade de trabalho via GetWithItensAsync).
-        // DbSet.Update() percorre todo o grafo e, como os novos PedidoItem já têm
-        // um Guid não-vazio gerado em memória, os classifica como "Modified" em vez
-        // de "Added" — o EF então tenta fazer UPDATE de linhas que ainda não existem
-        // no banco, afetando 0 linhas e lançando DbUpdateConcurrencyException.
-        // Com o grafo já rastreado, o SaveChangesAsync detecta sozinho os itens
-        // adicionados/removidos corretamente.
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Pedido {PedidoId} atualizado com {ItemCount} item(ns)", pedido.Id, novosItens.Count);
 
