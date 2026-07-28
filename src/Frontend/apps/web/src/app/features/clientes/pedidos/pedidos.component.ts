@@ -44,7 +44,7 @@ import { PedidoDto } from '@veloxml/models';
             </thead>
             <tbody>
               @for (p of pedidos(); track p.id) {
-                <tr>
+                <tr class="row-link" (click)="abrirPedido(p)">
                   <td class="mono">{{ p.id.slice(0, 8) }}...</td>
                   <td>{{ p.destinatarioNome }}</td>
                   <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
@@ -52,10 +52,9 @@ import { PedidoDto } from '@veloxml/models';
                   <td>
                     <span class="badge" [class]="statusClass(p.status)">{{ p.status }}</span>
                   </td>
-                  <td>
-                    <button class="row-btn" (click)="editarPedido(p)" [disabled]="p.status !== 'Rascunho'">Editar</button>
-                    <button class="row-btn danger" (click)="cancelarPedido(p)" [disabled]="p.status === 'Cancelado'">Cancelar</button>
-                    <button class="btn-nfe" disabled title="Em breve">Gerar NF-e</button>
+                  <td class="actions-cell">
+                    <button class="row-btn" (click)="$event.stopPropagation(); imprimirPedido(p)">Imprimir</button>
+                    <button class="row-btn danger" (click)="$event.stopPropagation(); cancelarPedido(p)" [disabled]="p.status === 'Cancelado'">Cancelar</button>
                   </td>
                 </tr>
               }
@@ -94,10 +93,9 @@ import { PedidoDto } from '@veloxml/models';
     .row-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
     .row-btn.danger:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
     .row-btn:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-nfe {
-      background: none; border: 1px dashed var(--border); color: var(--text2);
-      border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: not-allowed; opacity: .45;
-    }
+    .row-link { cursor: pointer; }
+    .row-link:hover td { background: rgba(255,255,255,.02); }
+    .actions-cell { white-space: nowrap; }
   `],
 })
 export class PedidosComponent implements OnInit {
@@ -118,7 +116,12 @@ export class PedidosComponent implements OnInit {
 
   goBack(): void { this._router.navigate(['/clientes', this.clienteId]); }
   novoPedido(): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos', 'novo']); }
-  editarPedido(p: PedidoDto): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos', p.id]); }
+
+  abrirPedido(p: PedidoDto): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos', p.id]); }
+
+  imprimirPedido(p: PedidoDto): void {
+    window.open(`/imprimir/pedidos/${this.clienteId}/${p.id}`, '_blank');
+  }
 
   filtrar(status: string | null): void {
     this.statusFiltro.set(status);

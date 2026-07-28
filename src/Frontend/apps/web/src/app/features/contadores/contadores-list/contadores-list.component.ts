@@ -201,7 +201,7 @@ type ModalMode = 'create';
                 @if (f['nome'].touched && f['nome'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
               </div>
               <div class="field"><label class="label">E-mail *</label>
-                <input class="input" type="email" formControlName="email" placeholder="joao@escritorio.com"/>
+                <input class="input" type="email" formControlName="email" placeholder="joao@escritorio.com" autocomplete="off"/>
                 @if (f['email'].touched && f['email'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
               </div>
             </div>

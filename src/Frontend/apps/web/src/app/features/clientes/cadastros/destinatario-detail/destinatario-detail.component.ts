@@ -59,7 +59,7 @@ type Tab = 'cadastro' | 'endereco';
               </div>
               <div class="field">
                 <label class="label">E-mail</label>
-                <input class="input" type="email" [class.error]="fieldErrors()['email']" [(ngModel)]="form.email"/>
+                <input class="input" type="email" [class.error]="fieldErrors()['email']" [(ngModel)]="form.email" autocomplete="off"/>
                 @if (fieldErrors()['email']) { <span class="field-error">{{ fieldErrors()['email'] }}</span> }
               </div>
               <div class="field">

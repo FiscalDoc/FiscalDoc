@@ -10,6 +10,7 @@ export interface UsuarioDto {
   nomeCliente?: string;
   twoFactorHabilitado: boolean;
   createdAt: string;
+  ultimoAcessoEm?: string;
 }
 
 export interface CreateUsuarioRequest {

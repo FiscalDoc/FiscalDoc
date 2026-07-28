@@ -63,6 +63,6 @@ public sealed class CreateUsuarioCommandHandler(
         return Result.Success(new UsuarioDto(
             user.Id, user.Nome, user.Email, user.Perfil.ToString(), user.Ativo,
             user.ContadorId, nomeContador, user.ClienteId, null,
-            user.TwoFactorHabilitado, user.CreatedAt));
+            user.TwoFactorHabilitado, user.CreatedAt, user.UltimoAcessoEm));
     }
 }

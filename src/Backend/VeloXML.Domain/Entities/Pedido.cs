@@ -9,6 +9,13 @@ public class Pedido : BaseEntity, IAuditableEntity
     public string Status { get; set; } = "Rascunho"; // Rascunho, Emitido, Cancelado
     public string? Observacoes { get; set; }
     public decimal ValorTotal { get; set; }
+
+    // Dados necessários para, futuramente, gerar a NF-e a partir deste pedido.
+    public string NaturezaOperacao { get; set; } = "Venda de mercadoria";
+    public DateTime? DataSaida { get; set; }
+    public string? FormaPagamento { get; set; }              // "AVista" | "APrazo"
+    public string? MeioPagamento { get; set; }                // "Dinheiro" | "Cartao" | "Pix" | "Boleto" | "Outros"
+    public string? InformacoesComplementares { get; set; }
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 

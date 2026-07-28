@@ -14,6 +14,9 @@ export interface PedidoItemDto {
   aliquotaCofins: number;
 }
 
+export type FormaPagamento = 'AVista' | 'APrazo';
+export type MeioPagamento = 'Dinheiro' | 'Cartao' | 'Pix' | 'Boleto' | 'Outros';
+
 export interface PedidoDto {
   id: string;
   clienteId: string;
@@ -24,6 +27,11 @@ export interface PedidoDto {
   valorTotal: number;
   createdAt: string;
   itens: PedidoItemDto[];
+  naturezaOperacao: string;
+  dataSaida?: string;
+  formaPagamento?: FormaPagamento;
+  meioPagamento?: MeioPagamento;
+  informacoesComplementares?: string;
 }
 
 export interface PedidoItemInput {
@@ -45,6 +53,11 @@ export interface CreatePedidoRequest {
   destinatarioId: string;
   observacoes?: string;
   itens: PedidoItemInput[];
+  naturezaOperacao: string;
+  dataSaida?: string;
+  formaPagamento?: FormaPagamento;
+  meioPagamento?: MeioPagamento;
+  informacoesComplementares?: string;
 }
 
 export interface UpdatePedidoRequest {
@@ -52,4 +65,9 @@ export interface UpdatePedidoRequest {
   destinatarioId: string;
   observacoes?: string;
   itens: PedidoItemInput[];
+  naturezaOperacao: string;
+  dataSaida?: string;
+  formaPagamento?: FormaPagamento;
+  meioPagamento?: MeioPagamento;
+  informacoesComplementares?: string;
 }

@@ -8,6 +8,7 @@ public class CreatePedidoCommandValidator : AbstractValidator<CreatePedidoComman
     {
         RuleFor(x => x.DestinatarioId).NotEqual(Guid.Empty).WithMessage("Selecione um destinatário.");
         RuleFor(x => x.Itens).NotEmpty().WithMessage("Adicione pelo menos um item ao pedido.");
+        RuleFor(x => x.NaturezaOperacao).NotEmpty().WithMessage("Informe a natureza da operação.");
 
         RuleForEach(x => x.Itens).ChildRules(item =>
         {

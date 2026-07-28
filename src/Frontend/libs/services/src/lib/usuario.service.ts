@@ -14,6 +14,10 @@ export class UsuarioService {
     return this._api.get<PagedResult<UsuarioDto>>('/usuarios', params as Record<string, unknown>);
   }
 
+  getById(id: string): Observable<UsuarioDto> {
+    return this._api.get<UsuarioDto>(`/usuarios/${id}`);
+  }
+
   create(req: CreateUsuarioRequest): Observable<UsuarioDto> {
     return this._api.post<UsuarioDto>('/usuarios', req);
   }

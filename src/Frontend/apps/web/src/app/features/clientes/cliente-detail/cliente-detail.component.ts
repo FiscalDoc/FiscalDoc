@@ -98,7 +98,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
               </div>
               <div class="field">
                 <label class="label">E-mail</label>
-                <input class="input" [(ngModel)]="edit.email" type="email" placeholder="email@empresa.com"/>
+                <input class="input" [(ngModel)]="edit.email" type="email" placeholder="email@empresa.com" autocomplete="off"/>
               </div>
               <div class="field">
                 <label class="label">Telefone</label>
@@ -291,11 +291,11 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </div>
                 <div class="field col-2">
                   <label class="label">E-mail</label>
-                  <input class="input" [(ngModel)]="imap.email" type="email" placeholder="fiscal@empresa.com"/>
+                  <input class="input" [(ngModel)]="imap.email" type="email" placeholder="fiscal@empresa.com" autocomplete="off"/>
                 </div>
                 <div class="field col-2">
                   <label class="label">Senha</label>
-                  <input class="input" [(ngModel)]="imap.senha" type="password" placeholder="{{ cliente()!.imapEmail ? '••••••••' : 'Senha do e-mail' }}"/>
+                  <input class="input" [(ngModel)]="imap.senha" type="password" placeholder="{{ cliente()!.imapEmail ? '••••••••' : 'Senha do e-mail' }}" autocomplete="new-password"/>
                   @if (cliente()!.imapEmail) {
                     <span class="field-hint">Deixe em branco para manter a senha atual.</span>
                   }
@@ -324,11 +324,11 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </div>
                 <div class="field">
                   <label class="label">E-mail de acesso</label>
-                  <input class="input" [(ngModel)]="conta.email" type="email" placeholder="responsavel@empresa.com"/>
+                  <input class="input" [(ngModel)]="conta.email" type="email" placeholder="responsavel@empresa.com" autocomplete="off"/>
                 </div>
                 <div class="field">
                   <label class="label">Senha</label>
-                  <input class="input" [(ngModel)]="conta.senha" type="password" placeholder="Mínimo 6 caracteres"/>
+                  <input class="input" [(ngModel)]="conta.senha" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
                 </div>
               </div>
               @if (erroConta()) { <div class="alert-error" style="margin-top:.5rem">{{ erroConta() }}</div> }

@@ -11,5 +11,6 @@ public record UsuarioDto(
     Guid? ClienteId,
     string? NomeCliente,
     bool TwoFactorHabilitado,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    DateTime? UltimoAcessoEm
 );

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Usuarios.Commands.CreateUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.UpdateUsuario;
+using VeloXML.Application.Features.Usuarios.Queries.GetUsuarioById;
 using VeloXML.Application.Features.Usuarios.Queries.GetUsuarios;
 
 namespace VeloXML.API.Controllers.v1;
@@ -22,6 +23,13 @@ public sealed class UsuariosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetUsuariosQuery(termo, perfil, page, pageSize), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetUsuarioByIdQuery(id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
     [HttpPost]

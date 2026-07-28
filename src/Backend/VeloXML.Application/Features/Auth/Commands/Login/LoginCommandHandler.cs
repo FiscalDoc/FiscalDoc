@@ -62,6 +62,10 @@ public sealed class LoginCommandHandler(
         };
 
         await uow.Tokens.AddAsync(refreshToken, ct);
+
+        user.UltimoAcessoEm = DateTime.UtcNow;
+        uow.Users.Update(user);
+
         await uow.SaveChangesAsync(ct);
 
         return Result.Success(new LoginResponse(

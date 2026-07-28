@@ -25,6 +25,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.TwoFactorHabilitado).HasColumnName("two_factor_habilitado").HasDefaultValue(false);
         b.Property(e => e.TotpSecret).HasColumnName("totp_secret").HasMaxLength(256);
+        b.Property(e => e.UltimoAcessoEm).HasColumnName("ultimo_acesso_em");
         b.Property(e => e.CreatedBy).HasColumnName("created_by").HasMaxLength(256);
         b.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(256);
 

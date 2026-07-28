@@ -127,7 +127,7 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
                 </div>
                 <div class="field">
                   <label class="label">E-mail</label>
-                  <input class="input" formControlName="email" type="email" placeholder="email@empresa.com"/>
+                  <input class="input" formControlName="email" type="email" placeholder="email@empresa.com" autocomplete="off"/>
                 </div>
                 <div class="field">
                   <label class="label">Telefone</label>

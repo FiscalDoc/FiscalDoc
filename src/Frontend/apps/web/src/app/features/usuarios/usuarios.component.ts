@@ -1,26 +1,22 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
-import { UsuarioService, ContadorService, ClienteService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
-import { UsuarioDto, ContadorDto, ClienteDto } from '@veloxml/models';
-
-type ModalMode = 'create' | 'edit';
+import { Router } from '@angular/router';
+import { UsuarioService } from '@veloxml/services';
+import { UsuarioDto } from '@veloxml/models';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DatePipe],
+  imports: [CommonModule, DatePipe],
   template: `
 <div class="page">
 
-  <!-- ── Header ── -->
   <header class="page-header">
     <div>
       <h2 class="font-heading">Usuários</h2>
       <p class="page-sub">{{ total() }} usuário(s) cadastrado(s)</p>
     </div>
-    <button class="btn-primary" (click)="openCreate()">
+    <button class="btn-primary" (click)="abrirUsuario('novo')">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
@@ -28,7 +24,6 @@ type ModalMode = 'create' | 'edit';
     </button>
   </header>
 
-  <!-- ── Toolbar ── -->
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -47,7 +42,6 @@ type ModalMode = 'create' | 'edit';
     </select>
   </div>
 
-  <!-- ── Tabela ── -->
   <div class="card">
     @if (loading()) {
       <div class="empty-state">Carregando...</div>
@@ -67,7 +61,7 @@ type ModalMode = 'create' | 'edit';
         </thead>
         <tbody>
           @for (u of usuarios(); track u.id) {
-            <tr class="row-link" (click)="openEdit(u)">
+            <tr class="row-link" (click)="abrirUsuario(u.id)">
               <td>
                 <div class="cell-name">
                   <div class="avatar">{{ initial(u.nome) }}</div>
@@ -111,133 +105,6 @@ type ModalMode = 'create' | 'edit';
     }
   </div>
 </div>
-
-<!-- ── Modal ── -->
-@if (showModal()) {
-  <div class="overlay" (click)="closeModal()">
-    <div class="modal" (click)="$event.stopPropagation()">
-
-      <header class="modal-header">
-        <h3 class="modal-title font-heading">{{ mode() === 'create' ? 'Novo Usuário' : 'Editar Usuário' }}</h3>
-        <button class="modal-close" (click)="closeModal()">✕</button>
-      </header>
-
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
-
-        <div class="form-row">
-          <div class="field">
-            <label class="label">Nome *</label>
-            <input class="input" type="text" formControlName="nome" placeholder="Nome completo"
-              [class.error]="f['nome'].touched && f['nome'].errors?.['required'] || fieldErrors()['nome']" />
-            @if (f['nome'].touched && f['nome'].errors?.['required']) {
-              <span class="field-error">Obrigatório</span>
-            } @else if (fieldErrors()['nome']) {
-              <span class="field-error">{{ fieldErrors()['nome'] }}</span>
-            }
-          </div>
-          @if (mode() === 'create') {
-            <div class="field">
-              <label class="label">E-mail *</label>
-              <input class="input" type="email" formControlName="email" placeholder="email@exemplo.com"
-                [class.error]="(f['email'].touched && f['email'].invalid) || fieldErrors()['email']" />
-              @if (f['email'].touched && f['email'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-              @if (f['email'].touched && f['email'].errors?.['email']) { <span class="field-error">E-mail inválido</span> }
-              @if (fieldErrors()['email']) { <span class="field-error">{{ fieldErrors()['email'] }}</span> }
-            </div>
-          }
-        </div>
-
-        @if (mode() === 'create') {
-          <div class="form-row">
-            <div class="field">
-              <label class="label">Senha *</label>
-              <input class="input" type="password" formControlName="senha" placeholder="Mínimo 8 caracteres"
-                [class.error]="(f['senha'].touched && f['senha'].invalid) || fieldErrors()['senha']" />
-              @if (f['senha'].touched && f['senha'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-              @if (f['senha'].touched && f['senha'].errors?.['minlength']) { <span class="field-error">Mínimo 8 caracteres</span> }
-              @if (fieldErrors()['senha']) { <span class="field-error">{{ fieldErrors()['senha'] }}</span> }
-            </div>
-            <div class="field">
-              <label class="label">Perfil *</label>
-              <select class="input" formControlName="perfil" (change)="onPerfilFormChange()"
-                [class.error]="(f['perfil'].touched && f['perfil'].errors?.['required']) || fieldErrors()['perfil']">
-                <option value="">Selecione</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Contador">Contador</option>
-                <option value="UsuarioContador">Usuário Contador</option>
-                <option value="Cliente">Cliente</option>
-              </select>
-              @if (f['perfil'].touched && f['perfil'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-              @if (fieldErrors()['perfil']) { <span class="field-error">{{ fieldErrors()['perfil'] }}</span> }
-            </div>
-          </div>
-
-          @if (perfilSelecionado() === 'UsuarioContador') {
-            <div class="field">
-              <label class="label">Contador *</label>
-              <select class="input" formControlName="contadorId"
-                [class.error]="(f['contadorId'].touched && f['contadorId'].errors?.['required']) || fieldErrors()['contadorid']">
-                <option value="">Selecione o contador</option>
-                @for (c of contadores(); track c.id) {
-                  <option [value]="c.id">{{ c.nome }}</option>
-                }
-              </select>
-              @if (f['contadorId'].touched && f['contadorId'].errors?.['required']) {
-                <span class="field-error">Contador obrigatório para Usuário Contador</span>
-              }
-              @if (fieldErrors()['contadorid']) { <span class="field-error">{{ fieldErrors()['contadorid'] }}</span> }
-            </div>
-          }
-
-          @if (perfilSelecionado() === 'Cliente') {
-            <div class="field">
-              <label class="label">Cliente *</label>
-              <select class="input" formControlName="clienteId"
-                [class.error]="(f['clienteId'].touched && f['clienteId'].errors?.['required']) || fieldErrors()['clienteid']">
-                <option value="">Selecione o cliente</option>
-                @for (c of clientes(); track c.id) {
-                  <option [value]="c.id">{{ c.razaoSocial }}</option>
-                }
-              </select>
-              @if (f['clienteId'].touched && f['clienteId'].errors?.['required']) {
-                <span class="field-error">Cliente obrigatório para perfil Cliente</span>
-              }
-              @if (fieldErrors()['clienteid']) { <span class="field-error">{{ fieldErrors()['clienteid'] }}</span> }
-            </div>
-          }
-        }
-
-        @if (mode() === 'edit') {
-          <div class="form-row">
-            <div class="field">
-              <label class="label">Nova Senha</label>
-              <input class="input" type="password" formControlName="novaSenha" placeholder="Deixe em branco para não alterar" />
-            </div>
-            <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
-              <label class="label">Status</label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);margin-top:6px;">
-                <input type="checkbox" formControlName="ativo" style="width:16px;height:16px;accent-color:var(--accent);" />
-                Usuário ativo
-              </label>
-            </div>
-          </div>
-        }
-
-        @if (submitError()) {
-          <div class="alert-error">{{ submitError() }}</div>
-        }
-
-        <div class="modal-footer">
-          <button type="button" class="btn-ghost" (click)="closeModal()">Cancelar</button>
-          <button type="submit" class="btn-primary" [disabled]="submitting()">
-            {{ submitting() ? 'Salvando...' : (mode() === 'create' ? 'Criar Usuário' : 'Salvar') }}
-          </button>
-        </div>
-
-      </form>
-    </div>
-  </div>
-}
   `,
   styles: [`
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -251,12 +118,6 @@ type ModalMode = 'create' | 'edit';
       padding: 0.5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
     }
     .btn-primary:hover { opacity: 0.88; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-ghost {
-      background: transparent; color: var(--text2); border: 1px solid var(--border);
-      border-radius: 8px; padding: 0.5rem 1rem; font-size: 13.5px; cursor: pointer;
-    }
-    .btn-ghost:hover { background: var(--bg3); color: var(--text); }
 
     .toolbar { display: flex; gap: .75rem; }
     .search-wrap { position: relative; flex: 1; max-width: 380px; }
@@ -297,83 +158,29 @@ type ModalMode = 'create' | 'edit';
     .badge-yellow { background: rgba(255,209,102,.15); color: var(--yellow); }
     .badge-gray   { background: var(--bg3); color: var(--text2); }
 
-    .icon-btn {
-      background: none; border: 1px solid var(--border); color: var(--text2);
-      border-radius: 6px; padding: 5px; cursor: pointer; display: flex; align-items: center;
-      transition: color 120ms, background 120ms, border-color 120ms;
-    }
-    .icon-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
-
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
     .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: .875rem 1rem; border-top: 1px solid var(--border); }
     .page-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
     .page-btn:disabled { opacity: .4; cursor: not-allowed; }
     .page-info { font-size: 13px; color: var(--text2); }
-
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
-    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); gap: 1rem; }
-    .modal-title { margin: 0; font-size: 1rem; }
-    .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; }
-    .modal-close:hover { color: var(--text); }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; padding-top: .5rem; border-top: 1px solid var(--border); margin-top: .5rem; }
-
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .field { display: flex; flex-direction: column; gap: 4px; }
-    .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
-    .input {
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit;
-    }
-    .input:focus { border-color: var(--accent); }
-    .input.error { border-color: var(--red); }
-    select.input { cursor: pointer; }
-    .field-error { font-size: 11px; color: var(--red); }
-    .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
   `]
 })
 export class UsuariosComponent implements OnInit {
   private readonly _svc    = inject(UsuarioService);
-  private readonly _cntSvc = inject(ContadorService);
-  private readonly _cliSvc = inject(ClienteService);
-  private readonly _fb     = inject(FormBuilder);
+  private readonly _router = inject(Router);
 
   usuarios      = signal<UsuarioDto[]>([]);
-  contadores    = signal<ContadorDto[]>([]);
-  clientes      = signal<ClienteDto[]>([]);
   loading       = signal(true);
-  submitting    = signal(false);
-  showModal     = signal(false);
-  mode          = signal<ModalMode>('create');
-  submitError   = signal<string | null>(null);
-  fieldErrors   = signal<Record<string, string>>({});
   termo         = signal('');
   filtroPerfil  = signal('');
   total         = signal(0);
   page          = signal(1);
   totalPages    = signal(1);
-  editId        = signal<string | null>(null);
-  perfilSelecionado = signal('');
-
-  form = this._fb.group({
-    nome:       ['', Validators.required],
-    email:      ['', [Validators.required, Validators.email]],
-    senha:      ['', [Validators.required, Validators.minLength(8)]],
-    perfil:     ['', Validators.required],
-    contadorId: [''],
-    clienteId:  [''],
-    novaSenha:  [''],
-    ativo:      [true],
-  });
-  get f() { return this.form.controls; }
 
   private _timer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.load();
-    this._cntSvc.getAll({ pageSize: 500 }).subscribe({ next: r => this.contadores.set(r.items) });
-    this._cliSvc.getAll({ pageSize: 500 }).subscribe({ next: r => this.clientes.set(r.items) });
   }
 
   load(): void {
@@ -400,78 +207,7 @@ export class UsuariosComponent implements OnInit {
 
   changePage(p: number): void { this.page.set(p); this.load(); }
 
-  openCreate(): void {
-    this.mode.set('create');
-    this.editId.set(null);
-    this.submitError.set(null);
-    this.fieldErrors.set({});
-    this.perfilSelecionado.set('');
-    this.form.reset({ ativo: true });
-    this.form.get('senha')?.setValidators([Validators.required, Validators.minLength(8)]);
-    this.form.get('perfil')?.setValidators(Validators.required);
-    this.form.get('email')?.setValidators([Validators.required, Validators.email]);
-    ['senha', 'perfil', 'email', 'contadorId', 'clienteId'].forEach(c => { this.form.get(c)?.enable(); this.form.get(c)?.updateValueAndValidity(); });
-    this.showModal.set(true);
-  }
-
-  openEdit(u: UsuarioDto): void {
-    this.mode.set('edit');
-    this.editId.set(u.id);
-    this.submitError.set(null);
-    this.fieldErrors.set({});
-    this.form.patchValue({ nome: u.nome, ativo: u.ativo, novaSenha: '' });
-    ['email', 'senha', 'perfil', 'contadorId', 'clienteId'].forEach(c => { this.form.get(c)?.disable(); });
-    this.form.get('senha')?.clearValidators(); this.form.get('senha')?.updateValueAndValidity();
-    this.showModal.set(true);
-  }
-
-  onPerfilFormChange(): void {
-    const p = this.form.get('perfil')?.value ?? '';
-    this.perfilSelecionado.set(p);
-
-    this.form.get('contadorId')?.clearValidators();
-    this.form.get('clienteId')?.clearValidators();
-    if (p === 'UsuarioContador') {
-      this.form.get('contadorId')?.setValidators(Validators.required);
-    } else if (p === 'Cliente') {
-      this.form.get('clienteId')?.setValidators(Validators.required);
-    }
-    this.form.get('contadorId')?.updateValueAndValidity();
-    this.form.get('clienteId')?.updateValueAndValidity();
-  }
-
-  closeModal(): void { this.showModal.set(false); }
-
-  onSubmit(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.submitting.set(true);
-    this.submitError.set(null);
-    this.fieldErrors.set({});
-    const v = this.form.getRawValue();
-
-    if (this.mode() === 'create') {
-      this._svc.create({
-        nome: v.nome!, email: v.email!, senha: v.senha!, perfil: v.perfil!,
-        contadorId: v.contadorId || undefined, clienteId: v.clienteId || undefined,
-      }).subscribe({
-        next: () => { this.submitting.set(false); this.closeModal(); this.load(); },
-        error: err => {
-          this.submitting.set(false);
-          this.submitError.set(extractErrorMessage(err, 'Erro ao criar usuário.'));
-          this.fieldErrors.set(extractFieldErrors(err) ?? {});
-        },
-      });
-    } else {
-      this._svc.update(this.editId()!, { nome: v.nome!, ativo: v.ativo ?? true, novaSenha: v.novaSenha || undefined }).subscribe({
-        next: () => { this.submitting.set(false); this.closeModal(); this.load(); },
-        error: err => {
-          this.submitting.set(false);
-          this.submitError.set(extractErrorMessage(err, 'Erro ao atualizar.'));
-          this.fieldErrors.set(extractFieldErrors(err) ?? {});
-        },
-      });
-    }
-  }
+  abrirUsuario(id: string): void { this._router.navigate(['/usuarios', id]); }
 
   initial(nome: string): string { return nome?.charAt(0)?.toUpperCase() ?? '?'; }
 

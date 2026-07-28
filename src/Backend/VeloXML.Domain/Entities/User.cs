@@ -14,6 +14,7 @@ public class User : BaseEntity, IAuditableEntity
     public Guid? ClienteId { get; set; }
     public bool TwoFactorHabilitado { get; set; }
     public string? TotpSecret { get; set; }
+    public DateTime? UltimoAcessoEm { get; set; }
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 

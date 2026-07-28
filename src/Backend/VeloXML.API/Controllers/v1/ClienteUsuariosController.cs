@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Usuarios.Commands.CreateClienteUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.DeleteClienteUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.UpdateClienteUsuario;
+using VeloXML.Application.Features.Usuarios.Queries.GetClienteUsuarioById;
 using VeloXML.Application.Features.Usuarios.Queries.GetClienteUsuarios;
 
 namespace VeloXML.API.Controllers.v1;
@@ -18,6 +19,13 @@ public sealed class ClienteUsuariosController(IMediator mediator) : ControllerBa
     {
         var result = await mediator.Send(new GetClienteUsuariosQuery(clienteId, termo, page, pageSize), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetClienteUsuarioByIdQuery(clienteId, id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
     [HttpPost]

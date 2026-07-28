@@ -12,6 +12,11 @@ export const CLIENTES_ROUTES: Routes = [
     loadComponent: () => import('./cliente-detail/cliente-detail.component').then((m) => m.ClienteDetailComponent),
   },
   {
+    path: ':id/empresa',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./cliente-empresa/cliente-empresa.component').then((m) => m.ClienteEmpresaComponent),
+  },
+  {
     path: ':id/cadastros',
     canActivate: [clienteScopeGuard],
     loadComponent: () => import('./cadastros/cadastros.component').then((m) => m.CadastrosComponent),
@@ -40,5 +45,10 @@ export const CLIENTES_ROUTES: Routes = [
     path: ':id/usuarios',
     canActivate: [clienteScopeGuard],
     loadComponent: () => import('./cliente-usuarios/cliente-usuarios.component').then((m) => m.ClienteUsuariosComponent),
+  },
+  {
+    path: ':id/usuarios/:usuarioId',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./cliente-usuarios/cliente-usuario-detail/cliente-usuario-detail.component').then((m) => m.ClienteUsuarioDetailComponent),
   },
 ];

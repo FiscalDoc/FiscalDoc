@@ -25,5 +25,10 @@ public record PedidoDto(
     string? Observacoes,
     decimal ValorTotal,
     DateTime CreatedAt,
-    List<PedidoItemDto> Itens
+    List<PedidoItemDto> Itens,
+    string NaturezaOperacao,
+    DateTime? DataSaida,
+    string? FormaPagamento,
+    string? MeioPagamento,
+    string? InformacoesComplementares
 );

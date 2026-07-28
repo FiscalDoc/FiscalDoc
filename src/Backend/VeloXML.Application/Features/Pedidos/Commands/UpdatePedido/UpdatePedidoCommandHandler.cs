@@ -40,6 +40,11 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePe
 
         pedido.DestinatarioId = request.DestinatarioId;
         pedido.Observacoes = request.Observacoes;
+        pedido.NaturezaOperacao = request.NaturezaOperacao;
+        pedido.DataSaida = request.DataSaida;
+        pedido.FormaPagamento = request.FormaPagamento;
+        pedido.MeioPagamento = request.MeioPagamento;
+        pedido.InformacoesComplementares = request.InformacoesComplementares;
         pedido.Itens.Clear();
 
         var novosItens = request.Itens.Select(i =>

@@ -33,7 +33,7 @@ public sealed class GetUsuariosQueryHandler(IApplicationDbContext db)
                 u.Id, u.Nome, u.Email, u.Perfil.ToString(), u.Ativo,
                 u.ContadorId, u.Contador != null ? u.Contador.Nome : null,
                 u.ClienteId, null,
-                u.TwoFactorHabilitado, u.CreatedAt))
+                u.TwoFactorHabilitado, u.CreatedAt, u.UltimoAcessoEm))
             .ToListAsync(ct);
 
         return Result.Success(PagedResult<UsuarioDto>.Create(items, total, request.Page, request.PageSize));

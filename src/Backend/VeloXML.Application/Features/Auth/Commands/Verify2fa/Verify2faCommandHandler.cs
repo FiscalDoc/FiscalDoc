@@ -46,6 +46,10 @@ public sealed class Verify2faCommandHandler(
         };
 
         await uow.Tokens.AddAsync(refreshToken, ct);
+
+        user.UltimoAcessoEm = DateTime.UtcNow;
+        uow.Users.Update(user);
+
         await uow.SaveChangesAsync(ct);
 
         var tenant = await db.Tenants.IgnoreQueryFilters()

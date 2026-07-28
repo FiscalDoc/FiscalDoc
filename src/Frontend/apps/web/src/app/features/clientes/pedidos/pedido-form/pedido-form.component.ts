@@ -18,15 +18,24 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
           </svg>
           Pedidos
         </button>
-        <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Editar Pedido' }}</h2>
+        <div class="header-top">
+          <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido' }}</h2>
+          @if (!isNew()) {
+            <button class="btn-ghost" (click)="imprimir()">Imprimir</button>
+          }
+        </div>
       </div>
+
+      @if (readonly()) {
+        <div class="alert-info">Este pedido está com status "{{ pedidoStatus() }}" e não pode mais ser editado.</div>
+      }
 
       <div class="card section">
         <h4 class="section-title">Destinatário</h4>
         <div class="form-grid">
           <div class="field col-2">
             <label class="label">Destinatário *</label>
-            <select class="input" [(ngModel)]="form.destinatarioId">
+            <select class="input" [disabled]="readonly()" [(ngModel)]="form.destinatarioId">
               <option value="">Selecione...</option>
               @for (d of destinatarios(); track d.id) {
                 <option [value]="d.id">{{ d.razaoSocial }}{{ d.nomeFantasia ? ' — ' + d.nomeFantasia : '' }}</option>
@@ -34,8 +43,45 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
             </select>
           </div>
           <div class="field col-2">
-            <label class="label">Observações</label>
-            <textarea class="input" [(ngModel)]="form.observacoes" rows="2" placeholder="Opcional"></textarea>
+            <label class="label">Observações (uso interno)</label>
+            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.observacoes" rows="2" placeholder="Opcional"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card section">
+        <h4 class="section-title">Dados Fiscais</h4>
+        <div class="form-grid">
+          <div class="field col-2">
+            <label class="label">Natureza da Operação *</label>
+            <input class="input" [disabled]="readonly()" [(ngModel)]="form.naturezaOperacao" placeholder="Venda de mercadoria"/>
+          </div>
+          <div class="field">
+            <label class="label">Data de Saída prevista</label>
+            <input class="input" type="date" [disabled]="readonly()" [(ngModel)]="form.dataSaida"/>
+          </div>
+          <div class="field">
+            <label class="label">Forma de Pagamento</label>
+            <select class="input" [disabled]="readonly()" [(ngModel)]="form.formaPagamento">
+              <option value="">Não informado</option>
+              <option value="AVista">À vista</option>
+              <option value="APrazo">A prazo</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label">Meio de Pagamento</label>
+            <select class="input" [disabled]="readonly()" [(ngModel)]="form.meioPagamento">
+              <option value="">Não informado</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartao">Cartão</option>
+              <option value="Pix">PIX</option>
+              <option value="Boleto">Boleto</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div class="field col-2">
+            <label class="label">Informações Complementares</label>
+            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.informacoesComplementares" rows="2" placeholder="Texto que vai para a nota fiscal (opcional)"></textarea>
           </div>
         </div>
       </div>
@@ -43,7 +89,9 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
       <div class="card section">
         <div class="list-header">
           <h4 class="section-title">Itens</h4>
-          <button class="btn-ghost-sm" (click)="adicionarItem()">+ Adicionar item</button>
+          @if (!readonly()) {
+            <button class="btn-ghost-sm" (click)="adicionarItem()">+ Adicionar item</button>
+          }
         </div>
 
         @if (itens().length === 0) {
@@ -51,24 +99,26 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
         } @else {
           <table class="table">
             <thead>
-              <tr><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Desconto</th><th>Total</th><th></th></tr>
+              <tr><th>Produto</th><th>Qtd</th><th>Preço Unit.</th><th>Desconto</th><th>Total</th>@if (!readonly()) { <th></th> }</tr>
             </thead>
             <tbody>
               @for (item of itens(); track $index; let i = $index) {
                 <tr>
                   <td>
-                    <select class="input-sm" [class.error]="rowErrors().has(i)" [(ngModel)]="item.produtoId" (change)="preencherProduto(i)">
+                    <select class="input-sm" [class.error]="rowErrors().has(i)" [disabled]="readonly()" [(ngModel)]="item.produtoId" (change)="preencherProduto(i)">
                       <option value="">Selecione...</option>
                       @for (p of produtos(); track p.id) {
                         <option [value]="p.id">{{ p.codigo }} — {{ p.descricao }}</option>
                       }
                     </select>
                   </td>
-                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
-                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
-                  <td><input class="input-sm num" type="number" [(ngModel)]="item.desconto" (input)="calcTotal(i)" min="0" step="0.01"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
+                  <td><input class="input-sm num" [disabled]="readonly()" type="number" [(ngModel)]="item.desconto" (input)="calcTotal(i)" min="0" step="0.01"/></td>
                   <td class="total-cell">{{ itemTotal(item) | currency:'BRL':'symbol':'1.2-2' }}</td>
-                  <td><button class="row-btn danger" (click)="removerItem(i)">✕</button></td>
+                  @if (!readonly()) {
+                    <td><button class="row-btn danger" (click)="removerItem(i)">✕</button></td>
+                  }
                 </tr>
               }
             </tbody>
@@ -85,26 +135,21 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
       @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
 
       <div class="form-actions">
-        <button class="btn-ghost" (click)="goBack()">Cancelar</button>
-        <div class="actions-right">
-          <button class="btn-nfe" disabled title="Em breve">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            Gerar NF-e
-          </button>
+        <button class="btn-ghost" (click)="goBack()">{{ readonly() ? 'Voltar' : 'Cancelar' }}</button>
+        @if (!readonly()) {
           <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
             {{ salvando() ? 'Salvando...' : 'Salvar Pedido' }}
           </button>
-        </div>
+        }
       </div>
     </div>
   `,
   styles: [`
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
-    .page-header { display: flex; flex-direction: column; gap: .25rem; }
-    .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; }
+    .page-header { display: flex; flex-direction: column; gap: .5rem; }
+    .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
+    .header-top { display: flex; align-items: center; justify-content: space-between; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -116,8 +161,10 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
     .input, textarea.input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
     .input:focus, textarea.input:focus { border-color: var(--accent); }
+    .input:disabled, textarea.input:disabled { opacity: .6; cursor: not-allowed; }
     .input-sm { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 8px; font-size: 12.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
     .input-sm:focus { border-color: var(--accent); }
+    .input-sm:disabled { opacity: .6; cursor: not-allowed; }
     .input-sm.num { text-align: right; }
     .input-sm.error, select.input-sm.error { border-color: var(--red); }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 1.5rem; }
@@ -132,8 +179,8 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .row-btn { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
     .row-btn.danger:hover { color: var(--red); border-color: var(--red); }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .form-actions { display: flex; align-items: center; justify-content: space-between; }
-    .actions-right { display: flex; align-items: center; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -141,11 +188,6 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
     .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
     .btn-ghost-sm:hover { color: var(--accent); border-color: var(--accent); }
-    .btn-nfe {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--bg3); border: 1px dashed var(--border); color: var(--text2);
-      border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: not-allowed; opacity: .5;
-    }
   `],
 })
 export class PedidoFormComponent implements OnInit {
@@ -163,11 +205,14 @@ export class PedidoFormComponent implements OnInit {
   readonly erro     = signal<string | null>(null);
   readonly produtos       = signal<ProdutoDto[]>([]);
   readonly destinatarios  = signal<DestinatarioDto[]>([]);
+  readonly pedidoStatus   = signal<string>('Rascunho');
+
+  readonly readonly = computed(() => !this.isNew() && this.pedidoStatus() !== 'Rascunho');
 
   itens = signal<PedidoItemInput[]>([]);
   readonly rowErrors = signal<Set<number>>(new Set());
 
-  form = { destinatarioId: '', observacoes: '' };
+  form = this._emptyForm();
 
   readonly valorTotal = computed(() =>
     this.itens().reduce((sum, i) => sum + this.itemTotal(i), 0)
@@ -188,8 +233,22 @@ export class PedidoFormComponent implements OnInit {
     }
   }
 
+  private _emptyForm() {
+    return {
+      destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria',
+      dataSaida: '', formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
+    };
+  }
+
   private _carregarPedido(p: PedidoDto): void {
-    this.form = { destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '' };
+    this.pedidoStatus.set(p.status);
+    this.form = {
+      destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '',
+      naturezaOperacao: p.naturezaOperacao || 'Venda de mercadoria',
+      dataSaida: p.dataSaida ? p.dataSaida.slice(0, 10) : '',
+      formaPagamento: p.formaPagamento ?? '', meioPagamento: p.meioPagamento ?? '',
+      informacoesComplementares: p.informacoesComplementares ?? '',
+    };
     this.itens.set(p.itens.map(i => ({
       produtoId: i.produtoId,
       descricao: i.descricao,
@@ -206,6 +265,10 @@ export class PedidoFormComponent implements OnInit {
   }
 
   goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos']); }
+
+  imprimir(): void {
+    window.open(`/imprimir/pedidos/${this.clienteId}/${this.pedidoId}`, '_blank');
+  }
 
   adicionarItem(): void {
     this.itens.update(l => [...l, {
@@ -266,11 +329,20 @@ export class PedidoFormComponent implements OnInit {
   salvar(): void {
     if (this.salvando()) return;
     if (!this.form.destinatarioId) { this.erro.set('Selecione um destinatário.'); return; }
+    if (!this.form.naturezaOperacao.trim()) { this.erro.set('Informe a natureza da operação.'); return; }
     if (this.itens().length === 0) { this.erro.set('Adicione pelo menos um item.'); return; }
     if (!this._validarItens()) return;
 
     this.salvando.set(true);
     this.erro.set(null);
+
+    const camposFiscais = {
+      naturezaOperacao: this.form.naturezaOperacao,
+      dataSaida: this.form.dataSaida || undefined,
+      formaPagamento: (this.form.formaPagamento || undefined) as CreatePedidoRequest['formaPagamento'],
+      meioPagamento: (this.form.meioPagamento || undefined) as CreatePedidoRequest['meioPagamento'],
+      informacoesComplementares: this.form.informacoesComplementares || undefined,
+    };
 
     if (this.isNew()) {
       const req: CreatePedidoRequest = {
@@ -278,6 +350,7 @@ export class PedidoFormComponent implements OnInit {
         destinatarioId: this.form.destinatarioId,
         observacoes: this.form.observacoes || undefined,
         itens: this.itens(),
+        ...camposFiscais,
       };
       this._pedidoSvc.create(req).subscribe({
         next: () => { this.salvando.set(false); this.goBack(); },
@@ -289,6 +362,7 @@ export class PedidoFormComponent implements OnInit {
         destinatarioId: this.form.destinatarioId,
         observacoes: this.form.observacoes || undefined,
         itens: this.itens(),
+        ...camposFiscais,
       }).subscribe({
         next: () => { this.salvando.set(false); this.goBack(); },
         error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },

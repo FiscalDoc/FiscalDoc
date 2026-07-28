@@ -54,7 +54,7 @@ import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
         <div class="form-row">
           <div class="field">
             <label class="label">E-mail remetente *</label>
-            <input class="input" type="email" formControlName="from" placeholder="noreply@suaempresa.com.br" />
+            <input class="input" type="email" formControlName="from" placeholder="noreply@suaempresa.com.br" autocomplete="off" />
             @if (f['from'].touched && f['from'].errors?.['email']) {
               <span class="field-error">E-mail inválido</span>
             }
@@ -72,14 +72,14 @@ import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
           </div>
           <div class="field">
             <label class="label">Senha SMTP</label>
-            <input class="input" type="password" formControlName="password" placeholder="Deixe em branco para não alterar" />
+            <input class="input" type="password" formControlName="password" placeholder="Deixe em branco para não alterar" autocomplete="new-password" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="field">
             <label class="label">Reply-To</label>
-            <input class="input" type="email" formControlName="replyTo" placeholder="suporte@suaempresa.com.br" />
+            <input class="input" type="email" formControlName="replyTo" placeholder="suporte@suaempresa.com.br" autocomplete="off" />
           </div>
           <div class="field field-center">
             <label class="label">Segurança</label>

@@ -23,6 +23,10 @@ export class ClienteUsuarioService {
     return this._api.get<PagedResult<UsuarioDto>>(`/clientes/${clienteId}/usuarios`, params as Record<string, unknown>);
   }
 
+  getById(clienteId: string, id: string): Observable<UsuarioDto> {
+    return this._api.get<UsuarioDto>(`/clientes/${clienteId}/usuarios/${id}`);
+  }
+
   create(clienteId: string, req: CreateClienteUsuarioRequest): Observable<UsuarioDto> {
     return this._api.post<UsuarioDto>(`/clientes/${clienteId}/usuarios`, req);
   }

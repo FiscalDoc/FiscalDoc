@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, landingDomainGuard } from '@veloxml/guards';
+import { authGuard, clienteScopeGuard, landingDomainGuard } from '@veloxml/guards';
 
 export const routes: Routes = [
   {
@@ -12,6 +12,12 @@ export const routes: Routes = [
   {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
+  {
+    path: 'imprimir/pedidos/:id/:pedidoId',
+    canActivate: [authGuard, clienteScopeGuard],
+    loadComponent: () =>
+      import('./features/clientes/pedidos/pedido-imprimir/pedido-imprimir.component').then((m) => m.PedidoImprimirComponent),
   },
   {
     path: '',
@@ -56,8 +62,8 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
-        loadComponent: () =>
-          import('./features/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
+        loadChildren: () =>
+          import('./features/usuarios/usuarios.routes').then((m) => m.USUARIOS_ROUTES),
       },
       {
         path: 'configuracoes',

@@ -56,6 +56,11 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
             Observacoes = request.Observacoes,
             ValorTotal = itens.Sum(i => i.ValorTotal),
             Itens = itens,
+            NaturezaOperacao = request.NaturezaOperacao,
+            DataSaida = request.DataSaida,
+            FormaPagamento = request.FormaPagamento,
+            MeioPagamento = request.MeioPagamento,
+            InformacoesComplementares = request.InformacoesComplementares,
         };
 
         await uow.Pedidos.AddAsync(pedido, ct);
@@ -74,5 +79,6 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
             i.Id, i.ProdutoId, i.Descricao, i.Unidade,
             i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
             i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
-        )).ToList());
+        )).ToList(),
+        p.NaturezaOperacao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares);
 }

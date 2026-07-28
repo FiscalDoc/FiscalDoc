@@ -21,5 +21,10 @@ public record CreatePedidoCommand(
     Guid ClienteId,
     Guid DestinatarioId,
     string? Observacoes,
-    List<CreatePedidoItemInput> Itens
+    List<CreatePedidoItemInput> Itens,
+    string NaturezaOperacao,
+    DateTime? DataSaida,
+    string? FormaPagamento,
+    string? MeioPagamento,
+    string? InformacoesComplementares
 ) : IRequest<Result<PedidoDto>>;

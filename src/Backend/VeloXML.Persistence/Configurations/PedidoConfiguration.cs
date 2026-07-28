@@ -24,6 +24,12 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
         b.Property(e => e.Observacoes).HasColumnName("observacoes");
         b.Property(e => e.ValorTotal).HasColumnName("valor_total").HasPrecision(18, 2);
 
+        b.Property(e => e.NaturezaOperacao).HasColumnName("natureza_operacao").HasMaxLength(60).IsRequired().HasDefaultValue("Venda de mercadoria");
+        b.Property(e => e.DataSaida).HasColumnName("data_saida");
+        b.Property(e => e.FormaPagamento).HasColumnName("forma_pagamento").HasMaxLength(20);
+        b.Property(e => e.MeioPagamento).HasColumnName("meio_pagamento").HasMaxLength(20);
+        b.Property(e => e.InformacoesComplementares).HasColumnName("informacoes_complementares");
+
         b.HasOne(e => e.Destinatario).WithMany().HasForeignKey(e => e.DestinatarioId).OnDelete(DeleteBehavior.Restrict);
         b.HasMany(e => e.Itens).WithOne(i => i.Pedido).HasForeignKey(i => i.PedidoId).OnDelete(DeleteBehavior.Cascade);
 

@@ -526,6 +526,13 @@ export class ShellComponent implements OnInit {
       const id = user.clienteId;
       base.push(
         {
+          label: 'Minha Empresa',
+          route: `/clientes/${id}/empresa`,
+          icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4m-4 6h.01M9 15h.01M9 18h.01"/>
+          </svg>`,
+        },
+        {
           label: 'Cadastros',
           route: `/clientes/${id}/cadastros`,
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
