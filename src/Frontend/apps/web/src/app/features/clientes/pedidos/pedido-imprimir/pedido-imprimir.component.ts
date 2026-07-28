@@ -32,7 +32,7 @@ const MEIO_PAGAMENTO_LABEL: Record<string, string> = { Dinheiro: 'Dinheiro', Car
           </div>
           <div class="doc-info">
             <div class="doc-title">Pedido</div>
-            <div class="doc-num">#{{ pedido()!.id.slice(0, 8) }}</div>
+            <div class="doc-num">#{{ pedido()!.numero }}</div>
             <div class="sub">{{ pedido()!.createdAt | date:'dd/MM/yyyy' }}</div>
             <div class="status">{{ pedido()!.status }}</div>
           </div>

@@ -72,7 +72,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
     }
 
     internal static PedidoDto ToDto(Pedido p) => new(
-        p.Id, p.ClienteId, p.DestinatarioId,
+        p.Id, p.Numero, p.ClienteId, p.DestinatarioId,
         p.Destinatario?.RazaoSocial ?? string.Empty,
         p.Status, p.Observacoes, p.ValorTotal, p.CreatedAt,
         p.Itens.Select(i => new PedidoItemDto(

@@ -40,21 +40,17 @@ import { PedidoDto } from '@veloxml/models';
         } @else {
           <table class="table">
             <thead>
-              <tr><th>#</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th><th></th></tr>
+              <tr><th>Nº</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th></tr>
             </thead>
             <tbody>
               @for (p of pedidos(); track p.id) {
                 <tr class="row-link" (click)="abrirPedido(p)">
-                  <td class="mono">{{ p.id.slice(0, 8) }}...</td>
+                  <td class="mono">#{{ p.numero }}</td>
                   <td>{{ p.destinatarioNome }}</td>
                   <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
                   <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td>
                     <span class="badge" [class]="statusClass(p.status)">{{ p.status }}</span>
-                  </td>
-                  <td class="actions-cell">
-                    <button class="row-btn" (click)="$event.stopPropagation(); imprimirPedido(p)">Imprimir</button>
-                    <button class="row-btn danger" (click)="$event.stopPropagation(); cancelarPedido(p)" [disabled]="p.status === 'Cancelado'">Cancelar</button>
                   </td>
                 </tr>
               }
@@ -89,13 +85,8 @@ import { PedidoDto } from '@veloxml/models';
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
-    .row-btn { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; margin-right: 4px; }
-    .row-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
-    .row-btn.danger:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
-    .row-btn:disabled { opacity: .4; cursor: not-allowed; }
     .row-link { cursor: pointer; }
     .row-link:hover td { background: rgba(255,255,255,.02); }
-    .actions-cell { white-space: nowrap; }
   `],
 })
 export class PedidosComponent implements OnInit {
@@ -119,10 +110,6 @@ export class PedidosComponent implements OnInit {
 
   abrirPedido(p: PedidoDto): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos', p.id]); }
 
-  imprimirPedido(p: PedidoDto): void {
-    window.open(`/imprimir/pedidos/${this.clienteId}/${p.id}`, '_blank');
-  }
-
   filtrar(status: string | null): void {
     this.statusFiltro.set(status);
     this.carregar();
@@ -134,11 +121,6 @@ export class PedidosComponent implements OnInit {
       next: r => { this.pedidos.set(r.items as PedidoDto[]); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
-  }
-
-  cancelarPedido(p: PedidoDto): void {
-    if (!confirm(`Cancelar pedido de "${p.destinatarioNome}"?`)) return;
-    this._svc.cancelar(this.clienteId, p.id).subscribe({ next: () => this.carregar() });
   }
 
   statusClass(status: string): string {

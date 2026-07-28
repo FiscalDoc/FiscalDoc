@@ -6,6 +6,7 @@ public class Pedido : BaseEntity, IAuditableEntity
 {
     public Guid ClienteId { get; set; }
     public Guid DestinatarioId { get; set; }
+    public int Numero { get; set; }
     public string Status { get; set; } = "Rascunho"; // Rascunho, Emitido, Cancelado
     public string? Observacoes { get; set; }
     public decimal ValorTotal { get; set; }

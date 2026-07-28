@@ -19,6 +19,7 @@ export type MeioPagamento = 'Dinheiro' | 'Cartao' | 'Pix' | 'Boleto' | 'Outros';
 
 export interface PedidoDto {
   id: string;
+  numero: number;
   clienteId: string;
   destinatarioId: string;
   destinatarioNome: string;

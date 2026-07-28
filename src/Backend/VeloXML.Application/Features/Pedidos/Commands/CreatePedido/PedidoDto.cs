@@ -18,6 +18,7 @@ public record PedidoItemDto(
 
 public record PedidoDto(
     Guid Id,
+    int Numero,
     Guid ClienteId,
     Guid DestinatarioId,
     string DestinatarioNome,

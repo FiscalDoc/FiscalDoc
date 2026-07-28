@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Pedidos.Commands.CancelarPedido;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
+using VeloXML.Application.Features.Pedidos.Commands.EmitirPedido;
 using VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoById;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
@@ -51,5 +52,12 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new CancelarPedidoCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/emitir")]
+    public async Task<IActionResult> Emitir(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new EmitirPedidoCommand(id, clienteId), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 }

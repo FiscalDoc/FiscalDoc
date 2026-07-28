@@ -19,9 +19,26 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
           Pedidos
         </button>
         <div class="header-top">
-          <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido' }}</h2>
+          <div class="title-row">
+            <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido #' + numero() }}</h2>
+            @if (!isNew()) {
+              <span class="badge" [class]="statusClass()">{{ pedidoStatus() }}</span>
+            }
+          </div>
           @if (!isNew()) {
-            <button class="btn-ghost" (click)="imprimir()">Imprimir</button>
+            <div class="header-actions">
+              <button class="btn-ghost" (click)="imprimir()">Imprimir</button>
+              @if (pedidoStatus() === 'Rascunho') {
+                <button class="btn-ghost" [disabled]="emitindo()" (click)="emitir()">
+                  {{ emitindo() ? 'Emitindo...' : 'Emitir Pedido' }}
+                </button>
+              }
+              @if (pedidoStatus() !== 'Cancelado') {
+                <button class="btn-ghost danger" [disabled]="cancelando()" (click)="cancelar()">
+                  {{ cancelando() ? 'Cancelando...' : 'Cancelar Pedido' }}
+                </button>
+              }
+            </div>
           }
         </div>
       </div>
@@ -149,8 +166,17 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
-    .header-top { display: flex; align-items: center; justify-content: space-between; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+    .title-row { display: flex; align-items: center; gap: .75rem; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .header-actions { display: flex; align-items: center; gap: .5rem; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
+    .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
+    .btn-ghost.danger { color: var(--red); border-color: rgba(255,77,109,.35); }
+    .btn-ghost.danger:hover:not(:disabled) { background: rgba(255,77,109,.1); border-color: var(--red); }
+    .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .section-title { margin: 0; font-size: .95rem; font-weight: 600; color: var(--text); }
@@ -206,6 +232,9 @@ export class PedidoFormComponent implements OnInit {
   readonly produtos       = signal<ProdutoDto[]>([]);
   readonly destinatarios  = signal<DestinatarioDto[]>([]);
   readonly pedidoStatus   = signal<string>('Rascunho');
+  readonly numero         = signal<number | null>(null);
+  readonly emitindo       = signal(false);
+  readonly cancelando     = signal(false);
 
   readonly readonly = computed(() => !this.isNew() && this.pedidoStatus() !== 'Rascunho');
 
@@ -242,6 +271,7 @@ export class PedidoFormComponent implements OnInit {
 
   private _carregarPedido(p: PedidoDto): void {
     this.pedidoStatus.set(p.status);
+    this.numero.set(p.numero);
     this.form = {
       destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '',
       naturezaOperacao: p.naturezaOperacao || 'Venda de mercadoria',
@@ -268,6 +298,36 @@ export class PedidoFormComponent implements OnInit {
 
   imprimir(): void {
     window.open(`/imprimir/pedidos/${this.clienteId}/${this.pedidoId}`, '_blank');
+  }
+
+  emitir(): void {
+    if (this.emitindo()) return;
+    if (!confirm(`Emitir o pedido #${this.numero()}? Depois de emitido ele não poderá mais ser editado.`)) return;
+    this.emitindo.set(true);
+    this.erro.set(null);
+    this._pedidoSvc.emitir(this.clienteId, this.pedidoId).subscribe({
+      next: p => { this.emitindo.set(false); this._carregarPedido(p); },
+      error: err => { this.emitindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao emitir pedido.')); },
+    });
+  }
+
+  cancelar(): void {
+    if (this.cancelando()) return;
+    if (!confirm(`Cancelar o pedido #${this.numero()}? Esta ação não pode ser desfeita.`)) return;
+    this.cancelando.set(true);
+    this.erro.set(null);
+    this._pedidoSvc.cancelar(this.clienteId, this.pedidoId).subscribe({
+      next: () => { this.cancelando.set(false); this.pedidoStatus.set('Cancelado'); },
+      error: err => { this.cancelando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao cancelar pedido.')); },
+    });
+  }
+
+  statusClass(): string {
+    return {
+      Rascunho: 'badge badge-rascunho',
+      Emitido: 'badge badge-emitido',
+      Cancelado: 'badge badge-cancelado',
+    }[this.pedidoStatus()] ?? 'badge';
   }
 
   adicionarItem(): void {
@@ -299,7 +359,12 @@ export class PedidoFormComponent implements OnInit {
     }));
   }
 
-  calcTotal(_i: number): void { /* triggers computed */ }
+  calcTotal(_i: number): void {
+    // ngModel muta o objeto do item diretamente (não passa por itens.set()),
+    // então o signal "itens" nunca emite mudança sozinho. Recriar o array
+    // força o computed valorTotal (e o total por linha) a recalcular na hora.
+    this.itens.update(l => [...l]);
+  }
 
   itemTotal(item: PedidoItemInput): number {
     return Math.max(0, (+item.quantidade * +item.precoUnitario) - +item.desconto);

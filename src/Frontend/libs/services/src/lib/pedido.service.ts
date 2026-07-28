@@ -27,4 +27,8 @@ export class PedidoService {
   cancelar(clienteId: string, id: string): Observable<void> {
     return this._api.post<void>(`/clientes/${clienteId}/pedidos/${id}/cancelar`, {});
   }
+
+  emitir(clienteId: string, id: string): Observable<PedidoDto> {
+    return this._api.post<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}/emitir`, {});
+  }
 }

@@ -20,6 +20,7 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
 
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.DestinatarioId).HasColumnName("destinatario_id");
+        b.Property(e => e.Numero).HasColumnName("numero").UseSequence("pedidos_numero_seq").ValueGeneratedOnAdd();
         b.Property(e => e.Status).HasColumnName("status").HasMaxLength(20);
         b.Property(e => e.Observacoes).HasColumnName("observacoes");
         b.Property(e => e.ValorTotal).HasColumnName("valor_total").HasPrecision(18, 2);
@@ -35,5 +36,6 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
 
         b.HasIndex(e => e.ClienteId).HasDatabaseName("ix_pedidos_cliente_id");
         b.HasIndex(e => e.TenantId).HasDatabaseName("ix_pedidos_tenant_id");
+        b.HasIndex(e => e.Numero).HasDatabaseName("ix_pedidos_numero");
     }
 }
