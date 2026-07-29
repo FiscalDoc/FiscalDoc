@@ -31,6 +31,17 @@ export interface SendConviteRequest {
   email: string;
 }
 
+export interface TestSmtpConfigRequest {
+  host: string;
+  port: number;
+  from: string;
+  fromName: string;
+  username?: string;
+  password?: string;
+  enableSsl: boolean;
+  emailDestino: string;
+}
+
 export interface ImportacaoXmlStatusDto {
   executadoEm: string;
   clientesProcessados: number;

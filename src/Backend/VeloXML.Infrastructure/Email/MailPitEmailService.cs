@@ -40,6 +40,31 @@ public sealed class MailPitEmailService(IOptions<EmailOptions> opts, IUnitOfWork
         await client.SendMailAsync(msg, ct);
     }
 
+    public async Task TestSmtpAsync(
+        string host, int port, string from, string fromName,
+        string? username, string? password, bool enableSsl,
+        string destinatario, CancellationToken ct = default)
+    {
+        using var client = new SmtpClient(host, port)
+        {
+            EnableSsl   = enableSsl,
+            Credentials = string.IsNullOrWhiteSpace(username) ? null : new NetworkCredential(username, password),
+            Timeout     = 15000,
+        };
+
+        using var msg = new MailMessage
+        {
+            From            = new MailAddress(from, fromName),
+            Subject         = "FiscalDoc — Teste de configuração de SMTP",
+            Body            = "Se você recebeu este e-mail, a configuração de SMTP do FiscalDoc está funcionando corretamente.",
+            SubjectEncoding = System.Text.Encoding.UTF8,
+            BodyEncoding    = System.Text.Encoding.UTF8,
+        };
+        msg.To.Add(destinatario);
+
+        await client.SendMailAsync(msg, ct);
+    }
+
     private async Task<(string host, int port, string from, string fromName, string? username, string? password, bool enableSsl)>
         ResolveSmtpAsync(CancellationToken ct)
     {

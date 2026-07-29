@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSocialConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SendConvite;
+using VeloXML.Application.Features.Configuracoes.Commands.TestSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSocialConfig;
@@ -27,6 +28,13 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(command, ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("smtp/test")]
+    public async Task<IActionResult> TestSmtp([FromBody] TestSmtpConfigCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpGet("social")]

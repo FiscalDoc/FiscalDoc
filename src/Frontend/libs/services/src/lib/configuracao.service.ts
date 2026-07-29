@@ -7,6 +7,7 @@ import {
   SendConviteRequest,
   SmtpConfigDto,
   SocialConfigDto,
+  TestSmtpConfigRequest,
 } from '../../../models/src/index';
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +20,10 @@ export class ConfiguracaoService {
 
   saveSmtp(req: SaveSmtpConfigRequest): Observable<SmtpConfigDto> {
     return this._api.put<SmtpConfigDto>('/configuracoes/smtp', req);
+  }
+
+  testSmtp(req: TestSmtpConfigRequest): Observable<void> {
+    return this._api.post<void>('/configuracoes/smtp/test', req);
   }
 
   getSocial(): Observable<SocialConfigDto> {

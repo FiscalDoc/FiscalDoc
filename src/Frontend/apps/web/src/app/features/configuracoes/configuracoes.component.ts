@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
 import { ImportacaoXmlStatusDto } from '@veloxml/models';
 
 type Tab = 'email' | 'social' | 'convite' | 'importacao';
@@ -9,7 +9,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   template: `
 <div class="page">
 
@@ -111,6 +111,19 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
           </div>
 
         </form>
+
+        <div class="test-block">
+          <div class="test-block-title">Testar esta configuração</div>
+          <p class="test-block-sub">Envia um e-mail de teste usando os dados preenchidos acima (não precisa salvar antes) para confirmar que o SMTP está funcionando.</p>
+          <div class="test-row">
+            <input class="input" type="email" [(ngModel)]="testEmailDestino" [ngModelOptions]="{standalone: true}" placeholder="seu-email@exemplo.com.br"/>
+            <button type="button" class="btn-ghost" [disabled]="testingSmtp()" (click)="testSmtp()">
+              {{ testingSmtp() ? 'Enviando...' : 'Enviar Teste' }}
+            </button>
+          </div>
+          @if (smtpTestSuccess()) { <div class="alert-success">{{ checkIcon() }} E-mail de teste enviado! Confira a caixa de entrada (e o spam).</div> }
+          @if (smtpTestError()) { <div class="alert-error">{{ smtpTestError() }}</div> }
+        </div>
       }
     </div>
   }
@@ -277,6 +290,12 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     .page-header h2 { font-size: 1.5rem; margin: 0; }
     .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
 
+    .test-block { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: .625rem; }
+    .test-block-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .test-block-sub { font-size: 12px; color: var(--text2); margin: -4px 0 0; }
+    .test-row { display: flex; gap: .625rem; }
+    .test-row .input { flex: 1; }
+
     .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
     .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
     .tab-btn:hover { color: var(--text); }
@@ -356,8 +375,9 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
   `]
 })
 export class ConfiguracoesComponent implements OnInit {
-  private readonly _svc = inject(ConfiguracaoService);
-  private readonly _fb  = inject(FormBuilder);
+  private readonly _svc  = inject(ConfiguracaoService);
+  private readonly _fb   = inject(FormBuilder);
+  private readonly _auth = inject(AuthService);
 
   readonly tab = signal<Tab>('email');
   checkIcon(): string { return '✓'; }
@@ -367,6 +387,11 @@ export class ConfiguracoesComponent implements OnInit {
   savingSmtp  = signal(false);
   smtpSuccess = signal(false);
   smtpError   = signal<string | null>(null);
+
+  testEmailDestino = '';
+  testingSmtp      = signal(false);
+  smtpTestSuccess  = signal(false);
+  smtpTestError    = signal<string | null>(null);
 
   smtpForm = this._fb.group({
     host:      ['', Validators.required],
@@ -409,6 +434,8 @@ export class ConfiguracoesComponent implements OnInit {
   importacaoStatus  = signal<ImportacaoXmlStatusDto | null>(null);
 
   ngOnInit(): void {
+    this.testEmailDestino = this._auth.currentUser()?.email ?? '';
+
     this.loadingSmtp.set(true);
     this._svc.getSmtp().subscribe({
       next: dto => {
@@ -431,6 +458,34 @@ export class ConfiguracoesComponent implements OnInit {
         this.loadingSocial.set(false);
       },
       error: () => this.loadingSocial.set(false),
+    });
+  }
+
+  testSmtp(): void {
+    if (!this.testEmailDestino) {
+      this.smtpTestError.set('Informe um e-mail de destino para o teste.');
+      return;
+    }
+    this.testingSmtp.set(true);
+    this.smtpTestSuccess.set(false);
+    this.smtpTestError.set(null);
+    const v = this.smtpForm.getRawValue();
+    this._svc.testSmtp({
+      host: v.host || '', port: v.port ?? 587, from: v.from || '', fromName: v.fromName || 'FiscalDoc',
+      username: v.username || undefined,
+      password: v.password || undefined,
+      enableSsl: v.enableSsl ?? false,
+      emailDestino: this.testEmailDestino,
+    }).subscribe({
+      next: () => {
+        this.testingSmtp.set(false);
+        this.smtpTestSuccess.set(true);
+        setTimeout(() => this.smtpTestSuccess.set(false), 6000);
+      },
+      error: err => {
+        this.testingSmtp.set(false);
+        this.smtpTestError.set(extractErrorMessage(err, 'Erro ao enviar e-mail de teste.'));
+      },
     });
   }
 
