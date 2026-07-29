@@ -22,11 +22,6 @@ public sealed class MarcarCobrancaPagaCommandHandler(IUnitOfWork uow)
         uow.Cobrancas.Update(cobranca);
         await uow.SaveChangesAsync(ct);
 
-        return Result.Success(new CobrancaDto(
-            cobranca.Id, cobranca.ContadorId, cobranca.Mes, cobranca.Ano,
-            cobranca.TotalClientes, cobranca.ValorPorCliente, cobranca.ValorBase,
-            cobranca.LimiteXmlTotal, cobranca.XmlsProcessados, cobranca.XmlsExcedentes,
-            cobranca.ValorExcedente, cobranca.ValorTotal,
-            cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao));
+        return Result.Success(CobrancaDtoMapper.ToDto(cobranca));
     }
 }

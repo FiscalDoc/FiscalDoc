@@ -80,6 +80,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/admin/blog/blog-admin.routes').then((m) => m.BLOG_ADMIN_ROUTES),
       },
+      {
+        path: 'cobrancas',
+        loadComponent: () =>
+          import('./features/cobrancas/cobrancas.component').then((m) => m.CobrancasComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '/dashboard' },

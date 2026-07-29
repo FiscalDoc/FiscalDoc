@@ -11,13 +11,7 @@ public sealed class GetHistoricoCobrancasQueryHandler(IUnitOfWork uow)
     public async Task<Result<IReadOnlyList<CobrancaDto>>> Handle(GetHistoricoCobrancasQuery request, CancellationToken ct)
     {
         var list = await uow.Cobrancas.GetByContadorAsync(request.ContadorId, ct);
-        var result = list.Select(c => new CobrancaDto(
-            c.Id, c.ContadorId, c.Mes, c.Ano,
-            c.TotalClientes, c.ValorPorCliente, c.ValorBase,
-            c.LimiteXmlTotal, c.XmlsProcessados, c.XmlsExcedentes,
-            c.ValorExcedente, c.ValorTotal,
-            c.Status.ToString(), c.DataVencimento, c.DataPagamento, c.Observacao))
-            .ToList();
+        var result = list.Select(CobrancaDtoMapper.ToDto).ToList();
         return Result.Success<IReadOnlyList<CobrancaDto>>(result);
     }
 }

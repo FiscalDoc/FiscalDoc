@@ -190,51 +190,22 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     <section class="plans" id="plans">
       <div class="container">
         <div class="section-label">Planos</div>
-        <h2 class="section-title">Preço justo para cada tamanho</h2>
-        <p class="section-sub">Sem taxa de setup, sem fidelidade. Comece pequeno e escale quando precisar.</p>
+        <h2 class="section-title">Um plano sob medida para o seu escritório</h2>
+        <p class="section-sub">Sem taxa de setup, sem fidelidade. O valor é definido de acordo com o volume de clientes e XMLs — sem pacotes engessados.</p>
 
-        <div class="plans-grid">
-          <div class="plan-card">
-            <div class="plan-name">Starter</div>
-            <div class="plan-price">R$ 99<span>/mês por cliente</span></div>
-            <ul class="plan-features">
-              <li><span class="check">✓</span> Até 100 XMLs/mês por cliente</li>
-              <li><span class="check">✓</span> NF-e, CT-e, MDF-e, NFS-e</li>
-              <li><span class="check">✓</span> Alertas automáticos</li>
-              <li><span class="check">✓</span> Download individual</li>
-              <li><span class="check">✓</span> Suporte via e-mail</li>
-            </ul>
-            <a [href]="wpp" target="_blank" class="btn btn-outline btn-full">Contratar</a>
-          </div>
-
-          <div class="plan-card plan-featured">
-            <div class="plan-badge">Mais popular</div>
-            <div class="plan-name">Professional</div>
-            <div class="plan-price">R$ 149<span>/mês por cliente</span></div>
-            <ul class="plan-features">
-              <li><span class="check">✓</span> Até 200 XMLs/mês por cliente</li>
-              <li><span class="check">✓</span> Tudo do Starter</li>
-              <li><span class="check">✓</span> Download em lote por mês</li>
-              <li><span class="check">✓</span> Logs de auditoria</li>
-              <li><span class="check">✓</span> Suporte prioritário WhatsApp</li>
-            </ul>
-            <a [href]="wpp" target="_blank" class="btn btn-primary btn-full">Contratar</a>
-          </div>
-
-          <div class="plan-card">
-            <div class="plan-name">Enterprise</div>
-            <div class="plan-price">R$ 249<span>/mês por cliente</span></div>
-            <ul class="plan-features">
-              <li><span class="check">✓</span> Até 500 XMLs/mês por cliente</li>
-              <li><span class="check">✓</span> Tudo do Professional</li>
-              <li><span class="check">✓</span> API dedicada</li>
-              <li><span class="check">✓</span> Relatórios personalizados</li>
-              <li><span class="check">✓</span> Gerente de conta exclusivo</li>
-            </ul>
-            <a [href]="wpp" target="_blank" class="btn btn-outline btn-full">Contratar</a>
-          </div>
+        <div class="plan-card plan-single">
+          <div class="plan-badge">Fale com a gente</div>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> NF-e, CT-e, MDF-e, NFS-e</li>
+            <li><span class="check">✓</span> Recepção automática de XMLs por API</li>
+            <li><span class="check">✓</span> Alertas automáticos de duplicidade e inconsistência</li>
+            <li><span class="check">✓</span> Download individual e em lote</li>
+            <li><span class="check">✓</span> Logs de auditoria completos</li>
+            <li><span class="check">✓</span> Suporte via WhatsApp</li>
+          </ul>
+          <a [href]="wpp" target="_blank" class="btn btn-primary btn-full btn-lg">Solicitar Proposta</a>
         </div>
-        <p class="plans-note">XMLs excedentes cobrados à parte. Sem limite de clientes por plano.</p>
+        <p class="plans-note">30 dias de teste grátis antes de qualquer compromisso.</p>
       </div>
     </section>
 
@@ -581,27 +552,22 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 
     /* ─── PLANS ──────────────────────────────── */
     .plans { padding: 100px 0; background: #13161e; }
-    .plans .section-sub { margin-bottom: 3.5rem; }
-    .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+    .plans .section-sub { margin-bottom: 3.5rem; max-width: 640px; }
     .plan-card {
       background: #0d0f14; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px;
-      padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; position: relative;
+      padding: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; position: relative;
     }
-    .plan-featured {
-      border-color: rgba(0,229,160,0.35); background: linear-gradient(145deg, rgba(0,229,160,0.04), #0d0f14);
-    }
+    .plan-single { max-width: 480px; border-color: rgba(0,229,160,0.35); background: linear-gradient(145deg, rgba(0,229,160,0.04), #0d0f14); }
     .plan-badge {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: #00e5a0; color: #0d0f14; font-size: 11px; font-weight: 800;
-      padding: 4px 14px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.04em;
+      align-self: flex-start;
+      background: rgba(0,229,160,0.12); color: #00e5a0; font-size: 11px; font-weight: 800;
+      padding: 5px 14px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.04em;
+      border: 1px solid rgba(0,229,160,0.25);
     }
-    .plan-name { font-size: 1.1rem; font-weight: 800; color: #e8eaf0; }
-    .plan-price { font-size: 2rem; font-weight: 900; color: #00e5a0; letter-spacing: -0.03em; }
-    .plan-price span { font-size: 13px; font-weight: 500; color: #7c8299; }
-    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; }
     .plan-features li { font-size: 14px; color: #7c8299; display: flex; align-items: center; gap: 8px; }
     .check { color: #00e5a0; font-weight: 700; }
-    .plans-note { text-align: center; font-size: 13px; color: #4a5068; margin-top: 2rem; }
+    .plans-note { text-align: left; max-width: 480px; font-size: 13px; color: #4a5068; margin-top: 1.5rem; }
 
     /* ─── FAQ ────────────────────────────────── */
     .faq { padding: 100px 0; background: #13161e; }

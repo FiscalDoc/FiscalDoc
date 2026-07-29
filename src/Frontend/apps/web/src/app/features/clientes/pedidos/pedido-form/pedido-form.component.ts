@@ -20,26 +20,59 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
         </button>
         <div class="header-top">
           <div class="title-row">
-            <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido #' + numero() }}</h2>
+            <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido ' + numero() }}</h2>
             @if (!isNew()) {
               <span class="badge" [class]="statusClass()">{{ pedidoStatus() }}</span>
             }
           </div>
-          @if (!isNew()) {
-            <div class="header-actions">
-              <button class="btn-ghost" (click)="imprimir()">Imprimir</button>
+          <div class="header-actions">
+            @if (!readonly()) {
+              <button class="icon-btn primary" [disabled]="salvando()" (click)="salvar()" title="Salvar Pedido">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-8H7v8"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v5h8"/>
+                </svg>
+                <span>{{ salvando() ? 'Salvando...' : 'Salvar' }}</span>
+              </button>
+            }
+            @if (!isNew()) {
+              <button class="icon-btn" (click)="imprimir()" title="Imprimir Pedido">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 14h12v8H6z"/>
+                </svg>
+                <span>Imprimir</span>
+              </button>
+              <button class="icon-btn" disabled title="Emissão de Nota Fiscal — em breve">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 13H8M16 17H8M10 9H8"/>
+                </svg>
+                <span>Gerar Nota Fiscal</span>
+              </button>
               @if (pedidoStatus() === 'Rascunho') {
-                <button class="btn-ghost" [disabled]="emitindo()" (click)="emitir()">
-                  {{ emitindo() ? 'Emitindo...' : 'Emitir Pedido' }}
+                <button class="icon-btn" [disabled]="emitindo()" (click)="emitir()" title="Emitir Pedido">
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                  </svg>
+                  <span>{{ emitindo() ? 'Emitindo...' : 'Emitir' }}</span>
                 </button>
               }
               @if (pedidoStatus() !== 'Cancelado') {
-                <button class="btn-ghost danger" [disabled]="cancelando()" (click)="cancelar()">
-                  {{ cancelando() ? 'Cancelando...' : 'Cancelar Pedido' }}
+                <button class="icon-btn danger" [disabled]="cancelando()" (click)="cancelar()" title="Cancelar Pedido">
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6"/>
+                  </svg>
+                  <span>{{ cancelando() ? 'Cancelando...' : 'Cancelar' }}</span>
                 </button>
               }
-            </div>
-          }
+            }
+          </div>
         </div>
       </div>
 
@@ -48,7 +81,7 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
       }
 
       <div class="card section header-section">
-        <h4 class="section-title">Destinatário e Dados Fiscais</h4>
+        <h4 class="section-title">Cabeçalho Pedido/Nota Fiscal</h4>
         <div class="form-grid">
           <div class="field col-2">
             <label class="label">Destinatário *</label>
@@ -147,11 +180,6 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
 
       <div class="form-actions">
         <button class="btn-ghost" (click)="goBack()">{{ readonly() ? 'Voltar' : 'Cancelar' }}</button>
-        @if (!readonly()) {
-          <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-            {{ salvando() ? 'Salvando...' : 'Salvar Pedido' }}
-          </button>
-        }
       </div>
     </div>
   `,
@@ -163,13 +191,18 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .header-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
     .title-row { display: flex; align-items: center; gap: .75rem; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
-    .header-actions { display: flex; align-items: center; gap: .5rem; }
+    .header-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .icon-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem .75rem; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .icon-btn:hover:not(:disabled) { border-color: var(--text2); color: var(--text); }
+    .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .icon-btn.primary { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+    .icon-btn.primary:hover:not(:disabled) { opacity: .88; color: #0d0f14; }
+    .icon-btn.danger { color: var(--red); border-color: rgba(255,77,109,.35); }
+    .icon-btn.danger:hover:not(:disabled) { background: rgba(255,77,109,.1); border-color: var(--red); color: var(--red); }
     .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
     .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
-    .btn-ghost.danger { color: var(--red); border-color: rgba(255,77,109,.35); }
-    .btn-ghost.danger:hover:not(:disabled) { background: rgba(255,77,109,.1); border-color: var(--red); }
     .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -206,10 +239,7 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .row-btn.danger:hover { color: var(--red); border-color: var(--red); }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
-    .form-actions { display: flex; align-items: center; justify-content: space-between; }
-    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
-    .btn-primary:hover { opacity: .88; }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .form-actions { display: flex; align-items: center; justify-content: flex-start; }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
     .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
@@ -302,7 +332,7 @@ export class PedidoFormComponent implements OnInit {
 
   emitir(): void {
     if (this.emitindo()) return;
-    if (!confirm(`Emitir o pedido #${this.numero()}? Depois de emitido ele não poderá mais ser editado.`)) return;
+    if (!confirm(`Emitir o pedido ${this.numero()}? Depois de emitido ele não poderá mais ser editado.`)) return;
     this.emitindo.set(true);
     this.erro.set(null);
     this._pedidoSvc.emitir(this.clienteId, this.pedidoId).subscribe({
@@ -313,7 +343,7 @@ export class PedidoFormComponent implements OnInit {
 
   cancelar(): void {
     if (this.cancelando()) return;
-    if (!confirm(`Cancelar o pedido #${this.numero()}? Esta ação não pode ser desfeita.`)) return;
+    if (!confirm(`Cancelar o pedido ${this.numero()}? Esta ação não pode ser desfeita.`)) return;
     this.cancelando.set(true);
     this.erro.set(null);
     this._pedidoSvc.cancelar(this.clienteId, this.pedidoId).subscribe({

@@ -15,3 +15,4 @@ export * from './lib/pedido.service';
 export * from './lib/cliente-usuario.service';
 export * from './lib/blog.service';
 export * from './lib/blog-admin.service';
+export * from './lib/cobranca.service';

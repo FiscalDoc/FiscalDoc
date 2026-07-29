@@ -29,6 +29,7 @@ public sealed class UpdateContadorCommandHandler(IUnitOfWork uow)
 
         var full = await uow.Contadores.GetWithClientesAsync(contador.Id, ct);
         var cobranca = await uow.Cobrancas.GetCobrancaAtualAsync(contador.Id, ct);
+        if (cobranca is not null) cobranca.Contador = contador;
 
         return Result.Success(new ContadorDto(
             contador.Id, contador.Nome, contador.Email, contador.Telefone, contador.Crc, contador.Empresa,
@@ -38,12 +39,7 @@ public sealed class UpdateContadorCommandHandler(IUnitOfWork uow)
             contador.StatusLicenca.ToString(), contador.MotivoBloqueio, contador.DataLimiteAcesso,
             contador.ValorPorCliente, contador.LimiteXmlPorCliente, contador.ValorXmlExcedente,
             contador.FotoUrl,
-            cobranca is null ? null : new CobrancaDto(
-                cobranca.Id, cobranca.ContadorId, cobranca.Mes, cobranca.Ano,
-                cobranca.TotalClientes, cobranca.ValorPorCliente, cobranca.ValorBase,
-                cobranca.LimiteXmlTotal, cobranca.XmlsProcessados, cobranca.XmlsExcedentes,
-                cobranca.ValorExcedente, cobranca.ValorTotal,
-                cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao),
+            cobranca is null ? null : CobrancaDtoMapper.ToDto(cobranca),
             full?.Tenant?.Plano ?? "Starter"));
     }
 }

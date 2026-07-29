@@ -15,6 +15,7 @@ public sealed class GetContadorByIdQueryHandler(IUnitOfWork uow)
             return Result.Failure<ContadorDto>(ResultError.NotFound("Contador"));
 
         var cobranca = await uow.Cobrancas.GetCobrancaAtualAsync(request.Id, ct);
+        if (cobranca is not null) cobranca.Contador = contador;
 
         return Result.Success(new ContadorDto(
             contador.Id, contador.Nome, contador.Email, contador.Telefone, contador.Crc, contador.Empresa,
@@ -26,12 +27,7 @@ public sealed class GetContadorByIdQueryHandler(IUnitOfWork uow)
             contador.DataLimiteAcesso,
             contador.ValorPorCliente, contador.LimiteXmlPorCliente, contador.ValorXmlExcedente,
             contador.FotoUrl,
-            cobranca is null ? null : new CobrancaDto(
-                cobranca.Id, cobranca.ContadorId, cobranca.Mes, cobranca.Ano,
-                cobranca.TotalClientes, cobranca.ValorPorCliente, cobranca.ValorBase,
-                cobranca.LimiteXmlTotal, cobranca.XmlsProcessados, cobranca.XmlsExcedentes,
-                cobranca.ValorExcedente, cobranca.ValorTotal,
-                cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao),
+            cobranca is null ? null : CobrancaDtoMapper.ToDto(cobranca),
             contador.Tenant?.Plano ?? "Starter"));
     }
 }

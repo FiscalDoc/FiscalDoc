@@ -45,7 +45,7 @@ import { PedidoDto } from '@veloxml/models';
             <tbody>
               @for (p of pedidos(); track p.id) {
                 <tr class="row-link" (click)="abrirPedido(p)">
-                  <td class="mono">#{{ p.numero }}</td>
+                  <td class="mono">{{ p.numero }}</td>
                   <td>{{ p.destinatarioNome }}</td>
                   <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
                   <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>

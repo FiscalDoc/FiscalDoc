@@ -1,6 +1,9 @@
 export interface CobrancaDto {
   id: string;
-  contadorId: string;
+  contadorId?: string;
+  clienteId?: string;
+  tipo: 'Contador' | 'Cliente';
+  entidadeNome: string;
   mes: number;
   ano: number;
   totalClientes: number;
@@ -106,4 +109,22 @@ export interface ContadorResumoDto {
   statusLicenca: string;
   valorMensal: number;
   statusCobranca: string;
+}
+
+export interface CriarCobrancaManualRequest {
+  contadorId?: string;
+  clienteId?: string;
+  mes: number;
+  ano: number;
+  valorTotal: number;
+  dataVencimento: string;
+  observacao?: string;
+}
+
+export interface CobrancasResumoDto {
+  totalPendente: number;
+  qtdPendente: number;
+  totalAtrasado: number;
+  qtdAtrasado: number;
+  totalRecebidoMesAtual: number;
 }

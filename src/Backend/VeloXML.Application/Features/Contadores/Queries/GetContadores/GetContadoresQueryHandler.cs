@@ -23,6 +23,7 @@ public sealed class GetContadoresQueryHandler(IUnitOfWork uow)
         var items = paged.Items.Select(c =>
         {
             cobrancas.TryGetValue(c.Id, out var cb);
+            if (cb is not null) cb.Contador = c;
             var dataLimite = c.DataLimiteAcesso ?? c.CreatedAt.AddDays(30);
             return new ContadorDto(
                 c.Id, c.Nome, c.Email, c.Telefone, c.Crc, c.Empresa, c.Ativo,
@@ -33,12 +34,7 @@ public sealed class GetContadoresQueryHandler(IUnitOfWork uow)
                 dataLimite,
                 c.ValorPorCliente, c.LimiteXmlPorCliente, c.ValorXmlExcedente,
                 c.FotoUrl,
-                cb is null ? null : new CobrancaDto(
-                    cb.Id, cb.ContadorId, cb.Mes, cb.Ano,
-                    cb.TotalClientes, cb.ValorPorCliente, cb.ValorBase,
-                    cb.LimiteXmlTotal, cb.XmlsProcessados, cb.XmlsExcedentes,
-                    cb.ValorExcedente, cb.ValorTotal,
-                    cb.Status.ToString(), cb.DataVencimento, cb.DataPagamento, cb.Observacao),
+                cb is null ? null : CobrancaDtoMapper.ToDto(cb),
                 c.Tenant?.Plano ?? "Starter"
             );
         }).ToList();

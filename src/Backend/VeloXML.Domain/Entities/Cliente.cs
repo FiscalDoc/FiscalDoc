@@ -49,4 +49,5 @@ public class Cliente : BaseEntity, IAuditableEntity
     public ICollection<Produto> Produtos { get; set; } = [];
     public ICollection<Destinatario> Destinatarios { get; set; } = [];
     public ICollection<Pedido> Pedidos { get; set; } = [];
+    public ICollection<Cobranca> Cobrancas { get; set; } = [];
 }

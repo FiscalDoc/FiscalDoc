@@ -19,7 +19,7 @@ public class AppDbContext(
     public DbSet<Documento> Documentos => Set<Documento>();
     public DbSet<Arquivo> Arquivos => Set<Arquivo>();
     public DbSet<Alerta> Alertas => Set<Alerta>();
-    public DbSet<CobrancaContador> CobrancasContador => Set<CobrancaContador>();
+    public DbSet<Cobranca> Cobrancas => Set<Cobranca>();
     public DbSet<Configuracao> Configuracoes => Set<Configuracao>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Produto> Produtos => Set<Produto>();
@@ -47,7 +47,7 @@ public class AppDbContext(
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<Alerta>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
-        builder.Entity<CobrancaContador>().HasQueryFilter(e =>
+        builder.Entity<Cobranca>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<Produto>().HasQueryFilter(e =>
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);

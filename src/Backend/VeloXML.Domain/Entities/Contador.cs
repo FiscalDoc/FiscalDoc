@@ -34,5 +34,5 @@ public class Contador : BaseEntity, IAuditableEntity
     public Tenant? Tenant { get; set; }
     public ICollection<Cliente> Clientes { get; set; } = [];
     public ICollection<User> Users { get; set; } = [];
-    public ICollection<CobrancaContador> Cobrancas { get; set; } = [];
+    public ICollection<Cobranca> Cobrancas { get; set; } = [];
 }

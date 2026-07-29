@@ -27,7 +27,10 @@ public record ContadorDto(
 
 public record CobrancaDto(
     Guid Id,
-    Guid ContadorId,
+    Guid? ContadorId,
+    Guid? ClienteId,
+    string Tipo,
+    string EntidadeNome,
     int Mes,
     int Ano,
     int TotalClientes,

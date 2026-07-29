@@ -532,6 +532,9 @@ export class ShellComponent implements OnInit {
     gerencial: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/>
     </svg>`,
+    cobrancas: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>`,
   };
 
   private get adminNavItems(): NavItem[] {
@@ -559,6 +562,7 @@ export class ShellComponent implements OnInit {
         label: 'Gerencial',
         icon: this._adminIcons.gerencial,
         children: [
+          { label: 'Contas a Receber', route: '/cobrancas', icon: this._adminIcons.cobrancas },
           { label: 'Alertas', route: '/alertas', icon: this._adminIcons.alertas },
           { label: 'Logs', route: '/logs', icon: this._adminIcons.logs },
           { label: 'Blog', route: '/admin/blog', icon: this._adminIcons.blog },

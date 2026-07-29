@@ -36,7 +36,7 @@ public sealed class GerarCobrancaMensalCommandHandler(IUnitOfWork uow)
         var valorExc   = excedentes * contador.ValorXmlExcedente;
         var dataVenc   = inicio.AddMonths(1).AddDays(request.DiasVencimento - 1);
 
-        var cobranca = new CobrancaContador
+        var cobranca = new Cobranca
         {
             ContadorId       = request.ContadorId,
             Mes              = request.Mes,
@@ -53,14 +53,11 @@ public sealed class GerarCobrancaMensalCommandHandler(IUnitOfWork uow)
             DataVencimento   = dataVenc,
         };
 
+        cobranca.Contador = contador;
+
         await uow.Cobrancas.AddAsync(cobranca, ct);
         await uow.SaveChangesAsync(ct);
 
-        return Result.Success(new CobrancaDto(
-            cobranca.Id, cobranca.ContadorId, cobranca.Mes, cobranca.Ano,
-            cobranca.TotalClientes, cobranca.ValorPorCliente, cobranca.ValorBase,
-            cobranca.LimiteXmlTotal, cobranca.XmlsProcessados, cobranca.XmlsExcedentes,
-            cobranca.ValorExcedente, cobranca.ValorTotal,
-            cobranca.Status.ToString(), cobranca.DataVencimento, cobranca.DataPagamento, cobranca.Observacao));
+        return Result.Success(CobrancaDtoMapper.ToDto(cobranca));
     }
 }

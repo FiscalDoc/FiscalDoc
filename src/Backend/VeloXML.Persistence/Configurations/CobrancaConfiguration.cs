@@ -4,11 +4,11 @@ using VeloXML.Domain.Entities;
 
 namespace VeloXML.Persistence.Configurations;
 
-public class CobrancaContadorConfiguration : IEntityTypeConfiguration<CobrancaContador>
+public class CobrancaConfiguration : IEntityTypeConfiguration<Cobranca>
 {
-    public void Configure(EntityTypeBuilder<CobrancaContador> b)
+    public void Configure(EntityTypeBuilder<Cobranca> b)
     {
-        b.ToTable("cobrancas_contador");
+        b.ToTable("cobrancas");
         b.HasKey(e => e.Id);
         b.Property(e => e.Id).HasColumnName("id");
         b.Property(e => e.TenantId).HasColumnName("tenant_id");
@@ -16,7 +16,8 @@ public class CobrancaContadorConfiguration : IEntityTypeConfiguration<CobrancaCo
         b.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         b.Property(e => e.DeletedAt).HasColumnName("deleted_at");
 
-        b.Property(e => e.ContadorId).HasColumnName("contador_id").IsRequired();
+        b.Property(e => e.ContadorId).HasColumnName("contador_id");
+        b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.Mes).HasColumnName("mes").IsRequired();
         b.Property(e => e.Ano).HasColumnName("ano").IsRequired();
         b.Property(e => e.TotalClientes).HasColumnName("total_clientes");
@@ -32,7 +33,17 @@ public class CobrancaContadorConfiguration : IEntityTypeConfiguration<CobrancaCo
         b.Property(e => e.DataPagamento).HasColumnName("data_pagamento");
         b.Property(e => e.Observacao).HasColumnName("observacao").HasMaxLength(1000);
 
-        b.HasIndex(e => new { e.ContadorId, e.Mes, e.Ano }).IsUnique().HasFilter("deleted_at IS NULL");
+        b.HasOne(e => e.Contador).WithMany(c => c.Cobrancas)
+            .HasForeignKey(e => e.ContadorId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(e => e.Cliente).WithMany(c => c.Cobrancas)
+            .HasForeignKey(e => e.ClienteId).OnDelete(DeleteBehavior.Cascade);
+
+        // Só impede duplicidade de cobrança automática mensal por Contador — cobranças
+        // manuais de Cliente direto não têm essa restrição (podem ser lançadas à vontade).
+        b.HasIndex(e => new { e.ContadorId, e.Mes, e.Ano })
+            .IsUnique()
+            .HasFilter("deleted_at IS NULL AND contador_id IS NOT NULL");
         b.HasIndex(e => e.TenantId);
+        b.HasIndex(e => e.ClienteId);
     }
 }
