@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using MailKit;
@@ -5,6 +6,7 @@ using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
 using VeloXML.Application.Common.DTOs;
+using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
 using VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
@@ -43,11 +45,34 @@ public sealed class ImportarXmlEmailJob(
         var totalErros = resumos.Sum(r => r.Erros);
 
         var nivelFinal = totalErros > 0 ? LogLevel.Warning : LogLevel.Information;
+        var concluidoEm = DateTime.UtcNow;
         logger.Log(nivelFinal,
             "[ImportarXmlEmail] Execução concluída em {ConcluidoEm:u} (duração: {DuracaoMs:N0}ms) | " +
             "Clientes processados: {TotalClientes} | E-mails encontrados: {TotalEmails} | " +
             "XMLs processados: {TotalProcessados} | XMLs importados com sucesso: {TotalImportados} | Erros: {TotalErros}",
-            DateTime.UtcNow, duracaoMs, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros);
+            concluidoEm, duracaoMs, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros);
+
+        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, ct);
+    }
+
+    private async Task SalvarStatusExecucaoAsync(
+        DateTime executadoEm, int clientesProcessados, int emailsEncontrados,
+        int xmlsProcessados, int xmlsImportados, int erros, CancellationToken ct)
+    {
+        try
+        {
+            var status = new ImportacaoXmlStatusDto(
+                executadoEm, clientesProcessados, emailsEncontrados, xmlsProcessados, xmlsImportados, erros);
+            var json = JsonSerializer.Serialize(status);
+            await uow.Configuracoes.UpsertAsync(
+                GetImportacaoXmlStatusQueryHandler.ChaveConfiguracao, json,
+                "Resumo da última execução do robô de importação de XML por e-mail", ct);
+            await uow.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "[ImportarXmlEmail] Falha ao salvar o status da última execução.");
+        }
     }
 
     private async Task<ResumoCliente> ProcessarClienteAsync(Cliente cliente, CancellationToken ct)

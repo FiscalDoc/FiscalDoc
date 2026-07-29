@@ -23,6 +23,16 @@ const MEIO_PAGAMENTO_LABEL: Record<string, string> = { Dinheiro: 'Dinheiro', Car
       </div>
 
       <div class="sheet">
+        <div class="print-brand">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="6" y="4" width="20" height="24" rx="3" fill="#1a1e28" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+            <path d="M10 9h12M10 13h12M10 17h8" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="4" y="2" width="12" height="12" rx="3" fill="#0d0f14" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+            <path d="M10 5v6M7 8h6" stroke="#00c98d" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="print-brand-name"><strong>Fiscal</strong>Doc</span>
+        </div>
+
         <header class="sheet-header">
           <div>
             <h1>{{ cliente()!.razaoSocial }}</h1>
@@ -103,6 +113,9 @@ const MEIO_PAGAMENTO_LABEL: Record<string, string> = { Dinheiro: 'Dinheiro', Car
     .btn-ghost { background: none; border: 1px solid #ccc; color: #333; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
 
     .sheet { max-width: 820px; margin: 1.5rem auto; background: #fff; padding: 2.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .print-brand { display: flex; align-items: center; gap: 6px; margin-bottom: 1rem; }
+    .print-brand-name { font-size: 13px; color: #555; letter-spacing: .01em; }
+    .print-brand-name strong { color: #111; }
     .sheet-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 1rem; margin-bottom: 1.5rem; }
     .sheet-header h1 { margin: 0; font-size: 1.3rem; }
     .sub { font-size: 12.5px; color: #555; margin-top: 2px; }
@@ -128,7 +141,7 @@ const MEIO_PAGAMENTO_LABEL: Record<string, string> = { Dinheiro: 'Dinheiro', Car
 
     @media print {
       .no-print { display: none !important; }
-      :host { background: #fff; }
+      :host { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .sheet { box-shadow: none; margin: 0; max-width: none; }
     }
   `],

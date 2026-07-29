@@ -47,8 +47,8 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
         <div class="alert-info">Este pedido está com status "{{ pedidoStatus() }}" e não pode mais ser editado.</div>
       }
 
-      <div class="card section">
-        <h4 class="section-title">Destinatário</h4>
+      <div class="card section header-section">
+        <h4 class="section-title">Destinatário e Dados Fiscais</h4>
         <div class="form-grid">
           <div class="field col-2">
             <label class="label">Destinatário *</label>
@@ -60,21 +60,11 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
             </select>
           </div>
           <div class="field col-2">
-            <label class="label">Observações (uso interno)</label>
-            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.observacoes" rows="2" placeholder="Opcional"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="card section">
-        <h4 class="section-title">Dados Fiscais</h4>
-        <div class="form-grid">
-          <div class="field col-2">
             <label class="label">Natureza da Operação *</label>
             <input class="input" [disabled]="readonly()" [(ngModel)]="form.naturezaOperacao" placeholder="Venda de mercadoria"/>
           </div>
           <div class="field">
-            <label class="label">Data de Saída prevista</label>
+            <label class="label">Data de Saída</label>
             <input class="input" type="date" [disabled]="readonly()" [(ngModel)]="form.dataSaida"/>
           </div>
           <div class="field">
@@ -96,9 +86,13 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
               <option value="Outros">Outros</option>
             </select>
           </div>
-          <div class="field col-2">
-            <label class="label">Informações Complementares</label>
-            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.informacoesComplementares" rows="2" placeholder="Texto que vai para a nota fiscal (opcional)"></textarea>
+          <div class="field">
+            <label class="label">Observações (interno)</label>
+            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.observacoes" rows="1" placeholder="Opcional"></textarea>
+          </div>
+          <div class="field col-4">
+            <label class="label">Informações Complementares (nota fiscal)</label>
+            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.informacoesComplementares" rows="1" placeholder="Texto que vai para a nota fiscal (opcional)"></textarea>
           </div>
         </div>
       </div>
@@ -179,13 +173,19 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
     .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .header-section { padding: 1.125rem 1.5rem; gap: .625rem; }
     .section-title { margin: 0; font-size: .95rem; font-weight: 600; color: var(--text); }
     .list-header { display: flex; align-items: center; justify-content: space-between; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+    .header-section .form-grid { grid-template-columns: repeat(4, 1fr); gap: .625rem; }
     .col-2 { grid-column: span 2; }
-    .field { display: flex; flex-direction: column; gap: 4px; }
+    .col-4 { grid-column: span 4; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .header-section .label { font-size: 10px; }
     .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
     .input, textarea.input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
+    .header-section .input, .header-section textarea.input { padding: .375rem .625rem; font-size: 13px; }
+    .header-section textarea.input { min-height: 32px; resize: vertical; }
     .input:focus, textarea.input:focus { border-color: var(--accent); }
     .input:disabled, textarea.input:disabled { opacity: .6; cursor: not-allowed; }
     .input-sm { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 8px; font-size: 12.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }

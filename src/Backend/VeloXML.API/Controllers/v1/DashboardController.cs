@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Dashboard.Queries.GetAdminDashboard;
+using VeloXML.Application.Features.Dashboard.Queries.GetClienteDashboard;
 using VeloXML.Application.Features.Dashboard.Queries.GetDashboardStats;
 
 namespace VeloXML.API.Controllers.v1;
@@ -23,6 +24,13 @@ public sealed class DashboardController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetAdminStats(CancellationToken ct)
     {
         var result = await mediator.Send(new GetAdminDashboardQuery(), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpGet("cliente/{clienteId:guid}")]
+    public async Task<IActionResult> GetClienteStats(Guid clienteId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetClienteDashboardQuery(clienteId), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 }

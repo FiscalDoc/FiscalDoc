@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { extractErrorMessage } from '@veloxml/services';
+import { extractErrorMessage, ConfiguracaoService } from '@veloxml/services';
+import { SocialConfigDto } from '@veloxml/models';
 
 const WPP_NUMBER = '5511973982559';
 const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o FiscalDoc.');
@@ -30,6 +31,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           <a href="#features">Recursos</a>
           <a href="#how">Como funciona</a>
           <a href="#plans">Planos</a>
+          <a routerLink="/blog">Blog</a>
           <a href="#faq">FAQ</a>
           <a href="#contact">Contato</a>
         </nav>
@@ -405,6 +407,44 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
             <span class="brand-fiscal">Fiscal</span><span class="brand-doc">Doc</span>
           </div>
           <p class="footer-copy">© 2025 FiscalDoc. Hub Fiscal para Contadores.</p>
+
+          @if (hasSocialLinks()) {
+            <div class="footer-social">
+              @if (social()?.instagram) {
+                <a [href]="social()!.instagram" target="_blank" rel="noopener" aria-label="Instagram" class="social-link">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </a>
+              }
+              @if (social()?.facebook) {
+                <a [href]="social()!.facebook" target="_blank" rel="noopener" aria-label="Facebook" class="social-link">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
+                  </svg>
+                </a>
+              }
+              @if (social()?.linkedin) {
+                <a [href]="social()!.linkedin" target="_blank" rel="noopener" aria-label="LinkedIn" class="social-link">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"></path>
+                    <rect x="2" y="9" width="4" height="12"></rect>
+                    <circle cx="4" cy="4" r="2"></circle>
+                  </svg>
+                </a>
+              }
+              @if (social()?.tiktok) {
+                <a [href]="social()!.tiktok" target="_blank" rel="noopener" aria-label="TikTok" class="social-link">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0115.54 3h-3.09v12.4a2.592 2.592 0 01-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 004.3 1.38V7.3s-1.88.09-3.24-1.48z"/>
+                  </svg>
+                </a>
+              }
+            </div>
+          }
+
           <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline btn-sm">Acessar sistema</a>
         </div>
       </div>
@@ -597,6 +637,9 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .footer-inner { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
     .footer-brand { display: flex; align-items: center; gap: 8px; }
     .footer-copy { flex: 1; font-size: 13px; color: #4a5068; }
+    .footer-social { display: flex; align-items: center; gap: .625rem; }
+    .social-link { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: #7c8299; border: 1px solid rgba(255,255,255,0.08); }
+    .social-link:hover { color: #00e5a0; border-color: rgba(0,229,160,0.3); }
 
     /* ─── TRIAL ─────────────────────────────── */
     .trial-section { padding: 100px 0; }
@@ -655,8 +698,22 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     }
   `]
 })
-export class LandingComponent {
+export class LandingComponent implements OnInit {
   readonly wpp = `https://wa.me/${WPP_NUMBER}?text=${WPP_MSG}`;
+
+  private readonly _configSvc = inject(ConfiguracaoService);
+  readonly social = signal<SocialConfigDto | null>(null);
+  readonly hasSocialLinks = () => {
+    const s = this.social();
+    return !!(s && (s.instagram || s.facebook || s.linkedin || s.tiktok));
+  };
+
+  ngOnInit(): void {
+    this._configSvc.getSocialPublic().subscribe({
+      next: s => this.social.set(s),
+      error: () => {},
+    });
+  }
 
   readonly faqs = [
     {

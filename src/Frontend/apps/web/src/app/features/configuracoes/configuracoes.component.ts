@@ -2,6 +2,9 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
+import { ImportacaoXmlStatusDto } from '@veloxml/models';
+
+type Tab = 'email' | 'social' | 'convite' | 'importacao';
 
 @Component({
   selector: 'app-configuracoes',
@@ -18,99 +21,254 @@ import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
     </div>
   </header>
 
-  <!-- ── SMTP ── -->
-  <div class="card">
-    <div class="section-header">
-      <div class="section-icon">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-        </svg>
+  <nav class="tabs">
+    <button class="tab-btn" [class.active]="tab() === 'email'" (click)="tab.set('email')">E-mail (SMTP)</button>
+    <button class="tab-btn" [class.active]="tab() === 'social'" (click)="tab.set('social')">Redes Sociais</button>
+    <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
+    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); loadStatus()">Importação de E-mails</button>
+  </nav>
+
+  <!-- ══ E-MAIL (SMTP) ══ -->
+  @if (tab() === 'email') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Configuração de E-mail (SMTP)</div>
+          <div class="section-sub">Utilizado em todos os envios de e-mail do sistema, incluindo os e-mails de boas-vindas</div>
+        </div>
       </div>
-      <div>
-        <div class="section-title">Configuração de E-mail (SMTP)</div>
-        <div class="section-sub">Utilizado em todos os envios de e-mail do sistema</div>
-      </div>
+
+      @if (loadingSmtp()) {
+        <div class="empty-state">Carregando configurações...</div>
+      } @else {
+        <form [formGroup]="smtpForm" (ngSubmit)="saveSmtp()" class="settings-form">
+
+          <div class="form-row">
+            <div class="field">
+              <label class="label">Servidor SMTP *</label>
+              <input class="input" type="text" formControlName="host" placeholder="smtp.exemplo.com.br" />
+              @if (f['host'].touched && f['host'].errors?.['required']) {
+                <span class="field-error">Obrigatório</span>
+              }
+            </div>
+            <div class="field field-sm">
+              <label class="label">Porta *</label>
+              <input class="input" type="number" formControlName="port" placeholder="587" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label class="label">E-mail remetente *</label>
+              <input class="input" type="email" formControlName="from" placeholder="noreply@suaempresa.com.br" autocomplete="off" />
+              @if (f['from'].touched && f['from'].errors?.['email']) {
+                <span class="field-error">E-mail inválido</span>
+              }
+            </div>
+            <div class="field">
+              <label class="label">Nome remetente *</label>
+              <input class="input" type="text" formControlName="fromName" placeholder="FiscalDoc" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label class="label">Usuário SMTP</label>
+              <input class="input" type="text" formControlName="username" placeholder="usuario@smtp" />
+            </div>
+            <div class="field">
+              <label class="label">Senha SMTP</label>
+              <input class="input" type="password" formControlName="password" placeholder="Deixe em branco para não alterar" autocomplete="new-password" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label class="label">Reply-To</label>
+              <input class="input" type="email" formControlName="replyTo" placeholder="suporte@suaempresa.com.br" autocomplete="off" />
+            </div>
+            <div class="field field-center">
+              <label class="label">Segurança</label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="enableSsl" />
+                Usar SSL/TLS
+              </label>
+            </div>
+          </div>
+
+          @if (smtpSuccess()) { <div class="alert-success">{{ checkIcon() }} Configurações salvas com sucesso!</div> }
+          @if (smtpError()) { <div class="alert-error">{{ smtpError() }}</div> }
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="savingSmtp()">
+              {{ savingSmtp() ? 'Salvando...' : 'Salvar Configurações' }}
+            </button>
+          </div>
+
+        </form>
+      }
     </div>
+  }
 
-    @if (loading()) {
-      <div class="empty-state">Carregando configurações...</div>
-    } @else {
-      <form [formGroup]="smtpForm" (ngSubmit)="saveSmtp()" class="settings-form">
+  <!-- ══ REDES SOCIAIS ══ -->
+  @if (tab() === 'social') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342a4 4 0 000 5.316m0-5.316a4 4 0 010-5.316m0 5.316L15.316 17m-6.632-8.658L15.316 5m0 8.342a4 4 0 100 5.316 4 4 0 000-5.316zm0-8.342a4 4 0 100 5.316 4 4 0 000-5.316z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Redes Sociais</div>
+          <div class="section-sub">Exibidas no rodapé do site — só aparecem os links preenchidos aqui</div>
+        </div>
+      </div>
 
+      @if (loadingSocial()) {
+        <div class="empty-state">Carregando configurações...</div>
+      } @else {
+        <form [formGroup]="socialForm" (ngSubmit)="saveSocial()" class="settings-form">
+          <div class="form-row">
+            <div class="field">
+              <label class="label">Instagram</label>
+              <input class="input" type="url" formControlName="instagram" placeholder="https://instagram.com/fiscaldoc" />
+            </div>
+            <div class="field">
+              <label class="label">Facebook</label>
+              <input class="input" type="url" formControlName="facebook" placeholder="https://facebook.com/fiscaldoc" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label">LinkedIn</label>
+              <input class="input" type="url" formControlName="linkedin" placeholder="https://linkedin.com/company/fiscaldoc" />
+            </div>
+            <div class="field">
+              <label class="label">TikTok</label>
+              <input class="input" type="url" formControlName="tiktok" placeholder="https://tiktok.com/@fiscaldoc" />
+            </div>
+          </div>
+
+          @if (socialSuccess()) { <div class="alert-success">{{ checkIcon() }} Redes sociais salvas com sucesso!</div> }
+          @if (socialError()) { <div class="alert-error">{{ socialError() }}</div> }
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="savingSocial()">
+              {{ savingSocial() ? 'Salvando...' : 'Salvar Redes Sociais' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+
+  <!-- ══ CONVIDAR ══ -->
+  @if (tab() === 'convite') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Convidar para a Plataforma</div>
+          <div class="section-sub">Envia um e-mail com o link do teste grátis de 30 dias</div>
+        </div>
+      </div>
+
+      <form [formGroup]="conviteForm" (ngSubmit)="sendConvite()" class="settings-form">
         <div class="form-row">
           <div class="field">
-            <label class="label">Servidor SMTP *</label>
-            <input class="input" type="text" formControlName="host" placeholder="smtp.exemplo.com.br" />
-            @if (f['host'].touched && f['host'].errors?.['required']) {
+            <label class="label">Nome do convidado *</label>
+            <input class="input" type="text" formControlName="nome" placeholder="João Silva" />
+            @if (cf['nome'].touched && cf['nome'].errors?.['required']) {
               <span class="field-error">Obrigatório</span>
             }
           </div>
-          <div class="field field-sm">
-            <label class="label">Porta *</label>
-            <input class="input" type="number" formControlName="port" placeholder="587" />
-          </div>
-        </div>
-
-        <div class="form-row">
           <div class="field">
-            <label class="label">E-mail remetente *</label>
-            <input class="input" type="email" formControlName="from" placeholder="noreply@suaempresa.com.br" autocomplete="off" />
-            @if (f['from'].touched && f['from'].errors?.['email']) {
+            <label class="label">E-mail *</label>
+            <input class="input" type="email" formControlName="email" placeholder="joao@escritorio.com.br" autocomplete="off" />
+            @if (cf['email'].touched && cf['email'].errors) {
               <span class="field-error">E-mail inválido</span>
             }
           </div>
-          <div class="field">
-            <label class="label">Nome remetente *</label>
-            <input class="input" type="text" formControlName="fromName" placeholder="FiscalDoc" />
-          </div>
         </div>
 
-        <div class="form-row">
-          <div class="field">
-            <label class="label">Usuário SMTP</label>
-            <input class="input" type="text" formControlName="username" placeholder="usuario@smtp" />
-          </div>
-          <div class="field">
-            <label class="label">Senha SMTP</label>
-            <input class="input" type="password" formControlName="password" placeholder="Deixe em branco para não alterar" autocomplete="new-password" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="field">
-            <label class="label">Reply-To</label>
-            <input class="input" type="email" formControlName="replyTo" placeholder="suporte@suaempresa.com.br" autocomplete="off" />
-          </div>
-          <div class="field field-center">
-            <label class="label">Segurança</label>
-            <label class="checkbox-label">
-              <input type="checkbox" formControlName="enableSsl" />
-              Usar SSL/TLS
-            </label>
-          </div>
-        </div>
-
-        @if (success()) {
-          <div class="alert-success">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-            </svg>
-            Configurações salvas com sucesso!
-          </div>
-        }
-        @if (submitError()) {
-          <div class="alert-error">{{ submitError() }}</div>
-        }
+        @if (conviteSuccess()) { <div class="alert-success">{{ checkIcon() }} Convite enviado com sucesso!</div> }
+        @if (conviteError()) { <div class="alert-error">{{ conviteError() }}</div> }
 
         <div class="form-actions">
-          <button type="submit" class="btn-primary" [disabled]="saving()">
-            {{ saving() ? 'Salvando...' : 'Salvar Configurações' }}
+          <button type="submit" class="btn-primary" [disabled]="sendingConvite()">
+            {{ sendingConvite() ? 'Enviando...' : 'Enviar Convite' }}
           </button>
         </div>
-
       </form>
-    }
-  </div>
+    </div>
+  }
+
+  <!-- ══ IMPORTAÇÃO DE E-MAILS ══ -->
+  @if (tab() === 'importacao') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Importação de E-mails (XML)</div>
+          <div class="section-sub">Resumo da última execução do robô que lê os e-mails de cada cliente — roda automaticamente a cada 5 minutos</div>
+        </div>
+      </div>
+
+      @if (loadingStatus()) {
+        <div class="empty-state">Carregando...</div>
+      } @else if (!importacaoStatus()) {
+        <div class="empty-state">O robô de importação ainda não executou nenhuma vez.</div>
+      } @else {
+        <div class="settings-form">
+          <div class="status-summary">
+            <div class="status-kpi">
+              <span class="status-kpi-label">Última execução</span>
+              <span class="status-kpi-value">{{ importacaoStatus()!.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+            </div>
+            <div class="status-grid">
+              <div class="status-item">
+                <span class="status-item-value">{{ importacaoStatus()!.clientesProcessados }}</span>
+                <span class="status-item-label">Clientes processados</span>
+              </div>
+              <div class="status-item">
+                <span class="status-item-value">{{ importacaoStatus()!.emailsEncontrados }}</span>
+                <span class="status-item-label">E-mails encontrados</span>
+              </div>
+              <div class="status-item">
+                <span class="status-item-value">{{ importacaoStatus()!.xmlsProcessados }}</span>
+                <span class="status-item-label">XMLs processados</span>
+              </div>
+              <div class="status-item">
+                <span class="status-item-value accent">{{ importacaoStatus()!.xmlsImportados }}</span>
+                <span class="status-item-label">XMLs importados</span>
+              </div>
+              <div class="status-item">
+                <span class="status-item-value" [class.red]="importacaoStatus()!.erros > 0">{{ importacaoStatus()!.erros }}</span>
+                <span class="status-item-label">Erros</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" (click)="loadStatus()">Atualizar</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
 </div>
   `,
   styles: [`
@@ -119,6 +277,11 @@ import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
     .page-header h2 { font-size: 1.5rem; margin: 0; }
     .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
 
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+    .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
     .btn-primary {
       display: inline-flex; align-items: center; gap: 6px;
       background: var(--accent); color: #0d0f14; border: none; border-radius: 8px;
@@ -126,6 +289,8 @@ import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
     }
     .btn-primary:hover { opacity: 0.88; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
+    .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
 
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 
@@ -172,9 +337,21 @@ import { ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
     }
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
 
-    @media (max-width: 600px) {
+    .status-summary { display: flex; flex-direction: column; gap: 1.25rem; }
+    .status-kpi { display: flex; flex-direction: column; gap: 2px; }
+    .status-kpi-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+    .status-kpi-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .status-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; }
+    .status-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .875rem; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .status-item-value { font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .status-item-value.accent { color: var(--accent); }
+    .status-item-value.red { color: var(--red); }
+    .status-item-label { font-size: 11px; color: var(--text2); text-align: center; }
+
+    @media (max-width: 700px) {
       .form-row { grid-template-columns: 1fr; }
       .field-sm { max-width: 100%; }
+      .status-grid { grid-template-columns: repeat(2, 1fr); }
     }
   `]
 })
@@ -182,10 +359,14 @@ export class ConfiguracoesComponent implements OnInit {
   private readonly _svc = inject(ConfiguracaoService);
   private readonly _fb  = inject(FormBuilder);
 
-  loading     = signal(false);
-  saving      = signal(false);
-  success     = signal(false);
-  submitError = signal<string | null>(null);
+  readonly tab = signal<Tab>('email');
+  checkIcon(): string { return '✓'; }
+
+  // SMTP
+  loadingSmtp = signal(false);
+  savingSmtp  = signal(false);
+  smtpSuccess = signal(false);
+  smtpError   = signal<string | null>(null);
 
   smtpForm = this._fb.group({
     host:      ['', Validators.required],
@@ -199,25 +380,65 @@ export class ConfiguracoesComponent implements OnInit {
   });
   get f() { return this.smtpForm.controls; }
 
+  // Redes Sociais
+  loadingSocial = signal(false);
+  savingSocial  = signal(false);
+  socialSuccess = signal(false);
+  socialError   = signal<string | null>(null);
+
+  socialForm = this._fb.group({
+    instagram: [''],
+    facebook:  [''],
+    linkedin:  [''],
+    tiktok:    [''],
+  });
+
+  // Convidar
+  sendingConvite  = signal(false);
+  conviteSuccess  = signal(false);
+  conviteError    = signal<string | null>(null);
+
+  conviteForm = this._fb.group({
+    nome:  ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+  });
+  get cf() { return this.conviteForm.controls; }
+
+  // Importação de e-mails
+  loadingStatus     = signal(false);
+  importacaoStatus  = signal<ImportacaoXmlStatusDto | null>(null);
+
   ngOnInit(): void {
-    this.loading.set(true);
+    this.loadingSmtp.set(true);
     this._svc.getSmtp().subscribe({
       next: dto => {
         this.smtpForm.patchValue({
           host: dto.host, port: dto.port, from: dto.from, fromName: dto.fromName,
           username: dto.username ?? '', enableSsl: dto.enableSsl, replyTo: dto.replyTo ?? '',
         });
-        this.loading.set(false);
+        this.loadingSmtp.set(false);
       },
-      error: () => this.loading.set(false),
+      error: () => this.loadingSmtp.set(false),
+    });
+
+    this.loadingSocial.set(true);
+    this._svc.getSocial().subscribe({
+      next: dto => {
+        this.socialForm.patchValue({
+          instagram: dto.instagram ?? '', facebook: dto.facebook ?? '',
+          linkedin: dto.linkedin ?? '', tiktok: dto.tiktok ?? '',
+        });
+        this.loadingSocial.set(false);
+      },
+      error: () => this.loadingSocial.set(false),
     });
   }
 
   saveSmtp(): void {
     if (this.smtpForm.invalid) { this.smtpForm.markAllAsTouched(); return; }
-    this.saving.set(true);
-    this.success.set(false);
-    this.submitError.set(null);
+    this.savingSmtp.set(true);
+    this.smtpSuccess.set(false);
+    this.smtpError.set(null);
     const v = this.smtpForm.getRawValue();
     this._svc.saveSmtp({
       host: v.host!, port: v.port!, from: v.from!, fromName: v.fromName!,
@@ -227,14 +448,65 @@ export class ConfiguracoesComponent implements OnInit {
       replyTo: v.replyTo || undefined,
     }).subscribe({
       next: () => {
-        this.saving.set(false);
-        this.success.set(true);
-        setTimeout(() => this.success.set(false), 4000);
+        this.savingSmtp.set(false);
+        this.smtpSuccess.set(true);
+        setTimeout(() => this.smtpSuccess.set(false), 4000);
       },
       error: err => {
-        this.saving.set(false);
-        this.submitError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
+        this.savingSmtp.set(false);
+        this.smtpError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
       },
+    });
+  }
+
+  saveSocial(): void {
+    this.savingSocial.set(true);
+    this.socialSuccess.set(false);
+    this.socialError.set(null);
+    const v = this.socialForm.getRawValue();
+    this._svc.saveSocial({
+      instagram: v.instagram || undefined,
+      facebook: v.facebook || undefined,
+      linkedin: v.linkedin || undefined,
+      tiktok: v.tiktok || undefined,
+    }).subscribe({
+      next: () => {
+        this.savingSocial.set(false);
+        this.socialSuccess.set(true);
+        setTimeout(() => this.socialSuccess.set(false), 4000);
+      },
+      error: err => {
+        this.savingSocial.set(false);
+        this.socialError.set(extractErrorMessage(err, 'Erro ao salvar redes sociais.'));
+      },
+    });
+  }
+
+  sendConvite(): void {
+    if (this.conviteForm.invalid) { this.conviteForm.markAllAsTouched(); return; }
+    this.sendingConvite.set(true);
+    this.conviteSuccess.set(false);
+    this.conviteError.set(null);
+    const v = this.conviteForm.getRawValue();
+    this._svc.sendConvite({ nome: v.nome!, email: v.email! }).subscribe({
+      next: () => {
+        this.sendingConvite.set(false);
+        this.conviteSuccess.set(true);
+        this.conviteForm.reset();
+        setTimeout(() => this.conviteSuccess.set(false), 4000);
+      },
+      error: err => {
+        this.sendingConvite.set(false);
+        this.conviteError.set(extractErrorMessage(err, 'Erro ao enviar convite.'));
+      },
+    });
+  }
+
+  loadStatus(): void {
+    this.loadingStatus.set(true);
+    this._svc.getImportacaoXmlStatus().subscribe({
+      next: s => { this.importacaoStatus.set(s); this.loadingStatus.set(false); },
+      error: () => this.loadingStatus.set(false),
     });
   }
 }

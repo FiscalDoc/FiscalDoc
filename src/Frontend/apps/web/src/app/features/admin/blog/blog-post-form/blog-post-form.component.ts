@@ -67,7 +67,7 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
               </div>
               <div class="field col-2">
                 <label class="label">Conteúdo *</label>
-                <quill-editor [(ngModel)]="form.conteudo" theme="snow" [style]="{ minHeight: '320px' }"></quill-editor>
+                <quill-editor class="editor" [(ngModel)]="form.conteudo" theme="snow"></quill-editor>
                 @if (fieldErrors()['conteudo']) { <span class="field-error">{{ fieldErrors()['conteudo'] }}</span> }
               </div>
             </div>
@@ -168,6 +168,14 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .field-error { font-size: 11px; color: var(--red); }
     .hint { font-size: 11px; color: var(--text2); }
     .preview-img { max-width: 260px; max-height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; }
+    .editor { display: block; width: 100%; background: var(--bg3); border-radius: 8px; }
+    .editor ::ng-deep .ql-toolbar { border-color: var(--border); border-radius: 8px 8px 0 0; background: var(--bg2); }
+    .editor ::ng-deep .ql-toolbar .ql-stroke { stroke: var(--text2); }
+    .editor ::ng-deep .ql-toolbar .ql-fill { fill: var(--text2); }
+    .editor ::ng-deep .ql-toolbar .ql-picker { color: var(--text2); }
+    .editor ::ng-deep .ql-container { border-color: var(--border); border-radius: 0 0 8px 8px; font-family: inherit; font-size: 13.5px; }
+    .editor ::ng-deep .ql-editor { color: var(--text); min-height: 260px; max-height: 480px; overflow-y: auto; }
+    .editor ::ng-deep .ql-editor.ql-blank::before { color: var(--text2); font-style: normal; }
     .status-toggle { display: flex; gap: .5rem; }
     .status-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1.25rem; font-size: 13px; cursor: pointer; }
     .status-btn.active { background: rgba(0,229,160,.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }

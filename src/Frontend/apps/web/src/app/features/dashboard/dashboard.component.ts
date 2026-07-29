@@ -1,7 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { DashboardService, ContadorService, AuthService } from '@veloxml/services';
-import { DashboardStatsDto, AdminDashboardDto, DocumentoPorMesDto } from '@veloxml/models';
+import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPorMesDto, DocumentoPorMesClienteDto } from '@veloxml/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -107,8 +108,103 @@ import { DashboardStatsDto, AdminDashboardDto, DocumentoPorMesDto } from '@velox
           </div>
         }
 
+      } @else if (isCliente()) {
+        <!-- ════ CLIENTE DASHBOARD ════ -->
+        <header class="page-header">
+          <h2 class="font-heading">Dashboard</h2>
+          <p class="page-sub">Visão geral da sua empresa</p>
+        </header>
+
+        @if (clienteStats(); as c) {
+          <div class="kpis">
+            <div class="kpi-card kpi-accent">
+              <span class="kpi-label">Total de Documentos</span>
+              <span class="kpi-value font-heading">{{ c.totalDocumentos }}</span>
+              <span class="kpi-sub">{{ c.valorTotalDocumentosMes | currency:'BRL':'symbol':'1.2-2':'pt-BR' }} no mês</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Notas Fiscais (NF-e)</span>
+              <span class="kpi-value font-heading">{{ c.totalNotasFiscais }}</span>
+              <span class="kpi-sub">de {{ c.totalDocumentos }} documentos</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Total de Pedidos</span>
+              <span class="kpi-value font-heading">{{ c.totalPedidos }}</span>
+              <span class="kpi-sub">{{ c.valorTotalPedidosMes | currency:'BRL':'symbol':'1.2-2':'pt-BR' }} no mês</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Alertas Ativos</span>
+              <span class="kpi-value font-heading" [class.red]="c.alertasAtivos > 0">{{ c.alertasAtivos }}</span>
+              <span class="kpi-sub">requerem atenção</span>
+            </div>
+          </div>
+
+          <!-- Monthly volume chart -->
+          <div class="card">
+            <h3 class="card-title">Documentos por Mês (12 meses)</h3>
+            @if (c.documentosPorMes.length === 0 || maxQtdCliente(c.documentosPorMes) === 0) {
+              <p class="empty">Nenhum documento no período.</p>
+            } @else {
+              <div class="bar-chart">
+                @for (m of c.documentosPorMes; track m.label) {
+                  <div class="bar-col">
+                    <span class="bar-qty">{{ m.quantidade || '' }}</span>
+                    <div class="bar-track">
+                      <div class="bar-fill" [style.height.%]="m.quantidade / maxQtdCliente(c.documentosPorMes) * 100"></div>
+                    </div>
+                    <span class="bar-label">{{ m.label }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3 class="card-title">Documentos por Tipo</h3>
+              <div class="tipo-list">
+                @for (item of c.documentosPorTipo; track item.tipo) {
+                  <div class="tipo-row">
+                    <span class="tipo-name">{{ item.tipo }}</span>
+                    <div class="tipo-bar-wrap"><div class="tipo-bar" [style.width.%]="item.percentual"></div></div>
+                    <span class="tipo-pct">{{ item.percentual }}%</span>
+                    <span class="tipo-qty">{{ item.quantidade }}</span>
+                  </div>
+                }
+                @if (!c.documentosPorTipo.length) {
+                  <p class="empty">Nenhum documento no período.</p>
+                }
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title">Pedidos por Status</h3>
+              <div class="status-list">
+                <div class="status-row-item" (click)="irParaPedidos()">
+                  <span class="status-dot status-dot-neutral"></span>
+                  <span class="status-name">Rascunho</span>
+                  <span class="status-qty">{{ c.pedidosRascunho }}</span>
+                </div>
+                <div class="status-row-item" (click)="irParaPedidos()">
+                  <span class="status-dot status-dot-ok"></span>
+                  <span class="status-name">Emitido</span>
+                  <span class="status-qty">{{ c.pedidosEmitidos }}</span>
+                </div>
+                <div class="status-row-item" (click)="irParaPedidos()">
+                  <span class="status-dot status-dot-err"></span>
+                  <span class="status-name">Cancelado</span>
+                  <span class="status-qty">{{ c.pedidosCancelados }}</span>
+                </div>
+                @if (c.totalPedidos === 0) {
+                  <p class="empty">Nenhum pedido cadastrado ainda.</p>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
       } @else {
-        <!-- ════ CONTADOR / CLIENTE DASHBOARD ════ -->
+        <!-- ════ CONTADOR DASHBOARD ════ -->
         <header class="page-header">
           <h2 class="font-heading">Dashboard</h2>
           <p class="page-sub">Últimos {{ dias }} dias</p>
@@ -276,30 +372,63 @@ import { DashboardStatsDto, AdminDashboardDto, DocumentoPorMesDto } from '@velox
       .grid-2 { grid-template-columns: 1fr; }
       .status-row { flex-direction: column; }
     }
+
+    /* Cliente: Pedidos por Status */
+    .status-list { display: flex; flex-direction: column; gap: .5rem; }
+    .status-row-item { display: flex; align-items: center; gap: 10px; padding: .625rem .25rem; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .status-row-item:last-of-type { border-bottom: none; }
+    .status-row-item:hover { background: rgba(255,255,255,.02); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot-neutral { background: var(--text2); }
+    .status-dot-ok { background: var(--accent); }
+    .status-dot-err { background: var(--red); }
+    .status-name { flex: 1; font-size: 13.5px; color: var(--text); }
+    .status-qty { font-size: 14px; font-weight: 700; color: var(--text); }
   `],
 })
 export class DashboardComponent implements OnInit {
   private readonly _dash    = inject(DashboardService);
   private readonly _contSvc = inject(ContadorService);
   private readonly _auth    = inject(AuthService);
+  private readonly _router  = inject(Router);
 
-  readonly dias       = 30;
-  readonly loading    = signal(true);
-  readonly isAdmin    = signal(false);
-  readonly stats      = signal<DashboardStatsDto | null>(null);
-  readonly adminStats = signal<AdminDashboardDto | null>(null);
+  private clienteId = '';
+
+  readonly dias         = 30;
+  readonly loading      = signal(true);
+  readonly isAdmin      = signal(false);
+  readonly isCliente    = signal(false);
+  readonly stats        = signal<DashboardStatsDto | null>(null);
+  readonly adminStats   = signal<AdminDashboardDto | null>(null);
+  readonly clienteStats = signal<ClienteDashboardDto | null>(null);
 
   maxQtd(months: DocumentoPorMesDto[]): number {
     return Math.max(...months.map(m => m.quantidade), 1);
   }
 
+  maxQtdCliente(months: DocumentoPorMesClienteDto[]): number {
+    return Math.max(...months.map(m => m.quantidade), 1);
+  }
+
+  irParaPedidos(): void {
+    this._router.navigate(['/clientes', this.clienteId, 'pedidos']);
+  }
+
   ngOnInit(): void {
-    const perfil = this._auth.currentUser()?.perfil ?? '';
+    const user = this._auth.currentUser();
+    const perfil = user?.perfil ?? '';
     this.isAdmin.set(perfil === 'Administrador');
+    this.isCliente.set(perfil === 'Cliente');
 
     if (this.isAdmin()) {
       this._contSvc.getAdminDashboard().subscribe({
         next: s => { this.adminStats.set(s); this.loading.set(false); },
+        error: () => this.loading.set(false),
+      });
+    } else if (this.isCliente()) {
+      this.clienteId = user?.clienteId ?? '';
+      this._dash.getClienteStats(this.clienteId).subscribe({
+        next: s => { this.clienteStats.set(s); this.loading.set(false); },
         error: () => this.loading.set(false),
       });
     } else {
