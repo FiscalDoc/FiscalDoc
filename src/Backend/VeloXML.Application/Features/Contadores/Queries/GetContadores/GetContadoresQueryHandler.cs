@@ -18,7 +18,7 @@ public sealed class GetContadoresQueryHandler(IUnitOfWork uow)
         var now = DateTime.UtcNow;
 
         var cobrancasList = await uow.Cobrancas.GetByContadoresMesAsync(contadorIds, now.Month, now.Year, ct);
-        var cobrancas = cobrancasList.ToDictionary(c => c.ContadorId);
+        var cobrancas = cobrancasList.ToDictionary(c => c.ContadorId!.Value);
 
         var items = paged.Items.Select(c =>
         {

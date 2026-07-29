@@ -241,12 +241,15 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         </div>
       </div>
 
-      @if (loadingStatus()) {
-        <div class="empty-state">Carregando...</div>
-      } @else if (!importacaoStatus()) {
-        <div class="empty-state">O robô de importação ainda não executou nenhuma vez.</div>
-      } @else {
-        <div class="settings-form">
+      <div class="settings-form">
+        @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! Os números abaixo devem atualizar em alguns segundos — clique em "Atualizar".</div> }
+        @if (forcarErro()) { <div class="alert-error">{{ forcarErro() }}</div> }
+
+        @if (loadingStatus()) {
+          <div class="empty-state">Carregando...</div>
+        } @else if (!importacaoStatus()) {
+          <div class="empty-state">O robô de importação ainda não executou nenhuma vez.</div>
+        } @else {
           <div class="status-summary">
             <div class="status-kpi">
               <span class="status-kpi-label">Última execução</span>
@@ -275,11 +278,15 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
               </div>
             </div>
           </div>
-          <div class="form-actions">
-            <button type="button" class="btn-ghost" (click)="loadStatus()">Atualizar</button>
-          </div>
+        }
+
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" (click)="loadStatus()">Atualizar</button>
+          <button type="button" class="btn-primary" [disabled]="forcando()" (click)="forcarImportacao()">
+            {{ forcando() ? 'Disparando...' : 'Forçar Importação Agora' }}
+          </button>
         </div>
-      }
+      </div>
     </div>
   }
 </div>
@@ -432,6 +439,9 @@ export class ConfiguracoesComponent implements OnInit {
   // Importação de e-mails
   loadingStatus     = signal(false);
   importacaoStatus  = signal<ImportacaoXmlStatusDto | null>(null);
+  forcando          = signal(false);
+  forcarSucesso     = signal(false);
+  forcarErro        = signal<string | null>(null);
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -562,6 +572,24 @@ export class ConfiguracoesComponent implements OnInit {
     this._svc.getImportacaoXmlStatus().subscribe({
       next: s => { this.importacaoStatus.set(s); this.loadingStatus.set(false); },
       error: () => this.loadingStatus.set(false),
+    });
+  }
+
+  forcarImportacao(): void {
+    if (this.forcando()) return;
+    this.forcando.set(true);
+    this.forcarSucesso.set(false);
+    this.forcarErro.set(null);
+    this._svc.forcarImportacaoXml().subscribe({
+      next: () => {
+        this.forcando.set(false);
+        this.forcarSucesso.set(true);
+        setTimeout(() => this.forcarSucesso.set(false), 8000);
+      },
+      error: err => {
+        this.forcando.set(false);
+        this.forcarErro.set(extractErrorMessage(err, 'Erro ao forçar a importação.'));
+      },
     });
   }
 }

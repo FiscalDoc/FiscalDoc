@@ -106,7 +106,7 @@ try
     app.UseHangfireDashboard("/hangfire");
 
     RecurringJob.AddOrUpdate<ImportarXmlEmailJob>(
-        "importar-xml-email",
+        ImportarXmlEmailJob.JobId,
         job => job.ExecuteAsync(CancellationToken.None),
         "*/5 * * * *"); // every 5 minutes
 

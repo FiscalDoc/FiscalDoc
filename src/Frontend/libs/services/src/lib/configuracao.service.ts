@@ -45,4 +45,8 @@ export class ConfiguracaoService {
   getImportacaoXmlStatus(): Observable<ImportacaoXmlStatusDto | null> {
     return this._api.get<ImportacaoXmlStatusDto | null>('/configuracoes/importacao-xml/status');
   }
+
+  forcarImportacaoXml(): Observable<void> {
+    return this._api.post<void>('/configuracoes/importacao-xml/forcar', {});
+  }
 }

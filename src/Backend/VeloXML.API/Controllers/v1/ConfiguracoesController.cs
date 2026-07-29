@@ -1,3 +1,4 @@
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using VeloXML.Application.Features.Configuracoes.Commands.TestSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSocialConfig;
+using VeloXML.Infrastructure.Jobs;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -71,5 +73,12 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetImportacaoXmlStatusQuery(), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("importacao-xml/forcar")]
+    public IActionResult ForcarImportacaoXml()
+    {
+        RecurringJob.TriggerJob(ImportarXmlEmailJob.JobId);
+        return Ok();
     }
 }

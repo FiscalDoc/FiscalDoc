@@ -16,7 +16,7 @@ public sealed class GetAdminDashboardQueryHandler(IUnitOfWork uow)
         var now = DateTime.UtcNow;
         var contadorIds = contadores.Select(c => c.Id).ToList();
         var cobrancasMes = await uow.Cobrancas.GetByContadoresMesAsync(contadorIds, now.Month, now.Year, ct);
-        var mapCob = cobrancasMes.ToDictionary(c => c.ContadorId);
+        var mapCob = cobrancasMes.ToDictionary(c => c.ContadorId!.Value);
 
         var totalContadores     = contadores.Count;
         var contadoresAtivos    = contadores.Count(c => c.StatusLicenca == StatusLicencaEnum.Ativo);

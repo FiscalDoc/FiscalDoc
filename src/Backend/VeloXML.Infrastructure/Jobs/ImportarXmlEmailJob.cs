@@ -19,6 +19,8 @@ public sealed class ImportarXmlEmailJob(
     IMediator mediator,
     ILogger<ImportarXmlEmailJob> logger)
 {
+    public const string JobId = "importar-xml-email";
+
     private sealed record ResumoCliente(
         Guid ClienteId, string ClienteNome, DateTime ExecutadoEm,
         int EmailsEncontrados, int XmlsProcessados, int XmlsImportados, int Erros, string? MensagemErro);
