@@ -25,4 +25,8 @@ export class UsuarioService {
   update(id: string, req: UpdateUsuarioRequest): Observable<UsuarioDto> {
     return this._api.put<UsuarioDto>(`/usuarios/${id}`, req);
   }
+
+  delete(id: string): Observable<void> {
+    return this._api.delete<void>(`/usuarios/${id}`);
+  }
 }

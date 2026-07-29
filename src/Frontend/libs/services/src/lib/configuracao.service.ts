@@ -49,4 +49,12 @@ export class ConfiguracaoService {
   forcarImportacaoXml(): Observable<void> {
     return this._api.post<void>('/configuracoes/importacao-xml/forcar', {});
   }
+
+  getIntervaloImportacao(): Observable<{ intervaloMinutos: number }> {
+    return this._api.get<{ intervaloMinutos: number }>('/configuracoes/importacao-xml/intervalo');
+  }
+
+  saveIntervaloImportacao(intervaloMinutos: number): Observable<{ intervaloMinutos: number }> {
+    return this._api.put<{ intervaloMinutos: number }>('/configuracoes/importacao-xml/intervalo', { intervaloMinutos });
+  }
 }

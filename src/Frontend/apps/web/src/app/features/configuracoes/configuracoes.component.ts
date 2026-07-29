@@ -25,7 +25,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     <button class="tab-btn" [class.active]="tab() === 'email'" (click)="tab.set('email')">E-mail (SMTP)</button>
     <button class="tab-btn" [class.active]="tab() === 'social'" (click)="tab.set('social')">Redes Sociais</button>
     <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
-    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); loadStatus()">Importação de E-mails</button>
+    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); loadStatus(); carregarIntervalo()">Importação de E-mails</button>
   </nav>
 
   <!-- ══ E-MAIL (SMTP) ══ -->
@@ -237,11 +237,23 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         </div>
         <div>
           <div class="section-title">Importação de E-mails (XML)</div>
-          <div class="section-sub">Resumo da última execução do robô que lê os e-mails de cada cliente — roda automaticamente a cada 5 minutos</div>
+          <div class="section-sub">Resumo da última execução do robô que lê os e-mails de cada cliente</div>
         </div>
       </div>
 
       <div class="settings-form">
+        <div class="intervalo-row">
+          <div class="field field-sm">
+            <label class="label">Intervalo de execução (minutos)</label>
+            <input class="input" type="number" min="1" max="1440" [(ngModel)]="intervaloMinutos"/>
+          </div>
+          <button type="button" class="btn-ghost" [disabled]="salvandoIntervalo()" (click)="salvarIntervalo()">
+            {{ salvandoIntervalo() ? 'Salvando...' : 'Salvar Intervalo' }}
+          </button>
+        </div>
+        @if (intervaloSucesso()) { <div class="alert-success">{{ checkIcon() }} Intervalo atualizado para {{ intervaloMinutos }} minuto(s) — já aplicado, sem precisar reiniciar.</div> }
+        @if (intervaloErro()) { <div class="alert-error">{{ intervaloErro() }}</div> }
+
         @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! Os números abaixo devem atualizar em alguns segundos — clique em "Atualizar".</div> }
         @if (forcarErro()) { <div class="alert-error">{{ forcarErro() }}</div> }
 
@@ -297,6 +309,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     .page-header h2 { font-size: 1.5rem; margin: 0; }
     .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
 
+    .intervalo-row { display: flex; align-items: flex-end; gap: .75rem; }
     .test-block { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: .625rem; }
     .test-block-title { font-size: 13px; font-weight: 600; color: var(--text); }
     .test-block-sub { font-size: 12px; color: var(--text2); margin: -4px 0 0; }
@@ -442,6 +455,10 @@ export class ConfiguracoesComponent implements OnInit {
   forcando          = signal(false);
   forcarSucesso     = signal(false);
   forcarErro        = signal<string | null>(null);
+  intervaloMinutos  = 5;
+  salvandoIntervalo = signal(false);
+  intervaloSucesso  = signal(false);
+  intervaloErro     = signal<string | null>(null);
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -572,6 +589,32 @@ export class ConfiguracoesComponent implements OnInit {
     this._svc.getImportacaoXmlStatus().subscribe({
       next: s => { this.importacaoStatus.set(s); this.loadingStatus.set(false); },
       error: () => this.loadingStatus.set(false),
+    });
+  }
+
+  carregarIntervalo(): void {
+    this._svc.getIntervaloImportacao().subscribe(r => this.intervaloMinutos = r.intervaloMinutos);
+  }
+
+  salvarIntervalo(): void {
+    if (!this.intervaloMinutos || this.intervaloMinutos < 1) {
+      this.intervaloErro.set('Informe um intervalo válido (mínimo 1 minuto).');
+      return;
+    }
+    this.salvandoIntervalo.set(true);
+    this.intervaloSucesso.set(false);
+    this.intervaloErro.set(null);
+    this._svc.saveIntervaloImportacao(this.intervaloMinutos).subscribe({
+      next: r => {
+        this.intervaloMinutos = r.intervaloMinutos;
+        this.salvandoIntervalo.set(false);
+        this.intervaloSucesso.set(true);
+        setTimeout(() => this.intervaloSucesso.set(false), 6000);
+      },
+      error: err => {
+        this.salvandoIntervalo.set(false);
+        this.intervaloErro.set(extractErrorMessage(err, 'Erro ao salvar intervalo.'));
+      },
     });
   }
 

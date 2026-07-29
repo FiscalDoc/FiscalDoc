@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Usuarios.Commands.CreateUsuario;
+using VeloXML.Application.Features.Usuarios.Commands.DeleteUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.UpdateUsuario;
 using VeloXML.Application.Features.Usuarios.Queries.GetUsuarioById;
 using VeloXML.Application.Features.Usuarios.Queries.GetUsuarios;
@@ -44,6 +45,13 @@ public sealed class UsuariosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new UpdateUsuarioCommand(id, body.Nome, body.Ativo, body.NovaSenha), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeleteUsuarioCommand(id), ct);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 }
 

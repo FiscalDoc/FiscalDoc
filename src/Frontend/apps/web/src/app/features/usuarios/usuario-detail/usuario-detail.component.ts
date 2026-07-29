@@ -23,7 +23,14 @@ type Tab = 'geral' | 'acesso';
             </svg>
             Usuários
           </button>
-          <h2 class="page-title">{{ isNew() ? 'Novo Usuário' : (form.get('nome')?.value || 'Usuário') }}</h2>
+          <div class="header-top">
+            <h2 class="page-title">{{ isNew() ? 'Novo Usuário' : (form.get('nome')?.value || 'Usuário') }}</h2>
+            @if (!isNew() && usuario()?.perfil !== 'Administrador') {
+              <button class="btn-danger-outline" [disabled]="excluindo()" (click)="excluir()">
+                {{ excluindo() ? 'Excluindo...' : 'Excluir' }}
+              </button>
+            }
+          </div>
         </div>
 
         <nav class="tabs">
@@ -173,7 +180,11 @@ type Tab = 'geral' | 'acesso';
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .btn-danger-outline { background: none; border: 1px solid rgba(255,77,109,.4); color: var(--red); border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: pointer; }
+    .btn-danger-outline:hover:not(:disabled) { background: rgba(255,77,109,.1); }
+    .btn-danger-outline:disabled { opacity: .5; cursor: not-allowed; }
 
     .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
     .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms, border-color 120ms; }
@@ -222,6 +233,7 @@ export class UsuarioDetailComponent implements OnInit {
   readonly isNew    = signal(true);
   readonly loading  = signal(true);
   readonly submitting = signal(false);
+  readonly excluindo = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly tab      = signal<Tab>('geral');
@@ -284,6 +296,20 @@ export class UsuarioDetailComponent implements OnInit {
   }
 
   goBack(): void { this._router.navigate(['/usuarios']); }
+
+  excluir(): void {
+    const nome = this.usuario()?.nome ?? 'este usuário';
+    if (!confirm(`Excluir ${nome}? Esta ação não pode ser desfeita.`)) return;
+    this.excluindo.set(true);
+    this.submitError.set(null);
+    this._svc.delete(this.usuarioId).subscribe({
+      next: () => { this.excluindo.set(false); this.goBack(); },
+      error: err => {
+        this.excluindo.set(false);
+        this.submitError.set(extractErrorMessage(err, 'Erro ao excluir usuário.'));
+      },
+    });
+  }
 
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }

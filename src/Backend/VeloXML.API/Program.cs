@@ -1,9 +1,11 @@
 using Hangfire;
 using Hangfire.PostgreSql;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using VeloXML.API.Middleware;
 using VeloXML.API.Startup;
+using VeloXML.Application.Features.Configuracoes.Queries.GetIntervaloImportacao;
 using VeloXML.Infrastructure.Jobs;
 using VeloXML.Application;
 using VeloXML.Infrastructure;
@@ -105,10 +107,20 @@ try
     // Hangfire dashboard: em produção, proteger com auth (Etapa 5)
     app.UseHangfireDashboard("/hangfire");
 
+    int intervaloImportacaoMinutos;
+    using (var scope = app.Services.CreateScope())
+    {
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var intervaloResult = await mediator.Send(new GetIntervaloImportacaoQuery());
+        intervaloImportacaoMinutos = intervaloResult.IsSuccess
+            ? intervaloResult.Value
+            : GetIntervaloImportacaoQueryHandler.IntervaloPadraoMinutos;
+    }
+
     RecurringJob.AddOrUpdate<ImportarXmlEmailJob>(
         ImportarXmlEmailJob.JobId,
         job => job.ExecuteAsync(CancellationToken.None),
-        "*/5 * * * *"); // every 5 minutes
+        $"*/{intervaloImportacaoMinutos} * * * *");
 
     app.MapControllers();
     app.MapHealthChecks("/health");

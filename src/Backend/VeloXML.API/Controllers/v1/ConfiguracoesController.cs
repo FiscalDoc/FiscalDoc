@@ -2,11 +2,13 @@ using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Features.Configuracoes.Commands.SaveIntervaloImportacao;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSocialConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SendConvite;
 using VeloXML.Application.Features.Configuracoes.Commands.TestSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
+using VeloXML.Application.Features.Configuracoes.Queries.GetIntervaloImportacao;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSocialConfig;
 using VeloXML.Infrastructure.Jobs;
@@ -80,5 +82,27 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
     {
         RecurringJob.TriggerJob(ImportarXmlEmailJob.JobId);
         return Ok();
+    }
+
+    [HttpGet("importacao-xml/intervalo")]
+    public async Task<IActionResult> GetIntervaloImportacao(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetIntervaloImportacaoQuery(), ct);
+        return Ok(new { intervaloMinutos = result.Value });
+    }
+
+    [HttpPut("importacao-xml/intervalo")]
+    public async Task<IActionResult> SaveIntervaloImportacao([FromBody] SaveIntervaloImportacaoCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        if (!result.IsSuccess) return BadRequest(result.Error);
+
+        // Reagenda o job em produção imediatamente, sem precisar reiniciar a API.
+        RecurringJob.AddOrUpdate<ImportarXmlEmailJob>(
+            ImportarXmlEmailJob.JobId,
+            job => job.ExecuteAsync(CancellationToken.None),
+            $"*/{result.Value} * * * *");
+
+        return Ok(new { intervaloMinutos = result.Value });
     }
 }
