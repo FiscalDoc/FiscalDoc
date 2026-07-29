@@ -1,12 +1,13 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService, ContadorService } from '@veloxml/services';
 
 interface NavItem {
   label: string;
   icon: string;
-  route: string;
+  route?: string;
   roles?: string[];
+  children?: NavItem[];
 }
 
 @Component({
@@ -29,15 +30,33 @@ interface NavItem {
         </div>
 
         <nav class="sidebar-nav">
-          @for (item of visibleNavItems; track item.route) {
-            <a
-              [routerLink]="item.route"
-              routerLinkActive="active"
-              class="nav-item"
-            >
-              <span class="nav-icon" [innerHTML]="item.icon"></span>
-              <span class="nav-label">{{ item.label }}</span>
-            </a>
+          @for (item of visibleNavItems; track item.label) {
+            @if (item.children) {
+              <div class="nav-group">
+                <button type="button" class="nav-item nav-group-toggle" [class.active]="isGroupActive(item)" (click)="toggleGroup(item.label)">
+                  <span class="nav-icon" [innerHTML]="item.icon"></span>
+                  <span class="nav-label">{{ item.label }}</span>
+                  <svg class="nav-chevron" [class.open]="isGroupExpanded(item)" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+                @if (isGroupExpanded(item)) {
+                  <div class="nav-subitems">
+                    @for (child of item.children; track child.route) {
+                      <a [routerLink]="child.route" routerLinkActive="active" class="nav-item nav-subitem">
+                        <span class="nav-icon" [innerHTML]="child.icon"></span>
+                        <span class="nav-label">{{ child.label }}</span>
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+                <span class="nav-icon" [innerHTML]="item.icon"></span>
+                <span class="nav-label">{{ item.label }}</span>
+              </a>
+            }
           }
         </nav>
 
@@ -251,6 +270,14 @@ interface NavItem {
 
     .nav-label { flex: 1; }
 
+    .nav-group { display: flex; flex-direction: column; gap: 2px; }
+    .nav-group-toggle { width: 100%; background: none; border: none; font-family: inherit; text-align: left; }
+    .nav-chevron { flex-shrink: 0; transition: transform 150ms; opacity: .6; }
+    .nav-chevron.open { transform: rotate(90deg); }
+    .nav-subitems { display: flex; flex-direction: column; gap: 2px; padding-left: 1.5rem; }
+    .nav-subitem { font-size: 13px; padding: 0.4rem 0.75rem; }
+    .nav-subitem .nav-icon { width: 14px; height: 14px; }
+
     /* Footer */
     .sidebar-footer {
       padding: 0.5rem 0.75rem 0.75rem;
@@ -424,10 +451,12 @@ interface NavItem {
 export class ShellComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly _contSvc = inject(ContadorService);
+  private readonly _router = inject(Router);
 
   cobrancasAtrasadas = signal(0);
   isAdmin = signal(false);
   showUpgradeModal = signal(false);
+  private readonly _expandedGroups = signal<Set<string>>(new Set());
 
   private readonly _whatsappNumber = '5511973982559';
   readonly whatsappNumberFormatted = '+55 11 97398-2559';
@@ -497,6 +526,14 @@ export class ShellComponent implements OnInit {
       </svg>`,
     },
     {
+      label: 'Blog',
+      route: '/admin/blog',
+      roles: ['Administrador'],
+      icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+      </svg>`,
+    },
+    {
       label: 'Configurações',
       route: '/configuracoes',
       roles: ['Administrador'],
@@ -538,6 +575,29 @@ export class ShellComponent implements OnInit {
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
           </svg>`,
+          children: [
+            {
+              label: 'Usuários',
+              route: `/clientes/${id}/usuarios`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.196-3.796M9 20H4v-2a4 4 0 015.196-3.796M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 10a3 3 0 116 0 3 3 0 01-6 0z"/>
+              </svg>`,
+            },
+            {
+              label: 'Produtos',
+              route: `/clientes/${id}/cadastros/produtos`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+              </svg>`,
+            },
+            {
+              label: 'Destinatários',
+              route: `/clientes/${id}/cadastros/destinatarios`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12.5 3.5a3.5 3.5 0 110 7 3.5 3.5 0 010-7zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+              </svg>`,
+            },
+          ],
         },
         {
           label: 'Pedidos / NF-e',
@@ -546,17 +606,26 @@ export class ShellComponent implements OnInit {
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>`,
         },
-        {
-          label: 'Usuários',
-          route: `/clientes/${id}/usuarios`,
-          icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.196-3.796M9 20H4v-2a4 4 0 015.196-3.796M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 10a3 3 0 116 0 3 3 0 01-6 0z"/>
-          </svg>`,
-        },
       );
     }
 
     return base;
+  }
+
+  toggleGroup(label: string): void {
+    this._expandedGroups.update(s => {
+      const next = new Set(s);
+      if (next.has(label)) next.delete(label); else next.add(label);
+      return next;
+    });
+  }
+
+  isGroupActive(item: NavItem): boolean {
+    return (item.children ?? []).some(c => !!c.route && this._router.url.startsWith(c.route));
+  }
+
+  isGroupExpanded(item: NavItem): boolean {
+    return this._expandedGroups().has(item.label) || this.isGroupActive(item);
   }
 
   userInitials(): string {

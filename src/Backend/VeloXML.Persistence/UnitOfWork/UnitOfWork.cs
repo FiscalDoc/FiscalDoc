@@ -22,6 +22,8 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
     public IProdutoRepository Produtos { get; } = new ProdutoRepository(context);
     public IDestinatarioRepository Destinatarios { get; } = new DestinatarioRepository(context);
     public IPedidoRepository Pedidos { get; } = new PedidoRepository(context);
+    public IBlogPostRepository BlogPosts { get; } = new BlogPostRepository(context);
+    public IBlogCategoriaRepository BlogCategorias { get; } = new BlogCategoriaRepository(context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default) =>
         await context.SaveChangesAsync(ct);

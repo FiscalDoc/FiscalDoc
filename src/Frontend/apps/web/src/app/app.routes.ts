@@ -14,6 +14,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   {
+    path: 'blog',
+    canActivate: [landingDomainGuard],
+    loadChildren: () => import('./features/blog/blog.routes').then((m) => m.BLOG_ROUTES),
+  },
+  {
     path: 'imprimir/pedidos/:id/:pedidoId',
     canActivate: [authGuard, clienteScopeGuard],
     loadComponent: () =>
@@ -69,6 +74,11 @@ export const routes: Routes = [
         path: 'configuracoes',
         loadComponent: () =>
           import('./features/configuracoes/configuracoes.component').then((m) => m.ConfiguracoesComponent),
+      },
+      {
+        path: 'admin/blog',
+        loadChildren: () =>
+          import('./features/admin/blog/blog-admin.routes').then((m) => m.BLOG_ADMIN_ROUTES),
       },
     ],
   },

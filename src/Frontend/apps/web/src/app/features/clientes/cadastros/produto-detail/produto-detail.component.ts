@@ -194,7 +194,7 @@ export class ProdutoDetailComponent implements OnInit {
     };
   }
 
-  goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros']); }
+  goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'produtos']); }
 
   salvar(): void {
     if (this.salvando()) return;

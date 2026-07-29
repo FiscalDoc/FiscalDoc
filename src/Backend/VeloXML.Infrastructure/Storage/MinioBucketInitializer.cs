@@ -8,7 +8,7 @@ public sealed class MinioBucketInitializer(
     IStorageService storage,
     ILogger<MinioBucketInitializer> logger) : IHostedService
 {
-    private static readonly string[] Buckets = ["veloxml", "documentos", "arquivos", "thumbnails"];
+    private static readonly string[] Buckets = ["veloxml", "documentos", "arquivos", "thumbnails", "blog"];
 
     public async Task StartAsync(CancellationToken ct)
     {

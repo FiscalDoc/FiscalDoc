@@ -47,13 +47,25 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
         <!-- Módulos -->
         <div class="modules-row">
-          <a [routerLink]="['/clientes', cliente()!.id, 'cadastros']" class="module-card">
+          <a [routerLink]="['/clientes', cliente()!.id, 'cadastros', 'produtos']" class="module-card">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
             <div>
-              <div class="module-title">Produtos &amp; Destinatários</div>
-              <div class="module-sub">Cadastrar produtos e destinatários de NF-e</div>
+              <div class="module-title">Produtos</div>
+              <div class="module-sub">Cadastrar produtos usados nos pedidos e NF-e</div>
+            </div>
+            <svg class="module-arrow" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a [routerLink]="['/clientes', cliente()!.id, 'cadastros', 'destinatarios']" class="module-card">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.196-3.796M9 20H4v-2a4 4 0 015.196-3.796M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 10a3 3 0 116 0 3 3 0 01-6 0z"/>
+            </svg>
+            <div>
+              <div class="module-title">Destinatários</div>
+              <div class="module-sub">Cadastrar destinatários das NF-e (clientes finais)</div>
             </div>
             <svg class="module-arrow" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>

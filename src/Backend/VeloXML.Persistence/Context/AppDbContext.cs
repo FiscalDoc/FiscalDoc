@@ -26,6 +26,8 @@ public class AppDbContext(
     public DbSet<Destinatario> Destinatarios => Set<Destinatario>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<PedidoItem> PedidoItens => Set<PedidoItem>();
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
+    public DbSet<BlogCategoria> BlogCategorias => Set<BlogCategoria>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -68,10 +70,13 @@ public class AppDbContext(
             if (entry.State == EntityState.Modified)
                 entry.Entity.UpdatedAt = DateTime.UtcNow;
 
+            // currentTenant.TenantId é null para Administrador de propósito (bypass do filtro de
+            // leitura) — usar currentUser.TenantId aqui, que sempre reflete o tenant_id real do
+            // JWT, para não gravar TenantId vazio e violar as FKs de tenant_id nas novas entidades.
             if (entry.State == EntityState.Added
-                && currentTenant.TenantId.HasValue
+                && currentUser.TenantId.HasValue
                 && entry.Entity.TenantId == Guid.Empty)
-                entry.Entity.TenantId = currentTenant.TenantId.Value;
+                entry.Entity.TenantId = currentUser.TenantId.Value;
         }
 
         if (auditEntries.Count > 0)

@@ -30,6 +30,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           <a href="#features">Recursos</a>
           <a href="#how">Como funciona</a>
           <a href="#plans">Planos</a>
+          <a href="#faq">FAQ</a>
           <a href="#contact">Contato</a>
         </nav>
         <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline">Acessar sistema</a>
@@ -343,6 +344,33 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       </div>
     </section>
 
+    <!-- ─── FAQ ────────────────────────────────────────────────── -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <div class="section-label">Dúvidas frequentes</div>
+        <h2 class="section-title">Perguntas frequentes</h2>
+        <p class="section-sub">Tudo que você precisa saber antes de começar a usar o FiscalDoc.</p>
+
+        <div class="faq-list">
+          @for (item of faqs; track item.q; let i = $index) {
+            <div class="faq-item" [class.open]="openFaq() === i">
+              <button type="button" class="faq-question" [attr.aria-expanded]="openFaq() === i" (click)="toggleFaq(i)">
+                <span>{{ item.q }}</span>
+                <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              @if (openFaq() === i) {
+                <div class="faq-answer">
+                  <p>{{ item.a }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
     <!-- ─── CTA FINAL ────────────────────────────────────────── -->
     <section class="cta-section" id="contact">
       <div class="container">
@@ -535,6 +563,18 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .check { color: #00e5a0; font-weight: 700; }
     .plans-note { text-align: center; font-size: 13px; color: #4a5068; margin-top: 2rem; }
 
+    /* ─── FAQ ────────────────────────────────── */
+    .faq { padding: 100px 0; background: #13161e; }
+    .faq .section-sub { margin-bottom: 3rem; }
+    .faq-list { display: flex; flex-direction: column; gap: 0.75rem; max-width: 780px; }
+    .faq-item { background: #0d0f14; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; transition: border-color 200ms; }
+    .faq-item.open { border-color: rgba(0,229,160,0.25); }
+    .faq-question { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: none; border: none; text-align: left; cursor: pointer; padding: 1.25rem 1.5rem; font-size: 15px; font-weight: 700; color: #e8eaf0; }
+    .faq-chevron { flex-shrink: 0; color: #7c8299; transition: transform 200ms; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); color: #00e5a0; }
+    .faq-answer { padding: 0 1.5rem 1.5rem; }
+    .faq-answer p { font-size: 14px; color: #7c8299; line-height: 1.75; white-space: pre-line; }
+
     /* ─── CTA ────────────────────────────────── */
     .cta-section { padding: 100px 0; }
     .cta-card {
@@ -617,6 +657,35 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 })
 export class LandingComponent {
   readonly wpp = `https://wa.me/${WPP_NUMBER}?text=${WPP_MSG}`;
+
+  readonly faqs = [
+    {
+      q: 'O que é o FiscalDoc e como ele funciona na gestão de documentos fiscais?',
+      a: 'O FiscalDoc é um hub fiscal inteligente desenvolvido especificamente para escritórios de contabilidade e departamentos fiscais. Ele funciona como uma plataforma centralizada na nuvem que automatiza a recepção, organização e monitoramento de XMLs (NF-e, CT-e, NFS-e e MDF-e).\nO sistema elimina o trabalho manual de importação de notas fiscais. Seus clientes enviam os arquivos (ou utilizam nossa API/e-mail exclusivo) e o FiscalDoc automaticamente valida, indexa e organiza esses documentos, permitindo que sua equipe visualize todos os clientes em uma única tela, sem depender de planilhas ou e-mails descentralizados.',
+    },
+    {
+      q: 'De que maneira o FiscalDoc protege o escritório e o cliente contra prejuízos financeiros e multas?',
+      a: 'O FiscalDoc age como uma blindagem fiscal ativa contra erros humanos e fraudes. A conferência manual de notas fiscais é um processo lento e falho, que frequentemente resulta em pagamentos indevidos ou créditos tributários perdidos.\nNossa plataforma protege seu escritório e seus clientes de duas formas críticas:\n1. Detecção de Divergências de Valor: o sistema cruza automaticamente os dados do XML contra pedidos de compra ou valores de contrato, emitindo alertas imediatos se houver cobranças indevidas ou erros de emissão pelo fornecedor antes da contabilização.\n2. Bloqueio de Notas Duplicadas: o robô do FiscalDoc identifica XMLs duplicados (mesma chave de acesso ou número de nota) em tempo real, evitando que o financeiro pague a mesma despesa duas vezes — um erro operacional comum que gera alto ROI negativo.\nAo garantir que apenas notas fiscais validadas e íntegras sejam processadas, você elimina o risco de multas por inconsistências no SPED e blinda o caixa do seu cliente contra prejuízos diretos.',
+    },
+    {
+      q: 'Quais tipos de XML o FiscalDoc suporta e qual o volume de documentos suportado?',
+      a: 'O FiscalDoc é uma solução multi-tenant robusta que suporta todos os principais tipos de documentos fiscais eletrônicos do Brasil: NF-e (Nota Fiscal de Produto/Mercadoria), NFS-e (Nota Fiscal de Serviço), CT-e (Conhecimento de Transporte Eletrônico) e MDF-e (Manifesto Eletrônico de Documentos Fiscais).\nQuanto ao volume, nossa infraestrutura em nuvem é elástica e projetada para alta escala, atendendo desde pequenas empresas até grandes indústrias ou escritórios contábeis com centenas de clientes e milhares de notas processadas diariamente, mantendo a performance de busca instantânea (menos de 2 segundos por nota).',
+    },
+    {
+      q: 'O sistema possui integração com ERPs e compartilhamento com o contador?',
+      a: 'Sim, a integração e o compartilhamento são pilares fundamentais do FiscalDoc. Oferecemos opções flexíveis de integração via API com os principais ERPs do mercado, facilitando o fluxo de entrada de dados.\nPara os escritórios contábeis, o sistema foi desenhado para o modelo de portal do contador. Você pode configurar acessos para que seus clientes enviem os documentos diretamente para a plataforma, enquanto seu escritório tem visibilidade total em tempo real, podendo realizar downloads individuais ou em lote (XML e DANFE) e gerar relatórios gerenciais sem precisar solicitar arquivos aos clientes.',
+    },
+    {
+      q: 'Como posso testar o FiscalDoc e quanto custa a implantação?',
+      a: 'Você pode começar a organizar sua contabilidade agora mesmo com nosso período de teste gratuito de 30 dias, sem necessidade de cartão de crédito. Basta acessar nosso site e clicar em "Teste grátis".\nSobre a implantação, o FiscalDoc possui uma taxa de setup zero e a plataforma é extremamente intuitiva, permitindo um "go-live" rápido. Nossos planos são flexíveis (Starter, Professional e Enterprise) e cobrados de acordo com o volume de notas por cliente, sem contratos de fidelidade longos. O retorno sobre o investimento (ROI) é imediato devido à drástica redução do tempo operacional e à prevenção de prejuízos com notas duplicadas.',
+    },
+  ];
+
+  readonly openFaq = signal<number | null>(0);
+
+  toggleFaq(i: number): void {
+    this.openFaq.set(this.openFaq() === i ? null : i);
+  }
 
   private readonly _http = inject(HttpClient);
   private readonly _fb   = inject(FormBuilder);

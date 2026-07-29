@@ -24,7 +24,7 @@
                 "output": "assets"
               }
             ],
-            "styles": ["apps/web/src/styles/main.scss"],
+            "styles": ["apps/web/src/styles/main.scss", "node_modules/quill/dist/quill.snow.css"],
             "scripts": [],
             "stylePreprocessorOptions": {
               "includePaths": ["apps/web/src/styles"]

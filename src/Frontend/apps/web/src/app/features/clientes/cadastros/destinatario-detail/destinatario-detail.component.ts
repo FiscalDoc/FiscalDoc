@@ -215,7 +215,7 @@ export class DestinatarioDetailComponent implements OnInit {
     };
   }
 
-  goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros'], { queryParams: { tab: 'destinatarios' } }); }
+  goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'destinatarios']); }
 
   salvar(): void {
     if (this.salvando()) return;

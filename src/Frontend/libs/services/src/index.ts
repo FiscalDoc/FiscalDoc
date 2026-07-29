@@ -13,3 +13,5 @@ export * from './lib/produto.service';
 export * from './lib/destinatario.service';
 export * from './lib/pedido.service';
 export * from './lib/cliente-usuario.service';
+export * from './lib/blog.service';
+export * from './lib/blog-admin.service';

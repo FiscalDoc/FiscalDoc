@@ -6,6 +6,7 @@ using MailKit.Search;
 using MimeKit;
 using VeloXML.Application.Common.DTOs;
 using VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
+using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 
@@ -16,74 +17,126 @@ public sealed class ImportarXmlEmailJob(
     IMediator mediator,
     ILogger<ImportarXmlEmailJob> logger)
 {
+    private sealed record ResumoCliente(
+        Guid ClienteId, string ClienteNome, DateTime ExecutadoEm,
+        int EmailsEncontrados, int XmlsProcessados, int XmlsImportados, int Erros, string? MensagemErro);
+
     public async Task ExecuteAsync(CancellationToken ct = default)
     {
+        var inicioExecucao = DateTime.UtcNow;
+
         var clientes = await uow.Clientes.FindAsync(
             c => c.ImapHabilitado && c.ImapHost != null && c.ImapEmail != null && c.ImapSenha != null, ct);
 
+        logger.LogInformation(
+            "[ImportarXmlEmail] Execução iniciada em {IniciadoEm:u} | Clientes com IMAP habilitado: {TotalClientes}",
+            inicioExecucao, clientes.Count);
+
+        var resumos = new List<ResumoCliente>(clientes.Count);
         foreach (var cliente in clientes)
-        {
-            try
-            {
-                await ProcessarClienteAsync(cliente.Id, cliente.ImapHost!, cliente.ImapPort,
-                    cliente.ImapEmail!, cliente.ImapSenha!, ct);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Erro ao importar e-mails do cliente {ClienteId}", cliente.Id);
-            }
-        }
+            resumos.Add(await ProcessarClienteAsync(cliente, ct));
+
+        var duracaoMs = (DateTime.UtcNow - inicioExecucao).TotalMilliseconds;
+        var totalEmails = resumos.Sum(r => r.EmailsEncontrados);
+        var totalProcessados = resumos.Sum(r => r.XmlsProcessados);
+        var totalImportados = resumos.Sum(r => r.XmlsImportados);
+        var totalErros = resumos.Sum(r => r.Erros);
+
+        var nivelFinal = totalErros > 0 ? LogLevel.Warning : LogLevel.Information;
+        logger.Log(nivelFinal,
+            "[ImportarXmlEmail] Execução concluída em {ConcluidoEm:u} (duração: {DuracaoMs:N0}ms) | " +
+            "Clientes processados: {TotalClientes} | E-mails encontrados: {TotalEmails} | " +
+            "XMLs processados: {TotalProcessados} | XMLs importados com sucesso: {TotalImportados} | Erros: {TotalErros}",
+            DateTime.UtcNow, duracaoMs, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros);
     }
 
-    private async Task ProcessarClienteAsync(
-        Guid clienteId, string host, int port, string email, string senha, CancellationToken ct)
+    private async Task<ResumoCliente> ProcessarClienteAsync(Cliente cliente, CancellationToken ct)
     {
-        using var client = new ImapClient();
-        await client.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.SslOnConnect, ct);
-        await client.AuthenticateAsync(email, senha, ct);
+        var emailsEncontrados = 0;
+        var xmlsProcessados = 0;
+        var xmlsImportados = 0;
+        var erros = 0;
+        string? mensagemErro = null;
 
-        var inbox = client.Inbox;
-        await inbox.OpenAsync(FolderAccess.ReadWrite, ct);
-
-        var uids = await inbox.SearchAsync(SearchQuery.NotSeen, ct);
-        if (uids.Count == 0)
+        try
         {
-            await client.DisconnectAsync(true, ct);
-            return;
-        }
+            using var client = new ImapClient();
+            await client.ConnectAsync(cliente.ImapHost!, cliente.ImapPort, MailKit.Security.SecureSocketOptions.SslOnConnect, ct);
+            await client.AuthenticateAsync(cliente.ImapEmail!, cliente.ImapSenha!, ct);
 
-        var messages = await inbox.FetchAsync(uids, MessageSummaryItems.Full | MessageSummaryItems.Body, ct);
+            var inbox = client.Inbox;
+            await inbox.OpenAsync(FolderAccess.ReadWrite, ct);
 
-        foreach (var summary in messages)
-        {
-            var message = await inbox.GetMessageAsync(summary.UniqueId, ct);
-            var xmlAttachments = message.Attachments
-                .OfType<MimePart>()
-                .Where(a => a.FileName?.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) == true);
+            var uids = await inbox.SearchAsync(SearchQuery.NotSeen, ct);
+            emailsEncontrados = uids.Count;
 
-            foreach (var attachment in xmlAttachments)
+            if (uids.Count > 0)
             {
-                await using var stream = new MemoryStream();
-                await attachment.Content.DecodeToAsync(stream, ct);
-                stream.Position = 0;
+                var messages = await inbox.FetchAsync(uids, MessageSummaryItems.Full | MessageSummaryItems.Body, ct);
 
-                var fileName = attachment.FileName ?? $"email_{summary.UniqueId}.xml";
-                var tipo = DetectarTipo(fileName);
-                var dto = new FileUploadDto(stream, fileName, "application/xml", stream.Length);
+                foreach (var summary in messages)
+                {
+                    var message = await inbox.GetMessageAsync(summary.UniqueId, ct);
+                    var xmlAttachments = message.Attachments
+                        .OfType<MimePart>()
+                        .Where(a => a.FileName?.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) == true)
+                        .ToList();
 
-                var result = await mediator.Send(new UploadDocumentoCommand(clienteId, tipo, dto), ct);
-                if (result.IsSuccess)
-                    logger.LogInformation("XML {File} importado para cliente {ClienteId}", fileName, clienteId);
-                else
-                    logger.LogWarning("Falha ao importar {File} para cliente {ClienteId}: {Err}",
-                        fileName, clienteId, result.Error);
+                    foreach (var attachment in xmlAttachments)
+                    {
+                        xmlsProcessados++;
+                        await using var stream = new MemoryStream();
+                        await attachment.Content.DecodeToAsync(stream, ct);
+                        stream.Position = 0;
+
+                        var fileName = attachment.FileName ?? $"email_{summary.UniqueId}.xml";
+                        var tipo = DetectarTipo(fileName);
+                        var dto = new FileUploadDto(stream, fileName, "application/xml", stream.Length);
+
+                        var result = await mediator.Send(new UploadDocumentoCommand(cliente.Id, tipo, dto), ct);
+                        if (result.IsSuccess)
+                        {
+                            xmlsImportados++;
+                            logger.LogInformation(
+                                "[ImportarXmlEmail] XML importado com sucesso | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Tipo={Tipo}",
+                                cliente.Id, cliente.RazaoSocial, summary.Envelope?.Subject ?? "(sem assunto)", fileName, tipo);
+                        }
+                        else
+                        {
+                            erros++;
+                            logger.LogWarning(
+                                "[ImportarXmlEmail] Falha ao importar XML | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Motivo={Motivo}",
+                                cliente.Id, cliente.RazaoSocial, summary.Envelope?.Subject ?? "(sem assunto)", fileName, result.Error.Description);
+                        }
+                    }
+
+                    await inbox.AddFlagsAsync(summary.UniqueId, MessageFlags.Seen, true, ct);
+                }
             }
 
-            // Mark as read after processing
-            await inbox.AddFlagsAsync(summary.UniqueId, MessageFlags.Seen, true, ct);
+            await client.DisconnectAsync(true, ct);
+        }
+        catch (Exception ex)
+        {
+            erros++;
+            mensagemErro = ex.Message;
+            logger.LogError(ex,
+                "[ImportarXmlEmail] Erro ao processar e-mails do cliente {ClienteId} ({ClienteNome})",
+                cliente.Id, cliente.RazaoSocial);
         }
 
-        await client.DisconnectAsync(true, ct);
+        var executadoEm = DateTime.UtcNow;
+        var nivel = mensagemErro is not null ? LogLevel.Error : erros > 0 ? LogLevel.Warning : LogLevel.Information;
+
+        logger.Log(nivel,
+            "[ImportarXmlEmail] Resumo do cliente | Cliente={ClienteId} ({ClienteNome}) | ExecutadoEm={ExecutadoEm:u} | " +
+            "EmailsEncontrados={EmailsEncontrados} | XmlsProcessados={XmlsProcessados} | XmlsImportados={XmlsImportados} | " +
+            "Erros={Erros} | MensagemErro={MensagemErro}",
+            cliente.Id, cliente.RazaoSocial, executadoEm, emailsEncontrados, xmlsProcessados, xmlsImportados, erros,
+            mensagemErro ?? "nenhum");
+
+        return new ResumoCliente(cliente.Id, cliente.RazaoSocial, executadoEm,
+            emailsEncontrados, xmlsProcessados, xmlsImportados, erros, mensagemErro);
     }
 
     private static TipoDocumentoEnum DetectarTipo(string fileName)

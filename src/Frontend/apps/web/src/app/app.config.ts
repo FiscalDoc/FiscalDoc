@@ -1,10 +1,11 @@
-import { ApplicationConfig, inject, LOCALE_ID, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, inject, LOCALE_ID, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { firstValueFrom } from 'rxjs';
+import { QuillModule } from 'ngx-quill';
 import { routes } from './app.routes';
 import { authInterceptor, errorInterceptor } from '@veloxml/interceptors';
 import { AuthService } from '@veloxml/services';
@@ -20,6 +21,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor, errorInterceptor])
     ),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
+    importProvidersFrom(QuillModule.forRoot()),
     provideAppInitializer(() => {
       const auth = inject(AuthService);
       return firstValueFrom(auth.restoreSession());
