@@ -25,6 +25,8 @@ services:
       - Email__Host=mailpit
       - Email__Port=1025
       - Email__From=noreply@veloxml.com.br
+      - Hangfire__DashboardUser=${HANGFIRE_DASHBOARD_USER}
+      - Hangfire__DashboardPassword=${HANGFIRE_DASHBOARD_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

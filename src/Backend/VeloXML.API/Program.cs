@@ -1,4 +1,5 @@
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -104,8 +105,10 @@ try
     // ContadorAccessMiddleware deve rodar APÓS UseAuthentication para ter o JWT processado
     app.UseMiddleware<ContadorAccessMiddleware>();
 
-    // Hangfire dashboard: em produção, proteger com auth (Etapa 5)
-    app.UseHangfireDashboard("/hangfire");
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireDashboardAuthFilter(app.Configuration)],
+    });
 
     int intervaloImportacaoMinutos;
     using (var scope = app.Services.CreateScope())
