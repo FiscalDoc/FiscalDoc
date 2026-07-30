@@ -289,6 +289,28 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
                 <span class="status-item-label">Erros</span>
               </div>
             </div>
+
+            @if (importacaoStatus()!.clientes.length === 0) {
+              <p class="empty-clientes">Nenhum cliente com importação por e-mail habilitada.</p>
+            } @else {
+              <table class="clientes-table">
+                <thead>
+                  <tr><th>Cliente</th><th>E-mails</th><th>XMLs</th><th>Importados</th><th>Erros</th><th>Detalhe</th></tr>
+                </thead>
+                <tbody>
+                  @for (c of importacaoStatus()!.clientes; track c.clienteId) {
+                    <tr>
+                      <td>{{ c.clienteNome }}</td>
+                      <td>{{ c.emailsEncontrados }}</td>
+                      <td>{{ c.xmlsProcessados }}</td>
+                      <td>{{ c.xmlsImportados }}</td>
+                      <td [class.red-text]="c.erros > 0">{{ c.erros }}</td>
+                      <td class="mensagem-erro">{{ c.mensagemErro || (c.erros > 0 ? 'Falha ao importar um ou mais XMLs (veja os logs do servidor).' : '—') }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
           </div>
         }
 
@@ -386,6 +408,14 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     .status-item-value.accent { color: var(--accent); }
     .status-item-value.red { color: var(--red); }
     .status-item-label { font-size: 11px; color: var(--text2); text-align: center; }
+
+    .empty-clientes { color: var(--text2); font-size: 13px; text-align: center; padding: 1rem 0; margin: 0; }
+    .clientes-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .clientes-table th { text-align: left; color: var(--text2); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .clientes-table td { padding: 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+    .clientes-table tr:last-child td { border-bottom: none; }
+    .clientes-table .red-text { color: var(--red); font-weight: 600; }
+    .clientes-table .mensagem-erro { color: var(--text2); max-width: 320px; }
 
     @media (max-width: 700px) {
       .form-row { grid-template-columns: 1fr; }

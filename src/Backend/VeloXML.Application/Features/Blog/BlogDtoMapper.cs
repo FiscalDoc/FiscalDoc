@@ -5,7 +5,7 @@ namespace VeloXML.Application.Features.Blog;
 public static class BlogDtoMapper
 {
     public static string? ImagemUrl(string? imagemCapaKey) =>
-        imagemCapaKey is null ? null : $"/blog/imagens/{imagemCapaKey}";
+        imagemCapaKey is null ? null : $"/blog/imagens/{imagemCapaKey}/conteudo";
 
     public static BlogPostDto ToDto(BlogPost p) => new(
         p.Id, p.Titulo, p.Slug, p.Resumo, p.Conteudo, ImagemUrl(p.ImagemCapaKey),

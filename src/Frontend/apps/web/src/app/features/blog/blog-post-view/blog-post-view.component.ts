@@ -59,9 +59,10 @@ import { environment } from '../../../../environments/environment';
     .conteudo ::ng-deep hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
     .conteudo ::ng-deep table { border-collapse: collapse; display: block; overflow-x: auto; }
     .conteudo ::ng-deep pre { white-space: pre-wrap; word-break: break-word; overflow-x: auto; background: var(--bg3); padding: .75rem 1rem; border-radius: 8px; }
-    /* Conteúdo colado (Word/Docs) costuma trazer cor/fundo inline que quebram o tema escuro — força herdar do tema */
-    .conteudo ::ng-deep [style*="color"] { color: inherit !important; }
-    .conteudo ::ng-deep [style*="background"] { background: transparent !important; }
+    /* Conteúdo colado de fora (Word/Docs, etc.) traz cor/fundo — inline ou via classe do Quill —
+       que deixam o texto invisível no tema escuro. Força sempre a cor do tema, sem exceção. */
+    .conteudo, .conteudo ::ng-deep * { color: var(--text) !important; background-color: transparent !important; }
+    .conteudo ::ng-deep a { color: var(--accent) !important; }
     .tags { display: flex; gap: .5rem; flex-wrap: wrap; }
     .tag { color: var(--text2); font-size: 12px; background: var(--bg3); border-radius: 999px; padding: 3px 10px; }
     .share { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1.25rem; margin-top: .5rem; }

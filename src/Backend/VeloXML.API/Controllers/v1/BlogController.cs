@@ -46,7 +46,10 @@ public sealed class BlogController(IMediator mediator, IStorageService storage, 
         return Ok(result.Value);
     }
 
-    [HttpGet("imagens/{key}")]
+    // A URL termina em "/conteudo" (e não em ".png"/".jpg") de propósito — reverse proxies
+    // (nginx/Traefik) costumam ter uma regra que serve qualquer caminho terminado em extensão
+    // de imagem como arquivo estático, interceptando a requisição antes dela chegar na API.
+    [HttpGet("imagens/{key}/conteudo")]
     public async Task<IActionResult> GetImagem(string key, CancellationToken ct)
     {
         var extensao = Path.GetExtension(key);

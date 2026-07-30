@@ -18,7 +18,10 @@ public class ConfiguracaoConfiguration : IEntityTypeConfiguration<Configuracao>
 
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.Chave).HasColumnName("chave").HasMaxLength(100).IsRequired();
-        b.Property(e => e.Valor).HasColumnName("valor").HasMaxLength(2000).IsRequired();
+        // "text" (sem limite fixo) porque algumas chaves guardam JSON — ex.: o resumo por
+        // cliente da última execução do robô de importação de XML, que cresce com a quantidade
+        // de clientes com IMAP habilitado e pode passar de 2000 caracteres facilmente.
+        b.Property(e => e.Valor).HasColumnName("valor").HasColumnType("text").IsRequired();
         b.Property(e => e.Descricao).HasColumnName("descricao").HasMaxLength(500);
         b.Property(e => e.Global).HasColumnName("global").HasDefaultValue(false);
 

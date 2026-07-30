@@ -55,17 +55,23 @@ public sealed class ImportarXmlEmailJob(
             "XMLs processados: {TotalProcessados} | XMLs importados com sucesso: {TotalImportados} | Erros: {TotalErros}",
             concluidoEm, duracaoMs, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros);
 
-        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, ct);
+        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, resumos, ct);
     }
 
     private async Task SalvarStatusExecucaoAsync(
         DateTime executadoEm, int clientesProcessados, int emailsEncontrados,
-        int xmlsProcessados, int xmlsImportados, int erros, CancellationToken ct)
+        int xmlsProcessados, int xmlsImportados, int erros, List<ResumoCliente> resumos, CancellationToken ct)
     {
         try
         {
+            var clientesDto = resumos.Select(r => new ImportacaoXmlClienteStatusDto(
+                r.ClienteId, r.ClienteNome, r.EmailsEncontrados, r.XmlsProcessados, r.XmlsImportados, r.Erros,
+                // Trunca mensagens de exceção muito longas — é só um resumo de diagnóstico rápido.
+                r.MensagemErro is { Length: > 500 } ? r.MensagemErro[..500] + "…" : r.MensagemErro))
+                .ToList();
+
             var status = new ImportacaoXmlStatusDto(
-                executadoEm, clientesProcessados, emailsEncontrados, xmlsProcessados, xmlsImportados, erros);
+                executadoEm, clientesProcessados, emailsEncontrados, xmlsProcessados, xmlsImportados, erros, clientesDto);
             var json = JsonSerializer.Serialize(status);
             await uow.Configuracoes.UpsertAsync(
                 GetImportacaoXmlStatusQueryHandler.ChaveConfiguracao, json,

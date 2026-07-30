@@ -35,6 +35,6 @@ public sealed class UploadBlogImagemCommandHandler(IStorageService storage)
         var objectKey = $"{Guid.NewGuid()}{extensao.ToLowerInvariant()}";
         await storage.UploadAsync(arquivo.Content, objectKey, "blog", contentType, ct);
 
-        return Result.Success(new UploadBlogImagemResultDto(objectKey, $"/blog/imagens/{objectKey}"));
+        return Result.Success(new UploadBlogImagemResultDto(objectKey, $"/blog/imagens/{objectKey}/conteudo"));
     }
 }

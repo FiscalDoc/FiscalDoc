@@ -49,4 +49,15 @@ export interface ImportacaoXmlStatusDto {
   xmlsProcessados: number;
   xmlsImportados: number;
   erros: number;
+  clientes: ImportacaoXmlClienteStatusDto[];
+}
+
+export interface ImportacaoXmlClienteStatusDto {
+  clienteId: string;
+  clienteNome: string;
+  emailsEncontrados: number;
+  xmlsProcessados: number;
+  xmlsImportados: number;
+  erros: number;
+  mensagemErro?: string;
 }
