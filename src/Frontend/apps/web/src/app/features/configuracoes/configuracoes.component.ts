@@ -1,8 +1,8 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
-import { ImportacaoXmlLogDto, ImportacaoXmlStatusDto, PagedResult } from '@veloxml/models';
+import { ImportacaoXmlLogDto, PagedResult } from '@veloxml/models';
 
 type Tab = 'email' | 'social' | 'convite' | 'importacao';
 
@@ -25,7 +25,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     <button class="tab-btn" [class.active]="tab() === 'email'" (click)="tab.set('email')">E-mail (SMTP)</button>
     <button class="tab-btn" [class.active]="tab() === 'social'" (click)="tab.set('social')">Redes Sociais</button>
     <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
-    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); loadStatus(); carregarIntervalo(); carregarHistorico()">Importação de E-mails</button>
+    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); carregarIntervalo(); carregarHistorico()">Importação de E-mails</button>
   </nav>
 
   <!-- ══ E-MAIL (SMTP) ══ -->
@@ -237,7 +237,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         </div>
         <div>
           <div class="section-title">Importação de E-mails (XML)</div>
-          <div class="section-sub">Resumo da última execução do robô que lê os e-mails de cada cliente</div>
+          <div class="section-sub">Histórico do robô que lê os e-mails de cada cliente — clique numa linha pra ver a mensagem completa</div>
         </div>
       </div>
 
@@ -254,38 +254,34 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         @if (intervaloSucesso()) { <div class="alert-success">{{ checkIcon() }} Intervalo atualizado para {{ intervaloMinutos }} minuto(s) — já aplicado, sem precisar reiniciar.</div> }
         @if (intervaloErro()) { <div class="alert-error">{{ intervaloErro() }}</div> }
 
-        @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! Os números abaixo devem atualizar em alguns segundos — clique em "Atualizar".</div> }
+        @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! A tabela abaixo deve atualizar em alguns segundos — clique em "Atualizar".</div> }
         @if (forcarErro()) { <div class="alert-error">{{ forcarErro() }}</div> }
 
-        @if (loadingStatus()) {
-          <div class="empty-state">Carregando...</div>
-        } @else if (!importacaoStatus()) {
-          <div class="empty-state">O robô de importação ainda não executou nenhuma vez.</div>
-        } @else {
+        @if (ultimaExecucao(); as u) {
           <div class="status-summary">
             <div class="status-kpi">
               <span class="status-kpi-label">Última execução</span>
-              <span class="status-kpi-value">{{ importacaoStatus()!.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+              <span class="status-kpi-value">{{ u.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</span>
             </div>
             <div class="status-grid">
               <div class="status-item">
-                <span class="status-item-value">{{ importacaoStatus()!.clientesProcessados }}</span>
+                <span class="status-item-value">{{ u.clientesProcessados }}</span>
                 <span class="status-item-label">Clientes processados</span>
               </div>
               <div class="status-item">
-                <span class="status-item-value">{{ importacaoStatus()!.emailsEncontrados }}</span>
+                <span class="status-item-value">{{ u.emailsEncontrados }}</span>
                 <span class="status-item-label">E-mails encontrados</span>
               </div>
               <div class="status-item">
-                <span class="status-item-value">{{ importacaoStatus()!.xmlsProcessados }}</span>
+                <span class="status-item-value">{{ u.xmlsProcessados }}</span>
                 <span class="status-item-label">XMLs processados</span>
               </div>
               <div class="status-item">
-                <span class="status-item-value accent">{{ importacaoStatus()!.xmlsImportados }}</span>
+                <span class="status-item-value accent">{{ u.xmlsImportados }}</span>
                 <span class="status-item-label">XMLs importados</span>
               </div>
               <div class="status-item">
-                <span class="status-item-value" [class.red]="importacaoStatus()!.erros > 0">{{ importacaoStatus()!.erros }}</span>
+                <span class="status-item-value" [class.red]="u.erros > 0">{{ u.erros }}</span>
                 <span class="status-item-label">Erros</span>
               </div>
             </div>
@@ -293,15 +289,10 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         }
 
         <div class="form-actions">
-          <button type="button" class="btn-ghost" (click)="loadStatus()">Atualizar</button>
+          <button type="button" class="btn-ghost" (click)="carregarHistorico(1)">Atualizar</button>
           <button type="button" class="btn-primary" [disabled]="forcando()" (click)="forcarImportacao()">
             {{ forcando() ? 'Disparando...' : 'Forçar Importação Agora' }}
           </button>
-        </div>
-
-        <div class="historico-divider">
-          <span class="status-kpi-label">Histórico completo de execuções</span>
-          <span class="section-sub">Cliente por cliente — clique numa linha pra ver a mensagem completa</span>
         </div>
 
         @if (loadingHistorico()) {
@@ -311,18 +302,26 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         } @else {
           <table class="clientes-table historico-table">
             <thead>
-              <tr><th>Data/Hora</th><th>Cliente</th><th>E-mails</th><th>XMLs</th><th>Importados</th><th>Erros</th><th>Mensagem</th></tr>
+              <tr>
+                <th class="col-data">Data/Hora</th>
+                <th class="col-cliente">Cliente</th>
+                <th class="col-num">E-mails</th>
+                <th class="col-num">XMLs</th>
+                <th class="col-num">Importados</th>
+                <th class="col-num">Erros</th>
+                <th class="col-msg">Mensagem</th>
+              </tr>
             </thead>
             <tbody>
               @for (l of historico().items; track l.id) {
                 <tr class="historico-row" (click)="abrirDetalheLog(l)">
-                  <td>{{ l.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-                  <td>{{ l.clienteNome }}</td>
-                  <td>{{ l.emailsEncontrados }}</td>
-                  <td>{{ l.xmlsProcessados }}</td>
-                  <td>{{ l.xmlsImportados }}</td>
-                  <td [class.red-text]="l.erros > 0">{{ l.erros }}</td>
-                  <td class="mensagem-erro-preview">{{ l.mensagemErro || '—' }}</td>
+                  <td class="col-data">{{ l.executadoEm | date:'dd/MM/yy HH:mm' }}</td>
+                  <td class="col-cliente">{{ l.clienteNome }}</td>
+                  <td class="col-num">{{ l.emailsEncontrados }}</td>
+                  <td class="col-num">{{ l.xmlsProcessados }}</td>
+                  <td class="col-num">{{ l.xmlsImportados }}</td>
+                  <td class="col-num" [class.red-text]="l.erros > 0">{{ l.erros }}</td>
+                  <td class="col-msg"><span class="mensagem-erro-preview">{{ l.mensagemErro || '—' }}</span></td>
                 </tr>
               }
             </tbody>
@@ -467,12 +466,17 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     .clientes-table .red-text { color: var(--red); font-weight: 600; }
 
     .historico-divider { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: .25rem; display: flex; flex-direction: column; gap: 2px; }
-    .historico-table { table-layout: fixed; }
+    .historico-table { table-layout: fixed; width: 100%; }
+    .historico-table .col-data { width: 108px; }
+    .historico-table .col-cliente { width: 160px; }
+    .historico-table .col-num { width: 64px; }
+    .historico-table .col-msg { width: auto; }
+    .historico-table td.col-cliente { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .historico-row { cursor: pointer; }
     .historico-row:hover td { background: var(--bg3); }
     .mensagem-erro-preview {
-      color: var(--text2); font-size: 12px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 1px;
+      display: block; color: var(--text2); font-size: 12px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .mensagem-erro-detalhe {
       color: var(--text2); font-size: 12.5px; white-space: pre-wrap; word-break: break-word;
@@ -554,8 +558,6 @@ export class ConfiguracoesComponent implements OnInit {
   get cf() { return this.conviteForm.controls; }
 
   // Importação de e-mails
-  loadingStatus     = signal(false);
-  importacaoStatus  = signal<ImportacaoXmlStatusDto | null>(null);
   forcando          = signal(false);
   forcarSucesso     = signal(false);
   forcarErro        = signal<string | null>(null);
@@ -567,6 +569,23 @@ export class ConfiguracoesComponent implements OnInit {
   loadingHistorico = signal(false);
   historico = signal<PagedResult<ImportacaoXmlLogDto>>({ items: [], totalCount: 0, page: 1, pageSize: 25, totalPages: 0 });
   logDetalhe = signal<ImportacaoXmlLogDto | null>(null);
+
+  // Resumo da última execução derivado da própria página 1 do histórico — mesma fonte de dados
+  // da tabela abaixo, pra não ter dois números diferentes contando a mesma coisa.
+  ultimaExecucao = computed(() => {
+    const h = this.historico();
+    if (h.page !== 1 || h.items.length === 0) return null;
+    const executadoEm = h.items[0].executadoEm;
+    const doRun = h.items.filter(i => i.executadoEm === executadoEm);
+    return {
+      executadoEm,
+      clientesProcessados: doRun.length,
+      emailsEncontrados: doRun.reduce((s, i) => s + i.emailsEncontrados, 0),
+      xmlsProcessados: doRun.reduce((s, i) => s + i.xmlsProcessados, 0),
+      xmlsImportados: doRun.reduce((s, i) => s + i.xmlsImportados, 0),
+      erros: doRun.reduce((s, i) => s + i.erros, 0),
+    };
+  });
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -689,14 +708,6 @@ export class ConfiguracoesComponent implements OnInit {
         this.sendingConvite.set(false);
         this.conviteError.set(extractErrorMessage(err, 'Erro ao enviar convite.'));
       },
-    });
-  }
-
-  loadStatus(): void {
-    this.loadingStatus.set(true);
-    this._svc.getImportacaoXmlStatus().subscribe({
-      next: s => { this.importacaoStatus.set(s); this.loadingStatus.set(false); },
-      error: () => this.loadingStatus.set(false),
     });
   }
 
