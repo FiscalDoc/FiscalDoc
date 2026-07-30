@@ -7,6 +7,7 @@ using VeloXML.Application.Features.Configuracoes.Commands.SaveSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSocialConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SendConvite;
 using VeloXML.Application.Features.Configuracoes.Commands.TestSmtpConfig;
+using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlLogs;
 using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
 using VeloXML.Application.Features.Configuracoes.Queries.GetIntervaloImportacao;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSmtpConfig;
@@ -83,6 +84,16 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetImportacaoXmlStatus(CancellationToken ct)
     {
         var result = await mediator.Send(new GetImportacaoXmlStatusQuery(), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    // Mesma regra do endpoint de status: sem restrição de Roles, o handler já filtra pelo que o
+    // usuário logado pode ver.
+    [HttpGet("importacao-xml/logs")]
+    public async Task<IActionResult> GetImportacaoXmlLogs(
+        [FromQuery] Guid? clienteId, [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default)
+    {
+        var result = await mediator.Send(new GetImportacaoXmlLogsQuery(clienteId, page, pageSize), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 

@@ -23,7 +23,7 @@ public sealed class ImportarXmlEmailJob(
     public const string JobId = "importar-xml-email";
 
     private sealed record ResumoCliente(
-        Guid ClienteId, string ClienteNome, DateTime ExecutadoEm,
+        Guid ClienteId, string ClienteNome, Guid TenantId, Guid? ContadorId, DateTime ExecutadoEm,
         int EmailsEncontrados, int XmlsProcessados, int XmlsImportados, int Erros, string? MensagemErro);
 
     public async Task ExecuteAsync(CancellationToken ct = default)
@@ -55,18 +55,18 @@ public sealed class ImportarXmlEmailJob(
             "XMLs processados: {TotalProcessados} | XMLs importados com sucesso: {TotalImportados} | Erros: {TotalErros}",
             concluidoEm, duracaoMs, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros);
 
-        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, resumos, clientes, ct);
+        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, resumos, ct);
     }
 
     private async Task SalvarStatusExecucaoAsync(
         DateTime executadoEm, int clientesProcessados, int emailsEncontrados,
-        int xmlsProcessados, int xmlsImportados, int erros, List<ResumoCliente> resumos, IReadOnlyList<Cliente> clientes, CancellationToken ct)
+        int xmlsProcessados, int xmlsImportados, int erros, List<ResumoCliente> resumos, CancellationToken ct)
     {
         // O job roda em background (Hangfire), sem usuário logado pra derivar o tenant
         // automaticamente — usamos o tenant de qualquer cliente processado como dono do
         // registro de status "global". Sem nenhum cliente processado, não há como saber
         // de qual tenant é esse status, então a gravação é pulada (nada de novo a mostrar mesmo).
-        var tenantId = clientes.Count > 0 ? clientes[0].TenantId : (Guid?)null;
+        var tenantId = resumos.Count > 0 ? resumos[0].TenantId : (Guid?)null;
         if (tenantId is null)
         {
             logger.LogInformation("[ImportarXmlEmail] Nenhum cliente com IMAP habilitado — status da execução não será salvo.");
@@ -78,6 +78,7 @@ public sealed class ImportarXmlEmailJob(
             var clientesDto = resumos.Select(r => new ImportacaoXmlClienteStatusDto(
                 r.ClienteId, r.ClienteNome, r.EmailsEncontrados, r.XmlsProcessados, r.XmlsImportados, r.Erros,
                 // Trunca mensagens de exceção muito longas — é só um resumo de diagnóstico rápido.
+                // O histórico completo (sem truncar) fica gravado em ImportacaoXmlLogs, abaixo.
                 r.MensagemErro is { Length: > 500 } ? r.MensagemErro[..500] + "…" : r.MensagemErro))
                 .ToList();
 
@@ -87,6 +88,24 @@ public sealed class ImportarXmlEmailJob(
             await uow.Configuracoes.UpsertAsync(
                 GetImportacaoXmlStatusQueryHandler.ChaveConfiguracao, json,
                 "Resumo da última execução do robô de importação de XML por e-mail", ct, tenantId);
+
+            foreach (var r in resumos)
+            {
+                await uow.ImportacaoXmlLogs.AddAsync(new ImportacaoXmlLog
+                {
+                    TenantId = r.TenantId,
+                    ContadorId = r.ContadorId,
+                    ExecutadoEm = executadoEm,
+                    ClienteId = r.ClienteId,
+                    ClienteNome = r.ClienteNome,
+                    EmailsEncontrados = r.EmailsEncontrados,
+                    XmlsProcessados = r.XmlsProcessados,
+                    XmlsImportados = r.XmlsImportados,
+                    Erros = r.Erros,
+                    MensagemErro = r.MensagemErro,
+                }, ct);
+            }
+
             await uow.SaveChangesAsync(ct);
         }
         catch (Exception ex)
@@ -200,7 +219,7 @@ public sealed class ImportarXmlEmailJob(
             cliente.Id, cliente.RazaoSocial, executadoEm, emailsEncontrados, xmlsProcessados, xmlsImportados, erros,
             mensagemErro ?? "nenhum");
 
-        return new ResumoCliente(cliente.Id, cliente.RazaoSocial, executadoEm,
+        return new ResumoCliente(cliente.Id, cliente.RazaoSocial, cliente.TenantId, cliente.ContadorId, executadoEm,
             emailsEncontrados, xmlsProcessados, xmlsImportados, erros, mensagemErro);
     }
 

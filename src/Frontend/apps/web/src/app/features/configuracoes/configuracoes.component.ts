@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
-import { ImportacaoXmlStatusDto } from '@veloxml/models';
+import { ImportacaoXmlLogDto, ImportacaoXmlStatusDto, PagedResult } from '@veloxml/models';
 
 type Tab = 'email' | 'social' | 'convite' | 'importacao';
 
@@ -25,7 +25,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     <button class="tab-btn" [class.active]="tab() === 'email'" (click)="tab.set('email')">E-mail (SMTP)</button>
     <button class="tab-btn" [class.active]="tab() === 'social'" (click)="tab.set('social')">Redes Sociais</button>
     <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
-    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); loadStatus(); carregarIntervalo()">Importação de E-mails</button>
+    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); loadStatus(); carregarIntervalo(); carregarHistorico()">Importação de E-mails</button>
   </nav>
 
   <!-- ══ E-MAIL (SMTP) ══ -->
@@ -322,6 +322,52 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         </div>
       </div>
     </div>
+
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Histórico completo de execuções</div>
+          <div class="section-sub">Todas as execuções do robô, cliente por cliente, com a mensagem de erro sem cortes</div>
+        </div>
+      </div>
+
+      <div class="settings-form">
+        @if (loadingHistorico()) {
+          <div class="empty-state">Carregando...</div>
+        } @else if (historico().items.length === 0) {
+          <div class="empty-state">Nenhuma execução registrada ainda.</div>
+        } @else {
+          <table class="clientes-table historico-table">
+            <thead>
+              <tr><th>Data/Hora</th><th>Cliente</th><th>E-mails</th><th>XMLs</th><th>Importados</th><th>Erros</th><th>Mensagem</th></tr>
+            </thead>
+            <tbody>
+              @for (l of historico().items; track l.id) {
+                <tr>
+                  <td>{{ l.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                  <td>{{ l.clienteNome }}</td>
+                  <td>{{ l.emailsEncontrados }}</td>
+                  <td>{{ l.xmlsProcessados }}</td>
+                  <td>{{ l.xmlsImportados }}</td>
+                  <td [class.red-text]="l.erros > 0">{{ l.erros }}</td>
+                  <td class="mensagem-erro-full">{{ l.mensagemErro || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="pagination-row">
+            <button type="button" class="btn-ghost" [disabled]="historico().page <= 1" (click)="carregarHistorico(historico().page - 1)">Anterior</button>
+            <span class="pagination-info">Página {{ historico().page }} de {{ historico().totalPages || 1 }} ({{ historico().totalCount }} execuções)</span>
+            <button type="button" class="btn-ghost" [disabled]="historico().page >= historico().totalPages" (click)="carregarHistorico(historico().page + 1)">Próxima</button>
+          </div>
+        }
+      </div>
+    </div>
   }
 </div>
   `,
@@ -416,6 +462,10 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     .clientes-table tr:last-child td { border-bottom: none; }
     .clientes-table .red-text { color: var(--red); font-weight: 600; }
     .clientes-table .mensagem-erro { color: var(--text2); max-width: 320px; }
+    .historico-table { table-layout: fixed; }
+    .historico-table .mensagem-erro-full { color: var(--text2); white-space: pre-wrap; word-break: break-word; font-size: 12px; }
+    .pagination-row { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: .75rem; }
+    .pagination-info { font-size: 12.5px; color: var(--text2); }
 
     @media (max-width: 700px) {
       .form-row { grid-template-columns: 1fr; }
@@ -489,6 +539,9 @@ export class ConfiguracoesComponent implements OnInit {
   salvandoIntervalo = signal(false);
   intervaloSucesso  = signal(false);
   intervaloErro     = signal<string | null>(null);
+
+  loadingHistorico = signal(false);
+  historico = signal<PagedResult<ImportacaoXmlLogDto>>({ items: [], totalCount: 0, page: 1, pageSize: 25, totalPages: 0 });
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -624,6 +677,14 @@ export class ConfiguracoesComponent implements OnInit {
 
   carregarIntervalo(): void {
     this._svc.getIntervaloImportacao().subscribe(r => this.intervaloMinutos = r.intervaloMinutos);
+  }
+
+  carregarHistorico(page = 1): void {
+    this.loadingHistorico.set(true);
+    this._svc.getImportacaoXmlLogs({ page, pageSize: 25 }).subscribe({
+      next: r => { this.historico.set(r); this.loadingHistorico.set(false); },
+      error: () => this.loadingHistorico.set(false),
+    });
   }
 
   salvarIntervalo(): void {

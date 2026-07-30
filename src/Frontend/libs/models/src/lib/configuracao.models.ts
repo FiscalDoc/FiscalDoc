@@ -61,3 +61,15 @@ export interface ImportacaoXmlClienteStatusDto {
   erros: number;
   mensagemErro?: string;
 }
+
+export interface ImportacaoXmlLogDto {
+  id: string;
+  executadoEm: string;
+  clienteId: string;
+  clienteNome: string;
+  emailsEncontrados: number;
+  xmlsProcessados: number;
+  xmlsImportados: number;
+  erros: number;
+  mensagemErro?: string;
+}

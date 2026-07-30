@@ -28,6 +28,7 @@ public class AppDbContext(
     public DbSet<PedidoItem> PedidoItens => Set<PedidoItem>();
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogCategoria> BlogCategorias => Set<BlogCategoria>();
+    public DbSet<ImportacaoXmlLog> ImportacaoXmlLogs => Set<ImportacaoXmlLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -77,6 +78,9 @@ public class AppDbContext(
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
         builder.Entity<PedidoItem>().HasQueryFilter(e =>
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+        builder.Entity<ImportacaoXmlLog>().HasQueryFilter(e =>
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId));
 
         base.OnModelCreating(builder);
     }

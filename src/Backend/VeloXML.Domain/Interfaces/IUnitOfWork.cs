@@ -17,6 +17,7 @@ public interface IUnitOfWork : IDisposable
     IPedidoRepository Pedidos { get; }
     IBlogPostRepository BlogPosts { get; }
     IBlogCategoriaRepository BlogCategorias { get; }
+    IImportacaoXmlLogRepository ImportacaoXmlLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
     Task BeginTransactionAsync(CancellationToken ct = default);
