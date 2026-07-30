@@ -1,8 +1,8 @@
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
-import { ImportacaoXmlLogDto, PagedResult } from '@veloxml/models';
+import { ImportacaoXmlLogDto, ImportacaoXmlLogsResumoDto, PagedResult } from '@veloxml/models';
 
 type Tab = 'email' | 'social' | 'convite' | 'importacao';
 
@@ -257,32 +257,20 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
         @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! A tabela abaixo deve atualizar em alguns segundos — clique em "Atualizar".</div> }
         @if (forcarErro()) { <div class="alert-error">{{ forcarErro() }}</div> }
 
-        @if (ultimaExecucao(); as u) {
+        @if (resumo(); as r) {
           <div class="status-summary">
-            <div class="status-kpi">
-              <span class="status-kpi-label">Última execução</span>
-              <span class="status-kpi-value">{{ u.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</span>
-            </div>
-            <div class="status-grid">
+            <div class="status-grid status-grid-3">
               <div class="status-item">
-                <span class="status-item-value">{{ u.clientesProcessados }}</span>
-                <span class="status-item-label">Clientes processados</span>
+                <span class="status-item-value">{{ r.ultimaExecucaoEm ? (r.ultimaExecucaoEm | date:'dd/MM/yyyy HH:mm:ss') : '—' }}</span>
+                <span class="status-item-label">Última execução</span>
               </div>
               <div class="status-item">
-                <span class="status-item-value">{{ u.emailsEncontrados }}</span>
-                <span class="status-item-label">E-mails encontrados</span>
+                <span class="status-item-value">{{ r.totalExecucoes }}</span>
+                <span class="status-item-label">Execuções registradas</span>
               </div>
               <div class="status-item">
-                <span class="status-item-value">{{ u.xmlsProcessados }}</span>
-                <span class="status-item-label">XMLs processados</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value accent">{{ u.xmlsImportados }}</span>
-                <span class="status-item-label">XMLs importados</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value" [class.red]="u.erros > 0">{{ u.erros }}</span>
-                <span class="status-item-label">Erros</span>
+                <span class="status-item-value" [class.red]="r.totalErros > 0">{{ r.totalErros }}</span>
+                <span class="status-item-label">Total de erros (independente do cliente)</span>
               </div>
             </div>
           </div>
@@ -453,6 +441,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     .status-kpi-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
     .status-kpi-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
     .status-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; }
+    .status-grid-3 { grid-template-columns: repeat(3, 1fr); }
     .status-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .875rem; display: flex; flex-direction: column; gap: 2px; align-items: center; }
     .status-item-value { font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .status-item-value.accent { color: var(--accent); }
@@ -569,23 +558,7 @@ export class ConfiguracoesComponent implements OnInit {
   loadingHistorico = signal(false);
   historico = signal<PagedResult<ImportacaoXmlLogDto>>({ items: [], totalCount: 0, page: 1, pageSize: 25, totalPages: 0 });
   logDetalhe = signal<ImportacaoXmlLogDto | null>(null);
-
-  // Resumo da última execução derivado da própria página 1 do histórico — mesma fonte de dados
-  // da tabela abaixo, pra não ter dois números diferentes contando a mesma coisa.
-  ultimaExecucao = computed(() => {
-    const h = this.historico();
-    if (h.page !== 1 || h.items.length === 0) return null;
-    const executadoEm = h.items[0].executadoEm;
-    const doRun = h.items.filter(i => i.executadoEm === executadoEm);
-    return {
-      executadoEm,
-      clientesProcessados: doRun.length,
-      emailsEncontrados: doRun.reduce((s, i) => s + i.emailsEncontrados, 0),
-      xmlsProcessados: doRun.reduce((s, i) => s + i.xmlsProcessados, 0),
-      xmlsImportados: doRun.reduce((s, i) => s + i.xmlsImportados, 0),
-      erros: doRun.reduce((s, i) => s + i.erros, 0),
-    };
-  });
+  resumo = signal<ImportacaoXmlLogsResumoDto | null>(null);
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -721,6 +694,7 @@ export class ConfiguracoesComponent implements OnInit {
       next: r => { this.historico.set(r); this.loadingHistorico.set(false); },
       error: () => this.loadingHistorico.set(false),
     });
+    this._svc.getImportacaoXmlLogsResumo().subscribe(r => this.resumo.set(r));
   }
 
   abrirDetalheLog(l: ImportacaoXmlLogDto): void {

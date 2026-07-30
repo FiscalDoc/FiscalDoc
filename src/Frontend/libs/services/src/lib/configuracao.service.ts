@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   ImportacaoXmlLogDto,
+  ImportacaoXmlLogsResumoDto,
   ImportacaoXmlStatusDto,
   PagedResult,
   SaveSmtpConfigRequest,
@@ -50,6 +51,10 @@ export class ConfiguracaoService {
 
   getImportacaoXmlLogs(params?: { clienteId?: string; page?: number; pageSize?: number }): Observable<PagedResult<ImportacaoXmlLogDto>> {
     return this._api.get<PagedResult<ImportacaoXmlLogDto>>('/configuracoes/importacao-xml/logs', params as Record<string, unknown>);
+  }
+
+  getImportacaoXmlLogsResumo(): Observable<ImportacaoXmlLogsResumoDto> {
+    return this._api.get<ImportacaoXmlLogsResumoDto>('/configuracoes/importacao-xml/logs/resumo');
   }
 
   forcarImportacaoXml(): Observable<void> {

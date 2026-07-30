@@ -23,4 +23,17 @@ public sealed class ImportacaoXmlLogRepository(AppDbContext context)
         var items = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
         return PagedResult<ImportacaoXmlLog>.Create(items, total, page, pageSize);
     }
+
+    public async Task<(int TotalExecucoes, int TotalErros, DateTime? UltimaExecucaoEm)> GetResumoAsync(CancellationToken ct = default)
+    {
+        var q = DbSet.AsNoTracking();
+
+        var totalExecucoes = await q.CountAsync(ct);
+        if (totalExecucoes == 0)
+            return (0, 0, null);
+
+        var totalErros = await q.SumAsync(l => l.Erros, ct);
+        var ultimaExecucaoEm = await q.MaxAsync(l => (DateTime?)l.ExecutadoEm, ct);
+        return (totalExecucoes, totalErros, ultimaExecucaoEm);
+    }
 }

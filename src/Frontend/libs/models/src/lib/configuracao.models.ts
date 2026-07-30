@@ -62,6 +62,12 @@ export interface ImportacaoXmlClienteStatusDto {
   mensagemErro?: string;
 }
 
+export interface ImportacaoXmlLogsResumoDto {
+  totalExecucoes: number;
+  totalErros: number;
+  ultimaExecucaoEm?: string;
+}
+
 export interface ImportacaoXmlLogDto {
   id: string;
   executadoEm: string;

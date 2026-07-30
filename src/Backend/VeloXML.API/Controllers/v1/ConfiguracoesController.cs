@@ -97,6 +97,13 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
+    [HttpGet("importacao-xml/logs/resumo")]
+    public async Task<IActionResult> GetImportacaoXmlLogsResumo(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetImportacaoXmlLogsResumoQuery(), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
     [Authorize(Roles = "Administrador")]
     [HttpPost("importacao-xml/forcar")]
     public IActionResult ForcarImportacaoXml()
