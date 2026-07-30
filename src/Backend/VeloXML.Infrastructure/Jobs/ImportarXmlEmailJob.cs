@@ -106,6 +106,14 @@ public sealed class ImportarXmlEmailJob(
         try
         {
             using var client = new ImapClient();
+
+            // O container só tem rota de saída IPv6 pra domínios como o do Hostinger, e o
+            // responder de CRL/OCSP usado pra checar revogação do certificado não é alcançável
+            // por ali — o handshake TLS em si valida certinho (confirmado via openssl s_client),
+            // só a checagem de revogação trava. Desliga só a checagem de revogação; a validação
+            // de cadeia/identidade do certificado continua normal.
+            client.CheckCertificateRevocation = false;
+
             await client.ConnectAsync(cliente.ImapHost!, cliente.ImapPort, MailKit.Security.SecureSocketOptions.SslOnConnect, ct);
             await client.AuthenticateAsync(cliente.ImapEmail!, cliente.ImapSenha!, ct);
 
