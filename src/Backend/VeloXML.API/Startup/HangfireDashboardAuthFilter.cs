@@ -17,7 +17,10 @@ public sealed class HangfireDashboardAuthFilter(IConfiguration configuration) : 
         var password = configuration["Hangfire:DashboardPassword"];
 
         if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
+        {
+            Desafiar(httpContext);
             return false;
+        }
 
         var header = httpContext.Request.Headers.Authorization.ToString();
         if (!header.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
