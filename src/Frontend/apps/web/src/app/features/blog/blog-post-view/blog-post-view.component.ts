@@ -47,13 +47,21 @@ import { environment } from '../../../../environments/environment';
     .meta-item { color: var(--text2); font-size: 13px; }
     .title { margin: 0; font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1.2; }
     .resumo { color: var(--text2); font-size: 1.05rem; margin: 0; }
-    .conteudo { color: var(--text); font-size: 15.5px; line-height: 1.75; }
-    .conteudo ::ng-deep img { max-width: 100%; border-radius: 8px; }
+    .conteudo { color: var(--text); font-size: 15.5px; line-height: 1.75; max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
+    .conteudo ::ng-deep * { max-width: 100%; box-sizing: border-box; }
+    .conteudo ::ng-deep img { border-radius: 8px; height: auto; }
     .conteudo ::ng-deep a { color: var(--accent); }
-    .conteudo ::ng-deep h2 { font-size: 1.4rem; margin: 1.5rem 0 .75rem; }
-    .conteudo ::ng-deep h3 { font-size: 1.15rem; margin: 1.25rem 0 .5rem; }
+    .conteudo ::ng-deep h1 { font-size: 1.6rem; margin: 1.5rem 0 .75rem; line-height: 1.3; }
+    .conteudo ::ng-deep h2 { font-size: 1.4rem; margin: 1.5rem 0 .75rem; line-height: 1.3; }
+    .conteudo ::ng-deep h3 { font-size: 1.15rem; margin: 1.25rem 0 .5rem; line-height: 1.3; }
     .conteudo ::ng-deep p { margin: 0 0 1rem; }
     .conteudo ::ng-deep blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--text2); margin: 1rem 0; }
+    .conteudo ::ng-deep hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .conteudo ::ng-deep table { border-collapse: collapse; display: block; overflow-x: auto; }
+    .conteudo ::ng-deep pre { white-space: pre-wrap; word-break: break-word; overflow-x: auto; background: var(--bg3); padding: .75rem 1rem; border-radius: 8px; }
+    /* Conteúdo colado (Word/Docs) costuma trazer cor/fundo inline que quebram o tema escuro — força herdar do tema */
+    .conteudo ::ng-deep [style*="color"] { color: inherit !important; }
+    .conteudo ::ng-deep [style*="background"] { background: transparent !important; }
     .tags { display: flex; gap: .5rem; flex-wrap: wrap; }
     .tag { color: var(--text2); font-size: 12px; background: var(--bg3); border-radius: 999px; padding: 3px 10px; }
     .share { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1.25rem; margin-top: .5rem; }

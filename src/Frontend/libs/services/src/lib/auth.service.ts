@@ -88,6 +88,10 @@ export class AuthService {
     });
   }
 
+  changePassword(senhaAtual: string, novaSenha: string): Observable<void> {
+    return this._api.post<void>('/auth/change-password', { senhaAtual, novaSenha });
+  }
+
   setup2fa(): Observable<Setup2faResponse> {
     return this._api.post<Setup2faResponse>('/auth/2fa/setup', {});
   }

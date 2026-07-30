@@ -35,26 +35,46 @@ public class AppDbContext(
 
         // Filters evaluated at query-time via closure — safe to always register.
         // Use DeletedAt == null instead of !IsDeleted because EF Core cannot translate computed properties.
+        //
+        // Um Tenant pode ter VÁRIOS Contadores (Tenant.Contadores é uma coleção — cada Contador
+        // criado pelo Administrador reaproveita o TenantId do próprio Administrador). Por isso o
+        // filtro por TenantId sozinho NÃO isola os clientes de um Contador dos de outro Contador
+        // no mesmo Tenant. Quando o usuário logado tem ContadorId (perfil Contador ou
+        // UsuarioContador), também restringimos pelo Contador — Administrador e Cliente não têm
+        // ContadorId, então não são afetados por essa cláusula extra.
         builder.Entity<User>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<Contador>().HasQueryFilter(e =>
-            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Id == currentUser.ContadorId)
+            && e.DeletedAt == null);
         builder.Entity<Cliente>().HasQueryFilter(e =>
-            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId)
+            && e.DeletedAt == null);
         builder.Entity<Documento>().HasQueryFilter(e =>
-            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && e.DeletedAt == null);
         builder.Entity<Arquivo>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<Alerta>().HasQueryFilter(e =>
-            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && e.DeletedAt == null);
         builder.Entity<Cobranca>().HasQueryFilter(e =>
-            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId)
+            && e.DeletedAt == null);
         builder.Entity<Produto>().HasQueryFilter(e =>
-            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
         builder.Entity<Destinatario>().HasQueryFilter(e =>
-            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
         builder.Entity<Pedido>().HasQueryFilter(e =>
-            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
         builder.Entity<PedidoItem>().HasQueryFilter(e =>
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
 

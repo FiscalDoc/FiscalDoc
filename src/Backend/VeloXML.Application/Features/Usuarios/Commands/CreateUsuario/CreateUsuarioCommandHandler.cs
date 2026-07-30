@@ -20,6 +20,13 @@ public sealed class CreateUsuarioCommandHandler(
             return Result.Failure<UsuarioDto>(ResultError.Validation("Perfil", "Perfil inválido."));
         }
 
+        if (perfil == PerfilEnum.Contador)
+        {
+            logger.LogWarning("Tentativa de criar usuário com perfil Contador pela tela genérica de usuários.");
+            return Result.Failure<UsuarioDto>(ResultError.Validation("Perfil",
+                "Para criar um Contador, use a tela de Contadores — ela cria o cadastro completo (cobrança, licença etc.), não só o login."));
+        }
+
         if (perfil == PerfilEnum.Cliente && request.ClienteId is null)
             return Result.Failure<UsuarioDto>(ResultError.Validation("ClienteId", "Cliente é obrigatório para usuários do tipo Cliente."));
 

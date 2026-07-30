@@ -174,8 +174,13 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .editor ::ng-deep .ql-toolbar .ql-fill { fill: var(--text2); }
     .editor ::ng-deep .ql-toolbar .ql-picker { color: var(--text2); }
     .editor ::ng-deep .ql-container { border-color: var(--border); border-radius: 0 0 8px 8px; font-family: inherit; font-size: 13.5px; }
-    .editor ::ng-deep .ql-editor { color: var(--text); min-height: 260px; max-height: 480px; overflow-y: auto; }
+    .editor ::ng-deep .ql-editor { color: var(--text); min-height: 260px; max-height: 480px; overflow-y: auto; overflow-wrap: break-word; word-break: break-word; }
     .editor ::ng-deep .ql-editor.ql-blank::before { color: var(--text2); font-style: normal; }
+    .editor ::ng-deep .ql-editor img { max-width: 100%; height: auto; }
+    .editor ::ng-deep .ql-editor hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+    /* Conteúdo colado de fora (Word/Docs) traz cor/fundo inline que quebram o tema escuro */
+    .editor ::ng-deep .ql-editor [style*="color"] { color: inherit !important; }
+    .editor ::ng-deep .ql-editor [style*="background"] { background: transparent !important; }
     .status-toggle { display: flex; gap: .5rem; }
     .status-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1.25rem; font-size: 13px; cursor: pointer; }
     .status-btn.active { background: rgba(0,229,160,.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }

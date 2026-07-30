@@ -35,8 +35,26 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           <a href="#faq">FAQ</a>
           <a href="#contact">Contato</a>
         </nav>
-        <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline">Acessar sistema</a>
+        <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline desktop-only">Acessar sistema</a>
+
+        <button class="menu-toggle" type="button" [class.open]="mobileMenuOpen()"
+          (click)="mobileMenuOpen.set(!mobileMenuOpen())"
+          [attr.aria-expanded]="mobileMenuOpen()" aria-label="Abrir menu">
+          <span></span><span></span><span></span>
+        </button>
       </div>
+
+      @if (mobileMenuOpen()) {
+        <nav class="mobile-nav">
+          <a href="#features" (click)="mobileMenuOpen.set(false)">Recursos</a>
+          <a href="#how" (click)="mobileMenuOpen.set(false)">Como funciona</a>
+          <a href="#plans" (click)="mobileMenuOpen.set(false)">Planos</a>
+          <a routerLink="/blog" (click)="mobileMenuOpen.set(false)">Blog</a>
+          <a href="#faq" (click)="mobileMenuOpen.set(false)">FAQ</a>
+          <a href="#contact" (click)="mobileMenuOpen.set(false)">Contato</a>
+          <a href="https://app.fiscaldoc.com.br/auth/login" class="mobile-cta">Acessar sistema</a>
+        </nav>
+      }
     </header>
 
     <!-- ─── HERO ────────────────────────────────────────────── -->
@@ -470,6 +488,21 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .nav-links a { font-size: 14px; color: #7c8299; transition: color 150ms; }
     .nav-links a:hover { color: #e8eaf0; }
 
+    /* ─── MOBILE MENU ────────────────────────── */
+    .menu-toggle { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: none; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; cursor: pointer; padding: 0; }
+    .menu-toggle span { display: block; width: 16px; height: 2px; margin: 0 auto; background: #e8eaf0; border-radius: 2px; transition: transform 150ms, opacity 150ms; }
+    .menu-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .menu-toggle.open span:nth-child(2) { opacity: 0; }
+    .menu-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav {
+      display: none; flex-direction: column; gap: .25rem;
+      background: #0d0f14; border-top: 1px solid rgba(255,255,255,0.07);
+      padding: .75rem 1.5rem 1.25rem;
+    }
+    .mobile-nav a { font-size: 15px; color: #b0b5c5; padding: .75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .mobile-nav a:last-of-type { border-bottom: none; }
+    .mobile-nav .mobile-cta { margin-top: .5rem; background: #00e5a0; color: #0d0f14; font-weight: 700; text-align: center; border-radius: 8px; padding: .75rem; border-bottom: none; }
+
     /* ─── HERO ───────────────────────────────── */
     .hero {
       position: relative; overflow: hidden;
@@ -655,6 +688,9 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     /* ─── RESPONSIVE ─────────────────────────── */
     @media (max-width: 768px) {
       .nav-links { display: none; }
+      .desktop-only { display: none; }
+      .menu-toggle { display: flex; }
+      .mobile-nav { display: flex; }
       .steps { flex-direction: column; }
       .step-arrow { display: none; }
       .hero-stats .stat-div { display: none; }
@@ -666,6 +702,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 })
 export class LandingComponent implements OnInit {
   readonly wpp = `https://wa.me/${WPP_NUMBER}?text=${WPP_MSG}`;
+  readonly mobileMenuOpen = signal(false);
 
   private readonly _configSvc = inject(ConfiguracaoService);
   readonly social = signal<SocialConfigDto | null>(null);

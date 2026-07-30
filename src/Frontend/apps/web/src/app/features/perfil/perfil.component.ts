@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '@veloxml/services';
+import { AuthService, extractErrorMessage } from '@veloxml/services';
 import { Setup2faResponse } from '@veloxml/models';
 
 @Component({
@@ -69,6 +69,36 @@ import { Setup2faResponse } from '@veloxml/models';
           </div>
         }
       }
+
+      <div class="card section">
+        <h4 class="section-title">Alterar Senha</h4>
+        <p class="section-desc">Troque sua senha de acesso. Você precisa informar a senha atual para confirmar.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="label">Senha atual</label>
+            <input class="input-text" type="password" [(ngModel)]="senhaAtual" autocomplete="current-password"/>
+          </div>
+          <div class="field">
+            <label class="label">Nova senha</label>
+            <input class="input-text" type="password" [(ngModel)]="novaSenha" placeholder="Mínimo 8 caracteres" autocomplete="new-password"/>
+          </div>
+          <div class="field">
+            <label class="label">Confirmar nova senha</label>
+            <input class="input-text" type="password" [(ngModel)]="confirmarSenha" autocomplete="new-password"/>
+          </div>
+        </div>
+
+        @if (senhaSucesso()) { <div class="alert-ok">Senha alterada com sucesso!</div> }
+        @if (erroSenha()) { <div class="alert-error">{{ erroSenha() }}</div> }
+
+        <div class="form-actions">
+          <span></span>
+          <button class="btn-primary" [disabled]="alterandoSenha()" (click)="alterarSenha()">
+            {{ alterandoSenha() ? 'Alterando...' : 'Alterar Senha' }}
+          </button>
+        </div>
+      </div>
 
       <div class="card section">
         <h4 class="section-title">Autenticação em Dois Fatores (2FA)</h4>
@@ -211,6 +241,13 @@ import { Setup2faResponse } from '@veloxml/models';
     .section-title { margin: 0 0 .25rem; font-size: .95rem; font-weight: 600; color: var(--text); }
     .section-desc { margin: 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
 
+    .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .875rem; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+    .input-text { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
+    .input-text:focus { border-color: var(--accent); }
+    @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { display: flex; align-items: center; gap: 8px; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
@@ -259,6 +296,13 @@ export class PerfilComponent {
   readonly secretCopied    = signal(false);
   readonly showUpgradeModal = signal(false);
 
+  readonly alterandoSenha = signal(false);
+  readonly senhaSucesso   = signal(false);
+  readonly erroSenha      = signal<string | null>(null);
+  senhaAtual = '';
+  novaSenha = '';
+  confirmarSenha = '';
+
   verifyCode = '';
 
   private readonly _whatsappNumber = '5511973982559';
@@ -268,6 +312,40 @@ export class PerfilComponent {
     const nome = this.auth.currentUser()?.nome ?? '';
     const msg = `Olá! Sou ${nome} e quero fazer upgrade do meu plano no FiscalDoc.`;
     return `https://wa.me/${this._whatsappNumber}?text=${encodeURIComponent(msg)}`;
+  }
+
+  alterarSenha(): void {
+    this.erroSenha.set(null);
+    this.senhaSucesso.set(false);
+
+    if (!this.senhaAtual || !this.novaSenha || !this.confirmarSenha) {
+      this.erroSenha.set('Preencha todos os campos.');
+      return;
+    }
+    if (this.novaSenha.length < 8) {
+      this.erroSenha.set('A nova senha deve ter no mínimo 8 caracteres.');
+      return;
+    }
+    if (this.novaSenha !== this.confirmarSenha) {
+      this.erroSenha.set('A confirmação não confere com a nova senha.');
+      return;
+    }
+
+    this.alterandoSenha.set(true);
+    this.auth.changePassword(this.senhaAtual, this.novaSenha).subscribe({
+      next: () => {
+        this.alterandoSenha.set(false);
+        this.senhaSucesso.set(true);
+        this.senhaAtual = '';
+        this.novaSenha = '';
+        this.confirmarSenha = '';
+        setTimeout(() => this.senhaSucesso.set(false), 4000);
+      },
+      error: err => {
+        this.alterandoSenha.set(false);
+        this.erroSenha.set(extractErrorMessage(err, 'Erro ao alterar senha.'));
+      },
+    });
   }
 
   iniciarSetup(): void {

@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -104,36 +105,48 @@ public sealed class ImportarXmlEmailJob(
                 foreach (var summary in messages)
                 {
                     var message = await inbox.GetMessageAsync(summary.UniqueId, ct);
-                    var xmlAttachments = message.Attachments
-                        .OfType<MimePart>()
-                        .Where(a => a.FileName?.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) == true)
-                        .ToList();
+                    var attachments = message.Attachments.OfType<MimePart>().ToList();
+                    var assunto = summary.Envelope?.Subject ?? "(sem assunto)";
 
-                    foreach (var attachment in xmlAttachments)
+                    foreach (var attachment in attachments)
                     {
-                        xmlsProcessados++;
-                        await using var stream = new MemoryStream();
-                        await attachment.Content.DecodeToAsync(stream, ct);
-                        stream.Position = 0;
+                        var fileName = attachment.FileName ?? $"email_{summary.UniqueId}";
 
-                        var fileName = attachment.FileName ?? $"email_{summary.UniqueId}.xml";
-                        var tipo = DetectarTipo(fileName);
-                        var dto = new FileUploadDto(stream, fileName, "application/xml", stream.Length);
-
-                        var result = await mediator.Send(new UploadDocumentoCommand(cliente.Id, tipo, dto), ct);
-                        if (result.IsSuccess)
+                        if (fileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
                         {
-                            xmlsImportados++;
-                            logger.LogInformation(
-                                "[ImportarXmlEmail] XML importado com sucesso | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Tipo={Tipo}",
-                                cliente.Id, cliente.RazaoSocial, summary.Envelope?.Subject ?? "(sem assunto)", fileName, tipo);
+                            xmlsProcessados++;
+                            await using var stream = new MemoryStream();
+                            await attachment.Content.DecodeToAsync(stream, ct);
+                            stream.Position = 0;
+
+                            if (await ImportarXmlAsync(cliente, assunto, fileName, stream, ct))
+                                xmlsImportados++;
+                            else
+                                erros++;
                         }
-                        else
+                        else if (fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                         {
-                            erros++;
-                            logger.LogWarning(
-                                "[ImportarXmlEmail] Falha ao importar XML | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Motivo={Motivo}",
-                                cliente.Id, cliente.RazaoSocial, summary.Envelope?.Subject ?? "(sem assunto)", fileName, result.Error.Description);
+                            await using var zipStream = new MemoryStream();
+                            await attachment.Content.DecodeToAsync(zipStream, ct);
+                            zipStream.Position = 0;
+
+                            using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+                            foreach (var entry in archive.Entries)
+                            {
+                                if (!entry.Name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                                    continue;
+
+                                xmlsProcessados++;
+                                await using var entryStream = new MemoryStream();
+                                await using (var entryContent = entry.Open())
+                                    await entryContent.CopyToAsync(entryStream, ct);
+                                entryStream.Position = 0;
+
+                                if (await ImportarXmlAsync(cliente, assunto, entry.Name, entryStream, ct))
+                                    xmlsImportados++;
+                                else
+                                    erros++;
+                            }
                         }
                     }
 
@@ -164,6 +177,26 @@ public sealed class ImportarXmlEmailJob(
 
         return new ResumoCliente(cliente.Id, cliente.RazaoSocial, executadoEm,
             emailsEncontrados, xmlsProcessados, xmlsImportados, erros, mensagemErro);
+    }
+
+    private async Task<bool> ImportarXmlAsync(Cliente cliente, string assunto, string fileName, Stream stream, CancellationToken ct)
+    {
+        var tipo = DetectarTipo(fileName);
+        var dto = new FileUploadDto(stream, fileName, "application/xml", stream.Length);
+
+        var result = await mediator.Send(new UploadDocumentoCommand(cliente.Id, tipo, dto), ct);
+        if (result.IsSuccess)
+        {
+            logger.LogInformation(
+                "[ImportarXmlEmail] XML importado com sucesso | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Tipo={Tipo}",
+                cliente.Id, cliente.RazaoSocial, assunto, fileName, tipo);
+            return true;
+        }
+
+        logger.LogWarning(
+            "[ImportarXmlEmail] Falha ao importar XML | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Motivo={Motivo}",
+            cliente.Id, cliente.RazaoSocial, assunto, fileName, result.Error.Description);
+        return false;
     }
 
     private static TipoDocumentoEnum DetectarTipo(string fileName)

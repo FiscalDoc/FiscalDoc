@@ -9,7 +9,7 @@ namespace VeloXML.API.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/blog")]
-public sealed class BlogController(IMediator mediator, IStorageService storage) : ControllerBase
+public sealed class BlogController(IMediator mediator, IStorageService storage, ILogger<BlogController> logger) : ControllerBase
 {
     private static readonly Dictionary<string, string> ContentTypesPorExtensao = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -51,15 +51,19 @@ public sealed class BlogController(IMediator mediator, IStorageService storage) 
     {
         var extensao = Path.GetExtension(key);
         if (!ContentTypesPorExtensao.TryGetValue(extensao, out var contentType))
+        {
+            logger.LogWarning("[Blog] Extensão de imagem não reconhecida ao servir {Key}", key);
             return NotFound();
+        }
 
         try
         {
             var stream = await storage.DownloadAsync(key, "blog", ct);
             return File(stream, contentType);
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "[Blog] Falha ao buscar imagem {Key} no bucket 'blog'", key);
             return NotFound();
         }
     }

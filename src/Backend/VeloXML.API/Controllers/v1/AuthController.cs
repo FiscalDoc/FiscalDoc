@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Features.Auth.Commands.ChangePassword;
 using VeloXML.Application.Features.Auth.Commands.Login;
 using VeloXML.Application.Features.Auth.Commands.Logout;
 using VeloXML.Application.Features.Auth.Commands.RefreshToken;
@@ -52,6 +53,14 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetCurrentUserQuery(), ct);
         return result.IsSuccess ? Ok(result.Value) : Unauthorized(result.Error);
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPost("2fa/setup")]

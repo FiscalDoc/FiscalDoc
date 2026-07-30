@@ -80,12 +80,12 @@ type Tab = 'geral' | 'acesso';
                       [class.error]="(f['perfil'].touched && f['perfil'].errors?.['required']) || fieldErrors()['perfil']">
                       <option value="">Selecione</option>
                       <option value="Administrador">Administrador</option>
-                      <option value="Contador">Contador</option>
                       <option value="UsuarioContador">Usuário Contador</option>
                       <option value="Cliente">Cliente</option>
                     </select>
                     @if (f['perfil'].touched && f['perfil'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
                     @if (fieldErrors()['perfil']) { <span class="field-error">{{ fieldErrors()['perfil'] }}</span> }
+                    <span class="hint">Para criar um Contador, use a tela de Contadores.</span>
                   </div>
                 </div>
 
@@ -203,6 +203,7 @@ type Tab = 'geral' | 'acesso';
     .input.error { border-color: var(--red); }
     select.input { cursor: pointer; }
     .field-error { font-size: 11px; color: var(--red); }
+    .hint { font-size: 11px; color: var(--text2); }
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
 
     .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 13.5px; color: var(--text); }
