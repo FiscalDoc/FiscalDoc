@@ -17,9 +17,10 @@ namespace VeloXML.API.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/configuracoes")]
-[Authorize(Roles = "Administrador")]
+[Authorize]
 public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
 {
+    [Authorize(Roles = "Administrador")]
     [HttpGet("smtp")]
     public async Task<IActionResult> GetSmtp(CancellationToken ct)
     {
@@ -27,6 +28,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpPut("smtp")]
     public async Task<IActionResult> SaveSmtp([FromBody] SaveSmtpConfigCommand command, CancellationToken ct)
     {
@@ -34,6 +36,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpPost("smtp/test")]
     public async Task<IActionResult> TestSmtp([FromBody] TestSmtpConfigCommand command, CancellationToken ct)
     {
@@ -41,6 +44,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpGet("social")]
     public async Task<IActionResult> GetSocial(CancellationToken ct)
     {
@@ -48,6 +52,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpPut("social")]
     public async Task<IActionResult> SaveSocial([FromBody] SaveSocialConfigCommand command, CancellationToken ct)
     {
@@ -63,6 +68,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpPost("convite")]
     public async Task<IActionResult> SendConvite([FromBody] SendConviteCommand command, CancellationToken ct)
     {
@@ -70,6 +76,9 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
+    // Sem restrição de Roles de propósito: qualquer usuário autenticado (Admin ou Contador) pode
+    // consultar — o handler já recorta a lista de clientes pra só mostrar o que esse usuário
+    // pode ver, reaproveitando o mesmo filtro multi-tenant usado no resto do sistema.
     [HttpGet("importacao-xml/status")]
     public async Task<IActionResult> GetImportacaoXmlStatus(CancellationToken ct)
     {
@@ -77,6 +86,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpPost("importacao-xml/forcar")]
     public IActionResult ForcarImportacaoXml()
     {
@@ -84,6 +94,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return Ok();
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpGet("importacao-xml/intervalo")]
     public async Task<IActionResult> GetIntervaloImportacao(CancellationToken ct)
     {
@@ -91,6 +102,7 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return Ok(new { intervaloMinutos = result.Value });
     }
 
+    [Authorize(Roles = "Administrador")]
     [HttpPut("importacao-xml/intervalo")]
     public async Task<IActionResult> SaveIntervaloImportacao([FromBody] SaveIntervaloImportacaoCommand command, CancellationToken ct)
     {

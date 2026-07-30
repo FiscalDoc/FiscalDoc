@@ -174,7 +174,7 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .editor ::ng-deep .ql-toolbar .ql-fill { fill: var(--text2); }
     .editor ::ng-deep .ql-toolbar .ql-picker { color: var(--text2); }
     .editor ::ng-deep .ql-container { border-color: var(--border); border-radius: 0 0 8px 8px; font-family: inherit; font-size: 13.5px; }
-    .editor ::ng-deep .ql-editor { color: var(--text); min-height: 260px; max-height: 480px; overflow-y: auto; overflow-wrap: break-word; word-break: break-word; }
+    .editor ::ng-deep .ql-editor { color: var(--text); min-height: 260px; max-height: 480px; overflow-y: auto; overflow-wrap: break-word; }
     .editor ::ng-deep .ql-editor img { max-width: 100%; height: auto; }
     .editor ::ng-deep .ql-editor hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
     /* Conteúdo colado de fora (Word/Docs, etc.) traz cor/fundo (inline ou via classe do Quill)

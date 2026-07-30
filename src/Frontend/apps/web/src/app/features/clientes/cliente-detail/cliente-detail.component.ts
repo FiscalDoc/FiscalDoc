@@ -2,8 +2,8 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService, ClienteService, extractErrorMessage } from '@veloxml/services';
-import { ClienteDto, CriarContaClienteResponse } from '@veloxml/models';
+import { AuthService, ClienteService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
+import { ClienteDto, CriarContaClienteResponse, ImportacaoXmlClienteStatusDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
@@ -313,6 +313,33 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                   }
                 </div>
               </div>
+
+              <div class="imap-log">
+                <div class="imap-log-header">
+                  <span class="label">Última execução do robô</span>
+                  <button type="button" class="btn-ghost btn-sm" [disabled]="logImapLoading()" (click)="carregarLogImap(cliente()!.id)">
+                    {{ logImapLoading() ? 'Atualizando...' : 'Atualizar' }}
+                  </button>
+                </div>
+                @if (logImapLoading()) {
+                  <p class="section-desc">Carregando...</p>
+                } @else if (!logImapExecutadoEm()) {
+                  <p class="section-desc">O robô de importação ainda não executou.</p>
+                } @else if (!logImap()) {
+                  <p class="section-desc">Última execução em {{ logImapExecutadoEm() | date:'dd/MM/yyyy HH:mm' }} — este cliente ainda não foi processado nela (deve entrar na próxima passada).</p>
+                } @else {
+                  <p class="section-desc">Última execução em {{ logImapExecutadoEm() | date:'dd/MM/yyyy HH:mm' }}</p>
+                  <div class="imap-log-grid">
+                    <span>{{ logImap()!.emailsEncontrados }} e-mail(s) encontrado(s)</span>
+                    <span>{{ logImap()!.xmlsProcessados }} XML(s) processado(s)</span>
+                    <span>{{ logImap()!.xmlsImportados }} importado(s)</span>
+                    <span [class.red-text]="logImap()!.erros > 0">{{ logImap()!.erros }} erro(s)</span>
+                  </div>
+                  @if (logImap()!.mensagemErro) {
+                    <p class="alert-error" style="margin-top:.5rem">{{ logImap()!.mensagemErro }}</p>
+                  }
+                }
+              </div>
             }
             @if (erroImap()) { <div class="alert-error" style="margin-top:.75rem">{{ erroImap() }}</div> }
             @if (sucessoImap()) { <div class="alert-ok" style="margin-top:.75rem">Configuração salva!</div> }
@@ -444,6 +471,14 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .endpoint-path { font-family: monospace; font-size: 12px; color: var(--text); }
     .endpoint-sub { color: var(--text2); font-size: 11px; }
     .imap-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .imap-log { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .imap-log-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .375rem; }
+    .imap-log-grid { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; font-size: 13px; color: var(--text); margin-top: .375rem; }
+    .imap-log-grid .red-text { color: var(--red); font-weight: 600; }
+    .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
+    .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+    .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-sm { padding: .3rem .7rem; font-size: 12px; }
     .toggle { display: inline-flex; cursor: pointer; flex-shrink: 0; }
     .toggle input { display: none; }
     .toggle-track { width: 40px; height: 22px; background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; position: relative; transition: background 200ms, border-color 200ms; }
@@ -457,6 +492,7 @@ export class ClienteDetailComponent implements OnInit {
   private readonly _auth   = inject(AuthService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
+  private readonly _config = inject(ConfiguracaoService);
 
   readonly isAdmin = computed(() => this._auth.currentUser()?.perfil === 'Administrador');
 
@@ -474,6 +510,10 @@ export class ClienteDetailComponent implements OnInit {
   readonly salvandoImap   = signal(false);
   readonly erroImap       = signal<string | null>(null);
   readonly sucessoImap    = signal(false);
+
+  readonly logImapLoading = signal(false);
+  readonly logImapExecutadoEm = signal<string | null>(null);
+  readonly logImap        = signal<ImportacaoXmlClienteStatusDto | null>(null);
 
   readonly salvandoWebhook = signal(false);
   readonly erroWebhook     = signal<string | null>(null);
@@ -503,8 +543,21 @@ export class ClienteDetailComponent implements OnInit {
         this._syncImap(c);
         this._syncWebhook(c);
         this.loading.set(false);
+        if (c.imapHabilitado) this.carregarLogImap(c.id);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  carregarLogImap(clienteId: string): void {
+    this.logImapLoading.set(true);
+    this._config.getImportacaoXmlStatus().subscribe({
+      next: status => {
+        this.logImapLoading.set(false);
+        this.logImapExecutadoEm.set(status?.executadoEm ?? null);
+        this.logImap.set(status?.clientes.find(c => c.clienteId === clienteId) ?? null);
+      },
+      error: () => this.logImapLoading.set(false),
     });
   }
 

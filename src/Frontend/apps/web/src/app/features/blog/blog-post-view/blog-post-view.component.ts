@@ -47,13 +47,16 @@ import { environment } from '../../../../environments/environment';
     .meta-item { color: var(--text2); font-size: 13px; }
     .title { margin: 0; font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1.2; }
     .resumo { color: var(--text2); font-size: 1.05rem; margin: 0; }
-    .conteudo { color: var(--text); font-size: 15.5px; line-height: 1.75; max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
+    /* Base igual à do editor (body { font-size: 14px } global, herdado pelo .ql-editor sem
+       override) e escala de heading em "em" igual ao default do navegador (o que o Quill também
+       usa) — garante que o que foi formatado no editor renderize com o mesmo tamanho aqui. */
+    .conteudo { color: var(--text); font-size: 14px; line-height: 1.75; max-width: 100%; overflow-wrap: break-word; }
     .conteudo ::ng-deep * { max-width: 100%; box-sizing: border-box; }
     .conteudo ::ng-deep img { border-radius: 8px; height: auto; }
     .conteudo ::ng-deep a { color: var(--accent); }
-    .conteudo ::ng-deep h1 { font-size: 1.6rem; margin: 1.5rem 0 .75rem; line-height: 1.3; }
-    .conteudo ::ng-deep h2 { font-size: 1.4rem; margin: 1.5rem 0 .75rem; line-height: 1.3; }
-    .conteudo ::ng-deep h3 { font-size: 1.15rem; margin: 1.25rem 0 .5rem; line-height: 1.3; }
+    .conteudo ::ng-deep h1 { font-size: 2em; margin: 1.5rem 0 .75rem; line-height: 1.3; }
+    .conteudo ::ng-deep h2 { font-size: 1.5em; margin: 1.5rem 0 .75rem; line-height: 1.3; }
+    .conteudo ::ng-deep h3 { font-size: 1.17em; margin: 1.25rem 0 .5rem; line-height: 1.3; }
     .conteudo ::ng-deep p { margin: 0 0 1rem; }
     .conteudo ::ng-deep blockquote { border-left: 3px solid var(--accent); padding-left: 1rem; color: var(--text2); margin: 1rem 0; }
     .conteudo ::ng-deep hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }

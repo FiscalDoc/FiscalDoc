@@ -55,13 +55,24 @@ public sealed class ImportarXmlEmailJob(
             "XMLs processados: {TotalProcessados} | XMLs importados com sucesso: {TotalImportados} | Erros: {TotalErros}",
             concluidoEm, duracaoMs, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros);
 
-        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, resumos, ct);
+        await SalvarStatusExecucaoAsync(concluidoEm, clientes.Count, totalEmails, totalProcessados, totalImportados, totalErros, resumos, clientes, ct);
     }
 
     private async Task SalvarStatusExecucaoAsync(
         DateTime executadoEm, int clientesProcessados, int emailsEncontrados,
-        int xmlsProcessados, int xmlsImportados, int erros, List<ResumoCliente> resumos, CancellationToken ct)
+        int xmlsProcessados, int xmlsImportados, int erros, List<ResumoCliente> resumos, IReadOnlyList<Cliente> clientes, CancellationToken ct)
     {
+        // O job roda em background (Hangfire), sem usuário logado pra derivar o tenant
+        // automaticamente — usamos o tenant de qualquer cliente processado como dono do
+        // registro de status "global". Sem nenhum cliente processado, não há como saber
+        // de qual tenant é esse status, então a gravação é pulada (nada de novo a mostrar mesmo).
+        var tenantId = clientes.Count > 0 ? clientes[0].TenantId : (Guid?)null;
+        if (tenantId is null)
+        {
+            logger.LogInformation("[ImportarXmlEmail] Nenhum cliente com IMAP habilitado — status da execução não será salvo.");
+            return;
+        }
+
         try
         {
             var clientesDto = resumos.Select(r => new ImportacaoXmlClienteStatusDto(
@@ -75,7 +86,7 @@ public sealed class ImportarXmlEmailJob(
             var json = JsonSerializer.Serialize(status);
             await uow.Configuracoes.UpsertAsync(
                 GetImportacaoXmlStatusQueryHandler.ChaveConfiguracao, json,
-                "Resumo da última execução do robô de importação de XML por e-mail", ct);
+                "Resumo da última execução do robô de importação de XML por e-mail", ct, tenantId);
             await uow.SaveChangesAsync(ct);
         }
         catch (Exception ex)
