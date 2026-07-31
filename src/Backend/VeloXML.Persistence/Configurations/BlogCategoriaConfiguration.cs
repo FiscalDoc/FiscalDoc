@@ -19,6 +19,6 @@ public class BlogCategoriaConfiguration : IEntityTypeConfiguration<BlogCategoria
         b.Property(e => e.Nome).HasColumnName("nome").HasMaxLength(100).IsRequired();
         b.Property(e => e.Slug).HasColumnName("slug").HasMaxLength(120).IsRequired();
 
-        b.HasIndex(e => e.Slug).IsUnique().HasDatabaseName("ix_blog_categorias_slug");
+        b.HasIndex(e => e.Slug).IsUnique().HasDatabaseName("ix_blog_categorias_slug").HasFilter("deleted_at IS NULL");
     }
 }

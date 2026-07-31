@@ -43,6 +43,11 @@ public class AppDbContext(
         // no mesmo Tenant. Quando o usuário logado tem ContadorId (perfil Contador ou
         // UsuarioContador), também restringimos pelo Contador — Administrador e Cliente não têm
         // ContadorId, então não são afetados por essa cláusula extra.
+        //
+        // Da mesma forma, quando o usuário logado tem ClienteId (perfil Cliente), restringimos
+        // pro próprio cliente — sem isso, um usuário Cliente enxergava/selecionava TODOS os
+        // clientes do tenant (mesma classe de vazamento já corrigida pra Contador).
+        // Administrador e Contador não têm ClienteId, então não são afetados por essa cláusula.
         builder.Entity<User>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<Contador>().HasQueryFilter(e =>
@@ -52,30 +57,37 @@ public class AppDbContext(
         builder.Entity<Cliente>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.Id == currentUser.ClienteId)
             && e.DeletedAt == null);
         builder.Entity<Documento>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
             && e.DeletedAt == null);
         builder.Entity<Arquivo>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId) && e.DeletedAt == null);
         builder.Entity<Alerta>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
             && e.DeletedAt == null);
         builder.Entity<Cobranca>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
             && e.DeletedAt == null);
         builder.Entity<Produto>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
-            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
         builder.Entity<Destinatario>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
-            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
         builder.Entity<Pedido>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
-            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId));
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
         builder.Entity<PedidoItem>().HasQueryFilter(e =>
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
         builder.Entity<ImportacaoXmlLog>().HasQueryFilter(e =>

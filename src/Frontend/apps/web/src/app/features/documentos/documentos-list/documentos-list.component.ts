@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { from, concatMap, catchError, of } from 'rxjs';
-import { DocumentoService, ClienteService, extractErrorMessage, extractBlobErrorMessage } from '@veloxml/services';
+import { AuthService, DocumentoService, ClienteService, extractErrorMessage, extractBlobErrorMessage } from '@veloxml/services';
 import { DocumentoDto, ClienteDto } from '@veloxml/models';
 
 interface UploadItem { file: File; tipo: string; }
@@ -157,12 +157,14 @@ interface UploadItem { file: File; tipo: string; }
             }
           </div>
           <div class="upload-controls">
-            <select class="filter-select" [(ngModel)]="uploadClienteId">
-              <option value="">Detectar automaticamente pelo CNPJ (NF-e) ou selecione...</option>
-              @for (c of clientes(); track c.id) {
-                <option [value]="c.id">{{ c.razaoSocial }}</option>
-              }
-            </select>
+            @if (!isCliente()) {
+              <select class="filter-select" [(ngModel)]="uploadClienteId">
+                <option value="">Detectar automaticamente pelo CNPJ (NF-e) ou selecione...</option>
+                @for (c of clientes(); track c.id) {
+                  <option [value]="c.id">{{ c.razaoSocial }}</option>
+                }
+              </select>
+            }
             <button class="btn-primary" [disabled]="!uploadItems().length || uploading()" (click)="doUpload()">
               {{ uploading() ? 'Enviando...' : 'Enviar' }}
             </button>
@@ -611,6 +613,11 @@ interface UploadItem { file: File; tipo: string; }
 export class DocumentosListComponent implements OnInit {
   private readonly _docSvc = inject(DocumentoService);
   private readonly _cliSvc = inject(ClienteService);
+  private readonly _auth   = inject(AuthService);
+
+  // Perfil Cliente só importa pro próprio cliente — não faz sentido escolher outro, então
+  // a seleção nem aparece (o backend também ignora qualquer ClienteId enviado nesse caso).
+  readonly isCliente = computed(() => this._auth.currentUser()?.perfil === 'Cliente');
 
   readonly documentos       = signal<DocumentoDto[]>([]);
   readonly clientes         = signal<ClienteDto[]>([]);

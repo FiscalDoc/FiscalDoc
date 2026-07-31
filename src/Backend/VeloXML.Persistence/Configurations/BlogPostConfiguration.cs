@@ -33,7 +33,11 @@ public class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         b.HasOne(e => e.Categoria).WithMany(c => c.Posts)
             .HasForeignKey(e => e.CategoriaId).OnDelete(DeleteBehavior.SetNull);
 
-        b.HasIndex(e => e.Slug).IsUnique().HasDatabaseName("ix_blog_posts_slug");
+        // Sem o filtro, um post excluído (soft-delete) trava o slug pra sempre — a checagem de
+        // unicidade em BlogSlugResolver já ignora registros com deleted_at preenchido, então o
+        // índice do banco precisa fazer o mesmo, senão os dois discordam e o insert falha com
+        // "duplicate key" mesmo quando o slug já está livre pra reuso.
+        b.HasIndex(e => e.Slug).IsUnique().HasDatabaseName("ix_blog_posts_slug").HasFilter("deleted_at IS NULL");
         b.HasIndex(e => e.Status).HasDatabaseName("ix_blog_posts_status");
     }
 }

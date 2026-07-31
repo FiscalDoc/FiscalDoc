@@ -130,6 +130,17 @@ public sealed class UploadDocumentoCommandHandler(
 
     private async Task<Result<Cliente>> ResolverClienteAsync(Guid? clienteId, ParsedDocumento? parsed, CancellationToken ct)
     {
+        // Usuário logado como Cliente: a importação é sempre pro próprio cliente, ignorando
+        // qualquer ClienteId enviado ou CNPJ detectado no XML — não faz sentido esse perfil
+        // escolher/mirar outro cliente.
+        if (currentUser.ClienteId.HasValue)
+        {
+            var proprioCliente = await uow.Clientes.GetByIdAsync(currentUser.ClienteId.Value, ct);
+            return proprioCliente is null
+                ? Result.Failure<Cliente>(ResultError.NotFound("Cliente"))
+                : Result.Success(proprioCliente);
+        }
+
         if (clienteId.HasValue)
         {
             var cliente = await uow.Clientes.GetByIdAsync(clienteId.Value, ct);
