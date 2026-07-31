@@ -33,7 +33,7 @@ public sealed class UploadBlogImagemCommandHandler(IStorageService storage)
                 ResultError.BadRequest("Formato de imagem não suportado. Use JPG, PNG, WEBP ou GIF."));
 
         var objectKey = $"{Guid.NewGuid()}{extensao.ToLowerInvariant()}";
-        await storage.UploadAsync(arquivo.Content, objectKey, "blog", contentType, ct);
+        await storage.UploadAsync(arquivo.Content, objectKey, storage.ResolveBucket("blog"), contentType, ct);
 
         return Result.Success(new UploadBlogImagemResultDto(objectKey, $"/blog/imagens/{objectKey}/conteudo"));
     }

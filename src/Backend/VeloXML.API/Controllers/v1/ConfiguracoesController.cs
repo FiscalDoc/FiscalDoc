@@ -135,4 +135,14 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
 
         return Ok(new { intervaloMinutos = result.Value });
     }
+
+    // Execução única (não recorrente) — dispara via BackgroundJob, não RecurringJob, já que só
+    // roda uma vez por decisão manual do admin, não precisa de agendamento.
+    [Authorize(Roles = "Administrador")]
+    [HttpPost("storage/migrar-s3")]
+    public IActionResult MigrarArquivosParaS3()
+    {
+        BackgroundJob.Enqueue<MigrarArquivosParaS3Job>(job => job.ExecuteAsync(CancellationToken.None));
+        return Ok();
+    }
 }

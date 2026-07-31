@@ -4,7 +4,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
 import { ImportacaoXmlLogDto, ImportacaoXmlLogsResumoDto, PagedResult } from '@veloxml/models';
 
-type Tab = 'email' | 'social' | 'convite' | 'importacao';
+type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
 
 @Component({
   selector: 'app-configuracoes',
@@ -26,6 +26,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
     <button class="tab-btn" [class.active]="tab() === 'social'" (click)="tab.set('social')">Redes Sociais</button>
     <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
     <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); carregarIntervalo(); carregarHistorico()">Importação de E-mails</button>
+    <button class="tab-btn" [class.active]="tab() === 'storage'" (click)="tab.set('storage')">Armazenamento</button>
   </nav>
 
   <!-- ══ E-MAIL (SMTP) ══ -->
@@ -361,6 +362,39 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao';
       </div>
     }
   }
+
+  <!-- ══ ARMAZENAMENTO ══ -->
+  @if (tab() === 'storage') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 1.1 3.58 2 8 2s8-.9 8-2V7M4 7c0 1.1 3.58 2 8 2s8-.9 8-2M4 7c0-1.1 3.58-2 8-2s8 .9 8 2m0 5c0 1.1-3.58 2-8 2s-8-.9-8-2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Migração de arquivos para o S3</div>
+          <div class="section-sub">Copia os XMLs e imagens que ainda estão no MinIO para o bucket S3 configurado — não apaga o original</div>
+        </div>
+      </div>
+
+      <div class="settings-form">
+        <p class="section-sub">
+          Executa uma vez em segundo plano (não bloqueia a tela). Acompanhe o progresso pelos
+          logs do servidor (prefixo <code>[MigrarArquivosParaS3]</code>). Pode rodar de novo
+          com segurança — arquivos já migrados são pulados.
+        </p>
+        @if (migracaoSucesso()) { <div class="alert-success">{{ checkIcon() }} Migração disparada em segundo plano.</div> }
+        @if (migracaoErro()) { <div class="alert-error">{{ migracaoErro() }}</div> }
+        <div class="form-actions">
+          <span></span>
+          <button type="button" class="btn-primary" [disabled]="migrando()" (click)="migrarParaS3()">
+            {{ migrando() ? 'Disparando...' : 'Migrar arquivos para o S3' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
   `,
   styles: [`
@@ -555,6 +589,11 @@ export class ConfiguracoesComponent implements OnInit {
   intervaloSucesso  = signal(false);
   intervaloErro     = signal<string | null>(null);
 
+  // Armazenamento (migração pro S3)
+  migrando          = signal(false);
+  migracaoSucesso   = signal(false);
+  migracaoErro      = signal<string | null>(null);
+
   loadingHistorico = signal(false);
   historico = signal<PagedResult<ImportacaoXmlLogDto>>({ items: [], totalCount: 0, page: 1, pageSize: 25, totalPages: 0 });
   logDetalhe = signal<ImportacaoXmlLogDto | null>(null);
@@ -741,6 +780,24 @@ export class ConfiguracoesComponent implements OnInit {
       error: err => {
         this.forcando.set(false);
         this.forcarErro.set(extractErrorMessage(err, 'Erro ao forçar a importação.'));
+      },
+    });
+  }
+
+  migrarParaS3(): void {
+    if (this.migrando()) return;
+    this.migrando.set(true);
+    this.migracaoSucesso.set(false);
+    this.migracaoErro.set(null);
+    this._svc.migrarArquivosParaS3().subscribe({
+      next: () => {
+        this.migrando.set(false);
+        this.migracaoSucesso.set(true);
+        setTimeout(() => this.migracaoSucesso.set(false), 8000);
+      },
+      error: err => {
+        this.migrando.set(false);
+        this.migracaoErro.set(extractErrorMessage(err, 'Erro ao disparar a migração.'));
       },
     });
   }

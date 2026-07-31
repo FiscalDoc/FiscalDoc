@@ -68,4 +68,8 @@ export class ConfiguracaoService {
   saveIntervaloImportacao(intervaloMinutos: number): Observable<{ intervaloMinutos: number }> {
     return this._api.put<{ intervaloMinutos: number }>('/configuracoes/importacao-xml/intervalo', { intervaloMinutos });
   }
+
+  migrarArquivosParaS3(): Observable<void> {
+    return this._api.post<void>('/configuracoes/storage/migrar-s3', {});
+  }
 }

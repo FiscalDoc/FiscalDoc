@@ -20,6 +20,7 @@ public static class DependencyInjection
     {
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
         services.Configure<StorageOptions>(config.GetSection(StorageOptions.Section));
+        services.Configure<S3Options>(config.GetSection(S3Options.Section));
         services.Configure<EmailOptions>(config.GetSection(EmailOptions.Section));
         services.Configure<CacheOptions>(config.GetSection(CacheOptions.Section));
 
@@ -28,11 +29,20 @@ public static class DependencyInjection
         services.AddScoped<ICurrentTenant, CurrentTenantService>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddSingleton<ITotpService, TotpService>();
-        services.AddSingleton<IStorageService, MinioStorageService>();
+
+        // "Storage:Provider" ausente/"Minio" mantém o comportamento de sempre (dev local,
+        // sem custo AWS). Só produção define "S3" via variável de ambiente no Coolify.
+        var storageProvider = config["Storage:Provider"] ?? "Minio";
+        if (storageProvider.Equals("S3", StringComparison.OrdinalIgnoreCase))
+            services.AddSingleton<IStorageService, S3StorageService>();
+        else
+            services.AddSingleton<IStorageService, MinioStorageService>();
+
         services.AddSingleton<ICacheService, RedisCacheService>();
         services.AddScoped<IEmailService, MailPitEmailService>();
-        services.AddHostedService<MinioBucketInitializer>();
+        services.AddHostedService<StorageBucketInitializer>();
         services.AddScoped<ImportarXmlEmailJob>();
+        services.AddScoped<MigrarArquivosParaS3Job>();
         services.AddScoped<IWebhookService, WebhookService>();
         services.AddHttpClient("webhook").ConfigurePrimaryHttpMessageHandler(() =>
             new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });

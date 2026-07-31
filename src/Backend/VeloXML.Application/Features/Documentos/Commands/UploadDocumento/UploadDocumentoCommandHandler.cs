@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using AutoMapper;
 using MediatR;
+using VeloXML.Application.Common;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
 using VeloXML.Domain.Entities;
@@ -39,13 +40,15 @@ public sealed class UploadDocumentoCommandHandler(
         if (!cliente.Value.Ativo)
             return Result.Failure<DocumentoDto>(ResultError.Validation("Cliente", "Não é possível importar notas fiscais para um cliente inativo."));
 
-        await storage.EnsureBucketExistsAsync(BucketName, ct);
+        var bucket = storage.ResolveBucket(BucketName);
+        await storage.EnsureBucketExistsAsync(bucket, ct);
 
         var hash = await ComputeHashAsync(request.Arquivo.Content, ct);
         request.Arquivo.Content.Position = 0;
 
-        var objectKey = $"documentos/{cliente.Value.Id}/{request.Tipo.ToString().ToLower()}/{Guid.NewGuid()}/{request.Arquivo.FileName}";
-        var url = await storage.UploadAsync(request.Arquivo.Content, objectKey, BucketName, request.Arquivo.ContentType, ct);
+        var objectKey = StorageKeyHelper.MontarChaveDocumento(
+            cliente.Value.Cnpj, parsed?.DataEmissao ?? DateTime.UtcNow, parsed?.ChaveAcesso);
+        await storage.UploadAsync(request.Arquivo.Content, objectKey, bucket, request.Arquivo.ContentType, ct);
 
         var documento = new Documento
         {
@@ -92,11 +95,14 @@ public sealed class UploadDocumentoCommandHandler(
             TenantId    = currentUser.TenantId!.Value,
             NomeArquivo = Path.GetFileName(objectKey),
             NomeOriginal = request.Arquivo.FileName,
-            Bucket      = BucketName,
+            Bucket      = bucket,
             ObjectKey   = objectKey,
             MimeType    = request.Arquivo.ContentType,
             Hash        = hash,
-            Url         = url,
+            // Sem URL persistida de propósito — uma pre-signed URL expira, e
+            // DocumentosController já baixa sempre via Bucket/ObjectKey sob demanda
+            // (storage.DownloadAsync), nunca lendo este campo.
+            Url         = null,
             Tamanho     = request.Arquivo.Size
         };
 

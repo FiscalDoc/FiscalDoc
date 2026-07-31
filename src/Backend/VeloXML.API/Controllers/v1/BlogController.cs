@@ -61,7 +61,7 @@ public sealed class BlogController(IMediator mediator, IStorageService storage, 
 
         try
         {
-            var stream = await storage.DownloadAsync(key, "blog", ct);
+            var stream = await storage.DownloadAsync(key, storage.ResolveBucket("blog"), ct);
             return File(stream, contentType);
         }
         catch (Exception ex)

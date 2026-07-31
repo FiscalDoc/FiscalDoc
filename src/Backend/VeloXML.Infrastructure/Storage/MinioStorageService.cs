@@ -13,6 +13,8 @@ public sealed class MinioStorageService(IOptions<StorageOptions> opts) : IStorag
         .WithSSL(opts.Value.UseSSL)
         .Build();
 
+    public string ResolveBucket(string logicalBucket) => logicalBucket;
+
     public async Task<string> UploadAsync(Stream stream, string objectKey, string bucket, string contentType, CancellationToken ct = default)
     {
         await _client.PutObjectAsync(new PutObjectArgs()
@@ -22,7 +24,10 @@ public sealed class MinioStorageService(IOptions<StorageOptions> opts) : IStorag
             .WithObjectSize(stream.Length)
             .WithContentType(contentType), ct);
 
-        return await GetPresignedUrlAsync(objectKey, bucket);
+        // O objectKey é o que fica gravado no banco — a URL de download é sempre resolvida
+        // sob demanda (GetPresignedUrlAsync) e nunca persistida, já que uma pre-signed URL
+        // expira e não deve ser tratada como referência permanente.
+        return objectKey;
     }
 
     public async Task<Stream> DownloadAsync(string objectKey, string bucket, CancellationToken ct = default)
@@ -34,6 +39,19 @@ public sealed class MinioStorageService(IOptions<StorageOptions> opts) : IStorag
             .WithCallbackStream(s => s.CopyTo(ms)), ct);
         ms.Position = 0;
         return ms;
+    }
+
+    public async Task<bool> ExistsAsync(string objectKey, string bucket, CancellationToken ct = default)
+    {
+        try
+        {
+            await _client.StatObjectAsync(new StatObjectArgs().WithBucket(bucket).WithObject(objectKey), ct);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task DeleteAsync(string objectKey, string bucket, CancellationToken ct = default)

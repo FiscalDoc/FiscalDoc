@@ -74,7 +74,7 @@ public sealed class ContadoresController(IMediator mediator, IStorageService sto
 
         var objectKey = $"contadores/{id}/foto";
         await using var stream = foto.OpenReadStream();
-        await storage.UploadAsync(stream, objectKey, "veloxml", foto.ContentType, ct);
+        await storage.UploadAsync(stream, objectKey, storage.ResolveBucket("veloxml"), foto.ContentType, ct);
 
         // Store the foto path in DB via direct update
         using var scope = HttpContext.RequestServices.CreateScope();
@@ -95,7 +95,7 @@ public sealed class ContadoresController(IMediator mediator, IStorageService sto
         var objectKey = $"contadores/{id}/foto";
         try
         {
-            var stream = await storage.DownloadAsync(objectKey, "veloxml", ct);
+            var stream = await storage.DownloadAsync(objectKey, storage.ResolveBucket("veloxml"), ct);
             return File(stream, "image/jpeg");
         }
         catch
