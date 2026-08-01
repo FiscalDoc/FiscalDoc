@@ -6,7 +6,6 @@ import { PagedResult, UsuarioDto } from '@veloxml/models';
 export interface CreateClienteUsuarioRequest {
   nome: string;
   email: string;
-  senha: string;
 }
 
 export interface UpdateClienteUsuarioRequest {

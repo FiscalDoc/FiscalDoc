@@ -2,7 +2,10 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
 import { ApiService } from './api.service';
-import { LoginRequest, LoginResponse, CurrentUser, Setup2faResponse } from '@veloxml/models';
+import {
+  LoginRequest, LoginResponse, CurrentUser, Setup2faResponse,
+  SwitchContextRequest, SwitchContextResponse, RestoreAdminContextResponse,
+} from '@veloxml/models';
 
 const TOKEN_KEY   = 'vx_access_token';
 const REFRESH_KEY = 'vx_refresh_token';
@@ -19,6 +22,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
 
   readonly isOnTrial = computed(() => this._currentUser()?.plano === 'Trial');
+  readonly isImpersonating = computed(() => !!this._currentUser()?.actingAdminId);
 
   readonly diasRestantesTrial = computed(() => {
     const exp = this._currentUser()?.planoExpiracao;
@@ -90,6 +94,53 @@ export class AuthService {
 
   changePassword(senhaAtual: string, novaSenha: string): Observable<void> {
     return this._api.post<void>('/auth/change-password', { senhaAtual, novaSenha });
+  }
+
+  forgotPassword(email: string): Observable<void> {
+    return this._api.post<void>('/auth/forgot-password', { email });
+  }
+
+  resetPassword(token: string, novaSenha: string): Observable<void> {
+    return this._api.post<void>('/auth/reset-password', { token, novaSenha });
+  }
+
+  validateResetToken(token: string): Observable<{ valido: boolean }> {
+    return this._api.get<{ valido: boolean }>('/auth/reset-password/validar', { token });
+  }
+
+  switchContext(req: SwitchContextRequest): Observable<SwitchContextResponse> {
+    return new Observable(observer => {
+      this._api.post<SwitchContextResponse>('/auth/switch-context', req).subscribe({
+        next: (res) => {
+          // Sem refresh token guardado enquanto impersonando — se o access token expirar, a
+          // sessão simplesmente cai (evita "voltar" silenciosamente pro admin sem o usuário
+          // perceber, via um refresh usando o token antigo).
+          localStorage.removeItem(REFRESH_KEY);
+          localStorage.setItem(TOKEN_KEY, res.accessToken);
+          const user = this._decodeToken(res.accessToken);
+          if (user) this._currentUser.set({ ...user, plano: this._currentUser()?.plano, planoExpiracao: this._currentUser()?.planoExpiracao });
+          observer.next(res);
+          observer.complete();
+        },
+        error: (err) => observer.error(err),
+      });
+    });
+  }
+
+  restoreAdminContext(): Observable<RestoreAdminContextResponse> {
+    return new Observable(observer => {
+      this._api.post<RestoreAdminContextResponse>('/auth/restore-admin-context', {}).subscribe({
+        next: (res) => {
+          localStorage.setItem(TOKEN_KEY, res.accessToken);
+          localStorage.setItem(REFRESH_KEY, res.refreshToken);
+          const user = this._decodeToken(res.accessToken);
+          if (user) this._currentUser.set({ ...user, plano: this._currentUser()?.plano, planoExpiracao: this._currentUser()?.planoExpiracao });
+          observer.next(res);
+          observer.complete();
+        },
+        error: (err) => observer.error(err),
+      });
+    });
   }
 
   setup2fa(): Observable<Setup2faResponse> {
@@ -166,6 +217,7 @@ export class AuthService {
         empresa: payload['empresa'] ?? undefined,
         contadorId: payload['contador_id'] ?? undefined,
         clienteId: payload['cliente_id'] ?? undefined,
+        actingAdminId: payload['acting_admin_id'] ?? undefined,
       };
     } catch { return null; }
   }

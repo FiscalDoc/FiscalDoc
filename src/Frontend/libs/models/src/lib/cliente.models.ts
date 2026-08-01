@@ -67,7 +67,6 @@ export interface ConfigurarWebhookRequest {
 export interface CriarContaClienteRequest {
   nome: string;
   email: string;
-  senha: string;
 }
 
 export interface CriarContaClienteResponse {

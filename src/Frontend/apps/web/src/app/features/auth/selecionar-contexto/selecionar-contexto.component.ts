@@ -1,0 +1,167 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService, ClienteService, ContadorService, extractErrorMessage } from '@veloxml/services';
+import { ClienteDto, ContadorDto } from '@veloxml/models';
+
+@Component({
+  selector: 'app-selecionar-contexto',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="page">
+      <div class="card">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <h1 class="font-heading">FiscalDoc</h1>
+        </div>
+        <p class="subtitle">Como você quer entrar?</p>
+
+        <button type="button" class="btn-admin" (click)="continuarComoAdmin()">
+          Continuar como Administrador
+        </button>
+
+        <div class="divider"><span>ou atuar como</span></div>
+
+        <div class="field">
+          <label class="label">Empresa (Contador)</label>
+          <select class="input" [(ngModel)]="contadorId" (ngModelChange)="onContadorChange()">
+            <option value="">Selecione...</option>
+            @for (c of contadores(); track c.id) { <option [value]="c.id">{{ c.nome }}</option> }
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label">Perfil</label>
+          <div class="perfil-toggle">
+            <button type="button" class="perfil-btn" [class.active]="perfil === 'Contador'" (click)="perfil = 'Contador'">Contador</button>
+            <button type="button" class="perfil-btn" [class.active]="perfil === 'Cliente'" (click)="perfil = 'Cliente'">Cliente</button>
+          </div>
+        </div>
+
+        @if (perfil === 'Cliente') {
+          <div class="field">
+            <label class="label">Cliente</label>
+            <select class="input" [(ngModel)]="clienteId" [disabled]="!contadorId || loadingClientes()">
+              <option value="">{{ loadingClientes() ? 'Carregando...' : 'Selecione...' }}</option>
+              @for (c of clientes(); track c.id) { <option [value]="c.id">{{ c.razaoSocial }}</option> }
+            </select>
+          </div>
+        }
+
+        @if (erro()) { <p class="error-msg">{{ erro() }}</p> }
+
+        <button type="button" class="btn btn-primary" [disabled]="!podeEntrar() || entrando()" (click)="entrar()">
+          {{ entrando() ? 'Entrando...' : 'Entrar como ' + perfil }}
+        </button>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+    .card {
+      width: 400px; display: flex; flex-direction: column; gap: 1rem; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem;
+    }
+    .brand { display: flex; align-items: center; gap: 0.625rem; }
+    .brand-icon {
+      width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: #0d0f14;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .brand h1 { font-size: 1.5rem; margin: 0; }
+    .subtitle { color: var(--text2); font-size: 13px; margin: -0.5rem 0 0; }
+    .btn-admin {
+      width: 100%; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--accent);
+      background: var(--accent); color: #0d0f14; font-weight: 700; font-size: 14px; cursor: pointer;
+    }
+    .btn-admin:hover { opacity: .9; }
+    .divider { display: flex; align-items: center; gap: .75rem; color: var(--text2); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .label { font-size: 12px; color: var(--text2); font-weight: 500; }
+    .input {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 10px 12px; color: var(--text); font-size: 14px; outline: none;
+    }
+    .input:focus { border-color: var(--accent); }
+    .input:disabled { opacity: .5; }
+    .perfil-toggle { display: flex; gap: .5rem; }
+    .perfil-btn {
+      flex: 1; padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text2); font-size: 13px; cursor: pointer;
+    }
+    .perfil-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,.08); }
+    .btn { width: 100%; justify-content: center; padding: 10px; }
+    .error-msg {
+      font-size: 13px; color: var(--red); background: rgba(255,77,109,0.1);
+      border: 1px solid rgba(255,77,109,0.2); border-radius: var(--radius-sm); padding: 8px 12px; margin: 0;
+    }
+  `],
+})
+export class SelecionarContextoComponent implements OnInit {
+  private readonly _auth    = inject(AuthService);
+  private readonly _cntSvc  = inject(ContadorService);
+  private readonly _cliSvc  = inject(ClienteService);
+  private readonly _router  = inject(Router);
+
+  contadores = signal<ContadorDto[]>([]);
+  clientes   = signal<ClienteDto[]>([]);
+  loadingClientes = signal(false);
+  entrando   = signal(false);
+  erro       = signal<string | null>(null);
+
+  contadorId = '';
+  perfil: 'Contador' | 'Cliente' = 'Contador';
+  clienteId = '';
+
+  ngOnInit(): void {
+    this._cntSvc.getAll({ pageSize: 500 }).subscribe({ next: r => this.contadores.set(r.items) });
+  }
+
+  onContadorChange(): void {
+    this.clienteId = '';
+    this.clientes.set([]);
+    if (!this.contadorId) return;
+    this.loadingClientes.set(true);
+    this._cliSvc.getAll({ contadorId: this.contadorId, pageSize: 500 }).subscribe({
+      next: r => { this.clientes.set(r.items); this.loadingClientes.set(false); },
+      error: () => this.loadingClientes.set(false),
+    });
+  }
+
+  podeEntrar(): boolean {
+    if (!this.contadorId) return false;
+    if (this.perfil === 'Cliente' && !this.clienteId) return false;
+    return true;
+  }
+
+  continuarComoAdmin(): void {
+    this._router.navigate(['/dashboard']);
+  }
+
+  entrar(): void {
+    if (!this.podeEntrar() || this.entrando()) return;
+    this.entrando.set(true);
+    this.erro.set(null);
+    this._auth.switchContext({
+      contadorId: this.contadorId,
+      perfil: this.perfil,
+      clienteId: this.perfil === 'Cliente' ? this.clienteId : undefined,
+    }).subscribe({
+      next: () => {
+        this.entrando.set(false);
+        this._router.navigate([this.perfil === 'Cliente' ? '/documentos' : '/dashboard']);
+      },
+      error: err => {
+        this.entrando.set(false);
+        this.erro.set(extractErrorMessage(err, 'Não foi possível entrar nesse contexto.'));
+      },
+    });
+  }
+}

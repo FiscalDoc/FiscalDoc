@@ -66,8 +66,8 @@ export class ContadorService {
     return this._api.get<AdminDashboardDto>('/dashboard/admin');
   }
 
-  resetSenha(id: string): Observable<{ senha: string }> {
-    return this._api.post<{ senha: string }>(`/contadores/${id}/reset-senha`, {});
+  resetSenha(id: string): Observable<void> {
+    return this._api.post<void>(`/contadores/${id}/reset-senha`, {});
   }
 
   setDataLimiteAcesso(id: string, dataLimite: string | null): Observable<void> {

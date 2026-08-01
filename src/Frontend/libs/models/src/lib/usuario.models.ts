@@ -16,7 +16,6 @@ export interface UsuarioDto {
 export interface CreateUsuarioRequest {
   nome: string;
   email: string;
-  senha: string;
   perfil: string;
   contadorId?: string;
   clienteId?: string;

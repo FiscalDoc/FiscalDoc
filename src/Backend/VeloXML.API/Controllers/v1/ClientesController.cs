@@ -65,7 +65,7 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
     [HttpPost("{id:guid}/criar-conta")]
     public async Task<IActionResult> CriarContaCliente(Guid id, [FromBody] CriarContaClienteRequest body, CancellationToken ct)
     {
-        var result = await mediator.Send(new CriarContaClienteCommand(id, body.Nome, body.Email, body.Senha), ct);
+        var result = await mediator.Send(new CriarContaClienteCommand(id, body.Nome, body.Email), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
@@ -96,7 +96,7 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
 
 public record ConfigurarWebhookRequest(bool Habilitado, string? Url);
 public record ConfigurarImapRequest(bool Habilitado, string? Host, int Port = 993, string? Email = null, string? Senha = null);
-public record CriarContaClienteRequest(string Nome, string Email, string Senha);
+public record CriarContaClienteRequest(string Nome, string Email);
 public record UpdateClienteFiscalRequest(
     string? RegimeTributario,
     string? InscricaoEstadual,

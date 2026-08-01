@@ -50,6 +50,42 @@ public sealed class JwtTokenService(IOptions<JwtOptions> opts) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    public string GenerateContextToken(User admin, string perfil, Guid tenantId, Guid? contadorId, Guid? clienteId, string? empresa)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Secret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claimList = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, admin.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, admin.Email),
+            new("name", admin.Nome),
+            new("role", perfil),
+            new("tenant_id", tenantId.ToString()),
+            new("acting_admin_id", admin.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        if (contadorId.HasValue)
+            claimList.Add(new Claim("contador_id", contadorId.Value.ToString()));
+
+        if (clienteId.HasValue)
+            claimList.Add(new Claim("cliente_id", clienteId.Value.ToString()));
+
+        if (!string.IsNullOrEmpty(empresa))
+            claimList.Add(new Claim("empresa", empresa));
+
+        var token = new JwtSecurityToken(
+            issuer: _opts.Issuer,
+            audience: _opts.Audience,
+            claims: claimList.ToArray(),
+            expires: DateTime.UtcNow.AddMinutes(_opts.ExpiresInMinutes),
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     public string GenerateRefreshToken()
     {
         var bytes = new byte[64];

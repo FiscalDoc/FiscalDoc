@@ -46,16 +46,7 @@ import { ClienteUsuarioService, extractErrorMessage, extractFieldErrors } from '
           </div>
 
           @if (isNew()) {
-            <div class="form-grid">
-              <div class="field col-2">
-                <label class="label">Senha *</label>
-                <input class="input" type="password" formControlName="senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
-                  [class.error]="(f['senha'].touched && f['senha'].invalid) || fieldErrors()['senha']" />
-                @if (f['senha'].touched && f['senha'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-                @if (f['senha'].touched && f['senha'].errors?.['minlength']) { <span class="field-error">Mínimo 8 caracteres</span> }
-                @if (fieldErrors()['senha']) { <span class="field-error">{{ fieldErrors()['senha'] }}</span> }
-              </div>
-            </div>
+            <p class="hint">Um e-mail será enviado para o usuário definir a própria senha de acesso.</p>
           } @else {
             <div class="form-grid">
               <div class="field">
@@ -103,6 +94,7 @@ import { ClienteUsuarioService, extractErrorMessage, extractFieldErrors } from '
     .input:focus { border-color: var(--accent); }
     .input.error { border-color: var(--red); }
     .field-error { font-size: 11px; color: var(--red); }
+    .hint { font-size: 11px; color: var(--text2); }
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
@@ -132,7 +124,6 @@ export class ClienteUsuarioDetailComponent implements OnInit {
   form = this._fb.group({
     nome:      ['', Validators.required],
     email:     ['', [Validators.required, Validators.email]],
-    senha:     ['', [Validators.required, Validators.minLength(8)]],
     novaSenha: [''],
     ativo:     [true],
   });
@@ -149,8 +140,6 @@ export class ClienteUsuarioDetailComponent implements OnInit {
     }
 
     this.form.get('email')?.disable();
-    this.form.get('senha')?.clearValidators();
-    this.form.get('senha')?.updateValueAndValidity();
 
     this._svc.getById(this.clienteId, this.usuarioId).subscribe({
       next: u => {
@@ -171,7 +160,7 @@ export class ClienteUsuarioDetailComponent implements OnInit {
     const v = this.form.getRawValue();
 
     if (this.isNew()) {
-      this._svc.create(this.clienteId, { nome: v.nome!, email: v.email!, senha: v.senha! }).subscribe({
+      this._svc.create(this.clienteId, { nome: v.nome!, email: v.email! }).subscribe({
         next: () => { this.submitting.set(false); this.goBack(); },
         error: err => {
           this.submitting.set(false);

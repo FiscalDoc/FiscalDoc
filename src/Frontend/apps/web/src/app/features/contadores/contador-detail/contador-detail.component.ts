@@ -456,17 +456,14 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
             <div class="access-block">
               <div class="access-label">Senha do contador</div>
               <div class="access-status">
-                @if (novaSenha()) {
-                  <div class="senha-box">
-                    Nova senha: <strong>{{ novaSenha() }}</strong>
-                    <button class="btn-copy" (click)="copiarSenha()">Copiar</button>
-                  </div>
+                @if (senhaEnviada()) {
+                  <span class="inline-success">E-mail de redefinição de senha enviado para o contador.</span>
                 } @else {
-                  <span class="text-muted">Gera uma nova senha temporária para o contador</span>
+                  <span class="text-muted">Envia um e-mail para o contador definir uma nova senha</span>
                 }
               </div>
               <div class="access-actions">
-                <button class="btn-warning" (click)="resetarSenha()">Gerar nova senha</button>
+                <button class="btn-warning" (click)="resetarSenha()">Enviar redefinição de senha</button>
               </div>
               @if (erroSenha()) { <div class="inline-error">{{ erroSenha() }}</div> }
             </div>
@@ -681,14 +678,6 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
       border-radius: 7px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
     }
     .btn-warning:hover { background: rgba(255,209,102,0.2); }
-    .senha-box {
-      display: flex; align-items: center; gap: 10px; background: var(--bg3);
-      border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-size: 13px; color: var(--text);
-    }
-    .senha-box strong { color: var(--accent); letter-spacing: 0.05em; }
-    .btn-copy { background: none; border: none; color: var(--accent); font-size: 12px; cursor: pointer; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-    .btn-copy:hover { background: var(--accent-dim); }
-
     .inline-error {
       font-size: 12.5px; color: var(--red);
       background: rgba(255,77,109,0.08); border: 1px solid rgba(255,77,109,0.2);
@@ -720,7 +709,7 @@ export class ContadorDetailComponent implements OnInit {
   contador        = signal<ContadorDto | null>(null);
   clientes        = signal<ClienteDto[]>([]);
   historico       = signal<CobrancaDto[]>([]);
-  novaSenha       = signal<string | null>(null);
+  senhaEnviada    = signal(false);
   novaDataLimite  = '';
   bloquearMotivo  = '';
 
@@ -889,8 +878,8 @@ export class ContadorDetailComponent implements OnInit {
     this.erroSenha.set(null);
     const id = this._route.snapshot.paramMap.get('id')!;
     this._contSvc.resetSenha(id).subscribe({
-      next: (r) => this.novaSenha.set(r.senha),
-      error: (e) => this.erroSenha.set(extractErrorMessage(e, 'Erro ao gerar nova senha.')),
+      next: () => { this.senhaEnviada.set(true); setTimeout(() => this.senhaEnviada.set(false), 5000); },
+      error: (e) => this.erroSenha.set(extractErrorMessage(e, 'Erro ao enviar e-mail de redefinição.')),
     });
   }
 
@@ -906,10 +895,6 @@ export class ContadorDetailComponent implements OnInit {
       },
       error: (e) => { this.enviandoEmail.set(false); this.erroEmail.set(extractErrorMessage(e, 'Erro ao enviar o e-mail.')); },
     });
-  }
-
-  copiarSenha(): void {
-    if (this.novaSenha()) navigator.clipboard?.writeText(this.novaSenha()!);
   }
 
   // ── Financeiro ──

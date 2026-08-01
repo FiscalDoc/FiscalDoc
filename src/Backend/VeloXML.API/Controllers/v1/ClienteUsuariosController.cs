@@ -31,7 +31,7 @@ public sealed class ClienteUsuariosController(IMediator mediator) : ControllerBa
     [HttpPost]
     public async Task<IActionResult> Create(Guid clienteId, [FromBody] CreateClienteUsuarioRequest body, CancellationToken ct)
     {
-        var result = await mediator.Send(new CreateClienteUsuarioCommand(clienteId, body.Nome, body.Email, body.Senha), ct);
+        var result = await mediator.Send(new CreateClienteUsuarioCommand(clienteId, body.Nome, body.Email), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
@@ -50,5 +50,5 @@ public sealed class ClienteUsuariosController(IMediator mediator) : ControllerBa
     }
 }
 
-public record CreateClienteUsuarioRequest(string Nome, string Email, string Senha);
+public record CreateClienteUsuarioRequest(string Nome, string Email);
 public record UpdateClienteUsuarioRequest(string Nome, bool Ativo, string? NovaSenha);

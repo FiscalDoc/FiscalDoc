@@ -38,4 +38,24 @@ export interface CurrentUser {
   plano?: string;
   planoExpiracao?: string;
   acessoExpiracao?: string; // DataLimiteAcesso do Contador (quando criado pelo admin)
+  actingAdminId?: string; // presente só numa sessão "atuando como" (impersonação)
+}
+
+export interface SwitchContextRequest {
+  contadorId: string;
+  perfil: 'Contador' | 'Cliente';
+  clienteId?: string;
+}
+
+export interface SwitchContextResponse {
+  accessToken: string;
+  expiresAt: string;
+  perfil: string;
+  empresa?: string;
+}
+
+export interface RestoreAdminContextResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
 }

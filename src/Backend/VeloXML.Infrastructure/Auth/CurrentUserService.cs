@@ -16,5 +16,6 @@ public sealed class CurrentUserService(IHttpContextAccessor accessor) : ICurrent
     public Guid? TenantId => Guid.TryParse(User?.FindFirstValue("tenant_id"), out var id) ? id : null;
     public Guid? ContadorId => Guid.TryParse(User?.FindFirstValue("contador_id"), out var id) ? id : null;
     public Guid? ClienteId  => Guid.TryParse(User?.FindFirstValue("cliente_id"),  out var id) ? id : null;
+    public Guid? ActingAdminId => Guid.TryParse(User?.FindFirstValue("acting_admin_id"), out var id) ? id : null;
     public bool IsAuthenticated => User?.Identity?.IsAuthenticated ?? false;
 }

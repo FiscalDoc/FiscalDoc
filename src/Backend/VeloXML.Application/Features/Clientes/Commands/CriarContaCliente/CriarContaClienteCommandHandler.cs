@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VeloXML.Application.Common.Interfaces;
+using VeloXML.Application.Features.Auth;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
@@ -8,7 +10,8 @@ using VeloXML.SharedKernel;
 namespace VeloXML.Application.Features.Clientes.Commands.CriarContaCliente;
 
 public sealed class CriarContaClienteCommandHandler(
-    IUnitOfWork uow, ICurrentUser currentUser, ILogger<CriarContaClienteCommandHandler> logger)
+    IUnitOfWork uow, ICurrentUser currentUser, ITokenService tokenService, IEmailService emailService,
+    ILogger<CriarContaClienteCommandHandler> logger)
     : IRequestHandler<CriarContaClienteCommand, Result<CriarContaClienteResponse>>
 {
     public async Task<Result<CriarContaClienteResponse>> Handle(CriarContaClienteCommand request, CancellationToken ct)
@@ -28,15 +31,19 @@ public sealed class CriarContaClienteCommandHandler(
             TenantId     = currentUser.TenantId!.Value,
             Nome         = request.Nome,
             Email        = emailNorm,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Senha),
+            PasswordHash = PrimeiroAcessoHelper.GerarHashInutilizavel(tokenService),
+            SenhaDefinida = false,
             Perfil       = PerfilEnum.Cliente,
             ClienteId    = request.ClienteId,
             Ativo        = true
         };
 
         await uow.Users.AddAsync(user, ct);
+        var link = await PrimeiroAcessoHelper.CriarTokenAsync(uow, tokenService, user, ct);
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Conta de usuário {UserId} criada para o cliente {ClienteId}", user.Id, request.ClienteId);
+
+        _ = PrimeiroAcessoHelper.EnviarEmailAsync(emailService, user.Nome, user.Email, link, primeiroAcesso: true, CancellationToken.None);
 
         return Result.Success(new CriarContaClienteResponse(user.Id, user.Email, user.Nome));
     }

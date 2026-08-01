@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VeloXML.Application.Common.Interfaces;
+using VeloXML.Application.Features.Auth;
 using VeloXML.Application.Features.Usuarios.Queries.GetUsuarios;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
@@ -9,7 +11,8 @@ using VeloXML.SharedKernel;
 namespace VeloXML.Application.Features.Usuarios.Commands.CreateUsuario;
 
 public sealed class CreateUsuarioCommandHandler(
-    IUnitOfWork uow, ICurrentUser currentUser, ILogger<CreateUsuarioCommandHandler> logger)
+    IUnitOfWork uow, ICurrentUser currentUser, ITokenService tokenService, IEmailService emailService,
+    ILogger<CreateUsuarioCommandHandler> logger)
     : IRequestHandler<CreateUsuarioCommand, Result<UsuarioDto>>
 {
     public async Task<Result<UsuarioDto>> Handle(CreateUsuarioCommand request, CancellationToken ct)
@@ -49,7 +52,8 @@ public sealed class CreateUsuarioCommandHandler(
             TenantId     = currentUser.TenantId!.Value,
             Nome         = request.Nome,
             Email        = emailNorm,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Senha),
+            PasswordHash = PrimeiroAcessoHelper.GerarHashInutilizavel(tokenService),
+            SenhaDefinida = false,
             Perfil       = perfil,
             ContadorId   = request.ContadorId,
             ClienteId    = request.ClienteId,
@@ -57,8 +61,11 @@ public sealed class CreateUsuarioCommandHandler(
         };
 
         await uow.Users.AddAsync(user, ct);
+        var link = await PrimeiroAcessoHelper.CriarTokenAsync(uow, tokenService, user, ct);
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Usuário {UserId} ({Email}) criado com perfil {Perfil}", user.Id, user.Email, user.Perfil);
+
+        _ = PrimeiroAcessoHelper.EnviarEmailAsync(emailService, user.Nome, user.Email, link, primeiroAcesso: true, CancellationToken.None);
 
         string? nomeContador = null;
         if (user.ContadorId.HasValue)

@@ -47,7 +47,6 @@ export interface ContadorDto {
 
 export interface CreateContadorResponse {
   contador: ContadorDto;
-  senhaTemporaria: string;
 }
 
 export interface CreateContadorRequest {

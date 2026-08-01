@@ -2,13 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '@veloxml/services';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
   template: `
     <div class="login-page">
       <div class="login-card card">
@@ -73,6 +73,7 @@ import { AuthService } from '@veloxml/services';
             <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading()">
               {{ loading() ? 'Entrando...' : 'Entrar' }}
             </button>
+            <a class="forgot-link" routerLink="/auth/esqueci-senha">Esqueci minha senha</a>
           </form>
         }
       </div>
@@ -180,6 +181,11 @@ import { AuthService } from '@veloxml/services';
       cursor: pointer; padding: 0; text-align: left;
     }
     .btn-back:hover { color: var(--text); }
+    .forgot-link {
+      align-self: center; color: var(--text2); font-size: 12.5px;
+      text-decoration: none; margin-top: 0.25rem;
+    }
+    .forgot-link:hover { color: var(--accent); text-decoration: underline; }
   `],
 })
 export class LoginComponent implements OnInit {
@@ -221,9 +227,7 @@ export class LoginComponent implements OnInit {
           this.loading.set(false);
           return;
         }
-        const perfil = this._auth.currentUser()?.perfil;
-        const dest = perfil === 'Cliente' ? '/documentos' : '/dashboard';
-        this._router.navigate([dest]);
+        this._router.navigate([this._destinoAposLogin()]);
       },
       error: () => {
         this.errorMsg.set('E-mail ou senha incorretos.');
@@ -240,14 +244,18 @@ export class LoginComponent implements OnInit {
 
     this._auth.verify2fa(token, this.totpCode).subscribe({
       next: () => {
-        const perfil = this._auth.currentUser()?.perfil;
-        const dest = perfil === 'Cliente' ? '/documentos' : '/dashboard';
-        this._router.navigate([dest]);
+        this._router.navigate([this._destinoAposLogin()]);
       },
       error: () => {
         this.errorMsg.set('Código inválido ou expirado.');
         this.loading.set(false);
       },
     });
+  }
+
+  private _destinoAposLogin(): string {
+    const perfil = this._auth.currentUser()?.perfil;
+    if (perfil === 'Administrador') return '/auth/selecionar-contexto';
+    return perfil === 'Cliente' ? '/documentos' : '/dashboard';
   }
 }

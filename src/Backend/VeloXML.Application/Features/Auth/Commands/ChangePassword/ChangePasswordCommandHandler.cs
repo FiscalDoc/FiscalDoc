@@ -13,6 +13,12 @@ public sealed class ChangePasswordCommandHandler(IUnitOfWork uow, ICurrentUser c
         if (currentUser.UserId is null)
             return Result.Failure(ResultError.Unauthorized());
 
+        // Numa sessão impersonada, currentUser.UserId ainda é o Administrador real por trás do
+        // "atuar como" — bloqueado de propósito pra não alterar a senha do admin achando que
+        // está mexendo na conta do Contador/Cliente que está sendo visualizado.
+        if (currentUser.ActingAdminId is not null)
+            return Result.Failure(ResultError.Validation("Contexto", "Volte para o seu usuário administrador antes de alterar a senha."));
+
         var user = await uow.Users.GetByIdAsync(currentUser.UserId.Value, ct);
         if (user is null)
             return Result.Failure(ResultError.Unauthorized());

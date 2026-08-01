@@ -1,50 +1,29 @@
-using System.Security.Cryptography;
-using System.Text;
 using MediatR;
+using VeloXML.Application.Common.Interfaces;
+using VeloXML.Application.Features.Auth;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Contadores.Commands.ResetSenhaContador;
 
-public sealed class ResetSenhaContadorCommandHandler(IUnitOfWork uow)
-    : IRequestHandler<ResetSenhaContadorCommand, Result<string>>
+public sealed class ResetSenhaContadorCommandHandler(
+    IUnitOfWork uow, ITokenService tokenService, IEmailService emailService)
+    : IRequestHandler<ResetSenhaContadorCommand, Result>
 {
-    public async Task<Result<string>> Handle(ResetSenhaContadorCommand request, CancellationToken ct)
+    public async Task<Result> Handle(ResetSenhaContadorCommand request, CancellationToken ct)
     {
         var contador = await uow.Contadores.GetByIdAsync(request.ContadorId, ct);
         if (contador is null)
-            return Result.Failure<string>(ResultError.NotFound("Contador não encontrado."));
+            return Result.Failure(ResultError.NotFound("Contador não encontrado."));
 
         var user = await uow.Users.GetByContadorIdAsync(request.ContadorId, ct);
         if (user is null)
-            return Result.Failure<string>(ResultError.NotFound("Usuário do contador não encontrado."));
+            return Result.Failure(ResultError.NotFound("Usuário do contador não encontrado."));
 
-        var novaSenha = GerarSenhaTemporaria();
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(novaSenha);
+        var link = await PrimeiroAcessoHelper.CriarTokenAsync(uow, tokenService, user, ct);
         await uow.SaveChangesAsync(ct);
+        await PrimeiroAcessoHelper.EnviarEmailAsync(emailService, user.Nome, user.Email, link, primeiroAcesso: false, ct);
 
-        return Result.Success(novaSenha);
-    }
-
-    private static string GerarSenhaTemporaria()
-    {
-        const string upper   = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-        const string lower   = "abcdefghjkmnpqrstuvwxyz";
-        const string digits  = "23456789";
-        const string special = "@#!";
-        const string all     = upper + lower + digits + special;
-
-        Span<byte> bytes = stackalloc byte[12];
-        RandomNumberGenerator.Fill(bytes);
-
-        var sb = new StringBuilder(12);
-        for (var i = 0; i < 12; i++)
-            sb.Append(all[bytes[i] % all.Length]);
-
-        sb[9]  = upper[bytes[9]  % upper.Length];
-        sb[10] = digits[bytes[10] % digits.Length];
-        sb[11] = special[bytes[11] % special.Length];
-
-        return sb.ToString();
+        return Result.Success();
     }
 }

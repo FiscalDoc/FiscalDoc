@@ -88,6 +88,15 @@ interface NavItem {
       </aside>
 
       <main class="content">
+        @if (auth.isImpersonating()) {
+          <div class="impersonation-banner">
+            <span>
+              Você está atuando como <strong>{{ auth.currentUser()?.empresa || auth.currentUser()?.perfil }}</strong>
+              ({{ auth.currentUser()?.perfil }})
+            </span>
+            <button type="button" class="impersonation-exit" (click)="voltarParaAdmin()">Voltar para Admin</button>
+          </div>
+        }
         @if (auth.isOnTrial()) {
           <div class="trial-banner" [class.trial-critico]="auth.trialCritico()" [class.trial-expirado]="auth.trialExpirado()">
             <div class="trial-banner-left">
@@ -390,6 +399,19 @@ interface NavItem {
       gap: 0;
     }
 
+    /* Impersonation banner */
+    .impersonation-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      background: rgba(255,209,102,0.1); border: 1px solid rgba(255,209,102,0.35);
+      border-radius: var(--radius-sm, 8px); padding: 10px 16px; margin-bottom: 1rem;
+      font-size: 13px; color: var(--yellow);
+    }
+    .impersonation-exit {
+      background: none; border: 1px solid var(--yellow); color: var(--yellow); border-radius: 6px;
+      padding: 5px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+    .impersonation-exit:hover { background: rgba(255,209,102,0.15); }
+
     /* Trial banner */
     .trial-banner {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
@@ -460,6 +482,13 @@ export class ShellComponent implements OnInit {
 
   private readonly _whatsappNumber = '5511973982559';
   readonly whatsappNumberFormatted = '+55 11 97398-2559';
+
+  voltarParaAdmin(): void {
+    this.auth.restoreAdminContext().subscribe({
+      next: () => this._router.navigate(['/dashboard']),
+      error: () => this._router.navigate(['/auth/login']),
+    });
+  }
 
   whatsappUpgradeUrl(): string {
     const nome = this.auth.currentUser()?.nome ?? '';

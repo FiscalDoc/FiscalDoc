@@ -21,6 +21,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(e => e.PasswordHash).HasColumnName("password_hash").HasMaxLength(1024).IsRequired();
         b.Property(e => e.Perfil).HasColumnName("perfil").HasConversion<string>().HasMaxLength(30);
         b.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true).ValueGeneratedNever();
+        b.Property(e => e.SenhaDefinida).HasColumnName("senha_definida").HasDefaultValue(true).ValueGeneratedNever();
         b.Property(e => e.ContadorId).HasColumnName("contador_id");
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.TwoFactorHabilitado).HasColumnName("two_factor_habilitado").HasDefaultValue(false);

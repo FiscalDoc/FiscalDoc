@@ -29,6 +29,7 @@ public class AppDbContext(
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogCategoria> BlogCategorias => Set<BlogCategoria>();
     public DbSet<ImportacaoXmlLog> ImportacaoXmlLogs => Set<ImportacaoXmlLog>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

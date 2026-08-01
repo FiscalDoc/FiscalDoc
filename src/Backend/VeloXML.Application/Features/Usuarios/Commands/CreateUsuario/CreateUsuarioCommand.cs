@@ -7,7 +7,6 @@ namespace VeloXML.Application.Features.Usuarios.Commands.CreateUsuario;
 public record CreateUsuarioCommand(
     string Nome,
     string Email,
-    string Senha,
     string Perfil,
     Guid? ContadorId,
     Guid? ClienteId

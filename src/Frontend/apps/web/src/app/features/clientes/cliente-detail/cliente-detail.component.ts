@@ -361,15 +361,12 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                   <label class="label">Nome</label>
                   <input class="input" [(ngModel)]="conta.nome" placeholder="Nome do responsável"/>
                 </div>
-                <div class="field">
+                <div class="field col-2">
                   <label class="label">E-mail de acesso</label>
                   <input class="input" [(ngModel)]="conta.email" type="email" placeholder="responsavel@empresa.com" autocomplete="off"/>
                 </div>
-                <div class="field">
-                  <label class="label">Senha</label>
-                  <input class="input" [(ngModel)]="conta.senha" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
-                </div>
               </div>
+              <p class="section-desc" style="margin-top:.5rem">Um e-mail será enviado pra esse endereço com um link pra definir a senha de acesso.</p>
               @if (erroConta()) { <div class="alert-error" style="margin-top:.5rem">{{ erroConta() }}</div> }
               <div class="form-actions">
                 <span></span>
@@ -531,7 +528,7 @@ export class ClienteDetailComponent implements OnInit {
   fiscal  = { regimeTributario: '', inscricaoEstadual: '', inscricaoMunicipal: '', cnaePrincipal: '', serieNfe: '1', nfeHabilitado: false };
   imap    = { habilitado: false, host: '', port: 993, email: '', senha: '' };
   webhook = { habilitado: false, url: '' };
-  conta   = { nome: '', email: '', senha: '' };
+  conta   = { nome: '', email: '' };
 
   ngOnInit(): void {
     const id = this._route.snapshot.paramMap.get('id')!;
@@ -676,13 +673,13 @@ export class ClienteDetailComponent implements OnInit {
   criarConta(): void {
     const c = this.cliente();
     if (!c || this.criandoConta()) return;
-    if (!this.conta.nome || !this.conta.email || !this.conta.senha) {
-      this.erroConta.set('Preencha nome, e-mail e senha.');
+    if (!this.conta.nome || !this.conta.email) {
+      this.erroConta.set('Preencha nome e e-mail.');
       return;
     }
     this.criandoConta.set(true);
     this.erroConta.set(null);
-    this._svc.criarConta(c.id, { nome: this.conta.nome, email: this.conta.email, senha: this.conta.senha }).subscribe({
+    this._svc.criarConta(c.id, { nome: this.conta.nome, email: this.conta.email }).subscribe({
       next: res => { this.contaCriada.set(res); this.criandoConta.set(false); },
       error: err => { this.criandoConta.set(false); this.erroConta.set(extractErrorMessage(err, 'Erro ao criar conta. Verifique se o e-mail já está em uso.')); },
     });

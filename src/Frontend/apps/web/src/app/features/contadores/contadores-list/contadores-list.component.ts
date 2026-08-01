@@ -6,7 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ContadorService, extractErrorMessage } from '@veloxml/services';
 import { ContadorDto } from '@veloxml/models';
 
-interface SuccessInfo { nome: string; email: string; senha: string; }
+interface SuccessInfo { nome: string; email: string; }
 type ModalMode = 'create';
 
 @Component({
@@ -171,21 +171,7 @@ type ModalMode = 'create';
               </svg>
             </div>
             <h3 class="success-title font-heading">Contador cadastrado!</h3>
-            <p class="success-sub"><strong>{{ info.nome }}</strong> pode acessar com as credenciais abaixo.</p>
-            <div class="cred-block">
-              <div class="cred-row"><span class="cred-label">E-mail</span><span class="cred-value">{{ info.email }}</span></div>
-              <div class="cred-divider"></div>
-              <div class="cred-row">
-                <span class="cred-label">Senha temporária</span>
-                <div class="cred-senha-row">
-                  <span class="cred-value cred-senha">{{ info.senha }}</span>
-                  <button class="copy-btn" (click)="copySenha(info.senha)" [class.copied]="copied()">
-                    @if (copied()) { ✓ Copiado } @else { Copiar }
-                  </button>
-                </div>
-              </div>
-            </div>
-            <p class="success-warn">Anote a senha — ela não será exibida novamente.</p>
+            <p class="success-sub"><strong>{{ info.nome }}</strong> vai receber um e-mail em <strong>{{ info.email }}</strong> com um link para definir a própria senha de acesso.</p>
             <button class="btn-primary success-close-btn" (click)="closeModal()">Fechar</button>
           </div>
 
@@ -367,17 +353,7 @@ type ModalMode = 'create';
     .success-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,229,160,.12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
     .success-title { margin: 0; font-size: 1.25rem; }
     .success-sub { color: var(--text2); font-size: 14px; margin: 0; }
-    .success-warn { font-size: 12px; color: var(--text2); background: rgba(255,209,102,.08); border: 1px solid rgba(255,209,102,.2); border-radius: 8px; padding: .625rem .875rem; margin: 0; text-align: left; line-height: 1.5; }
     .success-close-btn { min-width: 140px; justify-content: center; }
-    .cred-block { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; text-align: left; }
-    .cred-row { display: flex; align-items: center; justify-content: space-between; padding: .875rem 1rem; gap: 1rem; }
-    .cred-divider { height: 1px; background: var(--border); }
-    .cred-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0; }
-    .cred-value { font-size: 14px; color: var(--text); word-break: break-all; }
-    .cred-senha-row { display: flex; align-items: center; gap: .75rem; }
-    .cred-senha { font-family: monospace; font-size: 15px; letter-spacing: .05em; color: var(--accent); }
-    .copy-btn { display: inline-flex; align-items: center; gap: 4px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-    .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
 
     .licenca-cell { display: flex; flex-direction: column; gap: 5px; }
     .badge-row { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -419,7 +395,6 @@ export class ContadoresListComponent implements OnInit {
   readonly submitting  = signal(false);
   readonly submitError = signal<string | null>(null);
   readonly successInfo = signal<SuccessInfo | null>(null);
-  readonly copied      = signal(false);
 
   readonly form = this._fb.group({
     nome:   ['', [Validators.required]],
@@ -454,7 +429,7 @@ export class ContadoresListComponent implements OnInit {
   // ── Modal ──
   openCreate() {
     this.form.reset({ canalNotificacao: 'ambos', notifNovasNotas: true, notifAlertas: true });
-    this.submitError.set(null); this.successInfo.set(null); this.copied.set(false);
+    this.submitError.set(null); this.successInfo.set(null);
     this.showModal.set(true);
   }
 
@@ -470,7 +445,7 @@ export class ContadoresListComponent implements OnInit {
     this.submitting.set(true); this.submitError.set(null);
     const v = this.form.value;
     this._svc.create({ nome: v.nome!, email: v.email!, telefone: v.telefone || undefined, crc: v.crc || undefined, empresa: v.empresa || undefined, canalNotificacao: v.canalNotificacao ?? 'ambos', notifNovasNotas: v.notifNovasNotas ?? true, notifAlertas: v.notifAlertas ?? true, notifResumoSemanal: v.notifResumoSemanal ?? false, notifConsolidadoMensal: v.notifConsolidadoMensal ?? false }).subscribe({
-      next: res => { this.submitting.set(false); this.successInfo.set({ nome: res.contador.nome, email: res.contador.email, senha: res.senhaTemporaria }); },
+      next: res => { this.submitting.set(false); this.successInfo.set({ nome: res.contador.nome, email: res.contador.email }); },
       error: err => { this.submitting.set(false); this.submitError.set(extractErrorMessage(err, 'Erro ao cadastrar.')); },
     });
   }
@@ -485,10 +460,6 @@ export class ContadoresListComponent implements OnInit {
 
   cobClass(status: string): Record<string, boolean> { return { [`badge-${status}`]: true }; }
   initial(nome: string) { return nome?.charAt(0)?.toUpperCase() ?? '?'; }
-
-  copySenha(senha: string) {
-    navigator.clipboard.writeText(senha).then(() => { this.copied.set(true); setTimeout(() => this.copied.set(false), 2000); });
-  }
 
   diasParaVencer(c: ContadorDto): number | null {
     if (!c.dataLimiteAcesso) return null;

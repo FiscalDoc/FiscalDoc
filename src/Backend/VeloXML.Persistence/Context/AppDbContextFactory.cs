@@ -29,6 +29,7 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
         public Guid? TenantId => null;
         public Guid? ContadorId => null;
         public Guid? ClienteId => null;
+        public Guid? ActingAdminId => null;
         public bool IsAuthenticated => false;
     }
 }

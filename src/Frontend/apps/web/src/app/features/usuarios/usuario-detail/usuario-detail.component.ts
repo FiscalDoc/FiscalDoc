@@ -65,28 +65,19 @@ type Tab = 'geral' | 'acesso';
               </div>
 
               @if (isNew()) {
-                <div class="form-grid">
-                  <div class="field">
-                    <label class="label">Senha *</label>
-                    <input class="input" type="password" formControlName="senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password"
-                      [class.error]="(f['senha'].touched && f['senha'].invalid) || fieldErrors()['senha']" />
-                    @if (f['senha'].touched && f['senha'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-                    @if (f['senha'].touched && f['senha'].errors?.['minlength']) { <span class="field-error">Mínimo 8 caracteres</span> }
-                    @if (fieldErrors()['senha']) { <span class="field-error">{{ fieldErrors()['senha'] }}</span> }
-                  </div>
-                  <div class="field">
-                    <label class="label">Perfil *</label>
-                    <select class="input" formControlName="perfil" (change)="onPerfilFormChange()"
-                      [class.error]="(f['perfil'].touched && f['perfil'].errors?.['required']) || fieldErrors()['perfil']">
-                      <option value="">Selecione</option>
-                      <option value="Administrador">Administrador</option>
-                      <option value="UsuarioContador">Usuário Contador</option>
-                      <option value="Cliente">Cliente</option>
-                    </select>
-                    @if (f['perfil'].touched && f['perfil'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
-                    @if (fieldErrors()['perfil']) { <span class="field-error">{{ fieldErrors()['perfil'] }}</span> }
-                    <span class="hint">Para criar um Contador, use a tela de Contadores.</span>
-                  </div>
+                <p class="hint" style="margin-bottom:.75rem">Um e-mail será enviado para o usuário definir a própria senha de acesso.</p>
+                <div class="field">
+                  <label class="label">Perfil *</label>
+                  <select class="input" formControlName="perfil" (change)="onPerfilFormChange()"
+                    [class.error]="(f['perfil'].touched && f['perfil'].errors?.['required']) || fieldErrors()['perfil']">
+                    <option value="">Selecione</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="UsuarioContador">Usuário Contador</option>
+                    <option value="Cliente">Cliente</option>
+                  </select>
+                  @if (f['perfil'].touched && f['perfil'].errors?.['required']) { <span class="field-error">Obrigatório</span> }
+                  @if (fieldErrors()['perfil']) { <span class="field-error">{{ fieldErrors()['perfil'] }}</span> }
+                  <span class="hint">Para criar um Contador, use a tela de Contadores.</span>
                 </div>
 
                 @if (perfilSelecionado() === 'UsuarioContador') {
@@ -246,7 +237,6 @@ export class UsuarioDetailComponent implements OnInit {
   form = this._fb.group({
     nome:       ['', Validators.required],
     email:      ['', [Validators.required, Validators.email]],
-    senha:      ['', [Validators.required, Validators.minLength(8)]],
     perfil:     ['', Validators.required],
     contadorId: [''],
     clienteId:  [''],
@@ -267,9 +257,7 @@ export class UsuarioDetailComponent implements OnInit {
       return;
     }
 
-    ['email', 'senha', 'perfil', 'contadorId', 'clienteId'].forEach(c => this.form.get(c)?.disable());
-    this.form.get('senha')?.clearValidators();
-    this.form.get('senha')?.updateValueAndValidity();
+    ['email', 'perfil', 'contadorId', 'clienteId'].forEach(c => this.form.get(c)?.disable());
 
     this._svc.getById(this.usuarioId).subscribe({
       next: u => {
@@ -321,7 +309,7 @@ export class UsuarioDetailComponent implements OnInit {
 
     if (this.isNew()) {
       this._svc.create({
-        nome: v.nome!, email: v.email!, senha: v.senha!, perfil: v.perfil!,
+        nome: v.nome!, email: v.email!, perfil: v.perfil!,
         contadorId: v.contadorId || undefined, clienteId: v.clienteId || undefined,
       }).subscribe({
         next: () => { this.submitting.set(false); this.goBack(); },

@@ -165,7 +165,7 @@ public sealed class ContadoresController(IMediator mediator, IStorageService sto
     public async Task<IActionResult> ResetSenha(Guid id, CancellationToken ct)
     {
         var result = await mediator.Send(new ResetSenhaContadorCommand(id), ct);
-        return result.IsSuccess ? Ok(new { senha = result.Value }) : BadRequest(result.Error);
+        return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 
     [HttpPost("{id:guid}/reenviar-boas-vindas")]

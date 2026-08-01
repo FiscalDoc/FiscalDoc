@@ -25,6 +25,7 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
     public IBlogPostRepository BlogPosts { get; } = new BlogPostRepository(context);
     public IBlogCategoriaRepository BlogCategorias { get; } = new BlogCategoriaRepository(context);
     public IImportacaoXmlLogRepository ImportacaoXmlLogs { get; } = new ImportacaoXmlLogRepository(context);
+    public IPasswordResetTokenRepository PasswordResetTokens { get; } = new PasswordResetTokenRepository(context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default) =>
         await context.SaveChangesAsync(ct);

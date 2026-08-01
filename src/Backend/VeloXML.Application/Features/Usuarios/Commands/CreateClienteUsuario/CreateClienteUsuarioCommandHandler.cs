@@ -16,7 +16,7 @@ public sealed class CreateClienteUsuarioCommandHandler(IMediator mediator, ICurr
             return Result.Failure<UsuarioDto>(ResultError.Unauthorized("Você não tem permissão para criar usuários deste cliente."));
 
         return await mediator.Send(
-            new CreateUsuarioCommand(request.Nome, request.Email, request.Senha, nameof(PerfilEnum.Cliente), null, request.ClienteId),
+            new CreateUsuarioCommand(request.Nome, request.Email, nameof(PerfilEnum.Cliente), null, request.ClienteId),
             ct);
     }
 }
