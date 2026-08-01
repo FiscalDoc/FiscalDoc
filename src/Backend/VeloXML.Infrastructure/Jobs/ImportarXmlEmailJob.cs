@@ -95,6 +95,7 @@ public sealed class ImportarXmlEmailJob(
                 {
                     TenantId = r.TenantId,
                     ContadorId = r.ContadorId,
+                    Origem = OrigemImportacaoEnum.ImportacaoEmail,
                     ExecutadoEm = executadoEm,
                     ClienteId = r.ClienteId,
                     ClienteNome = r.ClienteNome,
@@ -228,7 +229,7 @@ public sealed class ImportarXmlEmailJob(
         var tipo = DetectarTipo(fileName);
         var dto = new FileUploadDto(stream, fileName, "application/xml", stream.Length);
 
-        var result = await mediator.Send(new UploadDocumentoCommand(cliente.Id, tipo, dto), ct);
+        var result = await mediator.Send(new UploadDocumentoCommand(cliente.Id, tipo, dto, OrigemImportacaoEnum.ImportacaoEmail), ct);
         if (result.IsSuccess)
         {
             logger.LogInformation(

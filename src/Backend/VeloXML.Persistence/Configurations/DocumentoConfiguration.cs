@@ -19,6 +19,8 @@ public class DocumentoConfiguration : IEntityTypeConfiguration<Documento>
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.Tipo).HasColumnName("tipo").HasConversion<string>().HasMaxLength(20);
         b.Property(e => e.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20);
+        b.Property(e => e.OrigemImportacao).HasColumnName("origem_importacao").HasConversion<string>().HasMaxLength(20)
+            .HasDefaultValue(Domain.Enums.OrigemImportacaoEnum.Manual);
         b.Property(e => e.Numero).HasColumnName("numero").HasMaxLength(60).IsRequired();
         b.Property(e => e.ChaveAcesso).HasColumnName("chave_acesso").HasMaxLength(64);
         b.Property(e => e.CnpjEmitente).HasColumnName("cnpj_emitente").HasMaxLength(14);

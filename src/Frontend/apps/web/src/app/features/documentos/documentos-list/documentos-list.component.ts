@@ -201,6 +201,7 @@ interface UploadItem { file: File; tipo: string; }
                     </div>
                   }
                 </th>
+                <th>Origem</th>
                 <th></th>
               </tr>
             </thead>
@@ -214,6 +215,7 @@ interface UploadItem { file: File; tipo: string; }
                   <td class="cell-muted">{{ d.dataEmissao | date:'dd/MM/yyyy' }}</td>
                   <td>{{ d.valorTotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
                   <td><span class="badge" [ngClass]="statusClass(d.status)">{{ statusLabel(d.status) }}</span></td>
+                  <td><span class="badge" [ngClass]="origemClass(d.origemImportacao)">{{ origemLabel(d.origemImportacao) }}</span></td>
                   <td class="actions" (click)="$event.stopPropagation()">
                     <button class="icon-btn" title="Baixar arquivo" (click)="download(d)">
                       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -229,7 +231,7 @@ interface UploadItem { file: File; tipo: string; }
                 </tr>
               }
               @if (!documentos().length) {
-                <tr><td colspan="8" class="empty-state">Nenhum documento encontrado.</td></tr>
+                <tr><td colspan="9" class="empty-state">Nenhum documento encontrado.</td></tr>
               }
             </tbody>
           </table>
@@ -298,6 +300,11 @@ interface UploadItem { file: File; tipo: string; }
             <div class="hero-stat">
               <span class="hero-label">Status</span>
               <span class="badge" [ngClass]="statusClass(detail()!.status)" style="margin-top:4px">{{ statusLabel(detail()!.status) }}</span>
+            </div>
+            <div class="hero-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-label">Origem</span>
+              <span class="badge" [ngClass]="origemClass(detail()!.origemImportacao)" style="margin-top:4px">{{ origemLabel(detail()!.origemImportacao) }}</span>
             </div>
           </div>
 
@@ -490,6 +497,9 @@ interface UploadItem { file: File; tipo: string; }
     .badge-Valido  { background: rgba(0,229,160,0.12); color: var(--accent); }
     .badge-Alerta  { background: rgba(255,209,102,0.15); color: var(--yellow); }
     .badge-Duplicado { background: rgba(255,77,109,0.12); color: var(--red); }
+    .badge-origem-Manual { background: var(--bg3); color: var(--text2); }
+    .badge-origem-ImportacaoEmail { background: rgba(77,148,255,0.12); color: #4d94ff; }
+    .badge-origem-ApiIngest { background: rgba(0,229,160,0.12); color: var(--accent); }
 
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
     .pagination {
@@ -819,6 +829,15 @@ export class DocumentosListComponent implements OnInit {
     return {
       [`badge-${status}`]: true,
     };
+  }
+
+  origemLabel(origem: string): string {
+    const map: Record<string, string> = { Manual: 'Manual', ImportacaoEmail: 'E-mail', ApiIngest: 'API' };
+    return map[origem] ?? origem;
+  }
+
+  origemClass(origem: string): Record<string, boolean> {
+    return { [`badge-origem-${origem}`]: true };
   }
 
   copyChave(chave: string): void {

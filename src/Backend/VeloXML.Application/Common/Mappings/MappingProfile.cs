@@ -45,6 +45,7 @@ public class MappingProfile : Profile
                 src.Cliente?.RazaoSocial ?? string.Empty,
                 src.Tipo.ToString(), src.Tipo.ToString(),
                 src.Status.ToString(), src.Status.ToString(),
+                src.OrigemImportacao.ToString(), src.OrigemImportacao.ToString(),
                 src.Numero, src.ChaveAcesso, src.CnpjEmitente, src.NomeEmitente,
                 src.CnpjDestinatario, src.NomeDestinatario,
                 src.DataEmissao, src.ValorTotal,
@@ -52,6 +53,7 @@ public class MappingProfile : Profile
             .ForMember(d => d.NomeCliente, opt => opt.Ignore())
             .ForMember(d => d.TipoNome, opt => opt.Ignore())
             .ForMember(d => d.StatusNome, opt => opt.Ignore())
+            .ForMember(d => d.OrigemImportacaoNome, opt => opt.Ignore())
             .ForMember(d => d.TotalArquivos, opt => opt.Ignore())
             .ForMember(d => d.TotalAlertas, opt => opt.Ignore());
 

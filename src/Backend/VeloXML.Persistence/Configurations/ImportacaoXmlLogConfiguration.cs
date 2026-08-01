@@ -20,6 +20,8 @@ public class ImportacaoXmlLogConfiguration : IEntityTypeConfiguration<Importacao
         b.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         b.Property(e => e.DeletedAt).HasColumnName("deleted_at");
 
+        b.Property(e => e.Origem).HasColumnName("origem").HasConversion<string>().HasMaxLength(20)
+            .HasDefaultValue(Domain.Enums.OrigemImportacaoEnum.ImportacaoEmail);
         b.Property(e => e.ExecutadoEm).HasColumnName("executado_em");
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.ClienteNome).HasColumnName("cliente_nome").HasMaxLength(200).IsRequired();
@@ -31,6 +33,7 @@ public class ImportacaoXmlLogConfiguration : IEntityTypeConfiguration<Importacao
         b.Property(e => e.MensagemErro).HasColumnName("mensagem_erro").HasColumnType("text");
 
         b.HasIndex(e => new { e.TenantId, e.ExecutadoEm });
+        b.HasIndex(e => new { e.TenantId, e.Origem });
         b.HasIndex(e => e.ClienteId);
     }
 }

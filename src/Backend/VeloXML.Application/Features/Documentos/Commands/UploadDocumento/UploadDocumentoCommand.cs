@@ -9,5 +9,6 @@ namespace VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
 public record UploadDocumentoCommand(
     Guid? ClienteId,
     TipoDocumentoEnum Tipo,
-    FileUploadDto Arquivo
+    FileUploadDto Arquivo,
+    OrigemImportacaoEnum Origem = OrigemImportacaoEnum.Manual
 ) : IRequest<Result<DocumentoDto>>;

@@ -301,6 +301,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
   "tipoNome": "NFe",
   "status": 1,
   "statusNome": "Valido",
+  "origemImportacao": "ApiIngest",
   "numero": "1234",
   "chaveAcesso": "35260112345678000199550010000012341234567890",
   "cnpjEmitente": "12345678000199",

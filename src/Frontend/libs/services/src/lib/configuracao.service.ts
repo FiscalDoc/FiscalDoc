@@ -2,10 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
-  ImportacaoXmlLogDto,
-  ImportacaoXmlLogsResumoDto,
   ImportacaoXmlStatusDto,
-  PagedResult,
   SaveSmtpConfigRequest,
   SendConviteRequest,
   SmtpConfigDto,
@@ -47,14 +44,6 @@ export class ConfiguracaoService {
 
   getImportacaoXmlStatus(): Observable<ImportacaoXmlStatusDto | null> {
     return this._api.get<ImportacaoXmlStatusDto | null>('/configuracoes/importacao-xml/status');
-  }
-
-  getImportacaoXmlLogs(params?: { clienteId?: string; page?: number; pageSize?: number }): Observable<PagedResult<ImportacaoXmlLogDto>> {
-    return this._api.get<PagedResult<ImportacaoXmlLogDto>>('/configuracoes/importacao-xml/logs', params as Record<string, unknown>);
-  }
-
-  getImportacaoXmlLogsResumo(): Observable<ImportacaoXmlLogsResumoDto> {
-    return this._api.get<ImportacaoXmlLogsResumoDto>('/configuracoes/importacao-xml/logs/resumo');
   }
 
   forcarImportacaoXml(): Observable<void> {

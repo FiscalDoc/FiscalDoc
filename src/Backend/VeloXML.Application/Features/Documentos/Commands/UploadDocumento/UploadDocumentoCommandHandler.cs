@@ -52,12 +52,13 @@ public sealed class UploadDocumentoCommandHandler(
 
         var documento = new Documento
         {
-            TenantId    = cliente.Value.TenantId,
-            ClienteId   = cliente.Value.Id,
-            Tipo        = request.Tipo,
-            Numero      = Path.GetFileNameWithoutExtension(request.Arquivo.FileName),
-            DataEmissao = DateTime.UtcNow,
-            CreatedBy   = currentUser.Email
+            TenantId         = cliente.Value.TenantId,
+            ClienteId        = cliente.Value.Id,
+            Tipo             = request.Tipo,
+            OrigemImportacao = request.Origem,
+            Numero           = Path.GetFileNameWithoutExtension(request.Arquivo.FileName),
+            DataEmissao      = DateTime.UtcNow,
+            CreatedBy        = currentUser.Email
         };
 
         if (parsed != null)

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VeloXML.Domain.Entities;
+using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 using VeloXML.Persistence.Context;
 using VeloXML.SharedKernel;
@@ -10,12 +11,14 @@ public sealed class ImportacaoXmlLogRepository(AppDbContext context)
     : BaseRepository<ImportacaoXmlLog>(context), IImportacaoXmlLogRepository
 {
     public async Task<PagedResult<ImportacaoXmlLog>> SearchAsync(
-        Guid? clienteId, int page, int pageSize, CancellationToken ct = default)
+        Guid? clienteId, OrigemImportacaoEnum? origem, int page, int pageSize, CancellationToken ct = default)
     {
         var q = DbSet.AsNoTracking().AsQueryable();
 
         if (clienteId.HasValue)
             q = q.Where(l => l.ClienteId == clienteId.Value);
+        if (origem.HasValue)
+            q = q.Where(l => l.Origem == origem.Value);
 
         q = q.OrderByDescending(l => l.ExecutadoEm);
 
@@ -24,9 +27,12 @@ public sealed class ImportacaoXmlLogRepository(AppDbContext context)
         return PagedResult<ImportacaoXmlLog>.Create(items, total, page, pageSize);
     }
 
-    public async Task<(int TotalExecucoes, int TotalErros, DateTime? UltimaExecucaoEm)> GetResumoAsync(CancellationToken ct = default)
+    public async Task<(int TotalExecucoes, int TotalErros, DateTime? UltimaExecucaoEm)> GetResumoAsync(
+        OrigemImportacaoEnum? origem, CancellationToken ct = default)
     {
-        var q = DbSet.AsNoTracking();
+        var q = DbSet.AsNoTracking().AsQueryable();
+        if (origem.HasValue)
+            q = q.Where(l => l.Origem == origem.Value);
 
         var totalExecucoes = await q.CountAsync(ct);
         if (totalExecucoes == 0)

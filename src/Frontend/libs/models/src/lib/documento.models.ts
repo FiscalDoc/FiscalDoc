@@ -1,5 +1,6 @@
 export type TipoDocumento = 'NFe' | 'CTe' | 'MDFe' | 'NFSe' | 'PDF' | 'Imagem' | 'XML';
 export type StatusDocumento = 'Pendente' | 'Valido' | 'Alerta' | 'Duplicado';
+export type OrigemImportacao = 'Manual' | 'ImportacaoEmail' | 'ApiIngest';
 
 export interface DocumentoDto {
   id: string;
@@ -9,6 +10,8 @@ export interface DocumentoDto {
   tipoNome: string;
   status: string;
   statusNome: string;
+  origemImportacao: string;
+  origemImportacaoNome: string;
   numero: string;
   chaveAcesso?: string;
   cnpjEmitente?: string;

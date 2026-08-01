@@ -9,7 +9,7 @@ public sealed class GetImportacaoXmlLogsResumoQueryHandler(IUnitOfWork uow)
 {
     public async Task<Result<ImportacaoXmlLogsResumoDto>> Handle(GetImportacaoXmlLogsResumoQuery request, CancellationToken ct)
     {
-        var (totalExecucoes, totalErros, ultimaExecucaoEm) = await uow.ImportacaoXmlLogs.GetResumoAsync(ct);
+        var (totalExecucoes, totalErros, ultimaExecucaoEm) = await uow.ImportacaoXmlLogs.GetResumoAsync(request.Origem, ct);
         return Result.Success(new ImportacaoXmlLogsResumoDto(totalExecucoes, totalErros, ultimaExecucaoEm));
     }
 }

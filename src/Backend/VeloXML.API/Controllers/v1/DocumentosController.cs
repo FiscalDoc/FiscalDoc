@@ -162,7 +162,7 @@ public sealed class DocumentosController(
         if (file.Length == 0) return BadRequest(new { message = "Arquivo vazio." });
 
         var dto = new FileUploadDto(file.OpenReadStream(), file.FileName, file.ContentType, file.Length);
-        var result = await mediator.Send(new UploadDocumentoCommand(clienteId, tipo, dto), ct);
+        var result = await mediator.Send(new UploadDocumentoCommand(clienteId, tipo, dto, OrigemImportacaoEnum.Manual), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 

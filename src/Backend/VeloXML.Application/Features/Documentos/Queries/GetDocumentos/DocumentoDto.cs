@@ -8,6 +8,8 @@ public record DocumentoDto(
     string TipoNome,
     string Status,
     string StatusNome,
+    string OrigemImportacao,
+    string OrigemImportacaoNome,
     string Numero,
     string? ChaveAcesso,
     string? CnpjEmitente,

@@ -1,3 +1,4 @@
+using VeloXML.Domain.Enums;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Domain.Entities;
@@ -5,6 +6,7 @@ namespace VeloXML.Domain.Entities;
 public class ImportacaoXmlLog : BaseEntity
 {
     public Guid? ContadorId { get; set; }
+    public OrigemImportacaoEnum Origem { get; set; } = OrigemImportacaoEnum.ImportacaoEmail;
     public DateTime ExecutadoEm { get; set; }
     public Guid ClienteId { get; set; }
     public string ClienteNome { get; set; } = string.Empty;

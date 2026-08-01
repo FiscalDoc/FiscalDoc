@@ -8,6 +8,7 @@ public class Documento : BaseEntity, IAuditableEntity
     public Guid ClienteId { get; set; }
     public TipoDocumentoEnum Tipo { get; set; }
     public StatusDocumentoEnum Status { get; set; } = StatusDocumentoEnum.Pendente;
+    public OrigemImportacaoEnum OrigemImportacao { get; set; } = OrigemImportacaoEnum.Manual;
     public string Numero { get; set; } = string.Empty;
     public string? ChaveAcesso { get; set; }
     public string? CnpjEmitente { get; set; }

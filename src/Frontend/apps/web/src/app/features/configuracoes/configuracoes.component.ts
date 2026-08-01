@@ -1,15 +1,15 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
-import { ImportacaoXmlLogDto, ImportacaoXmlLogsResumoDto, PagedResult } from '@veloxml/models';
 
 type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
 
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
   template: `
 <div class="page">
 
@@ -25,7 +25,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
     <button class="tab-btn" [class.active]="tab() === 'email'" (click)="tab.set('email')">E-mail (SMTP)</button>
     <button class="tab-btn" [class.active]="tab() === 'social'" (click)="tab.set('social')">Redes Sociais</button>
     <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
-    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); carregarIntervalo(); carregarHistorico()">Importação de E-mails</button>
+    <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); carregarIntervalo()">Importação de E-mails</button>
     <button class="tab-btn" [class.active]="tab() === 'storage'" (click)="tab.set('storage')">Armazenamento</button>
   </nav>
 
@@ -238,7 +238,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
         </div>
         <div>
           <div class="section-title">Importação de E-mails (XML)</div>
-          <div class="section-sub">Histórico do robô que lê os e-mails de cada cliente — clique numa linha pra ver a mensagem completa</div>
+          <div class="section-sub">Quando habilitado, o sistema lê a caixa de entrada configurada a cada intervalo abaixo e importa anexos XML automaticamente.</div>
         </div>
       </div>
 
@@ -255,116 +255,17 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
         @if (intervaloSucesso()) { <div class="alert-success">{{ checkIcon() }} Intervalo atualizado para {{ intervaloMinutos }} minuto(s) — já aplicado, sem precisar reiniciar.</div> }
         @if (intervaloErro()) { <div class="alert-error">{{ intervaloErro() }}</div> }
 
-        @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! A tabela abaixo deve atualizar em alguns segundos — clique em "Atualizar".</div> }
+        @if (forcarSucesso()) { <div class="alert-success">{{ checkIcon() }} Importação disparada! Veja o resultado em Logs &gt; E-mail &amp; API em alguns segundos.</div> }
         @if (forcarErro()) { <div class="alert-error">{{ forcarErro() }}</div> }
 
-        @if (resumo(); as r) {
-          <div class="status-summary">
-            <div class="status-grid status-grid-3">
-              <div class="status-item">
-                <span class="status-item-value">{{ r.ultimaExecucaoEm ? (r.ultimaExecucaoEm | date:'dd/MM/yyyy HH:mm:ss') : '—' }}</span>
-                <span class="status-item-label">Última execução</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value">{{ r.totalExecucoes }}</span>
-                <span class="status-item-label">Execuções registradas</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value" [class.red]="r.totalErros > 0">{{ r.totalErros }}</span>
-                <span class="status-item-label">Total de erros (independente do cliente)</span>
-              </div>
-            </div>
-          </div>
-        }
-
         <div class="form-actions">
-          <button type="button" class="btn-ghost" (click)="carregarHistorico(1)">Atualizar</button>
+          <a routerLink="/logs" [queryParams]="{ tab: 'integracao' }" class="btn-ghost">Ver histórico em Logs</a>
           <button type="button" class="btn-primary" [disabled]="forcando()" (click)="forcarImportacao()">
             {{ forcando() ? 'Disparando...' : 'Forçar Importação Agora' }}
           </button>
         </div>
-
-        @if (loadingHistorico()) {
-          <div class="empty-state">Carregando...</div>
-        } @else if (historico().items.length === 0) {
-          <div class="empty-state">Nenhuma execução registrada ainda.</div>
-        } @else {
-          <table class="clientes-table historico-table">
-            <thead>
-              <tr>
-                <th class="col-data">Data/Hora</th>
-                <th class="col-cliente">Cliente</th>
-                <th class="col-num">E-mails</th>
-                <th class="col-num">XMLs</th>
-                <th class="col-num">Importados</th>
-                <th class="col-num">Erros</th>
-                <th class="col-msg">Mensagem</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (l of historico().items; track l.id) {
-                <tr class="historico-row" (click)="abrirDetalheLog(l)">
-                  <td class="col-data">{{ l.executadoEm | date:'dd/MM/yy HH:mm' }}</td>
-                  <td class="col-cliente">{{ l.clienteNome }}</td>
-                  <td class="col-num">{{ l.emailsEncontrados }}</td>
-                  <td class="col-num">{{ l.xmlsProcessados }}</td>
-                  <td class="col-num">{{ l.xmlsImportados }}</td>
-                  <td class="col-num" [class.red-text]="l.erros > 0">{{ l.erros }}</td>
-                  <td class="col-msg"><span class="mensagem-erro-preview" [class.msg-erro]="!!l.mensagemErro">{{ mensagemStatus(l) }}</span></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          <div class="pagination-row">
-            <button type="button" class="btn-ghost" [disabled]="historico().page <= 1" (click)="carregarHistorico(historico().page - 1)">Anterior</button>
-            <span class="pagination-info">Página {{ historico().page }} de {{ historico().totalPages || 1 }} ({{ historico().totalCount }} execuções)</span>
-            <button type="button" class="btn-ghost" [disabled]="historico().page >= historico().totalPages" (click)="carregarHistorico(historico().page + 1)">Próxima</button>
-          </div>
-        }
       </div>
     </div>
-
-    @if (logDetalhe(); as l) {
-      <div class="overlay" (click)="fecharDetalheLog()">
-        <div class="modal" (click)="$event.stopPropagation()">
-          <header class="modal-header">
-            <h3 class="modal-title">{{ l.clienteNome }}</h3>
-            <button class="modal-close" (click)="fecharDetalheLog()">✕</button>
-          </header>
-          <div class="modal-body">
-            <div class="status-grid">
-              <div class="status-item">
-                <span class="status-item-value">{{ l.emailsEncontrados }}</span>
-                <span class="status-item-label">E-mails encontrados</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value">{{ l.xmlsProcessados }}</span>
-                <span class="status-item-label">XMLs processados</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value accent">{{ l.xmlsImportados }}</span>
-                <span class="status-item-label">XMLs importados</span>
-              </div>
-              <div class="status-item">
-                <span class="status-item-value" [class.red]="l.erros > 0">{{ l.erros }}</span>
-                <span class="status-item-label">Erros</span>
-              </div>
-            </div>
-            <p class="status-kpi-label">Executado em {{ l.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</p>
-            <div class="field">
-              <label class="label">Status</label>
-              <p [class.red-text]="!!l.mensagemErro">{{ mensagemStatus(l) }}</p>
-            </div>
-            @if (l.mensagemErro) {
-              <div class="field">
-                <label class="label">Mensagem completa</label>
-                <pre class="mensagem-erro-detalhe">{{ l.mensagemErro }}</pre>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    }
   }
 
   <!-- ══ ARMAZENAMENTO ══ -->
@@ -474,59 +375,9 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
     }
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
 
-    .status-summary { display: flex; flex-direction: column; gap: 1.25rem; }
-    .status-kpi { display: flex; flex-direction: column; gap: 2px; }
-    .status-kpi-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
-    .status-kpi-value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
-    .status-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; }
-    .status-grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .status-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .875rem; display: flex; flex-direction: column; gap: 2px; align-items: center; }
-    .status-item-value { font-size: 1.35rem; font-weight: 700; color: var(--text); }
-    .status-item-value.accent { color: var(--accent); }
-    .status-item-value.red { color: var(--red); }
-    .status-item-label { font-size: 11px; color: var(--text2); text-align: center; }
-
-    .clientes-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-    .clientes-table th { text-align: left; color: var(--text2); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-    .clientes-table td { padding: 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-    .clientes-table tr:last-child td { border-bottom: none; }
-    .clientes-table .red-text { color: var(--red); font-weight: 600; }
-
-    .historico-divider { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: .25rem; display: flex; flex-direction: column; gap: 2px; }
-    .historico-table { table-layout: fixed; width: 100%; }
-    .historico-table .col-data { width: 108px; }
-    .historico-table .col-cliente { width: 160px; }
-    .historico-table .col-num { width: 64px; }
-    .historico-table .col-msg { width: auto; }
-    .historico-table td.col-cliente { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .historico-row { cursor: pointer; }
-    .historico-row:hover td { background: var(--bg3); }
-    .mensagem-erro-preview {
-      display: block; color: var(--text2); font-size: 12px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .mensagem-erro-preview.msg-erro { color: var(--red); font-weight: 600; }
-    .mensagem-erro-detalhe {
-      color: var(--text2); font-size: 12.5px; white-space: pre-wrap; word-break: break-word;
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .75rem;
-      max-height: 320px; overflow-y: auto; margin: 0; font-family: inherit;
-    }
-    .pagination-row { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: .75rem; }
-    .pagination-info { font-size: 12.5px; color: var(--text2); }
-
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
-    .modal-title { margin: 0; font-size: 1rem; }
-    .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; }
-    .modal-close:hover { color: var(--text); }
-    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .modal-body .status-grid { grid-template-columns: repeat(4, 1fr); }
-
     @media (max-width: 700px) {
       .form-row { grid-template-columns: 1fr; }
       .field-sm { max-width: 100%; }
-      .status-grid { grid-template-columns: repeat(2, 1fr); }
     }
   `]
 })
@@ -598,11 +449,6 @@ export class ConfiguracoesComponent implements OnInit {
   migrando          = signal(false);
   migracaoSucesso   = signal(false);
   migracaoErro      = signal<string | null>(null);
-
-  loadingHistorico = signal(false);
-  historico = signal<PagedResult<ImportacaoXmlLogDto>>({ items: [], totalCount: 0, page: 1, pageSize: 25, totalPages: 0 });
-  logDetalhe = signal<ImportacaoXmlLogDto | null>(null);
-  resumo = signal<ImportacaoXmlLogsResumoDto | null>(null);
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -730,31 +576,6 @@ export class ConfiguracoesComponent implements OnInit {
 
   carregarIntervalo(): void {
     this._svc.getIntervaloImportacao().subscribe(r => this.intervaloMinutos = r.intervaloMinutos);
-  }
-
-  carregarHistorico(page = 1): void {
-    this.loadingHistorico.set(true);
-    this._svc.getImportacaoXmlLogs({ page, pageSize: 25 }).subscribe({
-      next: r => { this.historico.set(r); this.loadingHistorico.set(false); },
-      error: () => this.loadingHistorico.set(false),
-    });
-    this._svc.getImportacaoXmlLogsResumo().subscribe(r => this.resumo.set(r));
-  }
-
-  abrirDetalheLog(l: ImportacaoXmlLogDto): void {
-    this.logDetalhe.set(l);
-  }
-
-  mensagemStatus(l: ImportacaoXmlLogDto): string {
-    if (l.mensagemErro) return l.mensagemErro;
-    if (l.emailsEncontrados === 0) return 'Nenhum e-mail novo encontrado';
-    if (l.xmlsProcessados === 0) return 'E-mail(s) sem anexo XML/ZIP';
-    if (l.xmlsImportados < l.xmlsProcessados) return 'XML(s) encontrados, mas não importados — ver Erros';
-    return 'OK';
-  }
-
-  fecharDetalheLog(): void {
-    this.logDetalhe.set(null);
   }
 
   salvarIntervalo(): void {

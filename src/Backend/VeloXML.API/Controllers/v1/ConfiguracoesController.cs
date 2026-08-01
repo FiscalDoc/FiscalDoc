@@ -7,7 +7,6 @@ using VeloXML.Application.Features.Configuracoes.Commands.SaveSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSocialConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SendConvite;
 using VeloXML.Application.Features.Configuracoes.Commands.TestSmtpConfig;
-using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlLogs;
 using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
 using VeloXML.Application.Features.Configuracoes.Queries.GetIntervaloImportacao;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSmtpConfig;
@@ -87,22 +86,8 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
-    // Mesma regra do endpoint de status: sem restrição de Roles, o handler já filtra pelo que o
-    // usuário logado pode ver.
-    [HttpGet("importacao-xml/logs")]
-    public async Task<IActionResult> GetImportacaoXmlLogs(
-        [FromQuery] Guid? clienteId, [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default)
-    {
-        var result = await mediator.Send(new GetImportacaoXmlLogsQuery(clienteId, page, pageSize), ct);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
-    }
-
-    [HttpGet("importacao-xml/logs/resumo")]
-    public async Task<IActionResult> GetImportacaoXmlLogsResumo(CancellationToken ct)
-    {
-        var result = await mediator.Send(new GetImportacaoXmlLogsResumoQuery(), ct);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
-    }
+    // O histórico/resumo de execuções (importacao-xml/logs*) foi migrado pra LogsController
+    // (api/v1/logs/integracao*) — tudo de log centralizado num único lugar na tela de Logs.
 
     [Authorize(Roles = "Administrador")]
     [HttpPost("importacao-xml/forcar")]

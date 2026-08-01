@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Common.DTOs;
 using VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
+using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
+using VeloXML.Domain.Interfaces;
 using VeloXML.Infrastructure.Auth;
+using VeloXML.SharedKernel;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -14,16 +17,24 @@ namespace VeloXML.API.Controllers.v1;
 [ApiController]
 [Route("api/v1/ingest")]
 [Authorize(AuthenticationSchemes = AppKeyAuthenticationOptions.SchemeName)]
-public sealed class IngestController(IMediator mediator) : ControllerBase
+public sealed class IngestController(IMediator mediator, IUnitOfWork uow, ICurrentUser currentUser) : ControllerBase
 {
     [HttpPost("xml")]
     [RequestSizeLimit(52_428_800)]
     public async Task<IActionResult> Xml([FromQuery] TipoDocumentoEnum tipo, CancellationToken ct)
     {
+        var cliente = await uow.Clientes.GetByIdAsync(currentUser.ClienteId!.Value, ct);
+        if (cliente is null)
+            return Unauthorized();
+
         using var ms = new MemoryStream();
         await Request.Body.CopyToAsync(ms, ct);
         if (ms.Length == 0)
+        {
+            await RegistrarLogAsync(cliente, xmlsProcessados: 0, xmlsImportados: 0,
+                erro: "Corpo da requisição vazio — envie o XML no body.", ct);
             return BadRequest(new { code = "EMPTY_BODY", message = "Corpo da requisição vazio — envie o XML no body." });
+        }
         ms.Position = 0;
 
         var fileName = Request.Headers.TryGetValue("X-File-Name", out var fn) && !string.IsNullOrWhiteSpace(fn)
@@ -34,7 +45,31 @@ public sealed class IngestController(IMediator mediator) : ControllerBase
 
         // ClienteId vem só da AppKey (claim cliente_id) — o handler ignora qualquer
         // tentativa de mirar outro cliente quando o chamador já está escopado a um.
-        var result = await mediator.Send(new UploadDocumentoCommand(null, tipo, dto), ct);
+        var result = await mediator.Send(new UploadDocumentoCommand(null, tipo, dto, OrigemImportacaoEnum.ApiIngest), ct);
+
+        await RegistrarLogAsync(cliente, xmlsProcessados: 1, xmlsImportados: result.IsSuccess ? 1 : 0,
+            erro: result.IsSuccess ? null : result.Error.Description, ct);
+
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    private async Task RegistrarLogAsync(
+        Cliente cliente, int xmlsProcessados, int xmlsImportados, string? erro, CancellationToken ct)
+    {
+        await uow.ImportacaoXmlLogs.AddAsync(new ImportacaoXmlLog
+        {
+            TenantId          = cliente.TenantId,
+            ContadorId        = cliente.ContadorId,
+            Origem            = OrigemImportacaoEnum.ApiIngest,
+            ExecutadoEm       = DateTime.UtcNow,
+            ClienteId         = cliente.Id,
+            ClienteNome       = cliente.RazaoSocial,
+            EmailsEncontrados = 0,
+            XmlsProcessados   = xmlsProcessados,
+            XmlsImportados    = xmlsImportados,
+            Erros             = erro is not null ? 1 : 0,
+            MensagemErro      = erro,
+        }, ct);
+        await uow.SaveChangesAsync(ct);
     }
 }

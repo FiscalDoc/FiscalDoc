@@ -70,6 +70,7 @@ export interface ImportacaoXmlLogsResumoDto {
 
 export interface ImportacaoXmlLogDto {
   id: string;
+  origem: string;
   executadoEm: string;
   clienteId: string;
   clienteNome: string;

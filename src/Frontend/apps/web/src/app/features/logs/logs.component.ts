@@ -1,8 +1,11 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { LogService } from '@veloxml/services';
-import { LogDto, PagedResult } from '@veloxml/models';
+import { ImportacaoXmlLogDto, ImportacaoXmlLogsResumoDto, LogDto, PagedResult } from '@veloxml/models';
+
+type LogsTab = 'auditoria' | 'integracao';
 
 @Component({
   selector: 'app-logs',
@@ -12,11 +15,17 @@ import { LogDto, PagedResult } from '@veloxml/models';
     <div class="page">
       <div class="page-header">
         <div>
-          <h2 class="page-title">Logs de Auditoria</h2>
-          <p class="page-sub">Histórico completo de alterações no sistema</p>
+          <h2 class="page-title">Logs</h2>
+          <p class="page-sub">Auditoria de alterações e histórico de importação de XML (e-mail e API)</p>
         </div>
       </div>
 
+      <nav class="tabs">
+        <button class="tab-btn" [class.active]="tab() === 'auditoria'" (click)="tab.set('auditoria')">Auditoria</button>
+        <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="selectIntegracaoTab()">E-mail &amp; API</button>
+      </nav>
+
+      @if (tab() === 'auditoria') {
       <!-- Filtros -->
       <div class="filters card">
         <div class="filter-row">
@@ -123,6 +132,125 @@ import { LogDto, PagedResult } from '@veloxml/models';
           </div>
         }
       </div>
+      }
+
+      @if (tab() === 'integracao') {
+        @if (resumo(); as r) {
+          <div class="status-grid">
+            <div class="card status-card">
+              <span class="status-value">{{ r.ultimaExecucaoEm ? formatDate(r.ultimaExecucaoEm) : '—' }}</span>
+              <span class="status-label">Última execução</span>
+            </div>
+            <div class="card status-card">
+              <span class="status-value">{{ r.totalExecucoes }}</span>
+              <span class="status-label">Execuções registradas</span>
+            </div>
+            <div class="card status-card">
+              <span class="status-value" [class.text-red]="r.totalErros > 0">{{ r.totalErros }}</span>
+              <span class="status-label">Total de erros</span>
+            </div>
+          </div>
+        }
+
+        <div class="filters card">
+          <div class="filter-row">
+            <div class="filter-field">
+              <label>Origem</label>
+              <select [(ngModel)]="filterOrigem" (ngModelChange)="onIntegracaoFilterChange()">
+                <option value="">Todas</option>
+                <option value="ImportacaoEmail">E-mail</option>
+                <option value="ApiIngest">API</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost" (click)="loadIntegracao(1)">Atualizar</button>
+          </div>
+        </div>
+
+        <div class="table-card card">
+          @if (loadingIntegracao()) {
+            <div class="empty-state"><div class="spinner"></div><span>Carregando...</span></div>
+          } @else if (integracaoLogs().length === 0) {
+            <div class="empty-state"><span>Nenhuma execução registrada ainda.</span></div>
+          } @else {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data/Hora</th>
+                    <th>Origem</th>
+                    <th>Cliente</th>
+                    <th>E-mails</th>
+                    <th>XMLs</th>
+                    <th>Importados</th>
+                    <th>Erros</th>
+                    <th>Mensagem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (l of integracaoLogs(); track l.id) {
+                    <tr class="row-clickable" (click)="openIntegracaoDetail(l)">
+                      <td class="mono text-sm">{{ formatDate(l.executadoEm) }}</td>
+                      <td><span class="op-badge" [class]="origemClass(l.origem)">{{ origemLabel(l.origem) }}</span></td>
+                      <td class="text-sm">{{ l.clienteNome }}</td>
+                      <td class="text-sm">{{ l.emailsEncontrados }}</td>
+                      <td class="text-sm">{{ l.xmlsProcessados }}</td>
+                      <td class="text-sm">{{ l.xmlsImportados }}</td>
+                      <td class="text-sm" [class.text-red]="l.erros > 0">{{ l.erros }}</td>
+                      <td class="text-sm text2 msg-preview" [class.text-red]="!!l.mensagemErro">{{ mensagemStatus(l) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pagination">
+              <span class="pag-info">{{ integracaoTotal() }} registros — página {{ integracaoPage() }} de {{ integracaoTotalPages() }}</span>
+              <div class="pag-btns">
+                <button class="btn btn-ghost btn-sm" [disabled]="integracaoPage() <= 1" (click)="loadIntegracao(integracaoPage() - 1)">Anterior</button>
+                <button class="btn btn-ghost btn-sm" [disabled]="integracaoPage() >= integracaoTotalPages()" (click)="loadIntegracao(integracaoPage() + 1)">Próxima</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (integracaoDetail(); as l) {
+          <div class="overlay" (click)="integracaoDetail.set(null)">
+            <div class="modal" (click)="$event.stopPropagation()">
+              <header class="modal-header">
+                <h3 class="modal-title">{{ l.clienteNome }}</h3>
+                <button class="modal-close" (click)="integracaoDetail.set(null)">✕</button>
+              </header>
+              <div class="modal-body">
+                <div class="status-grid">
+                  <div class="card status-card">
+                    <span class="status-value">{{ l.emailsEncontrados }}</span>
+                    <span class="status-label">E-mails encontrados</span>
+                  </div>
+                  <div class="card status-card">
+                    <span class="status-value">{{ l.xmlsProcessados }}</span>
+                    <span class="status-label">XMLs processados</span>
+                  </div>
+                  <div class="card status-card">
+                    <span class="status-value text-accent">{{ l.xmlsImportados }}</span>
+                    <span class="status-label">XMLs importados</span>
+                  </div>
+                  <div class="card status-card">
+                    <span class="status-value" [class.text-red]="l.erros > 0">{{ l.erros }}</span>
+                    <span class="status-label">Erros</span>
+                  </div>
+                </div>
+                <p class="pag-info">Executado em {{ formatDate(l.executadoEm) }} · Origem: {{ origemLabel(l.origem) }}</p>
+                @if (l.mensagemErro) {
+                  <div class="field">
+                    <label class="detail-label">Mensagem completa</label>
+                    <pre class="detail-json">{{ l.mensagemErro }}</pre>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      }
     </div>
   `,
   styles: [`
@@ -197,10 +325,44 @@ import { LogDto, PagedResult } from '@veloxml/models';
     .empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem; color: var(--text2); font-size: 14px; }
     .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      background: none; border: none; padding: 8px 14px; font-size: 13.5px; color: var(--text2);
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    .status-grid { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .status-card { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 4px; padding: 1rem; }
+    .status-value { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+    .status-label { font-size: 11.5px; color: var(--text2); }
+    .text-red { color: var(--red) !important; }
+    .text-accent { color: var(--accent) !important; }
+
+    .op-badge.origem-manual { background: var(--bg3); color: var(--text2); }
+    .op-badge.origem-importacaoemail { background: rgba(77,148,255,0.12); color: #4d94ff; }
+    .op-badge.origem-apiingest { background: rgba(0,229,160,0.12); color: var(--accent); }
+
+    .row-clickable { cursor: pointer; }
+    .msg-preview { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+    .modal-title { margin: 0; font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 15px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
   `]
 })
 export class LogsComponent implements OnInit {
-  private readonly _logs = inject(LogService);
+  private readonly _logs  = inject(LogService);
+  private readonly _route = inject(ActivatedRoute);
+
+  tab = signal<LogsTab>('auditoria');
 
   logs = signal<LogDto[]>([]);
   loading = signal(false);
@@ -212,8 +374,70 @@ export class LogsComponent implements OnInit {
   filterCategoria = '';
   filterOperacao = '';
 
+  resumo = signal<ImportacaoXmlLogsResumoDto | null>(null);
+  integracaoLogs = signal<ImportacaoXmlLogDto[]>([]);
+  loadingIntegracao = signal(false);
+  integracaoTotal = signal(0);
+  integracaoPage = signal(1);
+  integracaoTotalPages = signal(1);
+  integracaoDetail = signal<ImportacaoXmlLogDto | null>(null);
+  filterOrigem = '';
+
   ngOnInit(): void {
-    this.load();
+    if (this._route.snapshot.queryParamMap.get('tab') === 'integracao') {
+      this.selectIntegracaoTab();
+    } else {
+      this.load();
+    }
+  }
+
+  selectIntegracaoTab(): void {
+    this.tab.set('integracao');
+    this.loadIntegracao(1);
+  }
+
+  loadIntegracao(page = 1): void {
+    this.integracaoPage.set(page);
+    this.loadingIntegracao.set(true);
+    this._logs.getIntegracao({
+      origem: this.filterOrigem || undefined,
+      page,
+      pageSize: 25,
+    }).subscribe({
+      next: (r) => {
+        this.integracaoLogs.set(r.items);
+        this.integracaoTotal.set(r.totalCount);
+        this.integracaoTotalPages.set(Math.max(1, r.totalPages));
+        this.loadingIntegracao.set(false);
+      },
+      error: () => this.loadingIntegracao.set(false),
+    });
+    this._logs.getIntegracaoResumo(this.filterOrigem || undefined).subscribe(r => this.resumo.set(r));
+  }
+
+  onIntegracaoFilterChange(): void {
+    this.loadIntegracao(1);
+  }
+
+  openIntegracaoDetail(l: ImportacaoXmlLogDto): void {
+    this.integracaoDetail.set(l);
+  }
+
+  origemLabel(origem: string): string {
+    const map: Record<string, string> = { Manual: 'Manual', ImportacaoEmail: 'E-mail', ApiIngest: 'API' };
+    return map[origem] ?? origem;
+  }
+
+  origemClass(origem: string): string {
+    return `origem-${origem.toLowerCase()}`;
+  }
+
+  mensagemStatus(l: ImportacaoXmlLogDto): string {
+    if (l.mensagemErro) return l.mensagemErro;
+    if (l.emailsEncontrados === 0 && l.origem === 'ImportacaoEmail') return 'Nenhum e-mail novo encontrado';
+    if (l.xmlsProcessados === 0) return 'Sem anexo XML/ZIP';
+    if (l.xmlsImportados < l.xmlsProcessados) return 'XML(s) encontrados, mas não importados';
+    return 'OK';
   }
 
   load(): void {
