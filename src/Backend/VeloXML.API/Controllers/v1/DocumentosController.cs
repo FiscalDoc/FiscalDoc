@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Common.DTOs;
@@ -10,6 +11,7 @@ using VeloXML.Application.Features.Documentos.Queries.GetDocumentoById;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
+using VeloXML.Infrastructure.Auth;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -150,6 +152,7 @@ public sealed class DocumentosController(
 
     [HttpPost("upload")]
     [RequestSizeLimit(52_428_800)]
+    [Authorize(AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme},{AppKeyAuthenticationOptions.SchemeName}")]
     public async Task<IActionResult> Upload(
         [FromForm] Guid? clienteId,
         [FromForm] TipoDocumentoEnum tipo,

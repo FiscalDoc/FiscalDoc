@@ -310,7 +310,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
                   <td class="col-num">{{ l.xmlsProcessados }}</td>
                   <td class="col-num">{{ l.xmlsImportados }}</td>
                   <td class="col-num" [class.red-text]="l.erros > 0">{{ l.erros }}</td>
-                  <td class="col-msg"><span class="mensagem-erro-preview">{{ l.mensagemErro || '—' }}</span></td>
+                  <td class="col-msg"><span class="mensagem-erro-preview" [class.msg-erro]="!!l.mensagemErro">{{ mensagemStatus(l) }}</span></td>
                 </tr>
               }
             </tbody>
@@ -351,6 +351,10 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
               </div>
             </div>
             <p class="status-kpi-label">Executado em {{ l.executadoEm | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+            <div class="field">
+              <label class="label">Status</label>
+              <p [class.red-text]="!!l.mensagemErro">{{ mensagemStatus(l) }}</p>
+            </div>
             @if (l.mensagemErro) {
               <div class="field">
                 <label class="label">Mensagem completa</label>
@@ -501,6 +505,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
       display: block; color: var(--text2); font-size: 12px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .mensagem-erro-preview.msg-erro { color: var(--red); font-weight: 600; }
     .mensagem-erro-detalhe {
       color: var(--text2); font-size: 12.5px; white-space: pre-wrap; word-break: break-word;
       background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .75rem;
@@ -738,6 +743,14 @@ export class ConfiguracoesComponent implements OnInit {
 
   abrirDetalheLog(l: ImportacaoXmlLogDto): void {
     this.logDetalhe.set(l);
+  }
+
+  mensagemStatus(l: ImportacaoXmlLogDto): string {
+    if (l.mensagemErro) return l.mensagemErro;
+    if (l.emailsEncontrados === 0) return 'Nenhum e-mail novo encontrado';
+    if (l.xmlsProcessados === 0) return 'E-mail(s) sem anexo XML/ZIP';
+    if (l.xmlsImportados < l.xmlsProcessados) return 'XML(s) encontrados, mas não importados — ver Erros';
+    return 'OK';
   }
 
   fecharDetalheLog(): void {

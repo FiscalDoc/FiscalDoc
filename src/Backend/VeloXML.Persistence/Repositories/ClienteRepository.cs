@@ -25,4 +25,7 @@ public sealed class ClienteRepository(AppDbContext context) : BaseRepository<Cli
 
     public async Task<Cliente?> GetByCnpjAsync(string cnpj, CancellationToken ct = default) =>
         await DbSet.FirstOrDefaultAsync(c => c.Cnpj == cnpj, ct);
+
+    public async Task<Cliente?> GetByAppKeyAsync(string appKey, CancellationToken ct = default) =>
+        await DbSet.FirstOrDefaultAsync(c => c.AppKey == appKey, ct);
 }

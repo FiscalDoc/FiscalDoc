@@ -65,7 +65,9 @@ public static class DependencyInjection
                     NameClaimType = "name",
                     RoleClaimType = "role"
                 };
-            });
+            })
+            .AddScheme<AppKeyAuthenticationOptions, AppKeyAuthenticationHandler>(
+                AppKeyAuthenticationOptions.SchemeName, _ => { });
 
         services.AddAuthorization();
 

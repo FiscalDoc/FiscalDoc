@@ -252,6 +252,78 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
           </div>
 
           <div class="card section">
+            <h4 class="section-title">Como integrar</h4>
+            <p class="section-desc">
+              O ERP ou emissor de nota do cliente envia o XML no corpo (body) da requisição, sem precisar de login —
+              só a AppKey acima. Um XML por chamada.
+            </p>
+
+            <div class="docs-field">
+              <span class="docs-label">Parâmetros</span>
+              <table class="docs-table">
+                <tbody>
+                  <tr>
+                    <td><code>X-App-Key</code></td>
+                    <td>header, obrigatório</td>
+                    <td>A chave deste cliente (acima).</td>
+                  </tr>
+                  <tr>
+                    <td><code>tipo</code></td>
+                    <td>query string, obrigatório</td>
+                    <td><code>NFe</code>, <code>CTe</code>, <code>MDFe</code> ou <code>NFSe</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>X-File-Name</code></td>
+                    <td>header, opcional</td>
+                    <td>Nome do arquivo original (usado no registro). Se omitido, é gerado um nome automático.</td>
+                  </tr>
+                  <tr>
+                    <td>body</td>
+                    <td>obrigatório</td>
+                    <td>O conteúdo do XML, sem encoding (não é multipart nem base64).</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="docs-field">
+              <span class="docs-label">Exemplo (curl)</span>
+              <pre class="docs-code">{{ curlExemplo() }}</pre>
+            </div>
+
+            <div class="docs-field">
+              <span class="docs-label">Resposta — 200 OK</span>
+              <pre class="docs-code">{{ '{'
+              }}
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "clienteId": "{{ cliente()!.id }}",
+  "tipo": 1,
+  "tipoNome": "NFe",
+  "status": 1,
+  "statusNome": "Valido",
+  "numero": "1234",
+  "chaveAcesso": "35260112345678000199550010000012341234567890",
+  "cnpjEmitente": "12345678000199",
+  "nomeEmitente": "Fornecedor Exemplo LTDA",
+  "valorTotal": 1500.00,
+  "dataEmissao": "2026-08-01T12:00:00Z"
+{{ '}' }}</pre>
+            </div>
+
+            <div class="docs-field">
+              <span class="docs-label">Erros comuns</span>
+              <table class="docs-table">
+                <tbody>
+                  <tr><td><code>401</code></td><td>AppKey ausente, inválida ou cliente inativo.</td></tr>
+                  <tr><td><code>400 EMPTY_BODY</code></td><td>Nenhum conteúdo enviado no body.</td></tr>
+                  <tr><td><code>400 VALIDATION_ERROR</code></td><td>Arquivo maior que 50&nbsp;MB ou content-type não suportado.</td></tr>
+                  <tr><td><code>200</code> com <code>statusNome: "Duplicado"</code></td><td>XML com a mesma chave de acesso já foi importado antes — não é erro, é idempotência.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card section">
             <div class="imap-header">
               <div>
                 <h4 class="section-title" style="margin-bottom:4px">Webhook de Documentos</h4>
@@ -482,6 +554,15 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
     .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--text2); border-radius: 50%; transition: transform 200ms, background 200ms; }
     .toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); background: #0d0f14; }
+
+    .docs-field { margin-bottom: 1rem; }
+    .docs-field:last-child { margin-bottom: 0; }
+    .docs-label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+    .docs-code { margin: 0; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .75rem; font-size: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-word; color: var(--text); overflow-x: auto; }
+    .docs-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .docs-table td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+    .docs-table tr:last-child td { border-bottom: none; }
+    .docs-table code { color: var(--accent); font-size: 12px; }
   `],
 })
 export class ClienteDetailComponent implements OnInit {
@@ -492,6 +573,16 @@ export class ClienteDetailComponent implements OnInit {
   private readonly _config = inject(ConfiguracaoService);
 
   readonly isAdmin = computed(() => this._auth.currentUser()?.perfil === 'Administrador');
+
+  readonly curlExemplo = computed(() => {
+    const c = this.cliente();
+    const appKey = c?.appKey ?? '<sua-appkey>';
+    return `curl -X POST "${location.origin}/api/v1/ingest/xml?tipo=NFe" \\
+  -H "X-App-Key: ${appKey}" \\
+  -H "X-File-Name: nfe-35260112345678000199550010000012341234567890.xml" \\
+  -H "Content-Type: application/xml" \\
+  --data-binary @nota.xml`;
+  });
 
   readonly cliente      = signal<ClienteDto | null>(null);
   readonly loading      = signal(true);

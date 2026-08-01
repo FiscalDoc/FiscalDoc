@@ -52,7 +52,7 @@ public sealed class UploadDocumentoCommandHandler(
 
         var documento = new Documento
         {
-            TenantId    = currentUser.TenantId!.Value,
+            TenantId    = cliente.Value.TenantId,
             ClienteId   = cliente.Value.Id,
             Tipo        = request.Tipo,
             Numero      = Path.GetFileNameWithoutExtension(request.Arquivo.FileName),
@@ -92,7 +92,7 @@ public sealed class UploadDocumentoCommandHandler(
 
         var arquivo = new Arquivo
         {
-            TenantId    = currentUser.TenantId!.Value,
+            TenantId    = cliente.Value.TenantId,
             NomeArquivo = Path.GetFileName(objectKey),
             NomeOriginal = request.Arquivo.FileName,
             Bucket      = bucket,
