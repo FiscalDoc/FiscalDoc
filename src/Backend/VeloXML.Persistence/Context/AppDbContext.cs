@@ -93,7 +93,8 @@ public class AppDbContext(
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
         builder.Entity<ImportacaoXmlLog>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
-            && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId));
+            && (currentUser.ContadorId == null || e.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
 
         base.OnModelCreating(builder);
     }

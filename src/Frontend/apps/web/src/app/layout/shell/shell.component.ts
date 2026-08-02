@@ -531,6 +531,14 @@ export class ShellComponent implements OnInit {
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
       </svg>`,
     },
+    {
+      label: 'Logs',
+      route: '/logs',
+      roles: ['Contador', 'UsuarioContador', 'Cliente'],
+      icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+      </svg>`,
+    },
   ];
 
   private readonly _adminIcons = {
@@ -626,7 +634,7 @@ export class ShellComponent implements OnInit {
       const id = user.clienteId;
       base.push(
         {
-          label: 'Minha Empresa',
+          label: 'Empresa',
           route: `/clientes/${id}/empresa`,
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4m-4 6h.01M9 15h.01M9 18h.01"/>

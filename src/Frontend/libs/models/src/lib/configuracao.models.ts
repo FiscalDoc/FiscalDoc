@@ -79,4 +79,5 @@ export interface ImportacaoXmlLogDto {
   xmlsImportados: number;
   erros: number;
   mensagemErro?: string;
+  documentoIds: string[];
 }

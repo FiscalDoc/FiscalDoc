@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { from, concatMap, catchError, of } from 'rxjs';
 import { AuthService, DocumentoService, ClienteService, extractErrorMessage, extractBlobErrorMessage } from '@veloxml/services';
 import { DocumentoDto, ClienteDto } from '@veloxml/models';
@@ -624,6 +625,7 @@ export class DocumentosListComponent implements OnInit {
   private readonly _docSvc = inject(DocumentoService);
   private readonly _cliSvc = inject(ClienteService);
   private readonly _auth   = inject(AuthService);
+  private readonly _route  = inject(ActivatedRoute);
 
   // Perfil Cliente só importa pro próprio cliente — não faz sentido escolher outro, então
   // a seleção nem aparece (o backend também ignora qualquer ClienteId enviado nesse caso).
@@ -661,6 +663,11 @@ export class DocumentosListComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this._cliSvc.getAll({ pageSize: 200 }).subscribe(r => this.clientes.set(r.items));
+
+    const id = this._route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this._docSvc.getById(id).subscribe(d => this.detail.set(d));
+    }
   }
 
   load(): void {

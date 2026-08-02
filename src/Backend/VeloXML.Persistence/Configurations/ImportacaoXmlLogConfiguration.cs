@@ -31,6 +31,7 @@ public class ImportacaoXmlLogConfiguration : IEntityTypeConfiguration<Importacao
         b.Property(e => e.Erros).HasColumnName("erros");
         // "text" sem limite — mensagem de exceção completa, sem truncar como no card de resumo.
         b.Property(e => e.MensagemErro).HasColumnName("mensagem_erro").HasColumnType("text");
+        b.Property(e => e.DocumentoIds).HasColumnName("documento_ids").HasDefaultValueSql("'{}'");
 
         b.HasIndex(e => new { e.TenantId, e.ExecutadoEm });
         b.HasIndex(e => new { e.TenantId, e.Origem });

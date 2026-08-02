@@ -1,8 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { LogService } from '@veloxml/services';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService, LogService } from '@veloxml/services';
 import { ImportacaoXmlLogDto, ImportacaoXmlLogsResumoDto, LogDto, PagedResult } from '@veloxml/models';
 
 type LogsTab = 'auditoria' | 'integracao';
@@ -10,20 +10,28 @@ type LogsTab = 'auditoria' | 'integracao';
 @Component({
   selector: 'app-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
           <h2 class="page-title">Logs</h2>
-          <p class="page-sub">Auditoria de alterações e histórico de importação de XML (e-mail e API)</p>
+          <p class="page-sub">
+            @if (isAdmin()) {
+              Auditoria de alterações e histórico de importação de XML (e-mail e API)
+            } @else {
+              Histórico de importação de XML por e-mail e por integração via API
+            }
+          </p>
         </div>
       </div>
 
-      <nav class="tabs">
-        <button class="tab-btn" [class.active]="tab() === 'auditoria'" (click)="tab.set('auditoria')">Auditoria</button>
-        <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="selectIntegracaoTab()">E-mail &amp; API</button>
-      </nav>
+      @if (isAdmin()) {
+        <nav class="tabs">
+          <button class="tab-btn" [class.active]="tab() === 'auditoria'" (click)="tab.set('auditoria')">Auditoria</button>
+          <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="selectIntegracaoTab()">E-mail &amp; API</button>
+        </nav>
+      }
 
       @if (tab() === 'auditoria') {
       <!-- Filtros -->
@@ -184,6 +192,7 @@ type LogsTab = 'auditoria' | 'integracao';
                     <th>Importados</th>
                     <th>Erros</th>
                     <th>Mensagem</th>
+                    <th>Documento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -197,6 +206,15 @@ type LogsTab = 'auditoria' | 'integracao';
                       <td class="text-sm">{{ l.xmlsImportados }}</td>
                       <td class="text-sm" [class.text-red]="l.erros > 0">{{ l.erros }}</td>
                       <td class="text-sm text2 msg-preview" [class.text-red]="!!l.mensagemErro">{{ mensagemStatus(l) }}</td>
+                      <td class="text-sm" (click)="$event.stopPropagation()">
+                        @if (l.documentoIds.length === 1) {
+                          <a class="doc-link" [routerLink]="['/documentos']" [queryParams]="{ id: l.documentoIds[0] }">Ver documento</a>
+                        } @else if (l.documentoIds.length > 1) {
+                          <span class="doc-link" (click)="openIntegracaoDetail(l)">{{ l.documentoIds.length }} documentos</span>
+                        } @else {
+                          <span class="text2">—</span>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -240,6 +258,16 @@ type LogsTab = 'auditoria' | 'integracao';
                   </div>
                 </div>
                 <p class="pag-info">Executado em {{ formatDate(l.executadoEm) }} · Origem: {{ origemLabel(l.origem) }}</p>
+                @if (l.documentoIds.length > 0) {
+                  <div class="field">
+                    <label class="detail-label">Documento(s) importado(s)</label>
+                    <div class="doc-link-list">
+                      @for (docId of l.documentoIds; track docId) {
+                        <a class="doc-link" [routerLink]="['/documentos']" [queryParams]="{ id: docId }">Ver documento</a>
+                      }
+                    </div>
+                  </div>
+                }
                 @if (l.mensagemErro) {
                   <div class="field">
                     <label class="detail-label">Mensagem completa</label>
@@ -347,6 +375,9 @@ type LogsTab = 'auditoria' | 'integracao';
 
     .row-clickable { cursor: pointer; }
     .msg-preview { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-link { color: var(--accent); font-size: 12px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+    .doc-link:hover { text-decoration: underline; }
+    .doc-link-list { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
     .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; }
@@ -361,6 +392,9 @@ type LogsTab = 'auditoria' | 'integracao';
 export class LogsComponent implements OnInit {
   private readonly _logs  = inject(LogService);
   private readonly _route = inject(ActivatedRoute);
+  private readonly _auth  = inject(AuthService);
+
+  readonly isAdmin = computed(() => this._auth.currentUser()?.perfil === 'Administrador');
 
   tab = signal<LogsTab>('auditoria');
 
@@ -384,7 +418,7 @@ export class LogsComponent implements OnInit {
   filterOrigem = '';
 
   ngOnInit(): void {
-    if (this._route.snapshot.queryParamMap.get('tab') === 'integracao') {
+    if (!this.isAdmin() || this._route.snapshot.queryParamMap.get('tab') === 'integracao') {
       this.selectIntegracaoTab();
     } else {
       this.load();

@@ -15,4 +15,9 @@ public class ImportacaoXmlLog : BaseEntity
     public int XmlsImportados { get; set; }
     public int Erros { get; set; }
     public string? MensagemErro { get; set; }
+
+    // Documentos criados nesse log — permite linkar direto pro documento importado.
+    // Um log de ApiIngest sempre tem 0 ou 1; um log de e-mail pode ter vários (um por
+    // anexo/XML importado com sucesso na mesma execução).
+    public List<Guid> DocumentoIds { get; set; } = [];
 }

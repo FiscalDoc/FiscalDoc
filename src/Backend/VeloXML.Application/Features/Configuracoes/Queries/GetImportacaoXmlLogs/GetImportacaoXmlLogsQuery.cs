@@ -17,5 +17,6 @@ public record ImportacaoXmlLogDto(
     int XmlsProcessados,
     int XmlsImportados,
     int Erros,
-    string? MensagemErro
+    string? MensagemErro,
+    List<Guid> DocumentoIds
 );

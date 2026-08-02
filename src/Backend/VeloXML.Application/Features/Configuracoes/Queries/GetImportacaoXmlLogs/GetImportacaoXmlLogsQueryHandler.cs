@@ -16,7 +16,7 @@ public sealed class GetImportacaoXmlLogsQueryHandler(IUnitOfWork uow)
 
         var dtos = paged.Items.Select(l => new ImportacaoXmlLogDto(
             l.Id, l.Origem.ToString(), l.ExecutadoEm, l.ClienteId, l.ClienteNome,
-            l.EmailsEncontrados, l.XmlsProcessados, l.XmlsImportados, l.Erros, l.MensagemErro)).ToList();
+            l.EmailsEncontrados, l.XmlsProcessados, l.XmlsImportados, l.Erros, l.MensagemErro, l.DocumentoIds)).ToList();
 
         return Result.Success(PagedResult<ImportacaoXmlLogDto>.Create(dtos, paged.TotalCount, page, pageSize));
     }

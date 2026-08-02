@@ -24,7 +24,8 @@ public sealed class ImportarXmlEmailJob(
 
     private sealed record ResumoCliente(
         Guid ClienteId, string ClienteNome, Guid TenantId, Guid? ContadorId, DateTime ExecutadoEm,
-        int EmailsEncontrados, int XmlsProcessados, int XmlsImportados, int Erros, string? MensagemErro);
+        int EmailsEncontrados, int XmlsProcessados, int XmlsImportados, int Erros, string? MensagemErro,
+        List<Guid> DocumentoIds);
 
     public async Task ExecuteAsync(CancellationToken ct = default)
     {
@@ -104,6 +105,7 @@ public sealed class ImportarXmlEmailJob(
                     XmlsImportados = r.XmlsImportados,
                     Erros = r.Erros,
                     MensagemErro = r.MensagemErro,
+                    DocumentoIds = r.DocumentoIds,
                 }, ct);
             }
 
@@ -122,6 +124,7 @@ public sealed class ImportarXmlEmailJob(
         var xmlsImportados = 0;
         var erros = 0;
         string? mensagemErro = null;
+        var documentoIds = new List<Guid>();
 
         try
         {
@@ -164,8 +167,12 @@ public sealed class ImportarXmlEmailJob(
                             await attachment.Content.DecodeToAsync(stream, ct);
                             stream.Position = 0;
 
-                            if (await ImportarXmlAsync(cliente, assunto, fileName, stream, ct))
+                            var docId = await ImportarXmlAsync(cliente, assunto, fileName, stream, ct);
+                            if (docId.HasValue)
+                            {
                                 xmlsImportados++;
+                                documentoIds.Add(docId.Value);
+                            }
                             else
                                 erros++;
                         }
@@ -187,8 +194,12 @@ public sealed class ImportarXmlEmailJob(
                                     await entryContent.CopyToAsync(entryStream, ct);
                                 entryStream.Position = 0;
 
-                                if (await ImportarXmlAsync(cliente, assunto, entry.Name, entryStream, ct))
+                                var entryDocId = await ImportarXmlAsync(cliente, assunto, entry.Name, entryStream, ct);
+                                if (entryDocId.HasValue)
+                                {
                                     xmlsImportados++;
+                                    documentoIds.Add(entryDocId.Value);
+                                }
                                 else
                                     erros++;
                             }
@@ -221,10 +232,10 @@ public sealed class ImportarXmlEmailJob(
             mensagemErro ?? "nenhum");
 
         return new ResumoCliente(cliente.Id, cliente.RazaoSocial, cliente.TenantId, cliente.ContadorId, executadoEm,
-            emailsEncontrados, xmlsProcessados, xmlsImportados, erros, mensagemErro);
+            emailsEncontrados, xmlsProcessados, xmlsImportados, erros, mensagemErro, documentoIds);
     }
 
-    private async Task<bool> ImportarXmlAsync(Cliente cliente, string assunto, string fileName, Stream stream, CancellationToken ct)
+    private async Task<Guid?> ImportarXmlAsync(Cliente cliente, string assunto, string fileName, Stream stream, CancellationToken ct)
     {
         var tipo = DetectarTipo(fileName);
         var dto = new FileUploadDto(stream, fileName, "application/xml", stream.Length);
@@ -235,13 +246,13 @@ public sealed class ImportarXmlEmailJob(
             logger.LogInformation(
                 "[ImportarXmlEmail] XML importado com sucesso | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Tipo={Tipo}",
                 cliente.Id, cliente.RazaoSocial, assunto, fileName, tipo);
-            return true;
+            return result.Value.Id;
         }
 
         logger.LogWarning(
             "[ImportarXmlEmail] Falha ao importar XML | Cliente={ClienteId} ({ClienteNome}) | E-mail={EmailAssunto} | Arquivo={Arquivo} | Motivo={Motivo}",
             cliente.Id, cliente.RazaoSocial, assunto, fileName, result.Error.Description);
-        return false;
+        return null;
     }
 
     private static TipoDocumentoEnum DetectarTipo(string fileName)

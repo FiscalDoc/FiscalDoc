@@ -32,7 +32,7 @@ public sealed class IngestController(IMediator mediator, IUnitOfWork uow, ICurre
         if (ms.Length == 0)
         {
             await RegistrarLogAsync(cliente, xmlsProcessados: 0, xmlsImportados: 0,
-                erro: "Corpo da requisição vazio — envie o XML no body.", ct);
+                erro: "Corpo da requisição vazio — envie o XML no body.", documentoIds: [], ct);
             return BadRequest(new { code = "EMPTY_BODY", message = "Corpo da requisição vazio — envie o XML no body." });
         }
         ms.Position = 0;
@@ -48,13 +48,14 @@ public sealed class IngestController(IMediator mediator, IUnitOfWork uow, ICurre
         var result = await mediator.Send(new UploadDocumentoCommand(null, tipo, dto, OrigemImportacaoEnum.ApiIngest), ct);
 
         await RegistrarLogAsync(cliente, xmlsProcessados: 1, xmlsImportados: result.IsSuccess ? 1 : 0,
-            erro: result.IsSuccess ? null : result.Error.Description, ct);
+            erro: result.IsSuccess ? null : result.Error.Description,
+            documentoIds: result.IsSuccess ? [result.Value.Id] : [], ct);
 
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
     private async Task RegistrarLogAsync(
-        Cliente cliente, int xmlsProcessados, int xmlsImportados, string? erro, CancellationToken ct)
+        Cliente cliente, int xmlsProcessados, int xmlsImportados, string? erro, List<Guid> documentoIds, CancellationToken ct)
     {
         await uow.ImportacaoXmlLogs.AddAsync(new ImportacaoXmlLog
         {
@@ -69,6 +70,7 @@ public sealed class IngestController(IMediator mediator, IUnitOfWork uow, ICurre
             XmlsImportados    = xmlsImportados,
             Erros             = erro is not null ? 1 : 0,
             MensagemErro      = erro,
+            DocumentoIds      = documentoIds,
         }, ct);
         await uow.SaveChangesAsync(ct);
     }
