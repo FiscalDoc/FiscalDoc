@@ -86,16 +86,28 @@ public sealed class UploadDocumentoCommandHandler(
             documento.ValorAproxTributos  = parsed.ValorAproxTributos;
             if (parsed.Itens is { Count: > 0 })
                 documento.ItensJson = JsonSerializer.Serialize(parsed.Itens.Select(i => new DocumentoItemDto(
-                    i.CodigoProduto, i.Descricao, i.Ncm, i.Cfop, i.Unidade, i.Quantidade, i.ValorUnitario, i.ValorTotal)));
+                    i.CodigoProduto, i.Descricao, i.Ncm, i.Cfop, i.Unidade, i.Quantidade, i.ValorUnitario, i.ValorTotal,
+                    i.Cst, i.ValorBaseCalculoIcms, i.ValorIcms, i.ValorIpi, i.AliquotaIcms, i.AliquotaIpi)));
+
+            var temTransportador = !string.IsNullOrEmpty(parsed.TransportadorNome) || !string.IsNullOrEmpty(parsed.ModalidadeFrete)
+                || !string.IsNullOrEmpty(parsed.VolumeQuantidade);
 
             documento.DanfeJson = JsonSerializer.Serialize(new DanfeDadosDto(
                 parsed.Serie, parsed.NaturezaOperacao, parsed.ProtocoloAutorizacao, parsed.DataAutorizacao,
                 parsed.EmitenteIe,
                 new DanfeEnderecoDto(parsed.EmitenteLogradouro, parsed.EmitenteNumero, parsed.EmitenteComplemento,
-                    parsed.EmitenteBairro, parsed.EmitenteCidade, parsed.EmitenteUf, parsed.EmitenteCep),
+                    parsed.EmitenteBairro, parsed.EmitenteCidade, parsed.EmitenteUf, parsed.EmitenteCep, parsed.EmitenteFone),
                 parsed.DestinatarioIe,
                 new DanfeEnderecoDto(parsed.DestinatarioLogradouro, parsed.DestinatarioNumero, parsed.DestinatarioComplemento,
-                    parsed.DestinatarioBairro, parsed.DestinatarioCidade, parsed.DestinatarioUf, parsed.DestinatarioCep)));
+                    parsed.DestinatarioBairro, parsed.DestinatarioCidade, parsed.DestinatarioUf, parsed.DestinatarioCep, parsed.DestinatarioFone),
+                parsed.InfCpl,
+                temTransportador
+                    ? new DanfeTransportadorDto(
+                        parsed.ModalidadeFrete, parsed.TransportadorNome, parsed.TransportadorCnpjCpf,
+                        parsed.TransportadorMunicipio, parsed.TransportadorUf,
+                        new DanfeVolumeDto(parsed.VolumeQuantidade, parsed.VolumeEspecie, parsed.VolumeMarca,
+                            parsed.VolumeNumeracao, parsed.VolumePesoLiquido, parsed.VolumePesoBruto))
+                    : null));
 
             if (!string.IsNullOrEmpty(parsed.ChaveAcesso))
             {

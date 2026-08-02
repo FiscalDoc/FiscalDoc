@@ -8,7 +8,13 @@ public record DocumentoItemDto(
     string Unidade,
     decimal Quantidade,
     decimal ValorUnitario,
-    decimal ValorTotal
+    decimal ValorTotal,
+    string? Cst = null,
+    decimal? ValorBaseCalculoIcms = null,
+    decimal? ValorIcms = null,
+    decimal? ValorIpi = null,
+    decimal? AliquotaIcms = null,
+    decimal? AliquotaIpi = null
 );
 
 public record DocumentoImpostosDto(
@@ -32,7 +38,26 @@ public record DanfeEnderecoDto(
     string? Bairro,
     string? Cidade,
     string? Uf,
-    string? Cep
+    string? Cep,
+    string? Fone = null
+);
+
+public record DanfeVolumeDto(
+    string? Quantidade,
+    string? Especie,
+    string? Marca,
+    string? Numeracao,
+    decimal? PesoLiquido,
+    decimal? PesoBruto
+);
+
+public record DanfeTransportadorDto(
+    string? ModalidadeFrete,
+    string? Nome,
+    string? CnpjCpf,
+    string? Municipio,
+    string? Uf,
+    DanfeVolumeDto? Volume
 );
 
 public record DanfeDadosDto(
@@ -43,7 +68,9 @@ public record DanfeDadosDto(
     string? InscricaoEstadualEmitente,
     DanfeEnderecoDto? EnderecoEmitente,
     string? InscricaoEstadualDestinatario,
-    DanfeEnderecoDto? EnderecoDestinatario
+    DanfeEnderecoDto? EnderecoDestinatario,
+    string? InformacoesComplementares = null,
+    DanfeTransportadorDto? Transportador = null
 );
 
 public record DocumentoDto(

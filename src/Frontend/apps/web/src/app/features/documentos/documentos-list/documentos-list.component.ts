@@ -337,10 +337,57 @@ interface UploadItem { file: File; tipo: string; }
             </div>
           </div>
 
+          @if (temImpostos(detail()!)) {
+            <div class="accordion" [class.accordion--aberto]="impostosAbertos()">
+              <button type="button" class="accordion-header" (click)="impostosAbertos.set(!impostosAbertos())">
+                <span>Impostos</span>
+                <svg class="accordion-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              @if (impostosAbertos()) {
+                <div class="accordion-body">
+                  <div class="impostos-grid">
+                    @if (detail()!.impostos.valorProdutos != null) {
+                      <div class="imposto-item"><span class="footer-label">Valor dos Produtos</span><span class="footer-value">{{ detail()!.impostos.valorProdutos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorFrete != null) {
+                      <div class="imposto-item"><span class="footer-label">Frete</span><span class="footer-value">{{ detail()!.impostos.valorFrete | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorSeguro != null) {
+                      <div class="imposto-item"><span class="footer-label">Seguro</span><span class="footer-value">{{ detail()!.impostos.valorSeguro | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorDesconto != null) {
+                      <div class="imposto-item"><span class="footer-label">Desconto</span><span class="footer-value">{{ detail()!.impostos.valorDesconto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorIcms != null) {
+                      <div class="imposto-item"><span class="footer-label">ICMS</span><span class="footer-value">{{ detail()!.impostos.valorIcms | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorIpi != null) {
+                      <div class="imposto-item"><span class="footer-label">IPI</span><span class="footer-value">{{ detail()!.impostos.valorIpi | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorPis != null) {
+                      <div class="imposto-item"><span class="footer-label">PIS</span><span class="footer-value">{{ detail()!.impostos.valorPis | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorCofins != null) {
+                      <div class="imposto-item"><span class="footer-label">COFINS</span><span class="footer-value">{{ detail()!.impostos.valorCofins | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorOutrasDespesas != null) {
+                      <div class="imposto-item"><span class="footer-label">Outras Despesas</span><span class="footer-value">{{ detail()!.impostos.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                    @if (detail()!.impostos.valorAproxTributos != null) {
+                      <div class="imposto-item imposto-item--destaque"><span class="footer-label">Valor Aprox. dos Tributos*</span><span class="footer-value">{{ detail()!.impostos.valorAproxTributos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                    }
+                  </div>
+                  <p class="impostos-nota">* Conforme Lei 12.741/2012 (Lei da Transparência) — valor aproximado informado pelo emissor da nota.</p>
+                </div>
+              }
+            </div>
+          }
+
           <nav class="detail-tabs">
             <button class="detail-tab-btn" [class.active]="detailTab() === 'geral'" (click)="detailTab.set('geral')">Detalhes</button>
             <button class="detail-tab-btn" [class.active]="detailTab() === 'itens'" (click)="detailTab.set('itens')">Itens ({{ detail()!.itens.length }})</button>
-            <button class="detail-tab-btn" [class.active]="detailTab() === 'impostos'" (click)="detailTab.set('impostos')">Impostos</button>
           </nav>
 
           <div class="modal-body">
@@ -424,46 +471,6 @@ interface UploadItem { file: File; tipo: string; }
                   }
                 </tbody>
               </table>
-            }
-          }
-
-          @if (detailTab() === 'impostos') {
-            @if (!temImpostos(detail()!)) {
-              <div class="empty-state" style="padding:2rem 0">Nenhum detalhamento de imposto disponível pra este documento.</div>
-            } @else {
-              <div class="impostos-grid">
-                @if (detail()!.impostos.valorProdutos != null) {
-                  <div class="imposto-item"><span class="footer-label">Valor dos Produtos</span><span class="footer-value">{{ detail()!.impostos.valorProdutos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorFrete != null) {
-                  <div class="imposto-item"><span class="footer-label">Frete</span><span class="footer-value">{{ detail()!.impostos.valorFrete | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorSeguro != null) {
-                  <div class="imposto-item"><span class="footer-label">Seguro</span><span class="footer-value">{{ detail()!.impostos.valorSeguro | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorDesconto != null) {
-                  <div class="imposto-item"><span class="footer-label">Desconto</span><span class="footer-value">{{ detail()!.impostos.valorDesconto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorIcms != null) {
-                  <div class="imposto-item"><span class="footer-label">ICMS</span><span class="footer-value">{{ detail()!.impostos.valorIcms | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorIpi != null) {
-                  <div class="imposto-item"><span class="footer-label">IPI</span><span class="footer-value">{{ detail()!.impostos.valorIpi | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorPis != null) {
-                  <div class="imposto-item"><span class="footer-label">PIS</span><span class="footer-value">{{ detail()!.impostos.valorPis | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorCofins != null) {
-                  <div class="imposto-item"><span class="footer-label">COFINS</span><span class="footer-value">{{ detail()!.impostos.valorCofins | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorOutrasDespesas != null) {
-                  <div class="imposto-item"><span class="footer-label">Outras Despesas</span><span class="footer-value">{{ detail()!.impostos.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-                @if (detail()!.impostos.valorAproxTributos != null) {
-                  <div class="imposto-item imposto-item--destaque"><span class="footer-label">Valor Aprox. dos Tributos*</span><span class="footer-value">{{ detail()!.impostos.valorAproxTributos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
-                }
-              </div>
-              <p class="impostos-nota">* Conforme Lei 12.741/2012 (Lei da Transparência) — valor aproximado informado pelo emissor da nota.</p>
             }
           }
 
@@ -686,7 +693,18 @@ interface UploadItem { file: File; tipo: string; }
     .itens-table tr:last-child td { border-bottom: none; }
     .itens-table td.num, .itens-table th:nth-last-child(-n+3) { text-align: right; }
 
-    /* ── Aba Impostos ── */
+    /* ── Accordion (Impostos) ── */
+    .accordion { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .accordion-header {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: .75rem 1rem; background: var(--bg3); border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--text); font-family: inherit;
+    }
+    .accordion--aberto .accordion-header { border-bottom: 1px solid var(--border); }
+    .accordion-chevron { transition: transform .18s ease; flex-shrink: 0; color: var(--text2); }
+    .accordion--aberto .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body { padding: 1rem; display: flex; flex-direction: column; gap: .75rem; }
+
     .impostos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
     .imposto-item { display: flex; flex-direction: column; gap: 4px; padding: .875rem 1rem; background: var(--bg3); }
     .imposto-item--destaque { background: var(--bg2); grid-column: span 3; }
@@ -774,7 +792,8 @@ export class DocumentosListComponent implements OnInit {
   readonly totalPages       = signal(1);
   readonly termo            = signal('');
   readonly detail           = signal<DocumentoDto | null>(null);
-  readonly detailTab        = signal<'geral' | 'itens' | 'impostos'>('geral');
+  readonly detailTab        = signal<'geral' | 'itens'>('geral');
+  readonly impostosAbertos  = signal(false);
   readonly downloading      = signal(false);
   readonly showStatusLegend = signal(false);
   readonly selecionados     = signal<Set<string>>(new Set());
@@ -846,7 +865,7 @@ export class DocumentosListComponent implements OnInit {
   prevPage(): void { this.page.update(p => p - 1); this.load(); }
   nextPage(): void { this.page.update(p => p + 1); this.load(); }
 
-  openDetail(d: DocumentoDto): void { this.detail.set(d); this.detailTab.set('geral'); }
+  openDetail(d: DocumentoDto): void { this.detail.set(d); this.detailTab.set('geral'); this.impostosAbertos.set(false); }
 
   temImpostos(d: DocumentoDto): boolean {
     const i = d.impostos;

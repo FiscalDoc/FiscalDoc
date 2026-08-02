@@ -44,6 +44,10 @@ internal static class NfeXmlParser
         var enderDest = dest?.Element(ns + "enderDest");
         var tot  = infNFe.Element(ns + "total")?.Element(ns + "ICMSTot");
         var infProt = doc.Descendants(ns + "infProt").FirstOrDefault();
+        var transp = infNFe.Element(ns + "transp");
+        var transporta = transp?.Element(ns + "transporta");
+        var vol = transp?.Element(ns + "vol");
+        var infAdic = infNFe.Element(ns + "infAdic");
 
         var chave = doc.Descendants(ns + "chNFe").FirstOrDefault()?.Value
                  ?? infNFe.Attribute("Id")?.Value?.Replace("NFe", "");
@@ -60,13 +64,18 @@ internal static class NfeXmlParser
                 Quantidade:     ParseDecimal(prod?.Element(ns + "qCom")?.Value),
                 ValorUnitario:  ParseDecimal(prod?.Element(ns + "vUnCom")?.Value),
                 ValorTotal:     ParseDecimal(prod?.Element(ns + "vProd")?.Value),
-                // Alíquotas variam de sub-nó conforme o CST/CSOSN (ICMS00, ICMS40, ICMS60…) —
+                // Alíquotas/valores variam de sub-nó conforme o CST/CSOSN (ICMS00, ICMS40, ICMS60…) —
                 // busca por nome local em qualquer nível abaixo de <imposto>, sem acoplar a um
-                // CST específico, já que pra exibição/cadastro só a alíquota importa, não o
+                // CST específico, já que pra exibição/cadastro só o valor importa, não o
                 // enquadramento fiscal completo.
                 AliquotaIcms:   ParseDecimal(det.Descendants(ns + "pICMS").FirstOrDefault()?.Value),
                 AliquotaPis:    ParseDecimal(det.Descendants(ns + "pPIS").FirstOrDefault()?.Value),
-                AliquotaCofins: ParseDecimal(det.Descendants(ns + "pCOFINS").FirstOrDefault()?.Value)
+                AliquotaCofins: ParseDecimal(det.Descendants(ns + "pCOFINS").FirstOrDefault()?.Value),
+                AliquotaIpi:    ParseDecimal(det.Descendants(ns + "pIPI").FirstOrDefault()?.Value),
+                Cst:            (det.Descendants(ns + "CST").FirstOrDefault() ?? det.Descendants(ns + "CSOSN").FirstOrDefault())?.Value,
+                ValorBaseCalculoIcms: ParseDecimalNullable(det.Descendants(ns + "vBC").FirstOrDefault()?.Value),
+                ValorIcms:      ParseDecimalNullable(det.Descendants(ns + "vICMS").FirstOrDefault()?.Value),
+                ValorIpi:       ParseDecimalNullable(det.Descendants(ns + "vIPI").FirstOrDefault()?.Value)
             );
         }).ToList();
 
@@ -89,6 +98,7 @@ internal static class NfeXmlParser
             DestinatarioUf:          enderDest?.Element(ns + "UF")?.Value,
             DestinatarioCep:         enderDest?.Element(ns + "CEP")?.Value,
             DestinatarioCodIbge:     enderDest?.Element(ns + "cMun")?.Value,
+            DestinatarioFone:        enderDest?.Element(ns + "fone")?.Value,
 
             Serie:                   ide?.Element(ns + "serie")?.Value,
             NaturezaOperacao:        ide?.Element(ns + "natOp")?.Value,
@@ -103,6 +113,21 @@ internal static class NfeXmlParser
             EmitenteCidade:          enderEmit?.Element(ns + "xMun")?.Value,
             EmitenteUf:              enderEmit?.Element(ns + "UF")?.Value,
             EmitenteCep:             enderEmit?.Element(ns + "CEP")?.Value,
+            EmitenteFone:            enderEmit?.Element(ns + "fone")?.Value,
+
+            InfCpl:                  infAdic?.Element(ns + "infCpl")?.Value,
+
+            ModalidadeFrete:            transp?.Element(ns + "modFrete")?.Value,
+            TransportadorNome:          transporta?.Element(ns + "xNome")?.Value,
+            TransportadorCnpjCpf:       (transporta?.Element(ns + "CNPJ") ?? transporta?.Element(ns + "CPF"))?.Value,
+            TransportadorMunicipio:     transporta?.Element(ns + "xMun")?.Value,
+            TransportadorUf:            transporta?.Element(ns + "UF")?.Value,
+            VolumeQuantidade:           vol?.Element(ns + "qVol")?.Value,
+            VolumeEspecie:              vol?.Element(ns + "esp")?.Value,
+            VolumeMarca:                vol?.Element(ns + "marca")?.Value,
+            VolumeNumeracao:            vol?.Element(ns + "nVol")?.Value,
+            VolumePesoLiquido:          ParseDecimalNullable(vol?.Element(ns + "pesoL")?.Value),
+            VolumePesoBruto:            ParseDecimalNullable(vol?.Element(ns + "pesoB")?.Value),
 
             // Totais já vêm agregados pelo emissor em <total><ICMSTot>, independente de quantos
             // CSTs/regras diferentes os itens tenham — não precisamos recalcular nada aqui.
@@ -190,7 +215,12 @@ internal record ParsedDocumentoItem(
     decimal ValorTotal,
     decimal AliquotaIcms = 0,
     decimal AliquotaPis = 0,
-    decimal AliquotaCofins = 0
+    decimal AliquotaCofins = 0,
+    decimal AliquotaIpi = 0,
+    string? Cst = null,
+    decimal? ValorBaseCalculoIcms = null,
+    decimal? ValorIcms = null,
+    decimal? ValorIpi = null
 );
 
 internal record ParsedDocumento(
@@ -212,6 +242,7 @@ internal record ParsedDocumento(
     string? DestinatarioUf = null,
     string? DestinatarioCep = null,
     string? DestinatarioCodIbge = null,
+    string? DestinatarioFone = null,
 
     string? Serie = null,
     string? NaturezaOperacao = null,
@@ -226,6 +257,21 @@ internal record ParsedDocumento(
     string? EmitenteCidade = null,
     string? EmitenteUf = null,
     string? EmitenteCep = null,
+    string? EmitenteFone = null,
+
+    string? InfCpl = null,
+
+    string? ModalidadeFrete = null,
+    string? TransportadorNome = null,
+    string? TransportadorCnpjCpf = null,
+    string? TransportadorMunicipio = null,
+    string? TransportadorUf = null,
+    string? VolumeQuantidade = null,
+    string? VolumeEspecie = null,
+    string? VolumeMarca = null,
+    string? VolumeNumeracao = null,
+    decimal? VolumePesoLiquido = null,
+    decimal? VolumePesoBruto = null,
 
     decimal? ValorBaseCalculoIcms = null,
     decimal? ValorProdutos = null,

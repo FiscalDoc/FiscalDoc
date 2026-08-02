@@ -1,8 +1,18 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { DocumentoService } from '@veloxml/services';
 import { DocumentoDto } from '@veloxml/models';
+import { code128CModules, modulesToBars } from './code128';
+
+const MODALIDADE_FRETE: Record<string, string> = {
+  '0': 'Contratação do Frete por conta do Remetente (CIF)',
+  '1': 'Contratação do Frete por conta do Destinatário (FOB)',
+  '2': 'Contratação do Frete por conta de Terceiros',
+  '3': 'Transporte Próprio por conta do Remetente',
+  '4': 'Transporte Próprio por conta do Destinatário',
+  '9': 'Sem Ocorrência de Transporte',
+};
 
 @Component({
   selector: 'app-documento-danfe',
@@ -15,7 +25,11 @@ import { DocumentoDto } from '@veloxml/models';
       <div class="no-print loading-state">Não foi possível carregar o documento.</div>
     } @else {
       <div class="toolbar no-print">
-        <span class="toolbar-note">Representação simplificada do DANFE — não substitui o documento oficial.</span>
+        @if (!doc()!.danfe?.protocoloAutorizacao) {
+          <span class="toolbar-note toolbar-note--alerta">Este XML não tem protocolo de autorização — este DANFE não pode ser considerado válido para trânsito.</span>
+        } @else {
+          <span class="toolbar-note">DANFE gerado a partir do XML autorizado importado no FiscalDoc.</span>
+        }
         <div class="toolbar-actions">
           <button class="btn-ghost" (click)="fechar()">Fechar</button>
           <button class="btn-primary" (click)="print()">Imprimir novamente</button>
@@ -56,6 +70,7 @@ import { DocumentoDto } from '@veloxml/models';
             @if (enderecoTexto(doc()!.danfe?.enderecoEmitente); as end) { <div class="dx-emit-end">{{ end }}</div> }
             <div class="dx-emit-end">CNPJ: {{ formatCnpj(doc()!.cnpjEmitente) }}
               @if (doc()!.danfe?.inscricaoEstadualEmitente) { &nbsp;·&nbsp;IE: {{ doc()!.danfe!.inscricaoEstadualEmitente }} }
+              @if (doc()!.danfe?.enderecoEmitente?.fone) { &nbsp;·&nbsp;Fone: {{ doc()!.danfe!.enderecoEmitente!.fone }} }
             </div>
           </div>
 
@@ -72,10 +87,17 @@ import { DocumentoDto } from '@veloxml/models';
           </div>
 
           <div class="dx-box dx-chave-box">
-            <div class="dx-barcode-placeholder">Código de barras não disponível<br>nesta representação simplificada</div>
+            @if (barcodeBars(); as bars) {
+              <svg class="dx-barcode" [attr.viewBox]="'0 0 ' + barcodeWidth() + ' 40'" preserveAspectRatio="none">
+                <rect x="0" y="0" [attr.width]="barcodeWidth()" height="40" fill="#fff"/>
+                @for (b of bars; track $index) {
+                  <rect [attr.x]="b.x" y="2" [attr.width]="b.width" height="32" fill="#000"/>
+                }
+              </svg>
+            }
             <span class="dx-label">Chave de Acesso</span>
             <span class="dx-value mono dx-chave-valor">{{ chaveFormatada() }}</span>
-            <div class="dx-chave-nota">Consulte a autenticidade no portal da NF-e com a chave acima.</div>
+            <div class="dx-chave-nota">Consulte a autenticidade no portal nacional da NF-e com a chave acima.</div>
           </div>
         </section>
 
@@ -127,6 +149,10 @@ import { DocumentoDto } from '@veloxml/models';
           <div class="dx-box dx-box-grow-3">
             <span class="dx-label">Município</span>
             <span class="dx-value">{{ doc()!.danfe?.enderecoDestinatario?.cidade || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Fone/Fax</span>
+            <span class="dx-value">{{ doc()!.danfe?.enderecoDestinatario?.fone || '—' }}</span>
           </div>
           <div class="dx-box">
             <span class="dx-label">UF</span>
@@ -184,6 +210,59 @@ import { DocumentoDto } from '@veloxml/models';
           <p class="dx-tributos-nota">Valor aprox. dos tributos: {{ doc()!.impostos.valorAproxTributos | currency:'BRL':'symbol':'1.2-2' }} (Lei 12.741/2012).</p>
         }
 
+        <!-- Transportador / Volumes -->
+        <div class="dx-section-title">Transportador / Volumes Transportados</div>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow-3">
+            <span class="dx-label">Nome / Razão Social</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.nome || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Frete por Conta</span>
+            <span class="dx-value dx-value-small">{{ modalidadeFrete() || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">CNPJ / CPF</span>
+            <span class="dx-value mono">{{ formatCnpj(doc()!.danfe?.transportador?.cnpjCpf) }}</span>
+          </div>
+        </section>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow-3">
+            <span class="dx-label">Município</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.municipio || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">UF</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.uf || '—' }}</span>
+          </div>
+        </section>
+        <section class="dx-row">
+          <div class="dx-box">
+            <span class="dx-label">Qtde. Volumes</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.volume?.quantidade || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Espécie</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.volume?.especie || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Marca</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.volume?.marca || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Numeração</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.volume?.numeracao || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Peso Bruto</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.volume?.pesoBruto != null ? (doc()!.danfe!.transportador!.volume!.pesoBruto + ' kg') : '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Peso Líquido</span>
+            <span class="dx-value">{{ doc()!.danfe?.transportador?.volume?.pesoLiquido != null ? (doc()!.danfe!.transportador!.volume!.pesoLiquido + ' kg') : '—' }}</span>
+          </div>
+        </section>
+
         <!-- Dados do produto/serviço -->
         <div class="dx-section-title">Dados do Produto / Serviço</div>
         @if (doc()!.itens.length === 0) {
@@ -192,8 +271,9 @@ import { DocumentoDto } from '@veloxml/models';
           <table class="dx-table">
             <thead>
               <tr>
-                <th>Código</th><th>Descrição</th><th>NCM/SH</th><th>CFOP</th><th>Unid.</th>
-                <th>Quant.</th><th>Valor Unit.</th><th>Valor Total</th>
+                <th>Código</th><th>Descrição</th><th>NCM/SH</th><th>CST</th><th>CFOP</th><th>Unid.</th>
+                <th>Quant.</th><th>Valor Unit.</th><th>Valor Total</th><th>B.Cálc ICMS</th>
+                <th>Valor ICMS</th><th>Valor IPI</th><th>Alíq ICMS</th><th>Alíq IPI</th>
               </tr>
             </thead>
             <tbody>
@@ -202,26 +282,50 @@ import { DocumentoDto } from '@veloxml/models';
                   <td class="mono">{{ i.codigoProduto || '—' }}</td>
                   <td>{{ i.descricao }}</td>
                   <td class="mono">{{ i.ncm || '—' }}</td>
+                  <td class="mono">{{ i.cst || '—' }}</td>
                   <td class="mono">{{ i.cfop || '—' }}</td>
                   <td>{{ i.unidade }}</td>
                   <td class="num">{{ i.quantidade }}</td>
                   <td class="num">{{ i.valorUnitario | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td class="num">{{ i.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
+                  <td class="num">{{ i.valorBaseCalculoIcms != null ? (i.valorBaseCalculoIcms | currency:'BRL':'symbol':'1.2-2') : '—' }}</td>
+                  <td class="num">{{ i.valorIcms != null ? (i.valorIcms | currency:'BRL':'symbol':'1.2-2') : '—' }}</td>
+                  <td class="num">{{ i.valorIpi != null ? (i.valorIpi | currency:'BRL':'symbol':'1.2-2') : '—' }}</td>
+                  <td class="num">{{ i.aliquotaIcms != null ? (i.aliquotaIcms + '%') : '—' }}</td>
+                  <td class="num">{{ i.aliquotaIpi != null ? (i.aliquotaIpi + '%') : '—' }}</td>
                 </tr>
               }
             </tbody>
           </table>
         }
 
+        <!-- Cálculo do ISSQN -->
+        <div class="dx-section-title">Cálculo do ISSQN</div>
+        <section class="dx-row">
+          <div class="dx-box">
+            <span class="dx-label">Inscrição Municipal</span>
+            <span class="dx-value">—</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Valor Total dos Serviços</span>
+            <span class="dx-value">{{ 0 | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Base de Cálculo do ISSQN</span>
+            <span class="dx-value">{{ 0 | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Valor do ISSQN</span>
+            <span class="dx-value">{{ 0 | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+        </section>
+
         <!-- Dados adicionais -->
         <div class="dx-section-title">Dados Adicionais</div>
         <section class="dx-row">
           <div class="dx-box dx-box-grow-3">
             <span class="dx-label">Informações Complementares</span>
-            <span class="dx-value dx-value-small">
-              Protocolo de autorização: {{ doc()!.danfe?.protocoloAutorizacao || '—' }}.
-              Documento gerado automaticamente a partir do XML importado no FiscalDoc.
-            </span>
+            <span class="dx-value dx-value-small">{{ doc()!.danfe?.informacoesComplementares || 'Nenhuma informação complementar informada pelo emitente.' }}</span>
           </div>
           <div class="dx-box">
             <span class="dx-label">Reservado ao Fisco</span>
@@ -230,7 +334,7 @@ import { DocumentoDto } from '@veloxml/models';
         </section>
 
         <footer class="sheet-footer">
-          Representação simplificada gerada pelo FiscalDoc a partir do XML importado — sem valor fiscal, apenas para conferência visual.
+          DANFE gerado pelo FiscalDoc a partir do XML da NF-e importado — reprodução dos dados autorizados pela SEFAZ, sem qualquer alteração no conteúdo fiscal.
         </footer>
       </div>
     }
@@ -240,6 +344,7 @@ import { DocumentoDto } from '@veloxml/models';
     .loading-state { padding: 3rem; text-align: center; color: #666; }
     .toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e2e2e2; position: sticky; top: 0; }
     .toolbar-note { font-size: 12px; color: #888; }
+    .toolbar-note--alerta { color: #b45309; font-weight: 600; }
     .toolbar-actions { display: flex; gap: .75rem; }
     .btn-primary { background: #0d0f14; color: #fff; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-ghost { background: none; border: 1px solid #ccc; color: #333; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
@@ -281,15 +386,15 @@ import { DocumentoDto } from '@veloxml/models';
     .dx-danfe-serie { font-size: 9.5px; color: #444; }
 
     .dx-chave-box { flex: 2; align-items: center; text-align: center; justify-content: center; gap: 2px; }
-    .dx-barcode-placeholder { font-size: 7.5px; color: #999; border: 1px dashed #ccc; padding: 4px 8px; margin-bottom: 4px; width: 100%; }
+    .dx-barcode { width: 100%; height: 34px; margin-bottom: 2px; }
     .dx-chave-valor { letter-spacing: .05em; font-size: 10.5px; }
     .dx-chave-nota { font-size: 7.5px; color: #777; margin-top: 3px; }
 
     .dx-section-title { background: #1a1e28; color: #fff; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 8px; margin-top: 8px; }
 
-    .dx-table { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-top: -1px; }
-    .dx-table th { text-align: left; padding: 4px 6px; background: #1a1e28; color: #fff; font-size: 8.5px; text-transform: uppercase; font-weight: 600; }
-    .dx-table td { padding: 3px 6px; border: 1px solid #ccc; }
+    .dx-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-top: -1px; }
+    .dx-table th { text-align: left; padding: 4px 5px; background: #1a1e28; color: #fff; font-size: 7.5px; text-transform: uppercase; font-weight: 600; }
+    .dx-table td { padding: 3px 5px; border: 1px solid #ccc; }
     .dx-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
     .dx-tributos-nota { font-size: 8.5px; color: #888; margin: 3px 0 0; }
@@ -309,6 +414,30 @@ export class DocumentoDanfeComponent implements OnInit {
 
   readonly loading = signal(true);
   readonly doc = signal<DocumentoDto | null>(null);
+
+  private readonly _moduleWidth = 2;
+
+  readonly barcodeModules = computed(() => {
+    const chave = this.doc()?.chaveAcesso?.replace(/\D/g, '');
+    if (!chave || chave.length !== 44) return null;
+    try {
+      return code128CModules(chave);
+    } catch {
+      return null;
+    }
+  });
+
+  readonly barcodeBars = computed(() => {
+    const modules = this.barcodeModules();
+    return modules ? modulesToBars(modules, this._moduleWidth) : null;
+  });
+
+  readonly barcodeWidth = computed(() => (this.barcodeModules()?.length ?? 0) * this._moduleWidth);
+
+  readonly modalidadeFrete = computed(() => {
+    const cod = this.doc()?.danfe?.transportador?.modalidadeFrete;
+    return cod != null ? (MODALIDADE_FRETE[cod] ?? cod) : null;
+  });
 
   ngOnInit(): void {
     const id = this._route.snapshot.paramMap.get('id')!;
@@ -351,7 +480,7 @@ export class DocumentoDanfeComponent implements OnInit {
     const digits = cnpj.replace(/\D/g, '');
     if (digits.length === 14) return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
     if (digits.length === 11) return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    return cnpj;
+    return cnpj || '—';
   }
 
   print(): void { window.print(); }

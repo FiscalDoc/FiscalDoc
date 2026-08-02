@@ -11,6 +11,12 @@ export interface DocumentoItemDto {
   quantidade: number;
   valorUnitario: number;
   valorTotal: number;
+  cst?: string;
+  valorBaseCalculoIcms?: number;
+  valorIcms?: number;
+  valorIpi?: number;
+  aliquotaIcms?: number;
+  aliquotaIpi?: number;
 }
 
 export interface DocumentoImpostosDto {
@@ -35,6 +41,25 @@ export interface DanfeEnderecoDto {
   cidade?: string;
   uf?: string;
   cep?: string;
+  fone?: string;
+}
+
+export interface DanfeVolumeDto {
+  quantidade?: string;
+  especie?: string;
+  marca?: string;
+  numeracao?: string;
+  pesoLiquido?: number;
+  pesoBruto?: number;
+}
+
+export interface DanfeTransportadorDto {
+  modalidadeFrete?: string;
+  nome?: string;
+  cnpjCpf?: string;
+  municipio?: string;
+  uf?: string;
+  volume?: DanfeVolumeDto;
 }
 
 export interface DanfeDadosDto {
@@ -46,6 +71,8 @@ export interface DanfeDadosDto {
   enderecoEmitente?: DanfeEnderecoDto;
   inscricaoEstadualDestinatario?: string;
   enderecoDestinatario?: DanfeEnderecoDto;
+  informacoesComplementares?: string;
+  transportador?: DanfeTransportadorDto;
 }
 
 export interface DocumentoDto {

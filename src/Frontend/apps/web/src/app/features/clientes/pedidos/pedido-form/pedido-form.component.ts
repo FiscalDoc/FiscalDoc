@@ -133,13 +133,25 @@ interface ConfirmState {
               </div>
             </div>
             @if (documentoImpostos(); as imp) {
-              <div class="nfe-impostos-grid">
-                @if (imp.valorProdutos != null) { <div class="nfe-imposto-item"><span class="footer-label">Produtos</span><span>{{ imp.valorProdutos | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorIcms != null) { <div class="nfe-imposto-item"><span class="footer-label">ICMS</span><span>{{ imp.valorIcms | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorIpi != null) { <div class="nfe-imposto-item"><span class="footer-label">IPI</span><span>{{ imp.valorIpi | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorPis != null) { <div class="nfe-imposto-item"><span class="footer-label">PIS</span><span>{{ imp.valorPis | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorCofins != null) { <div class="nfe-imposto-item"><span class="footer-label">COFINS</span><span>{{ imp.valorCofins | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorAproxTributos != null) { <div class="nfe-imposto-item nfe-imposto-item--destaque"><span class="footer-label">Aprox. Tributos*</span><span>{{ imp.valorAproxTributos | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+              <div class="accordion" [class.accordion--aberto]="impostosAbertos()">
+                <button type="button" class="accordion-header" (click)="impostosAbertos.set(!impostosAbertos())">
+                  <span>Impostos da Nota</span>
+                  <svg class="accordion-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                @if (impostosAbertos()) {
+                  <div class="accordion-body">
+                    <div class="nfe-impostos-grid">
+                      @if (imp.valorProdutos != null) { <div class="nfe-imposto-item"><span class="footer-label">Produtos</span><span>{{ imp.valorProdutos | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+                      @if (imp.valorIcms != null) { <div class="nfe-imposto-item"><span class="footer-label">ICMS</span><span>{{ imp.valorIcms | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+                      @if (imp.valorIpi != null) { <div class="nfe-imposto-item"><span class="footer-label">IPI</span><span>{{ imp.valorIpi | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+                      @if (imp.valorPis != null) { <div class="nfe-imposto-item"><span class="footer-label">PIS</span><span>{{ imp.valorPis | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+                      @if (imp.valorCofins != null) { <div class="nfe-imposto-item"><span class="footer-label">COFINS</span><span>{{ imp.valorCofins | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+                      @if (imp.valorAproxTributos != null) { <div class="nfe-imposto-item nfe-imposto-item--destaque"><span class="footer-label">Aprox. Tributos*</span><span>{{ imp.valorAproxTributos | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+                    </div>
+                  </div>
+                }
               </div>
             }
           </div>
@@ -505,10 +517,22 @@ interface ConfirmState {
     .nfe-card-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
     .nfe-card-chave { margin: 2px 0 0; font-size: 11px; color: var(--text2); word-break: break-all; }
     .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .nfe-impostos-grid { display: flex; gap: 1.5rem; flex-wrap: wrap; padding-top: .75rem; margin-top: .25rem; border-top: 1px solid var(--border); }
+    .nfe-impostos-grid { display: flex; gap: 1.5rem; flex-wrap: wrap; }
     .nfe-imposto-item { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text); }
     .nfe-imposto-item--destaque span:last-child { color: var(--accent); font-weight: 700; }
     .nfe-imposto-item .footer-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text2); }
+
+    /* ── Accordion (Impostos da nota) ── */
+    .nfe-card-wrap .accordion { margin-top: .75rem; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .accordion-header {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: .625rem .875rem; background: var(--bg3); border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--text); font-family: inherit;
+    }
+    .accordion--aberto .accordion-header { border-bottom: 1px solid var(--border); }
+    .accordion-chevron { transition: transform .18s ease; flex-shrink: 0; color: var(--text2); }
+    .accordion--aberto .accordion-chevron { transform: rotate(180deg); }
+    .accordion-body { padding: .875rem; }
     .documento-results { display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
     .documento-result-item { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
     .documento-result-item:last-child { border-bottom: none; }
