@@ -123,7 +123,7 @@ public sealed class UploadDocumentoCommandHandler(
         };
 
         if (parsed != null)
-            await AutoRegistrarCadastrosAsync(cliente.Value, parsed, ct);
+            await AutoRegistrarCadastrosAsync(cliente.Value, parsed, documento, ct);
 
         await uow.Documentos.AddAsync(documento, ct);
         arquivo.DocumentoId = documento.Id;
@@ -199,14 +199,14 @@ public sealed class UploadDocumentoCommandHandler(
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
-    // Só cadastra Destinatário/Produto quando o Cliente é quem EMITIU a nota — nesse caso o
-    // "destinatário" do XML é de fato um cliente do Cliente e os itens são produtos que ele
-    // vende (o caso de uso: nota emitida num emissor externo e importada aqui pra registro).
-    // Numa nota de COMPRA (Cliente é o destinatário do XML, caso mais comum de importação),
-    // o emitente é um fornecedor que este app não modela — cadastrar isso como
-    // Destinatario/Produto colocaria dado do lado errado, já que esses cadastros existem pra
-    // alimentar Pedidos de venda do próprio Cliente.
-    private async Task AutoRegistrarCadastrosAsync(Cliente cliente, ParsedDocumento parsed, CancellationToken ct)
+    // Só cadastra Destinatário/Produto/Pedido quando o Cliente é quem EMITIU a nota — nesse
+    // caso o "destinatário" do XML é de fato um cliente do Cliente e os itens são produtos que
+    // ele vende (o caso de uso: nota emitida num emissor externo e importada aqui pra
+    // registro). Numa nota de COMPRA (Cliente é o destinatário do XML, caso mais comum de
+    // importação), o emitente é um fornecedor que este app não modela — cadastrar isso como
+    // Destinatario/Produto/Pedido colocaria dado do lado errado, já que esses cadastros
+    // existem pra alimentar Pedidos de venda do próprio Cliente.
+    private async Task AutoRegistrarCadastrosAsync(Cliente cliente, ParsedDocumento parsed, Documento documento, CancellationToken ct)
     {
         var cnpjEmitenteLimpo = LimparDigitos(parsed.CnpjEmitente);
         var cnpjClienteLimpo = LimparDigitos(cliente.Cnpj);
@@ -214,13 +214,15 @@ public sealed class UploadDocumentoCommandHandler(
             return;
 
         var cnpjDestLimpo = LimparDigitos(parsed.CnpjDestinatario);
+        Destinatario? destinatario = null;
         if (!string.IsNullOrEmpty(cnpjDestLimpo))
         {
-            var destinatarioExiste = await uow.Destinatarios.ExistsAsync(
-                d => d.ClienteId == cliente.Id && d.CpfCnpj == cnpjDestLimpo, ct);
-            if (!destinatarioExiste)
+            destinatario = (await uow.Destinatarios.FindAsync(
+                d => d.ClienteId == cliente.Id && d.CpfCnpj == cnpjDestLimpo, ct)).FirstOrDefault();
+
+            if (destinatario is null)
             {
-                await uow.Destinatarios.AddAsync(new Destinatario
+                destinatario = new Destinatario
                 {
                     TenantId          = cliente.TenantId,
                     ClienteId         = cliente.Id,
@@ -235,35 +237,79 @@ public sealed class UploadDocumentoCommandHandler(
                     Estado            = parsed.DestinatarioUf,
                     Cep               = parsed.DestinatarioCep,
                     CodigoIbgeCidade  = parsed.DestinatarioCodIbge,
-                }, ct);
+                };
+                await uow.Destinatarios.AddAsync(destinatario, ct);
             }
         }
 
-        if (parsed.Itens is not { Count: > 0 }) return;
+        var produtosPorCodigo = (await uow.Produtos.FindAsync(p => p.ClienteId == cliente.Id, ct))
+            .Where(p => !string.IsNullOrWhiteSpace(p.Codigo))
+            .GroupBy(p => p.Codigo, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
-        var codigosExistentes = (await uow.Produtos.FindAsync(p => p.ClienteId == cliente.Id, ct))
-            .Select(p => p.Codigo).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var item in parsed.Itens)
+        var pedidoItens = new List<PedidoItem>();
+        if (parsed.Itens is { Count: > 0 })
         {
-            if (string.IsNullOrWhiteSpace(item.CodigoProduto) || codigosExistentes.Contains(item.CodigoProduto))
-                continue;
-
-            await uow.Produtos.AddAsync(new Produto
+            foreach (var item in parsed.Itens)
             {
-                TenantId      = cliente.TenantId,
-                ClienteId     = cliente.Id,
-                Codigo        = item.CodigoProduto,
-                Descricao     = item.Descricao,
-                Ncm           = item.Ncm,
-                Unidade       = item.Unidade,
-                PrecoUnitario = item.ValorUnitario,
-                Cfop          = item.Cfop,
-                AliquotaIcms  = item.AliquotaIcms,
-                AliquotaPis   = item.AliquotaPis,
-                AliquotaCofins = item.AliquotaCofins,
+                if (string.IsNullOrWhiteSpace(item.CodigoProduto))
+                    continue;
+
+                if (!produtosPorCodigo.TryGetValue(item.CodigoProduto, out var produto))
+                {
+                    produto = new Produto
+                    {
+                        TenantId      = cliente.TenantId,
+                        ClienteId     = cliente.Id,
+                        Codigo        = item.CodigoProduto,
+                        Descricao     = item.Descricao,
+                        Ncm           = item.Ncm,
+                        Unidade       = item.Unidade,
+                        PrecoUnitario = item.ValorUnitario,
+                        Cfop          = item.Cfop,
+                        AliquotaIcms  = item.AliquotaIcms,
+                        AliquotaPis   = item.AliquotaPis,
+                        AliquotaCofins = item.AliquotaCofins,
+                    };
+                    await uow.Produtos.AddAsync(produto, ct);
+                    produtosPorCodigo[item.CodigoProduto] = produto; // evita duplicar se a mesma nota repetir o código
+                }
+
+                pedidoItens.Add(new PedidoItem
+                {
+                    ProdutoId     = produto.Id,
+                    Descricao     = item.Descricao,
+                    Unidade       = item.Unidade,
+                    Quantidade    = item.Quantidade,
+                    PrecoUnitario = item.ValorUnitario,
+                    ValorTotal    = item.ValorTotal,
+                    Cfop          = item.Cfop,
+                    Ncm           = item.Ncm,
+                    AliquotaIcms  = item.AliquotaIcms,
+                    AliquotaPis   = item.AliquotaPis,
+                    AliquotaCofins = item.AliquotaCofins,
+                });
+            }
+        }
+
+        // Já nasce "Emitido" (não "Rascunho") — é o mesmo tratamento de VincularDocumentoCommandHandler:
+        // como esta é uma NF-e real já emitida externamente e importada de volta, não existe fase
+        // de rascunho. Sem destinatário identificado não tem pra quem criar o pedido, então pula.
+        // Também pula se o Documento já veio marcado como Duplicado, pra não gerar um segundo
+        // Pedido pra mesma nota reimportada.
+        if (destinatario is not null && documento.Status != Domain.Enums.StatusDocumentoEnum.Duplicado)
+        {
+            await uow.Pedidos.AddAsync(new Pedido
+            {
+                TenantId       = cliente.TenantId,
+                ClienteId      = cliente.Id,
+                DestinatarioId = destinatario.Id,
+                Status         = "Emitido",
+                ValorTotal     = documento.ValorTotal,
+                DataSaida      = documento.DataEmissao,
+                DocumentoId    = documento.Id,
+                Itens          = pedidoItens,
             }, ct);
-            codigosExistentes.Add(item.CodigoProduto); // evita duplicar se a mesma nota repetir o código
         }
     }
 
