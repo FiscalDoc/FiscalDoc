@@ -1,3 +1,5 @@
+import { DocumentoImpostosDto } from './documento.models';
+
 export interface PedidoItemDto {
   id: string;
   produtoId: string;
@@ -36,6 +38,7 @@ export interface PedidoDto {
   documentoId?: string;
   documentoNumero?: string;
   documentoChaveAcesso?: string;
+  documentoImpostos?: DocumentoImpostosDto;
 }
 
 export interface PedidoItemInput {

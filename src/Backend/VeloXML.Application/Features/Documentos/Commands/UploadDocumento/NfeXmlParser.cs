@@ -39,9 +39,11 @@ internal static class NfeXmlParser
         var ns   = NfeNs;
         var ide  = infNFe.Element(ns + "ide");
         var emit = infNFe.Element(ns + "emit");
+        var enderEmit = emit?.Element(ns + "enderEmit");
         var dest = infNFe.Element(ns + "dest");
         var enderDest = dest?.Element(ns + "enderDest");
         var tot  = infNFe.Element(ns + "total")?.Element(ns + "ICMSTot");
+        var infProt = doc.Descendants(ns + "infProt").FirstOrDefault();
 
         var chave = doc.Descendants(ns + "chNFe").FirstOrDefault()?.Value
                  ?? infNFe.Attribute("Id")?.Value?.Replace("NFe", "");
@@ -87,6 +89,20 @@ internal static class NfeXmlParser
             DestinatarioUf:          enderDest?.Element(ns + "UF")?.Value,
             DestinatarioCep:         enderDest?.Element(ns + "CEP")?.Value,
             DestinatarioCodIbge:     enderDest?.Element(ns + "cMun")?.Value,
+
+            Serie:                   ide?.Element(ns + "serie")?.Value,
+            NaturezaOperacao:        ide?.Element(ns + "natOp")?.Value,
+            ProtocoloAutorizacao:    infProt?.Element(ns + "nProt")?.Value,
+            DataAutorizacao:         ParseDateNullable(infProt?.Element(ns + "dhRecbto")?.Value),
+
+            EmitenteIe:              emit?.Element(ns + "IE")?.Value,
+            EmitenteLogradouro:      enderEmit?.Element(ns + "xLgr")?.Value,
+            EmitenteNumero:          enderEmit?.Element(ns + "nro")?.Value,
+            EmitenteComplemento:     enderEmit?.Element(ns + "xCpl")?.Value,
+            EmitenteBairro:          enderEmit?.Element(ns + "xBairro")?.Value,
+            EmitenteCidade:          enderEmit?.Element(ns + "xMun")?.Value,
+            EmitenteUf:              enderEmit?.Element(ns + "UF")?.Value,
+            EmitenteCep:             enderEmit?.Element(ns + "CEP")?.Value,
 
             // Totais já vêm agregados pelo emissor em <total><ICMSTot>, independente de quantos
             // CSTs/regras diferentes os itens tenham — não precisamos recalcular nada aqui.
@@ -155,6 +171,11 @@ internal static class NfeXmlParser
 
     private static decimal? ParseDecimalNullable(string? value) =>
         decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : null;
+
+    private static DateTime? ParseDateNullable(string? value) =>
+        DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+            ? dt.ToUniversalTime()
+            : null;
 }
 
 internal record ParsedDocumentoItem(
@@ -190,6 +211,20 @@ internal record ParsedDocumento(
     string? DestinatarioUf = null,
     string? DestinatarioCep = null,
     string? DestinatarioCodIbge = null,
+
+    string? Serie = null,
+    string? NaturezaOperacao = null,
+    string? ProtocoloAutorizacao = null,
+    DateTime? DataAutorizacao = null,
+
+    string? EmitenteIe = null,
+    string? EmitenteLogradouro = null,
+    string? EmitenteNumero = null,
+    string? EmitenteComplemento = null,
+    string? EmitenteBairro = null,
+    string? EmitenteCidade = null,
+    string? EmitenteUf = null,
+    string? EmitenteCep = null,
 
     decimal? ValorProdutos = null,
     decimal? ValorFrete = null,

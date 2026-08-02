@@ -25,6 +25,12 @@ export const routes: Routes = [
       import('./features/clientes/pedidos/pedido-imprimir/pedido-imprimir.component').then((m) => m.PedidoImprimirComponent),
   },
   {
+    path: 'imprimir/danfe/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/documentos/documento-danfe/documento-danfe.component').then((m) => m.DocumentoDanfeComponent),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>

@@ -26,6 +26,27 @@ export interface DocumentoImpostosDto {
   valorAproxTributos?: number;
 }
 
+export interface DanfeEnderecoDto {
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
+}
+
+export interface DanfeDadosDto {
+  serie?: string;
+  naturezaOperacao?: string;
+  protocoloAutorizacao?: string;
+  dataAutorizacao?: string;
+  inscricaoEstadualEmitente?: string;
+  enderecoEmitente?: DanfeEnderecoDto;
+  inscricaoEstadualDestinatario?: string;
+  enderecoDestinatario?: DanfeEnderecoDto;
+}
+
 export interface DocumentoDto {
   id: string;
   clienteId: string;
@@ -49,6 +70,7 @@ export interface DocumentoDto {
   createdAt: string;
   impostos: DocumentoImpostosDto;
   itens: DocumentoItemDto[];
+  danfe?: DanfeDadosDto;
 }
 
 export interface DocumentoDownloadResponse {

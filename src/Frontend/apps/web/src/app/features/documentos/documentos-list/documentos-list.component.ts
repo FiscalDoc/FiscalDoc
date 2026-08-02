@@ -233,6 +233,12 @@ interface UploadItem { file: File; tipo: string; }
                   <td><span class="badge" [ngClass]="statusClass(d.status)">{{ statusLabel(d.status) }}</span></td>
                   <td><span class="badge" [ngClass]="origemClass(d.origemImportacao)">{{ origemLabel(d.origemImportacao) }}</span></td>
                   <td class="actions" (click)="$event.stopPropagation()">
+                    <a class="icon-btn" title="Visualizar DANFE" [href]="danfeUrl(d.id)" target="_blank">
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                      </svg>
+                    </a>
                     <button class="icon-btn" title="Baixar arquivo" (click)="download(d)">
                       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -275,6 +281,13 @@ interface UploadItem { file: File; tipo: string; }
               <h3 class="modal-title font-heading">{{ tipoLabel(detail()!.tipo) }} {{ detail()!.numero || '—' }}</h3>
             </div>
             <div class="modal-header-actions">
+              <a class="btn-ghost btn-sm" [href]="danfeUrl(detail()!.id)" target="_blank">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                </svg>
+                Visualizar DANFE
+              </a>
               <button class="btn-primary btn-sm" (click)="download(detail()!)" [disabled]="downloading()">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -483,6 +496,13 @@ interface UploadItem { file: File; tipo: string; }
     }
     .btn-primary:hover { opacity: 0.88; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; color: var(--text2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: none;
+      transition: color 120ms, border-color 120ms; white-space: nowrap;
+    }
+    .btn-ghost:hover { color: var(--accent); border-color: var(--accent); }
     .btn-sm { padding: 0.375rem 0.75rem; font-size: 12.5px; }
     .bulk-bar { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text); }
     .btn-danger-sm { background: none; border: 1px solid rgba(255,77,109,.4); color: var(--red); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; margin-left: auto; }
@@ -833,6 +853,10 @@ export class DocumentosListComponent implements OnInit {
     return !!i && Object.values(i).some(v => v != null);
   }
   closeDetail(): void { this.detail.set(null); }
+
+  danfeUrl(id: string): string {
+    return `/imprimir/danfe/${id}`;
+  }
 
   download(doc: DocumentoDto): void {
     // Navega direto pro link (em vez de baixar bytes via JS e montar um blob: URL) — isso é

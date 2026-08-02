@@ -87,6 +87,15 @@ public sealed class UploadDocumentoCommandHandler(
                 documento.ItensJson = JsonSerializer.Serialize(parsed.Itens.Select(i => new DocumentoItemDto(
                     i.CodigoProduto, i.Descricao, i.Ncm, i.Cfop, i.Unidade, i.Quantidade, i.ValorUnitario, i.ValorTotal)));
 
+            documento.DanfeJson = JsonSerializer.Serialize(new DanfeDadosDto(
+                parsed.Serie, parsed.NaturezaOperacao, parsed.ProtocoloAutorizacao, parsed.DataAutorizacao,
+                parsed.EmitenteIe,
+                new DanfeEnderecoDto(parsed.EmitenteLogradouro, parsed.EmitenteNumero, parsed.EmitenteComplemento,
+                    parsed.EmitenteBairro, parsed.EmitenteCidade, parsed.EmitenteUf, parsed.EmitenteCep),
+                parsed.DestinatarioIe,
+                new DanfeEnderecoDto(parsed.DestinatarioLogradouro, parsed.DestinatarioNumero, parsed.DestinatarioComplemento,
+                    parsed.DestinatarioBairro, parsed.DestinatarioCidade, parsed.DestinatarioUf, parsed.DestinatarioCep)));
+
             if (!string.IsNullOrEmpty(parsed.ChaveAcesso))
             {
                 var existente = await uow.Documentos.GetByChaveAcessoAsync(parsed.ChaveAcesso, ct);

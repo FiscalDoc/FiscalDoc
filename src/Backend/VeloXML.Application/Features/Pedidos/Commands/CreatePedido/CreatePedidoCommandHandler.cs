@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
@@ -81,5 +82,9 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
             i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
         )).ToList(),
         p.NaturezaOperacao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
-        p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso);
+        p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso,
+        p.Documento is null ? null : new DocumentoImpostosDto(
+            p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,
+            p.Documento.ValorIcms, p.Documento.ValorIpi, p.Documento.ValorPis, p.Documento.ValorCofins,
+            p.Documento.ValorOutrasDespesas, p.Documento.ValorAproxTributos));
 }

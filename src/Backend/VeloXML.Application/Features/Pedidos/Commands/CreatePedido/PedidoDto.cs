@@ -1,3 +1,5 @@
+using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
+
 namespace VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
 
 public record PedidoItemDto(
@@ -34,5 +36,6 @@ public record PedidoDto(
     string? InformacoesComplementares,
     Guid? DocumentoId,
     string? DocumentoNumero,
-    string? DocumentoChaveAcesso
+    string? DocumentoChaveAcesso,
+    DocumentoImpostosDto? DocumentoImpostos
 );

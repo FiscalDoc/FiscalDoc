@@ -24,6 +24,27 @@ public record DocumentoImpostosDto(
     decimal? ValorAproxTributos
 );
 
+public record DanfeEnderecoDto(
+    string? Logradouro,
+    string? Numero,
+    string? Complemento,
+    string? Bairro,
+    string? Cidade,
+    string? Uf,
+    string? Cep
+);
+
+public record DanfeDadosDto(
+    string? Serie,
+    string? NaturezaOperacao,
+    string? ProtocoloAutorizacao,
+    DateTime? DataAutorizacao,
+    string? InscricaoEstadualEmitente,
+    DanfeEnderecoDto? EnderecoEmitente,
+    string? InscricaoEstadualDestinatario,
+    DanfeEnderecoDto? EnderecoDestinatario
+);
+
 public record DocumentoDto(
     Guid Id,
     Guid ClienteId,
@@ -46,5 +67,6 @@ public record DocumentoDto(
     int TotalAlertas,
     DateTime CreatedAt,
     DocumentoImpostosDto Impostos,
-    List<DocumentoItemDto> Itens
+    List<DocumentoItemDto> Itens,
+    DanfeDadosDto? Danfe
 );

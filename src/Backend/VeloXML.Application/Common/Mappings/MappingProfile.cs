@@ -55,7 +55,8 @@ public class MappingProfile : Profile
                     src.ValorProdutos, src.ValorFrete, src.ValorSeguro, src.ValorDesconto,
                     src.ValorIcms, src.ValorIpi, src.ValorPis, src.ValorCofins,
                     src.ValorOutrasDespesas, src.ValorAproxTributos),
-                DeserializarItens(src.ItensJson)))
+                DeserializarItens(src.ItensJson),
+                DeserializarDanfe(src.DanfeJson)))
             .ForMember(d => d.NomeCliente, opt => opt.Ignore())
             .ForMember(d => d.TipoNome, opt => opt.Ignore())
             .ForMember(d => d.StatusNome, opt => opt.Ignore())
@@ -63,7 +64,8 @@ public class MappingProfile : Profile
             .ForMember(d => d.TotalArquivos, opt => opt.Ignore())
             .ForMember(d => d.TotalAlertas, opt => opt.Ignore())
             .ForMember(d => d.Impostos, opt => opt.Ignore())
-            .ForMember(d => d.Itens, opt => opt.Ignore());
+            .ForMember(d => d.Itens, opt => opt.Ignore())
+            .ForMember(d => d.Danfe, opt => opt.Ignore());
 
         CreateMap<Alerta, AlertaDto>()
             .ConstructUsing((src, _) => new AlertaDto(
@@ -84,6 +86,19 @@ public class MappingProfile : Profile
         catch (JsonException)
         {
             return [];
+        }
+    }
+
+    private static DanfeDadosDto? DeserializarDanfe(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            return JsonSerializer.Deserialize<DanfeDadosDto>(json);
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 }

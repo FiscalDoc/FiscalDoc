@@ -37,6 +37,11 @@ public class Documento : BaseEntity, IAuditableEntity
     // normalizado em tabela própria porque nada além do modal de detalhe consulta isso.
     public string? ItensJson { get; set; }
 
+    // Dados complementares só usados pra montar a visualização de DANFE (série, natureza da
+    // operação, protocolo de autorização, endereço completo de emitente/destinatário) —
+    // agrupados num único JSON em vez de uma coluna por campo.
+    public string? DanfeJson { get; set; }
+
     public Cliente? Cliente { get; set; }
     public Tenant? Tenant { get; set; }
     public ICollection<Arquivo> Arquivos { get; set; } = [];

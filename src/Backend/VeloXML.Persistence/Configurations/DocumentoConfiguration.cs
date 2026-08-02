@@ -44,6 +44,7 @@ public class DocumentoConfiguration : IEntityTypeConfiguration<Documento>
         b.Property(e => e.ValorOutrasDespesas).HasColumnName("valor_outras_despesas").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorAproxTributos).HasColumnName("valor_aprox_tributos").HasColumnType("numeric(18,2)");
         b.Property(e => e.ItensJson).HasColumnName("itens_json").HasColumnType("text");
+        b.Property(e => e.DanfeJson).HasColumnName("danfe_json").HasColumnType("text");
 
         b.HasIndex(e => new { e.TenantId, e.ChaveAcesso }).HasFilter("chave_acesso IS NOT NULL AND deleted_at IS NULL");
         b.HasIndex(e => new { e.TenantId, e.ClienteId });
