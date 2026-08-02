@@ -2,6 +2,7 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using MediatR;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using VeloXML.API.Middleware;
@@ -95,6 +96,20 @@ try
     // Auto-migrate e seed
     await DatabaseInitializer.MigrateAsync(app.Services);
     await AppSeeder.SeedAsync(app.Services);
+
+    // Atrás do proxy do Coolify (Traefik), a conexão com o container é HTTP puro — sem isso,
+    // Request.Scheme/Request.Host ficam "http"/internos e qualquer URL absoluta gerada com
+    // Url.Action (ex.: o link assinado de download em DocumentosController) sai errada,
+    // apontando pra um endereço que o navegador não alcança. KnownNetworks/KnownProxies são
+    // limpos porque o proxy roda em outro container da mesma rede Docker, com IP dinâmico —
+    // não dá pra fixar um IP conhecido de antemão.
+    var forwardedHeadersOptions = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+    };
+    forwardedHeadersOptions.KnownIPNetworks.Clear();
+    forwardedHeadersOptions.KnownProxies.Clear();
+    app.UseForwardedHeaders(forwardedHeadersOptions);
 
     app.UseMiddleware<ExceptionMiddleware>();
 

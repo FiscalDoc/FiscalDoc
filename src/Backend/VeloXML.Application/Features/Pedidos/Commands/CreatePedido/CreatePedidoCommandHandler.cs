@@ -84,6 +84,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
         p.NaturezaOperacao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
         p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso,
         p.Documento is null ? null : new DocumentoImpostosDto(
+            p.Documento.ValorBaseCalculoIcms,
             p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,
             p.Documento.ValorIcms, p.Documento.ValorIpi, p.Documento.ValorPis, p.Documento.ValorCofins,
             p.Documento.ValorOutrasDespesas, p.Documento.ValorAproxTributos));

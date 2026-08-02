@@ -22,6 +22,7 @@ public class Documento : BaseEntity, IAuditableEntity
     public string? UpdatedBy { get; set; }
 
     // Totais de impostos extraídos de <total><ICMSTot> do XML — só preenchido pra NFe.
+    public decimal? ValorBaseCalculoIcms { get; set; }
     public decimal? ValorProdutos { get; set; }
     public decimal? ValorFrete { get; set; }
     public decimal? ValorSeguro { get; set; }

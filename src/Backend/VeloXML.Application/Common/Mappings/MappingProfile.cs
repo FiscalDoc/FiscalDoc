@@ -52,6 +52,7 @@ public class MappingProfile : Profile
                 src.DataEmissao, src.ValorTotal,
                 src.Arquivos.Count, src.Alertas.Count, src.CreatedAt,
                 new DocumentoImpostosDto(
+                    src.ValorBaseCalculoIcms,
                     src.ValorProdutos, src.ValorFrete, src.ValorSeguro, src.ValorDesconto,
                     src.ValorIcms, src.ValorIpi, src.ValorPis, src.ValorCofins,
                     src.ValorOutrasDespesas, src.ValorAproxTributos),

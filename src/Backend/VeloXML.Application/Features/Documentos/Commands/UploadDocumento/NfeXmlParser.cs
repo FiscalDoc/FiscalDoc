@@ -106,6 +106,7 @@ internal static class NfeXmlParser
 
             // Totais já vêm agregados pelo emissor em <total><ICMSTot>, independente de quantos
             // CSTs/regras diferentes os itens tenham — não precisamos recalcular nada aqui.
+            ValorBaseCalculoIcms: ParseDecimalNullable(tot?.Element(ns + "vBC")?.Value),
             ValorProdutos:       ParseDecimalNullable(tot?.Element(ns + "vProd")?.Value),
             ValorFrete:          ParseDecimalNullable(tot?.Element(ns + "vFrete")?.Value),
             ValorSeguro:         ParseDecimalNullable(tot?.Element(ns + "vSeg")?.Value),
@@ -226,6 +227,7 @@ internal record ParsedDocumento(
     string? EmitenteUf = null,
     string? EmitenteCep = null,
 
+    decimal? ValorBaseCalculoIcms = null,
     decimal? ValorProdutos = null,
     decimal? ValorFrete = null,
     decimal? ValorSeguro = null,

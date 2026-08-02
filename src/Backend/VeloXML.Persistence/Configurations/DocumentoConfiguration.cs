@@ -33,6 +33,7 @@ public class DocumentoConfiguration : IEntityTypeConfiguration<Documento>
         b.Property(e => e.CreatedBy).HasColumnName("created_by").HasMaxLength(256);
         b.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(256);
 
+        b.Property(e => e.ValorBaseCalculoIcms).HasColumnName("valor_base_calculo_icms").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorProdutos).HasColumnName("valor_produtos").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorFrete).HasColumnName("valor_frete").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorSeguro).HasColumnName("valor_seguro").HasColumnType("numeric(18,2)");

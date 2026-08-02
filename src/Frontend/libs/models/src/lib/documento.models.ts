@@ -14,6 +14,7 @@ export interface DocumentoItemDto {
 }
 
 export interface DocumentoImpostosDto {
+  valorBaseCalculoIcms?: number;
   valorProdutos?: number;
   valorFrete?: number;
   valorSeguro?: number;

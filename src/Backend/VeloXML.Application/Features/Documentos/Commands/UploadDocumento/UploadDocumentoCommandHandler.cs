@@ -73,6 +73,7 @@ public sealed class UploadDocumentoCommandHandler(
             documento.DataEmissao      = parsed.DataEmissao;
             documento.ValorTotal       = parsed.ValorTotal;
 
+            documento.ValorBaseCalculoIcms = parsed.ValorBaseCalculoIcms;
             documento.ValorProdutos       = parsed.ValorProdutos;
             documento.ValorFrete          = parsed.ValorFrete;
             documento.ValorSeguro         = parsed.ValorSeguro;

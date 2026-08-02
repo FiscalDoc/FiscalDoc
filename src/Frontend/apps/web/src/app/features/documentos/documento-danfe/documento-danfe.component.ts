@@ -15,166 +15,291 @@ import { DocumentoDto } from '@veloxml/models';
       <div class="no-print loading-state">Não foi possível carregar o documento.</div>
     } @else {
       <div class="toolbar no-print">
-        <button class="btn-ghost" (click)="fechar()">Fechar</button>
-        <button class="btn-primary" (click)="print()">Imprimir novamente</button>
+        <span class="toolbar-note">Representação simplificada do DANFE — não substitui o documento oficial.</span>
+        <div class="toolbar-actions">
+          <button class="btn-ghost" (click)="fechar()">Fechar</button>
+          <button class="btn-primary" (click)="print()">Imprimir novamente</button>
+        </div>
       </div>
 
       <div class="sheet">
-        <div class="print-brand">
-          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <rect x="6" y="4" width="20" height="24" rx="3" fill="#1a1e28" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
-            <path d="M10 9h12M10 13h12M10 17h8" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
-            <rect x="4" y="2" width="12" height="12" rx="3" fill="#0d0f14" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
-            <path d="M10 5v6M7 8h6" stroke="#00c98d" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <span class="print-brand-name"><strong>Fiscal</strong>Doc</span>
-        </div>
 
-        <header class="sheet-header">
-          <div>
-            <div class="doc-title">DANFE</div>
-            <div class="sub">Documento Auxiliar da Nota Fiscal Eletrônica</div>
-            <div class="sub sub-small">Representação simplificada gerada a partir do XML importado — não substitui a DANFE oficial (sem código de barras/QR Code).</div>
+        <!-- Canhoto do emitente -->
+        <section class="dx-canhoto">
+          <div class="dx-canhoto-texto">
+            RECEBEMOS DE <strong>{{ doc()!.nomeEmitente || '—' }}</strong> OS PRODUTOS E/OU NOTAS FISCAIS INDICADOS
+            E CONSTANTES NA NOTA FISCAL INDICADA AO LADO
           </div>
-          <div class="doc-info">
-            <div class="doc-num">Nº {{ doc()!.numero }}{{ doc()!.danfe?.serie ? ' — Série ' + doc()!.danfe!.serie : '' }}</div>
-            <div class="sub">Emissão: {{ doc()!.dataEmissao | date:'dd/MM/yyyy HH:mm' }}</div>
-            @if (doc()!.danfe?.protocoloAutorizacao) {
-              <div class="sub">Protocolo: {{ doc()!.danfe!.protocoloAutorizacao }}</div>
-            }
+          <div class="dx-canhoto-grid">
+            <div class="dx-box">
+              <span class="dx-label">Data de Recebimento</span>
+              <span class="dx-value">&nbsp;</span>
+            </div>
+            <div class="dx-box dx-box-grow">
+              <span class="dx-label">Identificação e Assinatura do Recebedor</span>
+              <span class="dx-value">&nbsp;</span>
+            </div>
           </div>
-        </header>
-
-        @if (doc()!.chaveAcesso) {
-          <section class="block chave-block">
-            <span class="info-label">Chave de Acesso</span>
-            <div class="chave-valor mono">{{ chaveFormatada() }}</div>
-          </section>
-        }
-
-        <div class="party-grid">
-          <section class="block party-box">
-            <h2>Emitente</h2>
-            <div class="party-name">{{ doc()!.nomeEmitente || '—' }}</div>
-            <div class="sub">CNPJ: {{ formatCnpj(doc()!.cnpjEmitente) }}</div>
-            @if (doc()!.danfe?.inscricaoEstadualEmitente) { <div class="sub">IE: {{ doc()!.danfe!.inscricaoEstadualEmitente }}</div> }
-            @if (enderecoTexto(doc()!.danfe?.enderecoEmitente); as end) { <div class="sub">{{ end }}</div> }
-          </section>
-          <section class="block party-box">
-            <h2>Destinatário</h2>
-            <div class="party-name">{{ doc()!.nomeDestinatario || '—' }}</div>
-            <div class="sub">CNPJ/CPF: {{ formatCnpj(doc()!.cnpjDestinatario) }}</div>
-            @if (doc()!.danfe?.inscricaoEstadualDestinatario) { <div class="sub">IE: {{ doc()!.danfe!.inscricaoEstadualDestinatario }}</div> }
-            @if (enderecoTexto(doc()!.danfe?.enderecoDestinatario); as end) { <div class="sub">{{ end }}</div> }
-          </section>
-        </div>
-
-        @if (doc()!.danfe?.naturezaOperacao) {
-          <section class="block">
-            <span class="info-label">Natureza da Operação</span>
-            <div class="sub">{{ doc()!.danfe!.naturezaOperacao }}</div>
-          </section>
-        }
-
-        <section class="block">
-          <h2>Itens</h2>
-          @if (doc()!.itens.length === 0) {
-            <div class="sub">Nenhum item detalhado disponível pra este documento.</div>
-          } @else {
-            <table class="table">
-              <thead>
-                <tr><th>Código</th><th>Descrição</th><th>NCM</th><th>CFOP</th><th>Qtd</th><th>Un.</th><th>Vlr. Unit.</th><th>Total</th></tr>
-              </thead>
-              <tbody>
-                @for (i of doc()!.itens; track $index) {
-                  <tr>
-                    <td class="mono">{{ i.codigoProduto || '—' }}</td>
-                    <td>{{ i.descricao }}</td>
-                    <td class="mono">{{ i.ncm || '—' }}</td>
-                    <td class="mono">{{ i.cfop || '—' }}</td>
-                    <td class="num">{{ i.quantidade }}</td>
-                    <td>{{ i.unidade }}</td>
-                    <td class="num">{{ i.valorUnitario | currency:'BRL':'symbol':'1.2-2' }}</td>
-                    <td class="num">{{ i.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          }
+          <div class="dx-canhoto-nf">
+            NF-e Nº {{ doc()!.numero }}{{ doc()!.danfe?.serie ? ' SÉRIE ' + doc()!.danfe!.serie : '' }}
+          </div>
         </section>
 
-        <section class="block">
-          <h2>Totais</h2>
-          <div class="info-grid">
-            @if (doc()!.impostos.valorProdutos != null) { <div><span class="info-label">Produtos</span>{{ doc()!.impostos.valorProdutos | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorFrete != null) { <div><span class="info-label">Frete</span>{{ doc()!.impostos.valorFrete | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorSeguro != null) { <div><span class="info-label">Seguro</span>{{ doc()!.impostos.valorSeguro | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorDesconto != null) { <div><span class="info-label">Desconto</span>{{ doc()!.impostos.valorDesconto | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorIcms != null) { <div><span class="info-label">ICMS</span>{{ doc()!.impostos.valorIcms | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorIpi != null) { <div><span class="info-label">IPI</span>{{ doc()!.impostos.valorIpi | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorPis != null) { <div><span class="info-label">PIS</span>{{ doc()!.impostos.valorPis | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorCofins != null) { <div><span class="info-label">COFINS</span>{{ doc()!.impostos.valorCofins | currency:'BRL':'symbol':'1.2-2' }}</div> }
-            @if (doc()!.impostos.valorAproxTributos != null) { <div><span class="info-label">Valor Aprox. Tributos*</span>{{ doc()!.impostos.valorAproxTributos | currency:'BRL':'symbol':'1.2-2' }}</div> }
+        <div class="dx-corte">
+          <span></span> CORTE NA LINHA PONTILHADA <span></span>
+        </div>
+
+        <!-- Cabeçalho: emitente / DANFE / chave de acesso -->
+        <section class="dx-row dx-header-row">
+          <div class="dx-box dx-emit-box">
+            <div class="dx-emit-nome">{{ doc()!.nomeEmitente || '—' }}</div>
+            @if (enderecoTexto(doc()!.danfe?.enderecoEmitente); as end) { <div class="dx-emit-end">{{ end }}</div> }
+            <div class="dx-emit-end">CNPJ: {{ formatCnpj(doc()!.cnpjEmitente) }}
+              @if (doc()!.danfe?.inscricaoEstadualEmitente) { &nbsp;·&nbsp;IE: {{ doc()!.danfe!.inscricaoEstadualEmitente }} }
+            </div>
           </div>
-          <div class="total-row">
-            <span class="total-label">Valor Total da Nota</span>
-            <span class="total-value">{{ doc()!.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</span>
+
+          <div class="dx-box dx-danfe-box">
+            <div class="dx-danfe-title">DANFE</div>
+            <div class="dx-danfe-sub">Documento Auxiliar da<br>Nota Fiscal Eletrônica</div>
+            <div class="dx-entrada-saida">
+              <span>0 — Entrada</span>
+              <span class="dx-checkbox">1</span>
+              <span>Saída</span>
+            </div>
+            <div class="dx-danfe-num">Nº {{ doc()!.numero }}</div>
+            <div class="dx-danfe-serie">Série {{ doc()!.danfe?.serie || '—' }}</div>
           </div>
-          @if (doc()!.impostos.valorAproxTributos != null) {
-            <p class="sub sub-small">* Conforme Lei 12.741/2012 (Lei da Transparência) — valor aproximado informado pelo emissor da nota.</p>
-          }
+
+          <div class="dx-box dx-chave-box">
+            <div class="dx-barcode-placeholder">Código de barras não disponível<br>nesta representação simplificada</div>
+            <span class="dx-label">Chave de Acesso</span>
+            <span class="dx-value mono dx-chave-valor">{{ chaveFormatada() }}</span>
+            <div class="dx-chave-nota">Consulte a autenticidade no portal da NF-e com a chave acima.</div>
+          </div>
         </section>
 
-        <footer class="sheet-footer">Documento gerado pelo FiscalDoc a partir do XML importado — não é um documento fiscal válido, apenas uma representação visual pra conferência.</footer>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow">
+            <span class="dx-label">Natureza da Operação</span>
+            <span class="dx-value">{{ doc()!.danfe?.naturezaOperacao || '—' }}</span>
+          </div>
+          <div class="dx-box dx-box-grow">
+            <span class="dx-label">Protocolo de Autorização de Uso</span>
+            <span class="dx-value">
+              {{ doc()!.danfe?.protocoloAutorizacao || '—' }}
+              @if (doc()!.danfe?.dataAutorizacao) { — {{ doc()!.danfe!.dataAutorizacao | date:'dd/MM/yyyy HH:mm:ss' }} }
+            </span>
+          </div>
+        </section>
+
+        <!-- Destinatário -->
+        <div class="dx-section-title">Destinatário / Remetente</div>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow-3">
+            <span class="dx-label">Nome / Razão Social</span>
+            <span class="dx-value">{{ doc()!.nomeDestinatario || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">CNPJ / CPF</span>
+            <span class="dx-value mono">{{ formatCnpj(doc()!.cnpjDestinatario) }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Data de Emissão</span>
+            <span class="dx-value">{{ doc()!.dataEmissao | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </section>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow-3">
+            <span class="dx-label">Endereço</span>
+            <span class="dx-value">{{ enderecoLogradouro(doc()!.danfe?.enderecoDestinatario) || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Bairro / Distrito</span>
+            <span class="dx-value">{{ doc()!.danfe?.enderecoDestinatario?.bairro || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">CEP</span>
+            <span class="dx-value">{{ doc()!.danfe?.enderecoDestinatario?.cep || '—' }}</span>
+          </div>
+        </section>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow-3">
+            <span class="dx-label">Município</span>
+            <span class="dx-value">{{ doc()!.danfe?.enderecoDestinatario?.cidade || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">UF</span>
+            <span class="dx-value">{{ doc()!.danfe?.enderecoDestinatario?.uf || '—' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Inscrição Estadual</span>
+            <span class="dx-value">{{ doc()!.danfe?.inscricaoEstadualDestinatario || '—' }}</span>
+          </div>
+        </section>
+
+        <!-- Cálculo do imposto -->
+        <div class="dx-section-title">Cálculo do Imposto</div>
+        <section class="dx-row">
+          <div class="dx-box">
+            <span class="dx-label">Base de Cálc. do ICMS</span>
+            <span class="dx-value">{{ doc()!.impostos.valorBaseCalculoIcms | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Valor do ICMS</span>
+            <span class="dx-value">{{ doc()!.impostos.valorIcms | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Valor do IPI</span>
+            <span class="dx-value">{{ doc()!.impostos.valorIpi | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Valor Total dos Produtos</span>
+            <span class="dx-value">{{ doc()!.impostos.valorProdutos | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+        </section>
+        <section class="dx-row">
+          <div class="dx-box">
+            <span class="dx-label">Valor do Frete</span>
+            <span class="dx-value">{{ doc()!.impostos.valorFrete | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Valor do Seguro</span>
+            <span class="dx-value">{{ doc()!.impostos.valorSeguro | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Desconto</span>
+            <span class="dx-value">{{ doc()!.impostos.valorDesconto | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Outras Desp. Acessórias</span>
+            <span class="dx-value">{{ doc()!.impostos.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+          <div class="dx-box dx-box-destaque">
+            <span class="dx-label">Valor Total da Nota</span>
+            <span class="dx-value dx-value-destaque">{{ doc()!.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</span>
+          </div>
+        </section>
+        @if (doc()!.impostos.valorAproxTributos != null) {
+          <p class="dx-tributos-nota">Valor aprox. dos tributos: {{ doc()!.impostos.valorAproxTributos | currency:'BRL':'symbol':'1.2-2' }} (Lei 12.741/2012).</p>
+        }
+
+        <!-- Dados do produto/serviço -->
+        <div class="dx-section-title">Dados do Produto / Serviço</div>
+        @if (doc()!.itens.length === 0) {
+          <div class="dx-box"><span class="dx-value">Nenhum item detalhado disponível para este documento.</span></div>
+        } @else {
+          <table class="dx-table">
+            <thead>
+              <tr>
+                <th>Código</th><th>Descrição</th><th>NCM/SH</th><th>CFOP</th><th>Unid.</th>
+                <th>Quant.</th><th>Valor Unit.</th><th>Valor Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (i of doc()!.itens; track $index) {
+                <tr>
+                  <td class="mono">{{ i.codigoProduto || '—' }}</td>
+                  <td>{{ i.descricao }}</td>
+                  <td class="mono">{{ i.ncm || '—' }}</td>
+                  <td class="mono">{{ i.cfop || '—' }}</td>
+                  <td>{{ i.unidade }}</td>
+                  <td class="num">{{ i.quantidade }}</td>
+                  <td class="num">{{ i.valorUnitario | currency:'BRL':'symbol':'1.2-2' }}</td>
+                  <td class="num">{{ i.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        <!-- Dados adicionais -->
+        <div class="dx-section-title">Dados Adicionais</div>
+        <section class="dx-row">
+          <div class="dx-box dx-box-grow-3">
+            <span class="dx-label">Informações Complementares</span>
+            <span class="dx-value dx-value-small">
+              Protocolo de autorização: {{ doc()!.danfe?.protocoloAutorizacao || '—' }}.
+              Documento gerado automaticamente a partir do XML importado no FiscalDoc.
+            </span>
+          </div>
+          <div class="dx-box">
+            <span class="dx-label">Reservado ao Fisco</span>
+            <span class="dx-value">&nbsp;</span>
+          </div>
+        </section>
+
+        <footer class="sheet-footer">
+          Representação simplificada gerada pelo FiscalDoc a partir do XML importado — sem valor fiscal, apenas para conferência visual.
+        </footer>
       </div>
     }
   `,
   styles: [`
-    :host { display: block; background: #f4f5f7; min-height: 100vh; color: #111; font-family: 'DM Sans', system-ui, sans-serif; }
+    :host { display: block; background: #dfe1e6; min-height: 100vh; color: #111; font-family: 'DM Sans', system-ui, sans-serif; }
     .loading-state { padding: 3rem; text-align: center; color: #666; }
-    .toolbar { display: flex; justify-content: flex-end; gap: .75rem; padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e2e2e2; position: sticky; top: 0; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e2e2e2; position: sticky; top: 0; }
+    .toolbar-note { font-size: 12px; color: #888; }
+    .toolbar-actions { display: flex; gap: .75rem; }
     .btn-primary { background: #0d0f14; color: #fff; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-ghost { background: none; border: 1px solid #ccc; color: #333; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
 
-    .sheet { max-width: 820px; margin: 1.5rem auto; background: #fff; padding: 2.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-    .print-brand { display: flex; align-items: center; gap: 6px; margin-bottom: 1rem; }
-    .print-brand-name { font-size: 13px; color: #555; letter-spacing: .01em; }
-    .print-brand-name strong { color: #111; }
-    .sheet-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 1rem; margin-bottom: 1.5rem; gap: 1.5rem; }
-    .sub { font-size: 12.5px; color: #555; margin-top: 2px; }
-    .sub-small { font-size: 10.5px; color: #888; }
-    .doc-info { text-align: right; flex-shrink: 0; }
-    .doc-title { font-size: 1.3rem; font-weight: 800; letter-spacing: .04em; }
-    .doc-num { font-size: 1.05rem; font-weight: 700; }
+    .sheet { max-width: 900px; margin: 1.5rem auto; background: #fff; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.12); font-size: 11px; }
 
-    .chave-block { text-align: center; background: #f7f7f8; border: 1px solid #ddd; border-radius: 6px; padding: .75rem 1rem; }
-    .chave-valor { font-size: 13px; letter-spacing: .06em; margin-top: 4px; }
+    /* Canhoto */
+    .dx-canhoto-texto { font-size: 9.5px; text-transform: uppercase; letter-spacing: .01em; margin-bottom: 4px; }
+    .dx-canhoto-grid { display: flex; gap: 0; }
+    .dx-canhoto-nf { text-align: right; font-size: 11px; font-weight: 700; margin-top: 4px; }
+    .dx-corte { display: flex; align-items: center; gap: .5rem; justify-content: center; font-size: 9px; color: #888; letter-spacing: .05em; margin: .6rem 0; }
+    .dx-corte span { flex: 1; border-top: 1px dashed #999; }
 
-    .party-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .party-box { background: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: .875rem 1rem; margin-bottom: 0; }
-    .party-name { font-size: 13px; font-weight: 700; margin-top: 2px; }
+    /* Boxes: bordered cell, label above value — mimics classic DANFE grid look */
+    .dx-row { display: flex; gap: 0; margin-top: -1px; }
+    .dx-box { flex: 1; border: 1px solid #333; padding: 3px 6px 4px; display: flex; flex-direction: column; margin-left: -1px; min-width: 0; }
+    .dx-box:first-child { margin-left: 0; }
+    .dx-box-grow { flex: 2; }
+    .dx-box-grow-3 { flex: 3; }
+    .dx-label { font-size: 7.5px; text-transform: uppercase; letter-spacing: .03em; color: #555; }
+    .dx-value { font-size: 11px; margin-top: 1px; word-break: break-word; }
+    .dx-value-small { font-size: 9.5px; color: #333; }
+    .dx-value-destaque { font-weight: 800; font-size: 12.5px; }
+    .dx-box-destaque { background: #f5f5f5; }
+    .mono { font-family: 'Courier New', monospace; }
 
-    .block { margin-bottom: 1.5rem; }
-    .block h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin: 0 0 .5rem; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-    .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem 1.5rem; font-size: 13px; }
-    .info-label { display: block; font-size: 10.5px; text-transform: uppercase; color: #888; letter-spacing: .04em; }
+    /* Header row: emitente / DANFE / chave */
+    .dx-header-row { align-items: stretch; }
+    .dx-emit-box { flex: 2.4; justify-content: center; }
+    .dx-emit-nome { font-size: 13px; font-weight: 800; }
+    .dx-emit-end { font-size: 9.5px; color: #444; margin-top: 2px; }
 
-    .table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .table th { text-align: left; padding: 6px 8px; border-bottom: 1px solid #333; font-size: 10px; text-transform: uppercase; color: #555; }
-    .table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
-    .table .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .mono { font-family: monospace; }
+    .dx-danfe-box { flex: 1.2; align-items: center; text-align: center; justify-content: center; }
+    .dx-danfe-title { font-size: 20px; font-weight: 900; letter-spacing: .08em; }
+    .dx-danfe-sub { font-size: 8px; color: #444; margin: 2px 0 4px; line-height: 1.25; }
+    .dx-entrada-saida { display: flex; align-items: center; gap: 4px; font-size: 8px; color: #333; margin-bottom: 4px; }
+    .dx-checkbox { border: 1px solid #333; padding: 0 4px; font-weight: 700; }
+    .dx-danfe-num { font-size: 11px; font-weight: 700; }
+    .dx-danfe-serie { font-size: 9.5px; color: #444; }
 
-    .total-row { display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #111; margin-top: .75rem; padding-top: .5rem; }
-    .total-label { font-weight: 700; font-size: 13px; }
-    .total-value { font-weight: 800; font-size: 1.1rem; }
+    .dx-chave-box { flex: 2; align-items: center; text-align: center; justify-content: center; gap: 2px; }
+    .dx-barcode-placeholder { font-size: 7.5px; color: #999; border: 1px dashed #ccc; padding: 4px 8px; margin-bottom: 4px; width: 100%; }
+    .dx-chave-valor { letter-spacing: .05em; font-size: 10.5px; }
+    .dx-chave-nota { font-size: 7.5px; color: #777; margin-top: 3px; }
 
-    .sheet-footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ddd; text-align: center; font-size: 10.5px; color: #999; }
+    .dx-section-title { background: #1a1e28; color: #fff; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 8px; margin-top: 8px; }
+
+    .dx-table { width: 100%; border-collapse: collapse; font-size: 9.5px; margin-top: -1px; }
+    .dx-table th { text-align: left; padding: 4px 6px; background: #1a1e28; color: #fff; font-size: 8.5px; text-transform: uppercase; font-weight: 600; }
+    .dx-table td { padding: 3px 6px; border: 1px solid #ccc; }
+    .dx-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .dx-tributos-nota { font-size: 8.5px; color: #888; margin: 3px 0 0; }
+
+    .sheet-footer { margin-top: 1.25rem; padding-top: .75rem; border-top: 1px solid #ddd; text-align: center; font-size: 9px; color: #999; }
 
     @media print {
       .no-print { display: none !important; }
       :host { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .sheet { box-shadow: none; margin: 0; max-width: none; }
+      .sheet { box-shadow: none; margin: 0; max-width: none; padding: 0; }
     }
   `],
 })
@@ -199,7 +324,14 @@ export class DocumentoDanfeComponent implements OnInit {
 
   chaveFormatada(): string {
     const chave = this.doc()?.chaveAcesso ?? '';
+    if (!chave) return '—';
     return chave.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+
+  enderecoLogradouro(end?: { logradouro?: string; numero?: string; complemento?: string }): string | null {
+    if (!end) return null;
+    const partes = [[end.logradouro, end.numero].filter(Boolean).join(', '), end.complemento].filter(Boolean);
+    return partes.length > 0 ? partes.join(' — ') : null;
   }
 
   enderecoTexto(end?: { logradouro?: string; numero?: string; complemento?: string; bairro?: string; cidade?: string; uf?: string; cep?: string }): string | null {

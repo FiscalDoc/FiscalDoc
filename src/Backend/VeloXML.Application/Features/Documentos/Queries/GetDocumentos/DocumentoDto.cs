@@ -12,6 +12,7 @@ public record DocumentoItemDto(
 );
 
 public record DocumentoImpostosDto(
+    decimal? ValorBaseCalculoIcms,
     decimal? ValorProdutos,
     decimal? ValorFrete,
     decimal? ValorSeguro,
