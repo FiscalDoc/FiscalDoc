@@ -29,13 +29,14 @@ public sealed class DocumentosController(
         [FromQuery] Guid? clienteId,
         [FromQuery] TipoDocumentoEnum? tipo,
         [FromQuery] StatusDocumentoEnum? status,
+        [FromQuery] OrigemImportacaoEnum? origem,
         [FromQuery] DateTime? de,
         [FromQuery] DateTime? ate,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetDocumentosQuery(termo, clienteId, tipo, status, de, ate, page, pageSize), ct);
+        var result = await mediator.Send(new GetDocumentosQuery(termo, clienteId, tipo, status, origem, de, ate, page, pageSize), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 

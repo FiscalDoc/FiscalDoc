@@ -74,7 +74,13 @@ interface UploadItem { file: File; tipo: string; }
           <option value="Alerta">Alerta</option>
           <option value="Duplicado">Duplicado</option>
         </select>
-        @if (filters.tipo || filters.status || filters.clienteId || termo()) {
+        <select class="filter-select" [(ngModel)]="filters.origem" (ngModelChange)="onFilter()">
+          <option value="">Todas as origens</option>
+          <option value="Manual">Manual</option>
+          <option value="ImportacaoEmail">E-mail</option>
+          <option value="ApiIngest">API</option>
+        </select>
+        @if (filters.tipo || filters.status || filters.origem || filters.clienteId || termo()) {
           <button class="btn-ghost-sm" (click)="clearFilters()">Limpar</button>
         }
       </div>
@@ -641,7 +647,7 @@ export class DocumentosListComponent implements OnInit {
   readonly downloading      = signal(false);
   readonly showStatusLegend = signal(false);
 
-  filters = { tipo: '', status: '', clienteId: '' };
+  filters = { tipo: '', status: '', origem: '', clienteId: '' };
 
   readonly showUploadForm = signal(false);
   readonly uploadItems    = signal<UploadItem[]>([]);
@@ -677,6 +683,7 @@ export class DocumentosListComponent implements OnInit {
       termo:     this.termo()             || undefined,
       tipo:      this.filters.tipo        || undefined,
       status:    this.filters.status      || undefined,
+      origem:    this.filters.origem      || undefined,
       clienteId: this.filters.clienteId   || undefined,
     }).subscribe({
       next: (r) => {
@@ -699,7 +706,7 @@ export class DocumentosListComponent implements OnInit {
 
   clearFilters(): void {
     this.termo.set('');
-    this.filters = { tipo: '', status: '', clienteId: '' };
+    this.filters = { tipo: '', status: '', origem: '', clienteId: '' };
     this.page.set(1);
     this.load();
   }

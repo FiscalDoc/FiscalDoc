@@ -14,7 +14,7 @@ public sealed class GetDocumentosQueryHandler(IUnitOfWork uow, IMapper mapper, I
         var clienteId = currentUser.Role == "Cliente" ? currentUser.ClienteId : request.ClienteId;
 
         var paged = await uow.Documentos.SearchAsync(
-            request.Termo, clienteId, request.Tipo, request.Status,
+            request.Termo, clienteId, request.Tipo, request.Status, request.Origem,
             request.De, request.Ate, request.Page, request.PageSize, ct);
 
         var items = paged.Items.Select(mapper.Map<DocumentoDto>).ToList();

@@ -9,7 +9,7 @@ namespace VeloXML.Persistence.Repositories;
 
 public sealed class DocumentoRepository(AppDbContext context) : BaseRepository<Documento>(context), IDocumentoRepository
 {
-    public async Task<PagedResult<Documento>> SearchAsync(string? termo, Guid? clienteId, TipoDocumentoEnum? tipo, StatusDocumentoEnum? status, DateTime? de, DateTime? ate, int page, int pageSize, CancellationToken ct = default)
+    public async Task<PagedResult<Documento>> SearchAsync(string? termo, Guid? clienteId, TipoDocumentoEnum? tipo, StatusDocumentoEnum? status, OrigemImportacaoEnum? origem, DateTime? de, DateTime? ate, int page, int pageSize, CancellationToken ct = default)
     {
         var query = DbSet.Include(d => d.Cliente).Include(d => d.Arquivos).Include(d => d.Alertas).AsQueryable();
 
@@ -30,6 +30,7 @@ public sealed class DocumentoRepository(AppDbContext context) : BaseRepository<D
         if (clienteId.HasValue) query = query.Where(d => d.ClienteId == clienteId.Value);
         if (tipo.HasValue) query = query.Where(d => d.Tipo == tipo.Value);
         if (status.HasValue) query = query.Where(d => d.Status == status.Value);
+        if (origem.HasValue) query = query.Where(d => d.OrigemImportacao == origem.Value);
         if (de.HasValue) query = query.Where(d => d.DataEmissao >= de.Value);
         if (ate.HasValue) query = query.Where(d => d.DataEmissao <= ate.Value);
 

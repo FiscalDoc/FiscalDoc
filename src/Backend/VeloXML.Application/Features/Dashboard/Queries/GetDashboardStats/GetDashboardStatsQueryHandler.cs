@@ -17,11 +17,11 @@ public sealed class GetDashboardStatsQueryHandler(IUnitOfWork uow)
 
         // Período para KPIs (ultimos N dias)
         var de = DateTime.UtcNow.AddDays(-request.UltimosDias);
-        var paged = await uow.Documentos.SearchAsync(null, request.ClienteId, null, null, de, null, 1, 5000, ct);
+        var paged = await uow.Documentos.SearchAsync(null, request.ClienteId, null, null, null, de, null, 1, 5000, ct);
         var docs  = paged.Items;
 
         // Todos docs dos últimos 12 meses (para o gráfico)
-        var pagedMensal = await uow.Documentos.SearchAsync(null, request.ClienteId, null, null, inicioDoze, null, 1, 10000, ct);
+        var pagedMensal = await uow.Documentos.SearchAsync(null, request.ClienteId, null, null, null, inicioDoze, null, 1, 10000, ct);
         var docsMensal  = pagedMensal.Items;
 
         var hoje = DateTime.UtcNow.Date;

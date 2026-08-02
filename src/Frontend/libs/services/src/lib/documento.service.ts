@@ -8,7 +8,7 @@ import { PagedResult, PaginationQuery } from '@veloxml/models';
 export class DocumentoService {
   private readonly _api = inject(ApiService);
 
-  getAll(q?: PaginationQuery & { clienteId?: string; tipo?: string; status?: string; de?: string; ate?: string; termo?: string }): Observable<PagedResult<DocumentoDto>> {
+  getAll(q?: PaginationQuery & { clienteId?: string; tipo?: string; status?: string; origem?: string; de?: string; ate?: string; termo?: string }): Observable<PagedResult<DocumentoDto>> {
     return this._api.get<PagedResult<DocumentoDto>>('/documentos', q as Record<string, unknown>);
   }
 

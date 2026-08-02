@@ -9,6 +9,7 @@ public record GetDocumentosQuery(
     Guid? ClienteId,
     TipoDocumentoEnum? Tipo,
     StatusDocumentoEnum? Status,
+    OrigemImportacaoEnum? Origem,
     DateTime? De,
     DateTime? Ate,
     int Page = 1,
