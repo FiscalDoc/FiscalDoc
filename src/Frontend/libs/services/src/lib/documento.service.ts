@@ -20,8 +20,16 @@ export class DocumentoService {
     return this._api.getBlob(`/documentos/${id}/arquivo`);
   }
 
+  getLinkDownload(id: string): Observable<{ url: string }> {
+    return this._api.get<{ url: string }>(`/documentos/${id}/link-download`);
+  }
+
   downloadLote(clienteId: string, mes: number, ano: number): Observable<Blob> {
     return this._api.getBlob('/documentos/lote', { clienteId, mes, ano });
+  }
+
+  deleteLote(ids: string[]): Observable<{ excluidos: number }> {
+    return this._api.post<{ excluidos: number }>('/documentos/excluir-lote', { ids });
   }
 
   upload(req: UploadDocumentoRequest): Observable<DocumentoDto> {

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using VeloXML.Domain.Entities;
 using VeloXML.Application.Features.Auth.Queries.GetCurrentUser;
@@ -49,13 +50,20 @@ public class MappingProfile : Profile
                 src.Numero, src.ChaveAcesso, src.CnpjEmitente, src.NomeEmitente,
                 src.CnpjDestinatario, src.NomeDestinatario,
                 src.DataEmissao, src.ValorTotal,
-                src.Arquivos.Count, src.Alertas.Count, src.CreatedAt))
+                src.Arquivos.Count, src.Alertas.Count, src.CreatedAt,
+                new DocumentoImpostosDto(
+                    src.ValorProdutos, src.ValorFrete, src.ValorSeguro, src.ValorDesconto,
+                    src.ValorIcms, src.ValorIpi, src.ValorPis, src.ValorCofins,
+                    src.ValorOutrasDespesas, src.ValorAproxTributos),
+                DeserializarItens(src.ItensJson)))
             .ForMember(d => d.NomeCliente, opt => opt.Ignore())
             .ForMember(d => d.TipoNome, opt => opt.Ignore())
             .ForMember(d => d.StatusNome, opt => opt.Ignore())
             .ForMember(d => d.OrigemImportacaoNome, opt => opt.Ignore())
             .ForMember(d => d.TotalArquivos, opt => opt.Ignore())
-            .ForMember(d => d.TotalAlertas, opt => opt.Ignore());
+            .ForMember(d => d.TotalAlertas, opt => opt.Ignore())
+            .ForMember(d => d.Impostos, opt => opt.Ignore())
+            .ForMember(d => d.Itens, opt => opt.Ignore());
 
         CreateMap<Alerta, AlertaDto>()
             .ConstructUsing((src, _) => new AlertaDto(
@@ -64,5 +72,18 @@ public class MappingProfile : Profile
                 src.Titulo, src.Descricao, src.Tipo, src.Severidade,
                 src.Status.ToString(), src.CreatedAt, src.LidoEm))
             .ForMember(d => d.NomeCliente, opt => opt.Ignore());
+    }
+
+    private static List<DocumentoItemDto> DeserializarItens(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try
+        {
+            return JsonSerializer.Deserialize<List<DocumentoItemDto>>(json) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 }

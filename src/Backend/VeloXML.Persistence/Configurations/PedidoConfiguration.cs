@@ -30,8 +30,10 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
         b.Property(e => e.FormaPagamento).HasColumnName("forma_pagamento").HasMaxLength(20);
         b.Property(e => e.MeioPagamento).HasColumnName("meio_pagamento").HasMaxLength(20);
         b.Property(e => e.InformacoesComplementares).HasColumnName("informacoes_complementares");
+        b.Property(e => e.DocumentoId).HasColumnName("documento_id");
 
         b.HasOne(e => e.Destinatario).WithMany().HasForeignKey(e => e.DestinatarioId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(e => e.Documento).WithMany().HasForeignKey(e => e.DocumentoId).OnDelete(DeleteBehavior.SetNull);
         b.HasMany(e => e.Itens).WithOne(i => i.Pedido).HasForeignKey(i => i.PedidoId).OnDelete(DeleteBehavior.Cascade);
 
         b.HasIndex(e => e.ClienteId).HasDatabaseName("ix_pedidos_cliente_id");

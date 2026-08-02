@@ -1,9 +1,15 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { PedidoService, ProdutoService, DestinatarioService, extractErrorMessage } from '@veloxml/services';
-import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest } from '@veloxml/models';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, extractErrorMessage } from '@veloxml/services';
+import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto } from '@veloxml/models';
+
+interface DocumentoVinculadoInfo {
+  id: string;
+  numero: string;
+  chaveAcesso?: string;
+}
 
 interface ConfirmState {
   titulo: string;
@@ -15,7 +21,7 @@ interface ConfirmState {
 @Component({
   selector: 'app-pedido-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="page">
       <div class="page-header">
@@ -105,6 +111,35 @@ interface ConfirmState {
 
       @if (readonly()) {
         <div class="alert-info">Este pedido está com status "{{ pedidoStatus() }}" e não pode mais ser editado.</div>
+      }
+
+      @if (!isNew()) {
+        @if (documentoVinculado(); as doc) {
+          <div class="card section nfe-card">
+            <div class="nfe-card-info">
+              <span class="badge badge-emitido">Emitido externamente</span>
+              <div>
+                <p class="nfe-card-title">NF-e nº {{ doc.numero }}</p>
+                <p class="nfe-card-chave mono">{{ doc.chaveAcesso }}</p>
+              </div>
+            </div>
+            <div class="nfe-card-actions">
+              <a class="btn-ghost-sm" [routerLink]="['/documentos']" [queryParams]="{ id: doc.id }">Ver documento</a>
+              <button class="btn-ghost-sm" [disabled]="desvinculando()" (click)="desvincularDocumento()">
+                {{ desvinculando() ? 'Removendo...' : 'Desvincular' }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="card section nfe-card">
+            <div class="nfe-card-info">
+              <span class="field-hint">Esse pedido ainda não tem uma NF-e real vinculada. Se ela já foi emitida em outro sistema, vincule o XML importado aqui.</span>
+            </div>
+            <div class="nfe-card-actions">
+              <button class="btn-ghost-sm" (click)="abrirVincularDocumento()">Vincular NF-e importada</button>
+            </div>
+          </div>
+        }
       }
 
       <div class="card section header-section">
@@ -358,6 +393,34 @@ interface ConfirmState {
         </div>
       </div>
     }
+
+    @if (showVincularDocumento()) {
+      <div class="overlay" (click)="fecharVincularDocumento()">
+        <div class="modal-quick" (click)="$event.stopPropagation()">
+          <h3 class="confirm-title">Vincular NF-e importada</h3>
+          <p class="quick-hint">Busque pelo número ou chave de acesso do XML já importado pra este cliente.</p>
+          <div class="field">
+            <input class="input" [ngModel]="documentoBusca" (ngModelChange)="onDocumentoBuscaInput($event)" placeholder="Número ou chave de acesso..." autofocus/>
+          </div>
+          @if (documentoResults().length > 0) {
+            <div class="documento-results">
+              @for (doc of documentoResults(); track doc.id) {
+                <div class="documento-result-item" (click)="selecionarDocumentoVinculo(doc)">
+                  <span class="nfe-card-title">NF-e nº {{ doc.numero }} — {{ doc.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</span>
+                  <span class="nfe-card-chave mono">{{ doc.chaveAcesso || '—' }}</span>
+                </div>
+              }
+            </div>
+          } @else if (documentoBusca.trim().length > 0) {
+            <p class="quick-hint">Nenhum documento encontrado.</p>
+          }
+          @if (erroVincularDocumento()) { <div class="alert-error">{{ erroVincularDocumento() }}</div> }
+          <div class="confirm-actions">
+            <button class="btn-ghost" (click)="fecharVincularDocumento()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -421,6 +484,16 @@ interface ConfirmState {
     .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .625rem; padding: 4px 0; }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+
+    .nfe-card { flex-direction: row; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; gap: 1rem; flex-wrap: wrap; }
+    .nfe-card-info { display: flex; align-items: center; gap: 12px; }
+    .nfe-card-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
+    .nfe-card-chave { margin: 2px 0 0; font-size: 11px; color: var(--text2); word-break: break-all; }
+    .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .documento-results { display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .documento-result-item { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .documento-result-item:last-child { border-bottom: none; }
+    .documento-result-item:hover { background: var(--bg3); }
     .form-actions { display: flex; align-items: center; justify-content: flex-start; }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
@@ -462,6 +535,7 @@ export class PedidoFormComponent implements OnInit {
   private readonly _pedidoSvc = inject(PedidoService);
   private readonly _prodSvc   = inject(ProdutoService);
   private readonly _destSvc   = inject(DestinatarioService);
+  private readonly _docSvc    = inject(DocumentoService);
   private readonly _route     = inject(ActivatedRoute);
   private readonly _router    = inject(Router);
 
@@ -478,6 +552,14 @@ export class PedidoFormComponent implements OnInit {
   readonly cancelando     = signal(false);
   readonly duplicando     = signal(false);
   readonly excluindo      = signal(false);
+
+  readonly documentoVinculado = signal<DocumentoVinculadoInfo | null>(null);
+  readonly desvinculando = signal(false);
+  readonly showVincularDocumento = signal(false);
+  readonly documentoResults = signal<DocumentoDto[]>([]);
+  readonly erroVincularDocumento = signal<string | null>(null);
+  documentoBusca = '';
+  private _docSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly readonly = computed(() => !this.isNew() && this.pedidoStatus() !== 'Rascunho');
 
@@ -533,15 +615,22 @@ export class PedidoFormComponent implements OnInit {
   }
 
   private _emptyForm() {
+    // Data de Saída por padrão é a própria data de emissão do pedido (hoje) — usuário troca
+    // só quando a mercadoria sai em outro dia.
+    const hoje = new Date();
+    const dataSaidaPadrao = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     return {
       destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria',
-      dataSaida: '', formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
+      dataSaida: dataSaidaPadrao, formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
     };
   }
 
   private _carregarPedido(p: PedidoDto): void {
     this.pedidoStatus.set(p.status);
     this.numero.set(p.numero);
+    this.documentoVinculado.set(p.documentoId
+      ? { id: p.documentoId, numero: p.documentoNumero ?? '', chaveAcesso: p.documentoChaveAcesso }
+      : null);
     this.form = {
       destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '',
       naturezaOperacao: p.naturezaOperacao || 'Venda de mercadoria',
@@ -775,6 +864,45 @@ export class PedidoFormComponent implements OnInit {
       },
       true,
     );
+  }
+
+  // ── Vínculo com NF-e importada (emitida externamente) ───────────────────
+
+  abrirVincularDocumento(): void {
+    this.documentoBusca = '';
+    this.documentoResults.set([]);
+    this.erroVincularDocumento.set(null);
+    this.showVincularDocumento.set(true);
+  }
+
+  fecharVincularDocumento(): void { this.showVincularDocumento.set(false); }
+
+  onDocumentoBuscaInput(value: string): void {
+    this.documentoBusca = value;
+    if (this._docSearchTimer) clearTimeout(this._docSearchTimer);
+    if (!value.trim()) { this.documentoResults.set([]); return; }
+    this._docSearchTimer = setTimeout(() => {
+      this._docSvc.getAll({ clienteId: this.clienteId, termo: value, pageSize: 10 }).subscribe({
+        next: r => this.documentoResults.set(r.items),
+      });
+    }, 300);
+  }
+
+  selecionarDocumentoVinculo(doc: DocumentoDto): void {
+    this.erroVincularDocumento.set(null);
+    this._pedidoSvc.vincularDocumento(this.clienteId, this.pedidoId, doc.id).subscribe({
+      next: p => { this.showVincularDocumento.set(false); this._carregarPedido(p); },
+      error: err => this.erroVincularDocumento.set(extractErrorMessage(err, 'Erro ao vincular documento.')),
+    });
+  }
+
+  desvincularDocumento(): void {
+    if (this.desvinculando()) return;
+    this.desvinculando.set(true);
+    this._pedidoSvc.desvincularDocumento(this.clienteId, this.pedidoId).subscribe({
+      next: p => { this.desvinculando.set(false); this._carregarPedido(p); },
+      error: err => { this.desvinculando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao desvincular documento.')); },
+    });
   }
 
   statusClass(): string {

@@ -7,6 +7,7 @@ using VeloXML.Application.Features.Pedidos.Commands.DeletePedido;
 using VeloXML.Application.Features.Pedidos.Commands.DuplicarPedido;
 using VeloXML.Application.Features.Pedidos.Commands.EmitirPedido;
 using VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
+using VeloXML.Application.Features.Pedidos.Commands.VincularDocumento;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoById;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
 
@@ -81,4 +82,20 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new DeletePedidoCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
+
+    [HttpPost("{id:guid}/vincular-documento")]
+    public async Task<IActionResult> VincularDocumento(Guid clienteId, Guid id, [FromBody] VincularDocumentoRequest body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new VincularDocumentoCommand(id, clienteId, body.DocumentoId), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/desvincular-documento")]
+    public async Task<IActionResult> DesvincularDocumento(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DesvincularDocumentoCommand(id, clienteId), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
 }
+
+public record VincularDocumentoRequest(Guid DocumentoId);

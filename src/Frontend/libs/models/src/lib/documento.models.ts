@@ -2,6 +2,30 @@ export type TipoDocumento = 'NFe' | 'CTe' | 'MDFe' | 'NFSe' | 'PDF' | 'Imagem' |
 export type StatusDocumento = 'Pendente' | 'Valido' | 'Alerta' | 'Duplicado';
 export type OrigemImportacao = 'Manual' | 'ImportacaoEmail' | 'ApiIngest';
 
+export interface DocumentoItemDto {
+  codigoProduto?: string;
+  descricao: string;
+  ncm?: string;
+  cfop?: string;
+  unidade: string;
+  quantidade: number;
+  valorUnitario: number;
+  valorTotal: number;
+}
+
+export interface DocumentoImpostosDto {
+  valorProdutos?: number;
+  valorFrete?: number;
+  valorSeguro?: number;
+  valorDesconto?: number;
+  valorIcms?: number;
+  valorIpi?: number;
+  valorPis?: number;
+  valorCofins?: number;
+  valorOutrasDespesas?: number;
+  valorAproxTributos?: number;
+}
+
 export interface DocumentoDto {
   id: string;
   clienteId: string;
@@ -23,6 +47,8 @@ export interface DocumentoDto {
   totalArquivos: number;
   totalAlertas: number;
   createdAt: string;
+  impostos: DocumentoImpostosDto;
+  itens: DocumentoItemDto[];
 }
 
 export interface DocumentoDownloadResponse {

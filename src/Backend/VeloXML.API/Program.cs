@@ -13,6 +13,13 @@ using VeloXML.Infrastructure;
 using VeloXML.Persistence;
 using VeloXML.Persistence.Seed;
 
+// O app trabalha só em UTC (BaseEntity.CreatedAt, DataEmissao, etc.) mas campos que vêm de
+// JSON de requisição (ex.: Pedido.DataSaida, filtros de data "de/ate") chegam com
+// DateTimeKind.Unspecified — o Npgsql 6+ recusa escrever isso em colunas "timestamptz"
+// ("Cannot write DateTime with Kind=Unspecified"). Esse switch global evita ficar corrigindo
+// isso campo por campo (já apareceu 3 vezes hoje) tratando Unspecified/Local como UTC.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();

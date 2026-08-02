@@ -33,6 +33,18 @@ public class DocumentoConfiguration : IEntityTypeConfiguration<Documento>
         b.Property(e => e.CreatedBy).HasColumnName("created_by").HasMaxLength(256);
         b.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(256);
 
+        b.Property(e => e.ValorProdutos).HasColumnName("valor_produtos").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorFrete).HasColumnName("valor_frete").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorSeguro).HasColumnName("valor_seguro").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorDesconto).HasColumnName("valor_desconto").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorIcms).HasColumnName("valor_icms").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorIpi).HasColumnName("valor_ipi").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorPis).HasColumnName("valor_pis").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorCofins).HasColumnName("valor_cofins").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorOutrasDespesas).HasColumnName("valor_outras_despesas").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorAproxTributos).HasColumnName("valor_aprox_tributos").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ItensJson).HasColumnName("itens_json").HasColumnType("text");
+
         b.HasIndex(e => new { e.TenantId, e.ChaveAcesso }).HasFilter("chave_acesso IS NOT NULL AND deleted_at IS NULL");
         b.HasIndex(e => new { e.TenantId, e.ClienteId });
         b.HasIndex(e => new { e.TenantId, e.Tipo });

@@ -20,7 +20,13 @@ public class Pedido : BaseEntity, IAuditableEntity
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 
+    // Vínculo com a NF-e real, emitida num emissor externo e importada de volta como
+    // Documento (via e-mail/API/upload) — cobre o caso de uso enquanto este app ainda não
+    // emite nota fiscal internamente.
+    public Guid? DocumentoId { get; set; }
+
     public Cliente? Cliente { get; set; }
     public Destinatario? Destinatario { get; set; }
+    public Documento? Documento { get; set; }
     public ICollection<PedidoItem> Itens { get; set; } = [];
 }

@@ -31,5 +31,8 @@ public record PedidoDto(
     DateTime? DataSaida,
     string? FormaPagamento,
     string? MeioPagamento,
-    string? InformacoesComplementares
+    string? InformacoesComplementares,
+    Guid? DocumentoId,
+    string? DocumentoNumero,
+    string? DocumentoChaveAcesso
 );

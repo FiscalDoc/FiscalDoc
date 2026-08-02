@@ -80,5 +80,6 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
             i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
             i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
         )).ToList(),
-        p.NaturezaOperacao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares);
+        p.NaturezaOperacao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
+        p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso);
 }

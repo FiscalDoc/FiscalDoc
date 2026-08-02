@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 using AutoMapper;
 using MediatR;
 using VeloXML.Application.Common;
@@ -72,6 +73,20 @@ public sealed class UploadDocumentoCommandHandler(
             documento.DataEmissao      = parsed.DataEmissao;
             documento.ValorTotal       = parsed.ValorTotal;
 
+            documento.ValorProdutos       = parsed.ValorProdutos;
+            documento.ValorFrete          = parsed.ValorFrete;
+            documento.ValorSeguro         = parsed.ValorSeguro;
+            documento.ValorDesconto       = parsed.ValorDesconto;
+            documento.ValorIcms           = parsed.ValorIcms;
+            documento.ValorIpi            = parsed.ValorIpi;
+            documento.ValorPis            = parsed.ValorPis;
+            documento.ValorCofins         = parsed.ValorCofins;
+            documento.ValorOutrasDespesas = parsed.ValorOutrasDespesas;
+            documento.ValorAproxTributos  = parsed.ValorAproxTributos;
+            if (parsed.Itens is { Count: > 0 })
+                documento.ItensJson = JsonSerializer.Serialize(parsed.Itens.Select(i => new DocumentoItemDto(
+                    i.CodigoProduto, i.Descricao, i.Ncm, i.Cfop, i.Unidade, i.Quantidade, i.ValorUnitario, i.ValorTotal)));
+
             if (!string.IsNullOrEmpty(parsed.ChaveAcesso))
             {
                 var existente = await uow.Documentos.GetByChaveAcessoAsync(parsed.ChaveAcesso, ct);
@@ -106,6 +121,9 @@ public sealed class UploadDocumentoCommandHandler(
             Url         = null,
             Tamanho     = request.Arquivo.Size
         };
+
+        if (parsed != null)
+            await AutoRegistrarCadastrosAsync(cliente.Value, parsed, ct);
 
         await uow.Documentos.AddAsync(documento, ct);
         arquivo.DocumentoId = documento.Id;
@@ -180,4 +198,75 @@ public sealed class UploadDocumentoCommandHandler(
         var bytes = await SHA256.HashDataAsync(stream, ct);
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
+
+    // Só cadastra Destinatário/Produto quando o Cliente é quem EMITIU a nota — nesse caso o
+    // "destinatário" do XML é de fato um cliente do Cliente e os itens são produtos que ele
+    // vende (o caso de uso: nota emitida num emissor externo e importada aqui pra registro).
+    // Numa nota de COMPRA (Cliente é o destinatário do XML, caso mais comum de importação),
+    // o emitente é um fornecedor que este app não modela — cadastrar isso como
+    // Destinatario/Produto colocaria dado do lado errado, já que esses cadastros existem pra
+    // alimentar Pedidos de venda do próprio Cliente.
+    private async Task AutoRegistrarCadastrosAsync(Cliente cliente, ParsedDocumento parsed, CancellationToken ct)
+    {
+        var cnpjEmitenteLimpo = LimparDigitos(parsed.CnpjEmitente);
+        var cnpjClienteLimpo = LimparDigitos(cliente.Cnpj);
+        if (cnpjEmitenteLimpo is null || cnpjEmitenteLimpo != cnpjClienteLimpo)
+            return;
+
+        var cnpjDestLimpo = LimparDigitos(parsed.CnpjDestinatario);
+        if (!string.IsNullOrEmpty(cnpjDestLimpo))
+        {
+            var destinatarioExiste = await uow.Destinatarios.ExistsAsync(
+                d => d.ClienteId == cliente.Id && d.CpfCnpj == cnpjDestLimpo, ct);
+            if (!destinatarioExiste)
+            {
+                await uow.Destinatarios.AddAsync(new Destinatario
+                {
+                    TenantId          = cliente.TenantId,
+                    ClienteId         = cliente.Id,
+                    RazaoSocial       = parsed.NomeDestinatario ?? cnpjDestLimpo,
+                    CpfCnpj           = cnpjDestLimpo,
+                    InscricaoEstadual = parsed.DestinatarioIe,
+                    Logradouro        = parsed.DestinatarioLogradouro,
+                    Numero            = parsed.DestinatarioNumero,
+                    Complemento       = parsed.DestinatarioComplemento,
+                    Bairro            = parsed.DestinatarioBairro,
+                    Cidade            = parsed.DestinatarioCidade,
+                    Estado            = parsed.DestinatarioUf,
+                    Cep               = parsed.DestinatarioCep,
+                    CodigoIbgeCidade  = parsed.DestinatarioCodIbge,
+                }, ct);
+            }
+        }
+
+        if (parsed.Itens is not { Count: > 0 }) return;
+
+        var codigosExistentes = (await uow.Produtos.FindAsync(p => p.ClienteId == cliente.Id, ct))
+            .Select(p => p.Codigo).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in parsed.Itens)
+        {
+            if (string.IsNullOrWhiteSpace(item.CodigoProduto) || codigosExistentes.Contains(item.CodigoProduto))
+                continue;
+
+            await uow.Produtos.AddAsync(new Produto
+            {
+                TenantId      = cliente.TenantId,
+                ClienteId     = cliente.Id,
+                Codigo        = item.CodigoProduto,
+                Descricao     = item.Descricao,
+                Ncm           = item.Ncm,
+                Unidade       = item.Unidade,
+                PrecoUnitario = item.ValorUnitario,
+                Cfop          = item.Cfop,
+                AliquotaIcms  = item.AliquotaIcms,
+                AliquotaPis   = item.AliquotaPis,
+                AliquotaCofins = item.AliquotaCofins,
+            }, ct);
+            codigosExistentes.Add(item.CodigoProduto); // evita duplicar se a mesma nota repetir o código
+        }
+    }
+
+    private static string? LimparDigitos(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? null : new string(valor.Where(char.IsDigit).ToArray());
 }

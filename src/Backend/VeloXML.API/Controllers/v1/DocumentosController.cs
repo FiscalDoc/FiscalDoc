@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Common.DTOs;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Documentos.Commands.DeleteDocumento;
+using VeloXML.Application.Features.Documentos.Commands.DeleteDocumentosLote;
 using VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentoById;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 using VeloXML.Infrastructure.Auth;
+using VeloXML.Infrastructure.Storage;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -21,7 +23,8 @@ namespace VeloXML.API.Controllers.v1;
 public sealed class DocumentosController(
     IMediator mediator,
     IUnitOfWork uow,
-    IStorageService storage) : ControllerBase
+    IStorageService storage,
+    DocumentoDownloadTokenService downloadTokens) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(
@@ -52,7 +55,39 @@ public sealed class DocumentosController(
     {
         var doc = await uow.Documentos.GetByIdWithArquivosAsync(id, ct);
         if (doc is null) return NotFound();
+        return await ServirArquivoAsync(doc, ct);
+    }
 
+    // Gera um link de download de curta duração (2 min), assinado, sem exigir o header
+    // Authorization — permite que o front navegue direto pro link (em vez de baixar bytes via
+    // JS e montar um blob: URL), o que evita o aviso do Chrome "isso pode danificar seu
+    // dispositivo" (esse aviso é específico de downloads disparados via blob:, não de uma
+    // navegação normal pra uma URL).
+    [HttpGet("{id:guid}/link-download")]
+    public async Task<IActionResult> GetLinkDownload(Guid id, CancellationToken ct)
+    {
+        var existe = await uow.Documentos.ExistsAsync(d => d.Id == id, ct);
+        if (!existe) return NotFound();
+
+        var token = downloadTokens.Gerar(id, TimeSpan.FromMinutes(2));
+        var url = Url.Action(nameof(DownloadPorToken), null, new { token }, Request.Scheme);
+        return Ok(new { url });
+    }
+
+    [HttpGet("download")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DownloadPorToken([FromQuery] string token, CancellationToken ct)
+    {
+        var id = downloadTokens.Validar(token);
+        if (id is null) return Unauthorized();
+
+        var doc = await uow.Documentos.GetByIdWithArquivosAsync(id.Value, ct);
+        if (doc is null) return NotFound();
+        return await ServirArquivoAsync(doc, ct);
+    }
+
+    private async Task<IActionResult> ServirArquivoAsync(VeloXML.Domain.Entities.Documento doc, CancellationToken ct)
+    {
         var arquivo = doc.Arquivos.FirstOrDefault();
         if (arquivo is null)
         {
@@ -173,4 +208,13 @@ public sealed class DocumentosController(
         var result = await mediator.Send(new DeleteDocumentoCommand(id), ct);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
+
+    [HttpPost("excluir-lote")]
+    public async Task<IActionResult> DeleteLote([FromBody] ExcluirLoteRequest body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeleteDocumentosLoteCommand(body.Ids), ct);
+        return result.IsSuccess ? Ok(new { excluidos = result.Value }) : BadRequest(result.Error);
+    }
 }
+
+public record ExcluirLoteRequest(List<Guid> Ids);

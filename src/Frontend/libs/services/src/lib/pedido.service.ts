@@ -39,4 +39,12 @@ export class PedidoService {
   delete(clienteId: string, id: string): Observable<void> {
     return this._api.delete<void>(`/clientes/${clienteId}/pedidos/${id}`);
   }
+
+  vincularDocumento(clienteId: string, id: string, documentoId: string): Observable<PedidoDto> {
+    return this._api.post<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}/vincular-documento`, { documentoId });
+  }
+
+  desvincularDocumento(clienteId: string, id: string): Observable<PedidoDto> {
+    return this._api.post<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}/desvincular-documento`, {});
+  }
 }

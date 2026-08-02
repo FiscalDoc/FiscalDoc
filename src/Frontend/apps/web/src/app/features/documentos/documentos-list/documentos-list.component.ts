@@ -184,10 +184,18 @@ interface UploadItem { file: File; tipo: string; }
       @if (loading()) {
         <div class="empty-state">Carregando...</div>
       } @else {
+        @if (selecionados().size > 0) {
+          <div class="bulk-bar">
+            <span>{{ selecionados().size }} selecionado(s)</span>
+            <button class="btn-ghost-sm" (click)="limparSelecao()">Limpar seleção</button>
+            <button class="btn-danger-sm" (click)="excluirSelecionados()">Excluir selecionados</button>
+          </div>
+        }
         <div class="card">
           <table class="table">
             <thead>
               <tr>
+                <th class="col-check"><input type="checkbox" [checked]="todosSelecionados()" (change)="toggleSelecionarTodos($event)"/></th>
                 <th>Tipo</th>
                 <th>Número</th>
                 <th>Cliente</th>
@@ -215,6 +223,7 @@ interface UploadItem { file: File; tipo: string; }
             <tbody>
               @for (d of documentos(); track d.id) {
                 <tr (click)="openDetail(d)" class="row-clickable">
+                  <td (click)="$event.stopPropagation()"><input type="checkbox" [checked]="selecionados().has(d.id)" (change)="toggleSelecionado(d.id)"/></td>
                   <td><span class="badge badge-tipo">{{ tipoLabel(d.tipo) }}</span></td>
                   <td class="mono">{{ d.numero || '—' }}</td>
                   <td>{{ d.nomeCliente }}</td>
@@ -238,7 +247,7 @@ interface UploadItem { file: File; tipo: string; }
                 </tr>
               }
               @if (!documentos().length) {
-                <tr><td colspan="9" class="empty-state">Nenhum documento encontrado.</td></tr>
+                <tr><td colspan="10" class="empty-state">Nenhum documento encontrado.</td></tr>
               }
             </tbody>
           </table>
@@ -315,8 +324,15 @@ interface UploadItem { file: File; tipo: string; }
             </div>
           </div>
 
+          <nav class="detail-tabs">
+            <button class="detail-tab-btn" [class.active]="detailTab() === 'geral'" (click)="detailTab.set('geral')">Detalhes</button>
+            <button class="detail-tab-btn" [class.active]="detailTab() === 'itens'" (click)="detailTab.set('itens')">Itens ({{ detail()!.itens.length }})</button>
+            <button class="detail-tab-btn" [class.active]="detailTab() === 'impostos'" (click)="detailTab.set('impostos')">Impostos</button>
+          </nav>
+
           <div class="modal-body">
 
+          @if (detailTab() === 'geral') {
             <!-- Emitente + Destinatário -->
             <div class="party-grid">
               <div class="party-card">
@@ -370,6 +386,73 @@ interface UploadItem { file: File; tipo: string; }
                 <span class="footer-value">{{ detail()!.createdAt | date:'dd/MM/yyyy' }}</span>
               </div>
             </div>
+          }
+
+          @if (detailTab() === 'itens') {
+            @if (detail()!.itens.length === 0) {
+              <div class="empty-state" style="padding:2rem 0">Nenhum item detalhado disponível pra este documento.</div>
+            } @else {
+              <table class="itens-table">
+                <thead>
+                  <tr><th>Código</th><th>Descrição</th><th>NCM</th><th>CFOP</th><th>Qtd</th><th>Un.</th><th>Vlr. Unit.</th><th>Total</th></tr>
+                </thead>
+                <tbody>
+                  @for (item of detail()!.itens; track $index) {
+                    <tr>
+                      <td class="mono">{{ item.codigoProduto || '—' }}</td>
+                      <td>{{ item.descricao }}</td>
+                      <td class="mono">{{ item.ncm || '—' }}</td>
+                      <td class="mono">{{ item.cfop || '—' }}</td>
+                      <td class="num">{{ item.quantidade }}</td>
+                      <td>{{ item.unidade }}</td>
+                      <td class="num">{{ item.valorUnitario | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+                      <td class="num">{{ item.valorTotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+
+          @if (detailTab() === 'impostos') {
+            @if (!temImpostos(detail()!)) {
+              <div class="empty-state" style="padding:2rem 0">Nenhum detalhamento de imposto disponível pra este documento.</div>
+            } @else {
+              <div class="impostos-grid">
+                @if (detail()!.impostos.valorProdutos != null) {
+                  <div class="imposto-item"><span class="footer-label">Valor dos Produtos</span><span class="footer-value">{{ detail()!.impostos.valorProdutos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorFrete != null) {
+                  <div class="imposto-item"><span class="footer-label">Frete</span><span class="footer-value">{{ detail()!.impostos.valorFrete | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorSeguro != null) {
+                  <div class="imposto-item"><span class="footer-label">Seguro</span><span class="footer-value">{{ detail()!.impostos.valorSeguro | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorDesconto != null) {
+                  <div class="imposto-item"><span class="footer-label">Desconto</span><span class="footer-value">{{ detail()!.impostos.valorDesconto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorIcms != null) {
+                  <div class="imposto-item"><span class="footer-label">ICMS</span><span class="footer-value">{{ detail()!.impostos.valorIcms | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorIpi != null) {
+                  <div class="imposto-item"><span class="footer-label">IPI</span><span class="footer-value">{{ detail()!.impostos.valorIpi | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorPis != null) {
+                  <div class="imposto-item"><span class="footer-label">PIS</span><span class="footer-value">{{ detail()!.impostos.valorPis | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorCofins != null) {
+                  <div class="imposto-item"><span class="footer-label">COFINS</span><span class="footer-value">{{ detail()!.impostos.valorCofins | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorOutrasDespesas != null) {
+                  <div class="imposto-item"><span class="footer-label">Outras Despesas</span><span class="footer-value">{{ detail()!.impostos.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+                @if (detail()!.impostos.valorAproxTributos != null) {
+                  <div class="imposto-item imposto-item--destaque"><span class="footer-label">Valor Aprox. dos Tributos*</span><span class="footer-value">{{ detail()!.impostos.valorAproxTributos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span></div>
+                }
+              </div>
+              <p class="impostos-nota">* Conforme Lei 12.741/2012 (Lei da Transparência) — valor aproximado informado pelo emissor da nota.</p>
+            }
+          }
 
           </div>
         </div>
@@ -401,6 +484,10 @@ interface UploadItem { file: File; tipo: string; }
     .btn-primary:hover { opacity: 0.88; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-sm { padding: 0.375rem 0.75rem; font-size: 12.5px; }
+    .bulk-bar { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text); }
+    .btn-danger-sm { background: none; border: 1px solid rgba(255,77,109,.4); color: var(--red); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; margin-left: auto; }
+    .btn-danger-sm:hover { background: rgba(255,77,109,.1); }
+    .col-check { width: 32px; }
     .btn-ghost-sm {
       background: transparent; color: var(--text2);
       border: 1px solid var(--border); border-radius: 8px;
@@ -563,6 +650,29 @@ interface UploadItem { file: File; tipo: string; }
     /* ── Modal body ── */
     .modal-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
 
+    /* ── Abas do modal de detalhe ── */
+    .detail-tabs { display: flex; gap: 4px; padding: 0 1.5rem; border-bottom: 1px solid var(--border); }
+    .detail-tab-btn {
+      background: none; border: none; padding: 8px 12px; font-size: 12.5px; color: var(--text2);
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .detail-tab-btn:hover { color: var(--text); }
+    .detail-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    /* ── Aba Itens ── */
+    .itens-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .itens-table th { text-align: left; color: var(--text2); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+    .itens-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+    .itens-table tr:last-child td { border-bottom: none; }
+    .itens-table td.num, .itens-table th:nth-last-child(-n+3) { text-align: right; }
+
+    /* ── Aba Impostos ── */
+    .impostos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .imposto-item { display: flex; flex-direction: column; gap: 4px; padding: .875rem 1rem; background: var(--bg3); }
+    .imposto-item--destaque { background: var(--bg2); grid-column: span 3; }
+    .imposto-item--destaque .footer-value { color: var(--accent); font-size: 1.1rem; }
+    .impostos-nota { font-size: 11px; color: var(--text2); margin: 0; font-style: italic; }
+
     /* ── Party grid (emitente / destinatário) ── */
     .party-grid {
       display: flex; align-items: center; gap: 0.75rem;
@@ -644,8 +754,10 @@ export class DocumentosListComponent implements OnInit {
   readonly totalPages       = signal(1);
   readonly termo            = signal('');
   readonly detail           = signal<DocumentoDto | null>(null);
+  readonly detailTab        = signal<'geral' | 'itens' | 'impostos'>('geral');
   readonly downloading      = signal(false);
   readonly showStatusLegend = signal(false);
+  readonly selecionados     = signal<Set<string>>(new Set());
 
   filters = { tipo: '', status: '', origem: '', clienteId: '' };
 
@@ -714,16 +826,21 @@ export class DocumentosListComponent implements OnInit {
   prevPage(): void { this.page.update(p => p - 1); this.load(); }
   nextPage(): void { this.page.update(p => p + 1); this.load(); }
 
-  openDetail(d: DocumentoDto): void { this.detail.set(d); }
+  openDetail(d: DocumentoDto): void { this.detail.set(d); this.detailTab.set('geral'); }
+
+  temImpostos(d: DocumentoDto): boolean {
+    const i = d.impostos;
+    return !!i && Object.values(i).some(v => v != null);
+  }
   closeDetail(): void { this.detail.set(null); }
 
   download(doc: DocumentoDto): void {
+    // Navega direto pro link (em vez de baixar bytes via JS e montar um blob: URL) — isso é
+    // o que fazia o Chrome marcar o arquivo como "pode danificar seu dispositivo" (aviso
+    // específico de downloads via blob:, não de uma navegação normal pra uma URL real).
     this.downloading.set(true);
-    this._docSvc.downloadArquivo(doc.id).subscribe({
-      next: (blob) => {
-        this._triggerDownload(blob, `${doc.chaveAcesso || doc.numero || doc.id}.xml`);
-        this.downloading.set(false);
-      },
+    this._docSvc.getLinkDownload(doc.id).subscribe({
+      next: ({ url }) => { window.open(url, '_blank'); this.downloading.set(false); },
       error: () => this.downloading.set(false),
     });
   }
@@ -733,6 +850,36 @@ export class DocumentosListComponent implements OnInit {
     this._docSvc.delete(doc.id).subscribe({
       next: () => { this.closeDetail(); this.load(); },
       error: (err) => alert(extractErrorMessage(err, 'Erro ao excluir documento.')),
+    });
+  }
+
+  toggleSelecionado(id: string): void {
+    this.selecionados.update(s => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  todosSelecionados(): boolean {
+    const docs = this.documentos();
+    return docs.length > 0 && docs.every(d => this.selecionados().has(d.id));
+  }
+
+  toggleSelecionarTodos(e: Event): void {
+    const marcar = (e.target as HTMLInputElement).checked;
+    this.selecionados.set(marcar ? new Set(this.documentos().map(d => d.id)) : new Set());
+  }
+
+  limparSelecao(): void { this.selecionados.set(new Set()); }
+
+  excluirSelecionados(): void {
+    const ids = [...this.selecionados()];
+    if (ids.length === 0) return;
+    if (!confirm(`Excluir ${ids.length} nota(s) fiscal(is) selecionada(s)? Esta ação não pode ser desfeita.`)) return;
+    this._docSvc.deleteLote(ids).subscribe({
+      next: () => { this.limparSelecao(); this.load(); },
+      error: (err) => alert(extractErrorMessage(err, 'Erro ao excluir documentos selecionados.')),
     });
   }
 

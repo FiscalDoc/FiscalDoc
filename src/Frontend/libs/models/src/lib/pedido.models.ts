@@ -33,6 +33,9 @@ export interface PedidoDto {
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
   informacoesComplementares?: string;
+  documentoId?: string;
+  documentoNumero?: string;
+  documentoChaveAcesso?: string;
 }
 
 export interface PedidoItemInput {

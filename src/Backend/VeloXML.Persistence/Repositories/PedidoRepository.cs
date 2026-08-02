@@ -34,7 +34,7 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
     }
 
     public async Task<Pedido?> GetWithItensAsync(Guid id, CancellationToken ct = default) =>
-        await DbSet.Include(p => p.Destinatario).Include(p => p.Itens).ThenInclude(i => i.Produto)
+        await DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Include(p => p.Itens).ThenInclude(i => i.Produto)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
     // Marca o estado de cada PedidoItem explicitamente (Remove/Add) em vez de
