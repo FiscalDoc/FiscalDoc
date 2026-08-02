@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Pedidos.Commands.CancelarPedido;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
+using VeloXML.Application.Features.Pedidos.Commands.DeletePedido;
+using VeloXML.Application.Features.Pedidos.Commands.DuplicarPedido;
 using VeloXML.Application.Features.Pedidos.Commands.EmitirPedido;
 using VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoById;
@@ -16,9 +18,12 @@ namespace VeloXML.API.Controllers.v1;
 public sealed class PedidosController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(Guid clienteId, [FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    public async Task<IActionResult> GetAll(
+        Guid clienteId, [FromQuery] string? status, [FromQuery] string? termo,
+        [FromQuery] DateTime? de, [FromQuery] DateTime? ate,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetPedidosQuery(clienteId, status, page, pageSize), ct);
+        var result = await mediator.Send(new GetPedidosQuery(clienteId, status, termo, de, ate, page, pageSize), ct);
         return Ok(result.Value);
     }
 
@@ -59,5 +64,21 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new EmitirPedidoCommand(id, clienteId), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/duplicar")]
+    public async Task<IActionResult> Duplicar(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DuplicarPedidoCommand(id, clienteId), ct);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetById), new { clienteId, id = result.Value.Id }, result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeletePedidoCommand(id, clienteId), ct);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 }

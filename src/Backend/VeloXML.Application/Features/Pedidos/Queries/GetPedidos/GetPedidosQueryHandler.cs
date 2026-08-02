@@ -11,7 +11,7 @@ public sealed class GetPedidosQueryHandler(IUnitOfWork uow)
     public async Task<Result<PagedResult<PedidoDto>>> Handle(GetPedidosQuery request, CancellationToken ct)
     {
         var paged = await uow.Pedidos.SearchAsync(
-            request.ClienteId, request.Status, request.Page, request.PageSize, ct);
+            request.ClienteId, request.Status, request.Termo, request.De, request.Ate, request.Page, request.PageSize, ct);
 
         var dto = PagedResult<PedidoDto>.Create(
             paged.Items.Select(CreatePedidoCommandHandler.ToDto).ToList(),

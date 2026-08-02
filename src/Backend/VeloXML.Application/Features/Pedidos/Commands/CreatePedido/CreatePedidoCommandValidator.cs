@@ -18,6 +18,9 @@ public class CreatePedidoCommandValidator : AbstractValidator<CreatePedidoComman
             item.RuleFor(i => i.Quantidade).GreaterThan(0).WithMessage("Quantidade do item deve ser maior que zero.");
             item.RuleFor(i => i.PrecoUnitario).GreaterThanOrEqualTo(0).WithMessage("Preço unitário do item não pode ser negativo.");
             item.RuleFor(i => i.Desconto).GreaterThanOrEqualTo(0).WithMessage("Desconto do item não pode ser negativo.");
+            item.RuleFor(i => i.Desconto)
+                .Must((i, desconto) => desconto <= i.Quantidade * i.PrecoUnitario)
+                .WithMessage("Desconto não pode ser maior que o valor do item (quantidade × preço unitário).");
         });
     }
 }

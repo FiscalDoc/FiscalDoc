@@ -7,6 +7,9 @@ namespace VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
 public record GetPedidosQuery(
     Guid ClienteId,
     string? Status,
+    string? Termo,
+    DateTime? De,
+    DateTime? Ate,
     int Page = 1,
     int PageSize = 20
 ) : IRequest<Result<PagedResult<PedidoDto>>>;

@@ -50,7 +50,7 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePe
 
         var novosItens = request.Itens.Select(i =>
         {
-            var total = (i.Quantidade * i.PrecoUnitario) - i.Desconto;
+            var total = Math.Max(0, (i.Quantidade * i.PrecoUnitario) - i.Desconto);
             return new PedidoItem
             {
                 PedidoId = pedido.Id,

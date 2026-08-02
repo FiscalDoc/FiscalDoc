@@ -32,6 +32,26 @@ import { PedidoDto } from '@veloxml/models';
         <button class="filter-btn" [class.active]="statusFiltro() === 'Cancelado'" (click)="filtrar('Cancelado')">Cancelado</button>
       </div>
 
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+          </svg>
+          <input class="search-input" type="text" placeholder="Buscar por número ou destinatário..." [value]="termo()" (input)="onSearch($event)"/>
+        </div>
+        <div class="date-field">
+          <label>De</label>
+          <input class="date-input" type="date" [(ngModel)]="de" (ngModelChange)="carregar()"/>
+        </div>
+        <div class="date-field">
+          <label>Até</label>
+          <input class="date-input" type="date" [(ngModel)]="ate" (ngModelChange)="carregar()"/>
+        </div>
+        @if (termo() || de || ate) {
+          <button class="btn-ghost-sm" (click)="limparFiltros()">Limpar</button>
+        }
+      </div>
+
       <div class="card section">
         @if (loading()) {
           <div class="empty">Carregando...</div>
@@ -71,6 +91,17 @@ import { PedidoDto } from '@veloxml/models';
     .filter-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer; }
     .filter-btn:hover { border-color: var(--text2); color: var(--text); }
     .filter-btn.active { background: var(--accent); color: #0d0f14; border-color: var(--accent); font-weight: 600; }
+    .toolbar { display: flex; align-items: center; gap: .625rem; flex-wrap: wrap; }
+    .search-wrap { position: relative; flex: 1; min-width: 220px; }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text2); pointer-events: none; }
+    .search-input { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem .5rem 2rem; font-size: 13.5px; outline: none; box-sizing: border-box; }
+    .search-input:focus { border-color: var(--accent); }
+    .date-field { display: flex; align-items: center; gap: 6px; }
+    .date-field label { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+    .date-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .45rem .625rem; font-size: 13px; outline: none; }
+    .date-input:focus { border-color: var(--accent); }
+    .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .45rem .875rem; font-size: 12.5px; cursor: pointer; }
+    .btn-ghost-sm:hover { color: var(--accent); border-color: var(--accent); }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
@@ -99,6 +130,10 @@ export class PedidosComponent implements OnInit {
   readonly pedidos       = signal<PedidoDto[]>([]);
   readonly loading       = signal(false);
   readonly statusFiltro  = signal<string | null>(null);
+  readonly termo         = signal('');
+  de = '';
+  ate = '';
+  private _searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.clienteId = this._route.snapshot.paramMap.get('id')!;
@@ -115,9 +150,27 @@ export class PedidosComponent implements OnInit {
     this.carregar();
   }
 
+  onSearch(e: Event): void {
+    this.termo.set((e.target as HTMLInputElement).value);
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this._searchTimer = setTimeout(() => this.carregar(), 350);
+  }
+
+  limparFiltros(): void {
+    this.termo.set('');
+    this.de = '';
+    this.ate = '';
+    this.carregar();
+  }
+
   carregar(): void {
     this.loading.set(true);
-    this._svc.getAll(this.clienteId, { status: this.statusFiltro() ?? undefined }).subscribe({
+    this._svc.getAll(this.clienteId, {
+      status: this.statusFiltro() ?? undefined,
+      termo: this.termo() || undefined,
+      de: this.de || undefined,
+      ate: this.ate || undefined,
+    }).subscribe({
       next: r => { this.pedidos.set(r.items as PedidoDto[]); this.loading.set(false); },
       error: () => this.loading.set(false),
     });

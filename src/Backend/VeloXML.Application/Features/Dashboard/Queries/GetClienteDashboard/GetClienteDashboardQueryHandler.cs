@@ -16,7 +16,7 @@ public sealed class GetClienteDashboardQueryHandler(IUnitOfWork uow, ICurrentUse
             return Result.Failure<ClienteDashboardDto>(ResultError.Unauthorized("Você não tem acesso ao dashboard deste cliente."));
 
         var documentos = await uow.Documentos.GetByClienteAsync(request.ClienteId, ct);
-        var pedidosPaged = await uow.Pedidos.SearchAsync(request.ClienteId, null, 1, 5000, ct);
+        var pedidosPaged = await uow.Pedidos.SearchAsync(request.ClienteId, null, null, null, null, 1, 5000, ct);
         var pedidos = pedidosPaged.Items;
         var alertasAtivos = await uow.Alertas.CountAtivosAsync(request.ClienteId, ct);
 

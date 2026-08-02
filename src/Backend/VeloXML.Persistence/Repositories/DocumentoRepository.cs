@@ -31,8 +31,10 @@ public sealed class DocumentoRepository(AppDbContext context) : BaseRepository<D
         if (tipo.HasValue) query = query.Where(d => d.Tipo == tipo.Value);
         if (status.HasValue) query = query.Where(d => d.Status == status.Value);
         if (origem.HasValue) query = query.Where(d => d.OrigemImportacao == origem.Value);
-        if (de.HasValue) query = query.Where(d => d.DataEmissao >= de.Value);
-        if (ate.HasValue) query = query.Where(d => d.DataEmissao <= ate.Value);
+        // DataEmissao é "timestamp with time zone" — o Npgsql exige DateTimeKind.Utc explícito,
+        // mas o model binding da query string sempre entrega Kind=Unspecified.
+        if (de.HasValue) query = query.Where(d => d.DataEmissao >= DateTime.SpecifyKind(de.Value, DateTimeKind.Utc));
+        if (ate.HasValue) query = query.Where(d => d.DataEmissao <= DateTime.SpecifyKind(ate.Value, DateTimeKind.Utc));
 
         var total = await query.LongCountAsync(ct);
         var items = await query.OrderByDescending(d => d.DataEmissao).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);

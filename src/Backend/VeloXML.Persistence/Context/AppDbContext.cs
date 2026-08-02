@@ -88,7 +88,8 @@ public class AppDbContext(
         builder.Entity<Pedido>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
-            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
+            && e.DeletedAt == null);
         builder.Entity<PedidoItem>().HasQueryFilter(e =>
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
         builder.Entity<ImportacaoXmlLog>().HasQueryFilter(e =>

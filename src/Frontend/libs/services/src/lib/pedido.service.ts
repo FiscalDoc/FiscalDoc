@@ -8,7 +8,7 @@ import { PagedResult, PaginationQuery } from '@veloxml/models';
 export class PedidoService {
   private readonly _api = inject(ApiService);
 
-  getAll(clienteId: string, q?: PaginationQuery & { status?: string }): Observable<PagedResult<PedidoDto>> {
+  getAll(clienteId: string, q?: PaginationQuery & { status?: string; termo?: string; de?: string; ate?: string }): Observable<PagedResult<PedidoDto>> {
     return this._api.get<PagedResult<PedidoDto>>(`/clientes/${clienteId}/pedidos`, q as Record<string, unknown>);
   }
 
@@ -30,5 +30,13 @@ export class PedidoService {
 
   emitir(clienteId: string, id: string): Observable<PedidoDto> {
     return this._api.post<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}/emitir`, {});
+  }
+
+  duplicar(clienteId: string, id: string): Observable<PedidoDto> {
+    return this._api.post<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}/duplicar`, {});
+  }
+
+  delete(clienteId: string, id: string): Observable<void> {
+    return this._api.delete<void>(`/clientes/${clienteId}/pedidos/${id}`);
   }
 }

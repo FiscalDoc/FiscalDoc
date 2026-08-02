@@ -31,7 +31,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
 
         var itens = request.Itens.Select(i =>
         {
-            var total = (i.Quantidade * i.PrecoUnitario) - i.Desconto;
+            var total = Math.Max(0, (i.Quantidade * i.PrecoUnitario) - i.Desconto);
             return new PedidoItem
             {
                 ProdutoId = i.ProdutoId,
