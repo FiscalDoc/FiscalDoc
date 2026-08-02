@@ -99,7 +99,7 @@ public sealed class UploadDocumentoCommandHandler(
 
             if (!string.IsNullOrEmpty(parsed.ChaveAcesso))
             {
-                var existente = await uow.Documentos.GetByChaveAcessoAsync(parsed.ChaveAcesso, ct);
+                var existente = await uow.Documentos.GetByChaveAcessoAsync(parsed.ChaveAcesso, cliente.Value.Id, ct);
                 if (existente != null)
                 {
                     documento.Status     = Domain.Enums.StatusDocumentoEnum.Duplicado;

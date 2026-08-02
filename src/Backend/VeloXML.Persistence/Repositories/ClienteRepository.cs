@@ -28,4 +28,16 @@ public sealed class ClienteRepository(AppDbContext context) : BaseRepository<Cli
 
     public async Task<Cliente?> GetByAppKeyAsync(string appKey, CancellationToken ct = default) =>
         await DbSet.FirstOrDefaultAsync(c => c.AppKey == appKey, ct);
+
+    // IgnoreQueryFilters porque o job de importação por e-mail (ImportarXmlEmailJob) varre
+    // TODOS os clientes com IMAP habilitado no sistema, não só os do contador atual — então a
+    // unicidade do e-mail também precisa valer globalmente, senão dois clientes de contadores
+    // diferentes poderiam configurar o mesmo e-mail e o job ficaria ambíguo sobre a quem
+    // atribuir os XMLs importados.
+    public async Task<bool> ExisteImapEmailEmOutroClienteAsync(string email, Guid clienteIdAtual, CancellationToken ct = default) =>
+        await DbSet.IgnoreQueryFilters().AnyAsync(c =>
+            c.DeletedAt == null &&
+            c.Id != clienteIdAtual &&
+            c.ImapEmail != null &&
+            c.ImapEmail.ToLower() == email.ToLower(), ct);
 }

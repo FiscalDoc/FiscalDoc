@@ -41,8 +41,12 @@ public sealed class DocumentoRepository(AppDbContext context) : BaseRepository<D
         return PagedResult<Documento>.Create(items, total, page, pageSize);
     }
 
-    public async Task<Documento?> GetByChaveAcessoAsync(string chaveAcesso, CancellationToken ct = default) =>
-        await DbSet.FirstOrDefaultAsync(d => d.ChaveAcesso == chaveAcesso, ct);
+    // Restrito ao mesmo Cliente de propósito: a mesma chave de acesso pode legitimamente
+    // aparecer em Clientes diferentes (ex.: o emitente e o destinatário da nota, cada um
+    // importando a própria cópia do XML) — duplicata só existe quando é o MESMO cliente
+    // reimportando a mesma nota.
+    public async Task<Documento?> GetByChaveAcessoAsync(string chaveAcesso, Guid clienteId, CancellationToken ct = default) =>
+        await DbSet.FirstOrDefaultAsync(d => d.ChaveAcesso == chaveAcesso && d.ClienteId == clienteId, ct);
 
     public async Task<Documento?> GetByIdWithArquivosAsync(Guid id, CancellationToken ct = default) =>
         await DbSet
