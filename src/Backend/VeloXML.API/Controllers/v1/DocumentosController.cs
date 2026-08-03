@@ -75,7 +75,8 @@ public sealed class DocumentosController(
         var arquivo = doc.Arquivos.FirstOrDefault();
         if (arquivo is not null)
         {
-            var presignedUrl = await storage.GetPresignedUrlAsync(arquivo.ObjectKey, arquivo.Bucket, expiresInSeconds: 120);
+            var presignedUrl = await storage.GetPresignedUrlAsync(
+                arquivo.ObjectKey, arquivo.Bucket, expiresInSeconds: 120, downloadFileName: arquivo.NomeOriginal);
             return Ok(new { url = presignedUrl });
         }
 

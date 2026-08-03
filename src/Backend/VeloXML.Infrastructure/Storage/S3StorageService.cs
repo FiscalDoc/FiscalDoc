@@ -79,15 +79,22 @@ public sealed class S3StorageService : IStorageService
         }, ct);
     }
 
-    public Task<string> GetPresignedUrlAsync(string objectKey, string bucket, int expiresInSeconds = 3600)
+    public Task<string> GetPresignedUrlAsync(string objectKey, string bucket, int expiresInSeconds = 3600, string? downloadFileName = null)
     {
-        var url = _client.GetPreSignedURL(new GetPreSignedUrlRequest
+        var request = new GetPreSignedUrlRequest
         {
             BucketName = bucket,
             Key = objectKey,
             Verb = HttpVerb.GET,
             Expires = DateTime.UtcNow.AddSeconds(expiresInSeconds),
-        });
+        };
+
+        if (!string.IsNullOrWhiteSpace(downloadFileName))
+        {
+            request.ResponseHeaderOverrides.ContentDisposition = $"attachment; filename=\"{downloadFileName}\"";
+        }
+
+        var url = _client.GetPreSignedURL(request);
         return Task.FromResult(url);
     }
 

@@ -61,12 +61,22 @@ public sealed class MinioStorageService(IOptions<StorageOptions> opts) : IStorag
             .WithObject(objectKey), ct);
     }
 
-    public async Task<string> GetPresignedUrlAsync(string objectKey, string bucket, int expiresInSeconds = 3600)
+    public async Task<string> GetPresignedUrlAsync(string objectKey, string bucket, int expiresInSeconds = 3600, string? downloadFileName = null)
     {
-        return await _client.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+        var args = new PresignedGetObjectArgs()
             .WithBucket(bucket)
             .WithObject(objectKey)
-            .WithExpiry(expiresInSeconds));
+            .WithExpiry(expiresInSeconds);
+
+        if (!string.IsNullOrWhiteSpace(downloadFileName))
+        {
+            args = args.WithHeaders(new Dictionary<string, string>
+            {
+                ["response-content-disposition"] = $"attachment; filename=\"{downloadFileName}\"",
+            });
+        }
+
+        return await _client.PresignedGetObjectAsync(args);
     }
 
     public async Task EnsureBucketExistsAsync(string bucket, CancellationToken ct = default)
