@@ -74,12 +74,12 @@ interface ConfirmState {
                 </svg>
                 <span>{{ salvando() ? 'Salvando...' : 'Salvar' }}</span>
               </button>
-              <button class="icon-btn" [disabled]="salvando() || salvandoEEmitindo()" (click)="salvarEEmitir()" title="Salvar e emitir em um passo">
+              <button class="icon-btn" [disabled]="salvando() || salvandoEEmitindo()" (click)="salvarEEmitir()" [title]="focusNfeDisponivel() ? 'Salvar e emitir a NF-e em um passo' : 'Salvar e emitir em um passo'">
                 <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13"/>
                   <path stroke-linecap="round" stroke-linejoin="round" d="M22 2l-7 20-4-9-9-4 20-7z"/>
                 </svg>
-                <span>{{ salvandoEEmitindo() ? 'Emitindo...' : 'Salvar e Emitir' }}</span>
+                <span>{{ salvandoEEmitindo() ? 'Emitindo...' : (focusNfeDisponivel() ? 'Salvar e Emitir NF-e' : 'Salvar e Emitir') }}</span>
               </button>
             }
             @if (!isNew()) {
@@ -114,13 +114,15 @@ interface ConfirmState {
                 <span>{{ duplicando() ? 'Duplicando...' : 'Duplicar' }}</span>
               </button>
               @if (pedidoStatus() === 'Rascunho') {
-                <button class="icon-btn" [disabled]="emitindo()" (click)="emitir()" title="Emitir Pedido">
-                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M22 2l-7 20-4-9-9-4 20-7z"/>
-                  </svg>
-                  <span>{{ emitindo() ? 'Emitindo...' : 'Emitir' }}</span>
-                </button>
+                @if (!focusNfeDisponivel()) {
+                  <button class="icon-btn" [disabled]="emitindo()" (click)="emitir()" title="Emitir Pedido">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                    <span>{{ emitindo() ? 'Emitindo...' : 'Emitir' }}</span>
+                  </button>
+                }
                 <button class="icon-btn danger" [disabled]="excluindo()" (click)="excluir()" title="Excluir Pedido">
                   <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -1457,7 +1459,26 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this._cancelarAutoSave();
 
     const eraNovo = this.isNew();
+    const usarFocus = this.focusNfeDisponivel();
     const aposSalvar = (id: string) => {
+      if (usarFocus) {
+        this._pedidoSvc.emitirNfeFocus(this.clienteId, id).subscribe({
+          next: () => {
+            this.salvandoEEmitindo.set(false);
+            // Recarrega da API em vez de montar o estado na mão — cobre os três desfechos
+            // possíveis (autorizada na hora, processando, ou rejeitada) com o mesmo código
+            // que já trata isso em _carregarPedido/_carregarNfeEmissao.
+            if (eraNovo) this._irParaPedidoCriado(id);
+            else this._pedidoSvc.getById(this.clienteId, id).subscribe({ next: p => this._carregarPedido(p) });
+          },
+          error: err => {
+            this.salvandoEEmitindo.set(false);
+            this.erro.set(extractErrorMessage(err, 'Pedido salvo, mas houve um erro ao emitir a NF-e. Abra o pedido e tente novamente.'));
+            if (eraNovo) this._irParaPedidoCriado(id);
+          },
+        });
+        return;
+      }
       this._pedidoSvc.emitir(this.clienteId, id).subscribe({
         next: p => {
           this.salvandoEEmitindo.set(false);
