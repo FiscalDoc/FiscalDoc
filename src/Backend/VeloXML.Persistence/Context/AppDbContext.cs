@@ -26,6 +26,7 @@ public class AppDbContext(
     public DbSet<Destinatario> Destinatarios => Set<Destinatario>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<PedidoItem> PedidoItens => Set<PedidoItem>();
+    public DbSet<PedidoHistorico> PedidoHistoricos => Set<PedidoHistorico>();
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogCategoria> BlogCategorias => Set<BlogCategoria>();
     public DbSet<ImportacaoXmlLog> ImportacaoXmlLogs => Set<ImportacaoXmlLog>();
@@ -91,6 +92,8 @@ public class AppDbContext(
             && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
             && e.DeletedAt == null);
         builder.Entity<PedidoItem>().HasQueryFilter(e =>
+            currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
+        builder.Entity<PedidoHistorico>().HasQueryFilter(e =>
             currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId);
         builder.Entity<ImportacaoXmlLog>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)

@@ -1,11 +1,12 @@
 using MediatR;
+using VeloXML.Application.Features.Pedidos.Common;
 using VeloXML.Domain.Exceptions;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.CancelarPedido;
 
-public sealed class CancelarPedidoCommandHandler(IUnitOfWork uow)
+public sealed class CancelarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser)
     : IRequestHandler<CancelarPedidoCommand, Result>
 {
     public async Task<Result> Handle(CancelarPedidoCommand request, CancellationToken ct)
@@ -19,6 +20,8 @@ public sealed class CancelarPedidoCommandHandler(IUnitOfWork uow)
 
         pedido.Status = "Cancelado";
         uow.Pedidos.Update(pedido);
+        await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
+            pedido.Id, pedido.TenantId, "Cancelado", "Pedido cancelado", currentUser), ct);
         await uow.SaveChangesAsync(ct);
         return Result.Success();
     }

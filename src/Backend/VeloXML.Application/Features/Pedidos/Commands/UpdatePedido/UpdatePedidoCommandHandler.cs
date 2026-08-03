@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
+using VeloXML.Application.Features.Pedidos.Common;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Exceptions;
 using VeloXML.Domain.Interfaces;
@@ -8,7 +9,7 @@ using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
 
-public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePedidoCommandHandler> logger)
+public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser, ILogger<UpdatePedidoCommandHandler> logger)
     : IRequestHandler<UpdatePedidoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(UpdatePedidoCommand request, CancellationToken ct)
@@ -81,6 +82,13 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ILogger<UpdatePe
 
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Pedido {PedidoId} atualizado com {ItemCount} item(ns)", pedido.Id, novosItens.Count);
+
+        if (request.Origem == "manual")
+        {
+            await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
+                pedido.Id, pedido.TenantId, "Editado", "Pedido editado", currentUser), ct);
+            await uow.SaveChangesAsync(ct);
+        }
 
         return Result.Success(CreatePedidoCommandHandler.ToDto(pedido));
     }

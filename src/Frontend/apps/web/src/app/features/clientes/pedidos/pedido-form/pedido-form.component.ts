@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, extractErrorMessage } from '@veloxml/services';
-import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto } from '@veloxml/models';
+import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto } from '@veloxml/models';
 
 interface DocumentoVinculadoInfo {
   id: string;
@@ -391,6 +391,26 @@ interface ConfirmState {
         }
       </div>
 
+      @if (!isNew() && historico().length > 0) {
+        <div class="card section historico-section">
+          <h4 class="section-title">Histórico</h4>
+          <div class="timeline">
+            @for (h of historico(); track h.id) {
+              <div class="timeline-item">
+                <span class="timeline-dot" [class]="'timeline-dot--' + h.tipo.toLowerCase()"></span>
+                <div class="timeline-content">
+                  <p class="timeline-desc">{{ h.descricao }}</p>
+                  <p class="timeline-meta">
+                    {{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                    @if (h.usuarioNome) { · {{ h.usuarioNome }} }
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
 
       <div class="form-actions">
@@ -590,6 +610,21 @@ interface ConfirmState {
     .documento-result-item:last-child { border-bottom: none; }
     .documento-result-item:hover { background: var(--bg3); }
     .form-actions { display: flex; align-items: center; justify-content: flex-start; }
+
+    /* ── Histórico / timeline ── */
+    .timeline { display: flex; flex-direction: column; }
+    .timeline-item { display: flex; gap: 12px; position: relative; padding-bottom: 1.25rem; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item:not(:last-child)::before {
+      content: ''; position: absolute; left: 5px; top: 14px; bottom: 0; width: 1px; background: var(--border);
+    }
+    .timeline-dot { flex-shrink: 0; width: 11px; height: 11px; border-radius: 50%; margin-top: 3px; background: var(--text2); }
+    .timeline-dot--criado { background: var(--accent); }
+    .timeline-dot--emitido { background: var(--accent); }
+    .timeline-dot--cancelado { background: var(--red); }
+    .timeline-dot--vinculonfe, .timeline-dot--desvinculonfe { background: #7c8299; }
+    .timeline-desc { margin: 0; font-size: 13px; color: var(--text); }
+    .timeline-meta { margin: 2px 0 0; font-size: 11px; color: var(--text2); }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
     .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
@@ -650,6 +685,7 @@ export class PedidoFormComponent implements OnInit {
 
   readonly documentoVinculado = signal<DocumentoVinculadoInfo | null>(null);
   readonly documentoImpostos = signal<PedidoDto['documentoImpostos'] | null>(null);
+  readonly historico = signal<PedidoHistoricoDto[]>([]);
   readonly impostosAbertos = signal(false);
   readonly desvinculando = signal(false);
   readonly showVincularDocumento = signal(false);
@@ -750,7 +786,16 @@ export class PedidoFormComponent implements OnInit {
     this.itens.set([]);
     this.produtoBusca = [];
     this.produtosFrequentes.set([]);
+    this.historico.set([]);
     this._dirty = false;
+  }
+
+  private _carregarHistorico(): void {
+    if (!this.pedidoId) { this.historico.set([]); return; }
+    this._pedidoSvc.getHistorico(this.clienteId, this.pedidoId).subscribe({
+      next: h => this.historico.set(h),
+      error: () => this.historico.set([]),
+    });
   }
 
   private _carregarVizinhos(): void {
@@ -843,6 +888,7 @@ export class PedidoFormComponent implements OnInit {
     this.produtoBusca = p.itens.map(i => i.descricao);
     this._dirty = false;
     this._carregarProdutosFrequentes(p.destinatarioId);
+    this._carregarHistorico();
   }
 
   private _carregarProdutosFrequentes(destinatarioId: string): void {
@@ -1056,7 +1102,7 @@ export class PedidoFormComponent implements OnInit {
         this.cancelando.set(true);
         this.erro.set(null);
         this._pedidoSvc.cancelar(this.clienteId, this.pedidoId).subscribe({
-          next: () => { this.cancelando.set(false); this.pedidoStatus.set('Cancelado'); },
+          next: () => { this.cancelando.set(false); this.pedidoStatus.set('Cancelado'); this._carregarHistorico(); },
           error: err => { this.cancelando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao cancelar pedido.')); },
         });
       },
@@ -1219,7 +1265,7 @@ export class PedidoFormComponent implements OnInit {
         error: () => this.autoSalvando.set(false),
       });
     } else {
-      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest() }).subscribe({
+      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest(), origem: 'auto' }).subscribe({
         next: () => aoTerminar(),
         error: () => this.autoSalvando.set(false),
       });
@@ -1299,7 +1345,7 @@ export class PedidoFormComponent implements OnInit {
         error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao criar pedido.')); },
       });
     } else {
-      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest() }).subscribe({
+      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest(), origem: 'manual' }).subscribe({
         next: p => { this.salvando.set(false); this._carregarPedido(p); },
         error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
       });
@@ -1336,7 +1382,7 @@ export class PedidoFormComponent implements OnInit {
         error: (err) => { this.salvandoEEmitindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao criar pedido.')); },
       });
     } else {
-      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest() }).subscribe({
+      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest(), origem: 'manual' }).subscribe({
         next: p => aposSalvar(p.id),
         error: (err) => { this.salvandoEEmitindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
       });

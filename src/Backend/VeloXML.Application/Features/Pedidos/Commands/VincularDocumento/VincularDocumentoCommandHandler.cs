@@ -1,12 +1,13 @@
 using MediatR;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
+using VeloXML.Application.Features.Pedidos.Common;
 using VeloXML.Domain.Exceptions;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.VincularDocumento;
 
-public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow)
+public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser)
     : IRequestHandler<VincularDocumentoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(VincularDocumentoCommand request, CancellationToken ct)
@@ -27,6 +28,8 @@ public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow)
         if (pedido.Status == "Rascunho")
             pedido.Status = "Emitido";
 
+        await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
+            pedido.Id, pedido.TenantId, "VinculoNfe", $"NF-e nº {documento.Numero} vinculada", currentUser), ct);
         await uow.SaveChangesAsync(ct);
 
         var atualizado = await uow.Pedidos.GetWithItensAsync(pedido.Id, ct);
@@ -34,7 +37,7 @@ public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow)
     }
 }
 
-public sealed class DesvincularDocumentoCommandHandler(IUnitOfWork uow)
+public sealed class DesvincularDocumentoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser)
     : IRequestHandler<DesvincularDocumentoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(DesvincularDocumentoCommand request, CancellationToken ct)
@@ -44,6 +47,8 @@ public sealed class DesvincularDocumentoCommandHandler(IUnitOfWork uow)
             throw new NotFoundException("Pedido", request.PedidoId);
 
         pedido.DocumentoId = null;
+        await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
+            pedido.Id, pedido.TenantId, "DesvinculoNfe", "NF-e desvinculada", currentUser), ct);
         await uow.SaveChangesAsync(ct);
 
         var atualizado = await uow.Pedidos.GetWithItensAsync(pedido.Id, ct);

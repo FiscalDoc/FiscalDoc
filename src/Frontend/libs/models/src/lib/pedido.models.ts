@@ -77,6 +77,7 @@ export interface UpdatePedidoRequest {
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
   informacoesComplementares?: string;
+  origem?: 'manual' | 'auto';
 }
 
 export interface PedidoVizinhosDto {
@@ -84,4 +85,12 @@ export interface PedidoVizinhosDto {
   anteriorNumero?: number;
   proximoId?: string;
   proximoNumero?: number;
+}
+
+export interface PedidoHistoricoDto {
+  id: string;
+  tipo: string;
+  descricao: string;
+  usuarioNome?: string;
+  createdAt: string;
 }

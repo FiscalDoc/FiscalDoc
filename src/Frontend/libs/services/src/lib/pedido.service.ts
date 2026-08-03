@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto } from '@veloxml/models';
+import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -54,5 +54,9 @@ export class PedidoService {
 
   getProdutosFrequentes(clienteId: string, destinatarioId: string): Observable<ProdutoDto[]> {
     return this._api.get<ProdutoDto[]>(`/clientes/${clienteId}/pedidos/produtos-frequentes`, { destinatarioId });
+  }
+
+  getHistorico(clienteId: string, id: string): Observable<PedidoHistoricoDto[]> {
+    return this._api.get<PedidoHistoricoDto[]>(`/clientes/${clienteId}/pedidos/${id}/historico`);
   }
 }

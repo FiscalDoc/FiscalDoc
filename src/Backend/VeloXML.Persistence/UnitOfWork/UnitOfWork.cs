@@ -22,6 +22,7 @@ public sealed class UnitOfWork(AppDbContext context) : IUnitOfWork
     public IProdutoRepository Produtos { get; } = new ProdutoRepository(context);
     public IDestinatarioRepository Destinatarios { get; } = new DestinatarioRepository(context);
     public IPedidoRepository Pedidos { get; } = new PedidoRepository(context);
+    public IPedidoHistoricoRepository PedidoHistoricos { get; } = new PedidoHistoricoRepository(context);
     public IBlogPostRepository BlogPosts { get; } = new BlogPostRepository(context);
     public IBlogCategoriaRepository BlogCategorias { get; } = new BlogCategoriaRepository(context);
     public IImportacaoXmlLogRepository ImportacaoXmlLogs { get; } = new ImportacaoXmlLogRepository(context);

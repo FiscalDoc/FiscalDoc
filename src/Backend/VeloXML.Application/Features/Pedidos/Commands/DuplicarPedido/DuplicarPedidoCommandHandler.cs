@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
+using VeloXML.Application.Features.Pedidos.Common;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Exceptions;
 using VeloXML.Domain.Interfaces;
@@ -8,7 +9,7 @@ using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.DuplicarPedido;
 
-public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ILogger<DuplicarPedidoCommandHandler> logger)
+public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser, ILogger<DuplicarPedidoCommandHandler> logger)
     : IRequestHandler<DuplicarPedidoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(DuplicarPedidoCommand request, CancellationToken ct)
@@ -53,6 +54,10 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ILogger<Duplic
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Pedido {PedidoId} duplicado a partir do pedido {OriginalId} (nº {NumeroOriginal})",
             copia.Id, original.Id, original.Numero);
+
+        await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
+            copia.Id, copia.TenantId, "Criado", $"Pedido duplicado a partir do pedido nº {original.Numero}", currentUser), ct);
+        await uow.SaveChangesAsync(ct);
 
         var withDest = await uow.Pedidos.GetWithItensAsync(copia.Id, ct);
         return Result.Success(CreatePedidoCommandHandler.ToDto(withDest!));

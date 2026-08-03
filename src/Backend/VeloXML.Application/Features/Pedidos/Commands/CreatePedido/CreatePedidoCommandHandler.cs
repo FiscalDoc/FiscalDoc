@@ -1,13 +1,14 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
+using VeloXML.Application.Features.Pedidos.Common;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
 
-public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePedidoCommandHandler> logger)
+public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser, ILogger<CreatePedidoCommandHandler> logger)
     : IRequestHandler<CreatePedidoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(CreatePedidoCommand request, CancellationToken ct)
@@ -67,6 +68,10 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ILogger<CreatePe
         await uow.Pedidos.AddAsync(pedido, ct);
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Pedido {PedidoId} criado para o cliente {ClienteId} com {ItemCount} item(ns)", pedido.Id, request.ClienteId, itens.Count);
+
+        await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
+            pedido.Id, pedido.TenantId, "Criado", "Pedido criado", currentUser), ct);
+        await uow.SaveChangesAsync(ct);
 
         var withDest = await uow.Pedidos.GetWithItensAsync(pedido.Id, ct);
         return Result.Success(ToDto(withDest!));
