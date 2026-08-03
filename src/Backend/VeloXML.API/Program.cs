@@ -147,6 +147,11 @@ try
         job => job.ExecuteAsync(CancellationToken.None),
         $"*/{intervaloImportacaoMinutos} * * * *");
 
+    RecurringJob.AddOrUpdate<AlertaPedidoParadoJob>(
+        AlertaPedidoParadoJob.JobId,
+        job => job.ExecuteAsync(CancellationToken.None),
+        "0 6 * * *");
+
     app.MapControllers();
     app.MapHealthChecks("/health");
 

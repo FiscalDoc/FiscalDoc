@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, HostListener, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -213,15 +213,15 @@ interface ConfirmState {
           </div>
           <div class="field col-2">
             <label class="label">Natureza da Operação *</label>
-            <input class="input" [disabled]="readonly()" [(ngModel)]="form.naturezaOperacao" placeholder="Venda de mercadoria"/>
+            <input class="input" [disabled]="readonly()" [ngModel]="form.naturezaOperacao" (ngModelChange)="form.naturezaOperacao = $event; marcarSujo()" placeholder="Venda de mercadoria"/>
           </div>
           <div class="field">
             <label class="label">Data de Saída</label>
-            <input class="input" type="date" [disabled]="readonly()" [(ngModel)]="form.dataSaida"/>
+            <input class="input" type="date" [disabled]="readonly()" [ngModel]="form.dataSaida" (ngModelChange)="form.dataSaida = $event; marcarSujo()"/>
           </div>
           <div class="field">
             <label class="label">Forma de Pagamento</label>
-            <select class="input" [disabled]="readonly()" [(ngModel)]="form.formaPagamento">
+            <select class="input" [disabled]="readonly()" [ngModel]="form.formaPagamento" (ngModelChange)="form.formaPagamento = $event; marcarSujo()">
               <option value="">Não informado</option>
               <option value="AVista">À vista</option>
               <option value="APrazo">A prazo</option>
@@ -229,7 +229,7 @@ interface ConfirmState {
           </div>
           <div class="field">
             <label class="label">Meio de Pagamento</label>
-            <select class="input" [disabled]="readonly()" [(ngModel)]="form.meioPagamento">
+            <select class="input" [disabled]="readonly()" [ngModel]="form.meioPagamento" (ngModelChange)="form.meioPagamento = $event; marcarSujo()">
               <option value="">Não informado</option>
               <option value="Dinheiro">Dinheiro</option>
               <option value="Cartao">Cartão</option>
@@ -240,11 +240,11 @@ interface ConfirmState {
           </div>
           <div class="field">
             <label class="label">Observações (interno)</label>
-            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.observacoes" rows="1" placeholder="Opcional"></textarea>
+            <textarea class="input" [disabled]="readonly()" [ngModel]="form.observacoes" (ngModelChange)="form.observacoes = $event; marcarSujo()" rows="1" placeholder="Opcional"></textarea>
           </div>
           <div class="field col-4">
             <label class="label">Informações Complementares (nota fiscal)</label>
-            <textarea class="input" [disabled]="readonly()" [(ngModel)]="form.informacoesComplementares" rows="1" placeholder="Texto que vai para a nota fiscal (opcional)"></textarea>
+            <textarea class="input" [disabled]="readonly()" [ngModel]="form.informacoesComplementares" (ngModelChange)="form.informacoesComplementares = $event; marcarSujo()" rows="1" placeholder="Texto que vai para a nota fiscal (opcional)"></textarea>
           </div>
         </div>
       </div>
@@ -279,6 +279,15 @@ interface ConfirmState {
             <button class="btn-ghost-sm" (click)="adicionarItem()">+ Adicionar item</button>
           }
         </div>
+
+        @if (!readonly() && produtosFrequentes().length > 0) {
+          <div class="frequentes-row">
+            <span class="frequentes-label">Adicionar novamente:</span>
+            @for (p of produtosFrequentes(); track p.id) {
+              <button type="button" class="chip" (click)="adicionarProdutoFrequente(p)">{{ p.codigo }} — {{ p.descricao }}</button>
+            }
+          </div>
+        }
 
         @if (itens().length === 0) {
           <div class="empty">Nenhum item adicionado.</div>
@@ -350,15 +359,15 @@ interface ConfirmState {
                       <div class="detail-grid">
                         <div class="field">
                           <label class="label">Descrição</label>
-                          <input class="input-sm" [disabled]="readonly()" [(ngModel)]="item.descricao"/>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.descricao" (ngModelChange)="item.descricao = $event; marcarSujo()"/>
                         </div>
                         <div class="field">
                           <label class="label">CFOP</label>
-                          <input class="input-sm" [disabled]="readonly()" [(ngModel)]="item.cfop"/>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cfop" (ngModelChange)="item.cfop = $event; marcarSujo()"/>
                         </div>
                         <div class="field">
                           <label class="label">NCM</label>
-                          <input class="input-sm" [disabled]="readonly()" [(ngModel)]="item.ncm"/>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.ncm" (ngModelChange)="item.ncm = $event; marcarSujo()"/>
                         </div>
                       </div>
                     </td>
@@ -512,6 +521,10 @@ interface ConfirmState {
     .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
     .badge-tipo--nf { background: rgba(0,229,160,.12); color: var(--accent); }
     .list-header { display: flex; align-items: center; justify-content: space-between; }
+    .frequentes-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .frequentes-label { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+    .chip { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 999px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+    .chip:hover { border-color: var(--accent); color: var(--accent); }
     .header-section .form-grid { grid-template-columns: repeat(4, 1fr); gap: .625rem; }
     .col-2 { grid-column: span 2; }
     .col-4 { grid-column: span 4; }
@@ -675,6 +688,9 @@ export class PedidoFormComponent implements OnInit {
   readonly produtoDropdownIndex = signal<number | null>(null);
   private _prodSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Sugestão "adicionar novamente": produtos que esse destinatário mais comprou.
+  readonly produtosFrequentes = signal<ProdutoDto[]>([]);
+
   readonly confirmState = signal<ConfirmState | null>(null);
 
   readonly showNovoDestinatario = signal(false);
@@ -733,6 +749,8 @@ export class PedidoFormComponent implements OnInit {
     this.destinatarioSearch = '';
     this.itens.set([]);
     this.produtoBusca = [];
+    this.produtosFrequentes.set([]);
+    this._dirty = false;
   }
 
   private _carregarVizinhos(): void {
@@ -748,12 +766,39 @@ export class PedidoFormComponent implements OnInit {
 
   irParaAnterior(): void {
     const id = this.vizinhoAnteriorId();
-    if (id) this._router.navigate(['/clientes', this.clienteId, 'pedidos', id]);
+    if (!id) return;
+    this._confirmarSaidaSeSujo(() => this._router.navigate(['/clientes', this.clienteId, 'pedidos', id]));
   }
 
   irParaProximo(): void {
     const id = this.vizinhoProximoId();
-    if (id) this._router.navigate(['/clientes', this.clienteId, 'pedidos', id]);
+    if (!id) return;
+    this._confirmarSaidaSeSujo(() => this._router.navigate(['/clientes', this.clienteId, 'pedidos', id]));
+  }
+
+  // ── Aviso de alterações não salvas ──────────────────────────────────────
+  // Rastreado manualmente (em vez de comparar snapshots) porque form/itens são mutados
+  // diretamente pelo ngModel, sem passar por um signal que dispararia um computed sozinho.
+  private _dirty = false;
+
+  marcarSujo(): void { this._dirty = true; }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this._dirty && !this.readonly()) {
+      event.preventDefault();
+      event.returnValue = true;
+    }
+  }
+
+  private _confirmarSaidaSeSujo(acao: () => void): void {
+    if (!this._dirty) { acao(); return; }
+    this.abrirConfirm(
+      'Sair sem salvar?',
+      'Este pedido tem alterações que ainda não foram salvas. Se você sair agora, elas serão perdidas.',
+      () => { this._dirty = false; acao(); },
+      true,
+    );
   }
 
   private _emptyForm() {
@@ -796,9 +841,40 @@ export class PedidoFormComponent implements OnInit {
       aliquotaCofins: i.aliquotaCofins,
     })));
     this.produtoBusca = p.itens.map(i => i.descricao);
+    this._dirty = false;
+    this._carregarProdutosFrequentes(p.destinatarioId);
   }
 
-  goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'pedidos']); }
+  private _carregarProdutosFrequentes(destinatarioId: string): void {
+    if (!destinatarioId) { this.produtosFrequentes.set([]); return; }
+    this._pedidoSvc.getProdutosFrequentes(this.clienteId, destinatarioId).subscribe({
+      next: r => this.produtosFrequentes.set(r),
+      error: () => this.produtosFrequentes.set([]),
+    });
+  }
+
+  adicionarProdutoFrequente(prod: ProdutoDto): void {
+    this.itens.update(l => [...l, {
+      produtoId: prod.id,
+      descricao: prod.descricao,
+      unidade: prod.unidade,
+      quantidade: 1,
+      precoUnitario: prod.precoUnitario,
+      desconto: 0,
+      cfop: prod.cfop,
+      ncm: prod.ncm,
+      aliquotaIcms: prod.aliquotaIcms,
+      aliquotaPis: prod.aliquotaPis,
+      aliquotaCofins: prod.aliquotaCofins,
+    }]);
+    this.produtoBusca.push(`${prod.codigo} — ${prod.descricao}`);
+    this.marcarSujo();
+    this._agendarAutoSave();
+  }
+
+  goBack(): void {
+    this._confirmarSaidaSeSujo(() => this._router.navigate(['/clientes', this.clienteId, 'pedidos']));
+  }
 
   imprimir(): void {
     window.open(`/imprimir/pedidos/${this.clienteId}/${this.pedidoId}`, '_blank');
@@ -831,6 +907,8 @@ export class PedidoFormComponent implements OnInit {
     this.form.destinatarioId = d.id;
     this.destinatarioSearch = d.razaoSocial;
     this.destinatarioDropdownOpen.set(false);
+    this.marcarSujo();
+    this._carregarProdutosFrequentes(d.id);
   }
 
   abrirNovoDestinatario(): void {
@@ -1067,6 +1145,7 @@ export class PedidoFormComponent implements OnInit {
       aliquotaIcms: 0, aliquotaPis: 0, aliquotaCofins: 0,
     }]);
     this.produtoBusca.push('');
+    this.marcarSujo();
     this._agendarAutoSave();
   }
 
@@ -1081,6 +1160,7 @@ export class PedidoFormComponent implements OnInit {
       }
       return next;
     });
+    this.marcarSujo();
     this._agendarAutoSave();
   }
 
@@ -1097,6 +1177,7 @@ export class PedidoFormComponent implements OnInit {
     // então o signal "itens" nunca emite mudança sozinho. Recriar o array
     // força o computed valorTotal (e o total por linha) a recalcular na hora.
     this.itens.update(l => [...l]);
+    this.marcarSujo();
     this._agendarAutoSave();
   }
 
@@ -1127,6 +1208,7 @@ export class PedidoFormComponent implements OnInit {
     const aoTerminar = () => {
       this.autoSalvando.set(false);
       this.autoSalvo.set(true);
+      this._dirty = false;
       this._autoSalvoTimer = setTimeout(() => this.autoSalvo.set(false), 2500);
     };
 

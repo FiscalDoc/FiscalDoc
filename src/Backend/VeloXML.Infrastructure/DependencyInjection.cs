@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddHostedService<StorageBucketInitializer>();
         services.AddScoped<ImportarXmlEmailJob>();
         services.AddScoped<MigrarArquivosParaS3Job>();
+        services.AddScoped<AlertaPedidoParadoJob>();
         services.AddScoped<IWebhookService, WebhookService>();
         services.AddHttpClient("webhook").ConfigurePrimaryHttpMessageHandler(() =>
             new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });

@@ -58,6 +58,18 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
         return (anterior?.Id, anterior?.Numero, proximo?.Id, proximo?.Numero);
     }
 
+    // Sugestão de "adicionar novamente" no formulário de pedido: produtos que esse
+    // destinatário mais comprou historicamente, ordenados por frequência. Pedidos cancelados
+    // não contam — não refletem o que o destinatário realmente costuma levar.
+    public async Task<List<Guid>> GetProdutosFrequentesPorDestinatarioAsync(Guid clienteId, Guid destinatarioId, int top, CancellationToken ct = default) =>
+        await context.Set<PedidoItem>()
+            .Where(i => i.Pedido!.ClienteId == clienteId && i.Pedido.DestinatarioId == destinatarioId && i.Pedido.Status != "Cancelado")
+            .GroupBy(i => i.ProdutoId)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .Take(top)
+            .ToListAsync(ct);
+
     // Marca o estado de cada PedidoItem explicitamente (Remove/Add) em vez de
     // confiar na detecção automática de Itens.Clear()+Add() dentro do mesmo
     // SaveChanges que também modifica o Pedido pai — nesse cenário o EF Core

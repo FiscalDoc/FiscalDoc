@@ -6,6 +6,7 @@ namespace VeloXML.Domain.Entities;
 public class Alerta : BaseEntity
 {
     public Guid? DocumentoId { get; set; }
+    public Guid? PedidoId { get; set; }
     public Guid ClienteId { get; set; }
     public string Titulo { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
@@ -16,6 +17,7 @@ public class Alerta : BaseEntity
     public string? LidoPor { get; set; }
 
     public Documento? Documento { get; set; }
+    public Pedido? Pedido { get; set; }
     public Cliente? Cliente { get; set; }
     public Tenant? Tenant { get; set; }
 }

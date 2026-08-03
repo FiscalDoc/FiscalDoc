@@ -70,7 +70,7 @@ public class MappingProfile : Profile
 
         CreateMap<Alerta, AlertaDto>()
             .ConstructUsing((src, _) => new AlertaDto(
-                src.Id, src.DocumentoId, src.ClienteId,
+                src.Id, src.DocumentoId, src.PedidoId, src.ClienteId,
                 src.Cliente?.RazaoSocial ?? string.Empty,
                 src.Titulo, src.Descricao, src.Tipo, src.Severidade,
                 src.Status.ToString(), src.CreatedAt, src.LidoEm))

@@ -17,6 +17,7 @@ public class AlertaConfiguration : IEntityTypeConfiguration<Alerta>
         b.Property(e => e.DeletedAt).HasColumnName("deleted_at");
 
         b.Property(e => e.DocumentoId).HasColumnName("documento_id");
+        b.Property(e => e.PedidoId).HasColumnName("pedido_id");
         b.Property(e => e.ClienteId).HasColumnName("cliente_id");
         b.Property(e => e.Titulo).HasColumnName("titulo").HasMaxLength(500).IsRequired();
         b.Property(e => e.Descricao).HasColumnName("descricao").HasMaxLength(2000).IsRequired();
@@ -29,7 +30,9 @@ public class AlertaConfiguration : IEntityTypeConfiguration<Alerta>
         b.HasIndex(e => new { e.TenantId, e.Status });
         b.HasIndex(e => new { e.TenantId, e.ClienteId });
         b.HasIndex(e => e.DocumentoId);
+        b.HasIndex(e => e.PedidoId);
 
         b.HasOne(e => e.Cliente).WithMany().HasForeignKey(e => e.ClienteId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(e => e.Pedido).WithMany().HasForeignKey(e => e.PedidoId).OnDelete(DeleteBehavior.Cascade);
     }
 }

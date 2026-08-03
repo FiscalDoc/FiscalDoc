@@ -11,6 +11,7 @@ using VeloXML.Application.Features.Pedidos.Commands.VincularDocumento;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoById;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoVizinhos;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
+using VeloXML.Application.Features.Pedidos.Queries.GetProdutosFrequentes;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -34,6 +35,13 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new GetPedidoByIdQuery(id, clienteId), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
+    }
+
+    [HttpGet("produtos-frequentes")]
+    public async Task<IActionResult> GetProdutosFrequentes(Guid clienteId, [FromQuery] Guid destinatarioId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetProdutosFrequentesQuery(clienteId, destinatarioId), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
     [HttpGet("{id:guid}/vizinhos")]
