@@ -12,7 +12,10 @@ public sealed class ContadorRepository(AppDbContext context) : BaseRepository<Co
     {
         var query = DbSet.Include(c => c.Clientes).Include(c => c.Tenant).AsQueryable();
         if (!string.IsNullOrWhiteSpace(termo))
-            query = query.Where(c => EF.Functions.ILike(c.Nome, $"%{termo}%") || EF.Functions.ILike(c.Email, $"%{termo}%"));
+            query = query.Where(c =>
+                EF.Functions.ILike(c.Nome, $"%{termo}%") || EF.Functions.ILike(c.Email, $"%{termo}%")
+                || (c.Empresa != null && EF.Functions.ILike(c.Empresa, $"%{termo}%"))
+                || (c.Crc != null && EF.Functions.ILike(c.Crc, $"%{termo}%")));
 
         var total = await query.LongCountAsync(ct);
         var items = await query.OrderBy(c => c.Nome).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);

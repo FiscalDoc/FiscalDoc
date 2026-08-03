@@ -23,19 +23,32 @@ public sealed class SwitchContextCommandHandler(
             || perfil is not (PerfilEnum.Contador or PerfilEnum.Cliente))
             return Result.Failure<SwitchContextResponse>(ResultError.Validation("Perfil", "Perfil inválido — escolha Contador ou Cliente."));
 
-        var contador = await uow.Contadores.GetByIdAsync(request.ContadorId, ct);
-        if (contador is null)
-            return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Contador"));
-
+        Contador? contador;
         Cliente? cliente = null;
+
         if (perfil == PerfilEnum.Cliente)
         {
             if (request.ClienteId is null)
                 return Result.Failure<SwitchContextResponse>(ResultError.Validation("ClienteId", "Selecione o cliente."));
 
             cliente = await uow.Clientes.GetByIdAsync(request.ClienteId.Value, ct);
-            if (cliente is null || cliente.ContadorId != contador.Id)
-                return Result.Failure<SwitchContextResponse>(ResultError.Validation("ClienteId", "Cliente não pertence a esse Contador."));
+            if (cliente is null)
+                return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Cliente"));
+
+            // Contador sempre derivado do próprio Cliente — o Admin seleciona o Cliente
+            // diretamente, sem precisar escolher o Contador antes.
+            contador = await uow.Contadores.GetByIdAsync(cliente.ContadorId, ct);
+            if (contador is null)
+                return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Contador"));
+        }
+        else
+        {
+            if (request.ContadorId is null)
+                return Result.Failure<SwitchContextResponse>(ResultError.Validation("ContadorId", "Selecione o contador."));
+
+            contador = await uow.Contadores.GetByIdAsync(request.ContadorId.Value, ct);
+            if (contador is null)
+                return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Contador"));
         }
 
         var admin = await uow.Users.GetByIdAsync(currentUser.UserId!.Value, ct);

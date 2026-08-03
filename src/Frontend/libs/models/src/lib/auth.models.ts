@@ -42,7 +42,9 @@ export interface CurrentUser {
 }
 
 export interface SwitchContextRequest {
-  contadorId: string;
+  // Obrigatório só pra perfil "Contador" — pra "Cliente", o Contador é derivado do próprio
+  // cliente selecionado no backend, não precisa ser escolhido antes.
+  contadorId?: string;
   perfil: 'Contador' | 'Cliente';
   clienteId?: string;
 }
