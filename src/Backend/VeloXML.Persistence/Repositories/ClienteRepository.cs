@@ -13,7 +13,7 @@ public sealed class ClienteRepository(AppDbContext context) : BaseRepository<Cli
         var query = DbSet.Include(c => c.Contador).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(termo))
-            query = query.Where(c => c.RazaoSocial.Contains(termo) || c.Cnpj.Contains(termo));
+            query = query.Where(c => EF.Functions.ILike(c.RazaoSocial, $"%{termo}%") || c.Cnpj.Contains(termo));
 
         if (contadorId.HasValue)
             query = query.Where(c => c.ContadorId == contadorId.Value);

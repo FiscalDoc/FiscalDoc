@@ -175,21 +175,13 @@ export class SelecionarContextoComponent {
   private _clienteSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
   contadorLabel(c: ContadorDto): string {
-    const partes = [c.nome];
-    if (c.empresa && c.empresa !== c.nome) partes.push(c.empresa);
-    if (c.crc) partes.push('CRC ' + c.crc);
-    return partes.join(' · ');
+    // Contador não tem CNPJ no cadastro (só CRC — o registro profissional) — usa o CRC no
+    // lugar, no mesmo formato "número - nome".
+    return c.crc ? `${c.crc} - ${c.nome}` : c.nome;
   }
 
   clienteLabel(c: ClienteDto): string {
-    const partes = [`${c.razaoSocial} — ${this._formatCnpj(c.cnpj)}`];
-    if (c.nomeContador) partes.push(c.nomeContador);
-    return partes.join(' · ');
-  }
-
-  private _formatCnpj(cnpj: string): string {
-    if (!cnpj || cnpj.length !== 14) return cnpj;
-    return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    return `${c.cnpj} - ${c.razaoSocial}`;
   }
 
   onPerfilChange(perfil: 'Contador' | 'Cliente'): void {
