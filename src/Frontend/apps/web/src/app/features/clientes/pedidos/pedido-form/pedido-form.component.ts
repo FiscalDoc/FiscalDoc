@@ -598,6 +598,7 @@ export class PedidoFormComponent implements OnInit {
 
   readonly documentoVinculado = signal<DocumentoVinculadoInfo | null>(null);
   readonly documentoImpostos = signal<PedidoDto['documentoImpostos'] | null>(null);
+  readonly impostosAbertos = signal(false);
   readonly desvinculando = signal(false);
   readonly showVincularDocumento = signal(false);
   readonly documentoResults = signal<DocumentoDto[]>([]);
