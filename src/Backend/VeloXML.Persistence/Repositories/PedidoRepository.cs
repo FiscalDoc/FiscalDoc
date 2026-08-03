@@ -37,6 +37,27 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
         await DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Include(p => p.Itens).ThenInclude(i => i.Produto)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    // "Anterior/Próximo" navega pelo número sequencial do pedido dentro do mesmo cliente —
+    // mais previsível pro usuário do que ordenar por data de criação, já que o número é o
+    // identificador visível no cabeçalho ("Pedido 1001").
+    public async Task<(Guid? AnteriorId, int? AnteriorNumero, Guid? ProximoId, int? ProximoNumero)> GetVizinhosAsync(
+        Guid clienteId, int numero, CancellationToken ct = default)
+    {
+        var anterior = await DbSet
+            .Where(p => p.ClienteId == clienteId && p.Numero < numero)
+            .OrderByDescending(p => p.Numero)
+            .Select(p => new { p.Id, p.Numero })
+            .FirstOrDefaultAsync(ct);
+
+        var proximo = await DbSet
+            .Where(p => p.ClienteId == clienteId && p.Numero > numero)
+            .OrderBy(p => p.Numero)
+            .Select(p => new { p.Id, p.Numero })
+            .FirstOrDefaultAsync(ct);
+
+        return (anterior?.Id, anterior?.Numero, proximo?.Id, proximo?.Numero);
+    }
+
     // Marca o estado de cada PedidoItem explicitamente (Remove/Add) em vez de
     // confiar na detecção automática de Itens.Clear()+Add() dentro do mesmo
     // SaveChanges que também modifica o Pedido pai — nesse cenário o EF Core

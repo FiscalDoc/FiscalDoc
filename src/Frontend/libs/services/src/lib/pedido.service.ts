@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest } from '@veloxml/models';
+import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -46,5 +46,9 @@ export class PedidoService {
 
   desvincularDocumento(clienteId: string, id: string): Observable<PedidoDto> {
     return this._api.post<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}/desvincular-documento`, {});
+  }
+
+  getVizinhos(clienteId: string, id: string): Observable<PedidoVizinhosDto> {
+    return this._api.get<PedidoVizinhosDto>(`/clientes/${clienteId}/pedidos/${id}/vizinhos`);
   }
 }

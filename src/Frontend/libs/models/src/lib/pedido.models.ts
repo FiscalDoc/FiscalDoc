@@ -78,3 +78,10 @@ export interface UpdatePedidoRequest {
   meioPagamento?: MeioPagamento;
   informacoesComplementares?: string;
 }
+
+export interface PedidoVizinhosDto {
+  anteriorId?: string;
+  anteriorNumero?: number;
+  proximoId?: string;
+  proximoNumero?: number;
+}

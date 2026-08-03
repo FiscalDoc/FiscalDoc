@@ -37,6 +37,31 @@ interface ConfirmState {
             @if (!isNew()) {
               <span class="badge" [class]="statusClass()">{{ pedidoStatus() }}</span>
             }
+            @if (!isNew() && (vizinhoAnteriorId() || vizinhoProximoId())) {
+              <div class="nav-vizinhos">
+                <button
+                  type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId()" (click)="irParaAnterior()"
+                  [title]="vizinhoAnteriorNumero() ? 'Pedido nº ' + vizinhoAnteriorNumero() : 'Sem pedido anterior'"
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                <button
+                  type="button" class="nav-btn" [disabled]="!vizinhoProximoId()" (click)="irParaProximo()"
+                  [title]="vizinhoProximoNumero() ? 'Pedido nº ' + vizinhoProximoNumero() : 'Sem próximo pedido'"
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </div>
+            }
+            @if (autoSalvando()) {
+              <span class="autosave-note">Salvando...</span>
+            } @else if (autoSalvo()) {
+              <span class="autosave-note">Salvo automaticamente</span>
+            }
           </div>
           <div class="header-actions">
             @if (!readonly()) {
@@ -462,6 +487,11 @@ interface ConfirmState {
     .title-row { display: flex; align-items: center; gap: .75rem; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .header-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .nav-vizinhos { display: flex; gap: 4px; }
+    .nav-btn { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text2); cursor: pointer; padding: 0; }
+    .nav-btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .autosave-note { font-size: 11.5px; color: var(--text2); font-style: italic; }
     .icon-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem .75rem; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .icon-btn:hover:not(:disabled) { border-color: var(--text2); color: var(--text); }
     .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
@@ -615,6 +645,16 @@ export class PedidoFormComponent implements OnInit {
   documentoBusca = '';
   private _docSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
+  readonly vizinhoAnteriorId = signal<string | null>(null);
+  readonly vizinhoAnteriorNumero = signal<number | null>(null);
+  readonly vizinhoProximoId = signal<string | null>(null);
+  readonly vizinhoProximoNumero = signal<number | null>(null);
+
+  readonly autoSalvando = signal(false);
+  readonly autoSalvo = signal(false);
+  private _autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _autoSalvoTimer: ReturnType<typeof setTimeout> | null = null;
+
   readonly readonly = computed(() => !this.isNew() && this.pedidoStatus() !== 'Rascunho');
 
   itens = signal<PedidoItemInput[]>([]);
@@ -657,15 +697,63 @@ export class PedidoFormComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.clienteId = this._route.snapshot.paramMap.get('id')!;
-    this.pedidoId  = this._route.snapshot.paramMap.get('pedidoId') ?? '';
-    this.isNew.set(!this.pedidoId || this.pedidoId === 'novo');
+    // Assina paramMap (em vez de ler o snapshot uma vez só) porque "Anterior/Próximo" navega
+    // pra outro :pedidoId dentro da MESMA rota — o Angular reaproveita esta instância do
+    // componente nesse caso, então um ngOnInit que só rodasse uma vez nunca pegaria a troca.
+    this._route.paramMap.subscribe(params => {
+      this.clienteId = params.get('id')!;
+      this.pedidoId  = params.get('pedidoId') ?? '';
+      this.isNew.set(!this.pedidoId || this.pedidoId === 'novo');
+      this._resetState();
 
-    if (!this.isNew()) {
-      this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({
-        next: p => this._carregarPedido(p),
-      });
-    }
+      if (!this.isNew()) {
+        this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({
+          next: p => { this._carregarPedido(p); this._carregarVizinhos(); },
+        });
+      }
+    });
+  }
+
+  private _resetState(): void {
+    this.erro.set(null);
+    this.pedidoStatus.set('Rascunho');
+    this.numero.set(null);
+    this.documentoVinculado.set(null);
+    this.documentoImpostos.set(null);
+    this.impostosAbertos.set(false);
+    this.vizinhoAnteriorId.set(null);
+    this.vizinhoAnteriorNumero.set(null);
+    this.vizinhoProximoId.set(null);
+    this.vizinhoProximoNumero.set(null);
+    this.autoSalvando.set(false);
+    this.autoSalvo.set(false);
+    this.rowErrors.set(new Set());
+    this.expandedRows.set(new Set());
+    this.form = this._emptyForm();
+    this.destinatarioSearch = '';
+    this.itens.set([]);
+    this.produtoBusca = [];
+  }
+
+  private _carregarVizinhos(): void {
+    this._pedidoSvc.getVizinhos(this.clienteId, this.pedidoId).subscribe({
+      next: v => {
+        this.vizinhoAnteriorId.set(v.anteriorId ?? null);
+        this.vizinhoAnteriorNumero.set(v.anteriorNumero ?? null);
+        this.vizinhoProximoId.set(v.proximoId ?? null);
+        this.vizinhoProximoNumero.set(v.proximoNumero ?? null);
+      },
+    });
+  }
+
+  irParaAnterior(): void {
+    const id = this.vizinhoAnteriorId();
+    if (id) this._router.navigate(['/clientes', this.clienteId, 'pedidos', id]);
+  }
+
+  irParaProximo(): void {
+    const id = this.vizinhoProximoId();
+    if (id) this._router.navigate(['/clientes', this.clienteId, 'pedidos', id]);
   }
 
   private _emptyForm() {
@@ -979,6 +1067,7 @@ export class PedidoFormComponent implements OnInit {
       aliquotaIcms: 0, aliquotaPis: 0, aliquotaCofins: 0,
     }]);
     this.produtoBusca.push('');
+    this._agendarAutoSave();
   }
 
   removerItem(i: number): void {
@@ -992,6 +1081,7 @@ export class PedidoFormComponent implements OnInit {
       }
       return next;
     });
+    this._agendarAutoSave();
   }
 
   toggleExpand(i: number): void {
@@ -1007,6 +1097,57 @@ export class PedidoFormComponent implements OnInit {
     // então o signal "itens" nunca emite mudança sozinho. Recriar o array
     // força o computed valorTotal (e o total por linha) a recalcular na hora.
     this.itens.update(l => [...l]);
+    this._agendarAutoSave();
+  }
+
+  // ── Auto-save: dispara sozinho depois de mexer nos itens, pra não perder o pedido se o
+  // usuário fechar a aba antes de clicar em "Salvar" manualmente. Só salva quando o cabeçalho
+  // e todos os itens já têm o mínimo necessário — senão fica tentando (e falhando) a cada
+  // tecla digitada num pedido ainda incompleto.
+  private _agendarAutoSave(): void {
+    if (this.readonly()) return;
+    if (this._autoSaveTimer) clearTimeout(this._autoSaveTimer);
+    this._autoSaveTimer = setTimeout(() => this._autoSalvar(), 1000);
+  }
+
+  private _cancelarAutoSave(): void {
+    if (this._autoSaveTimer) { clearTimeout(this._autoSaveTimer); this._autoSaveTimer = null; }
+  }
+
+  private _autoSalvar(): void {
+    if (this.readonly() || this.salvando() || this.salvandoEEmitindo() || this.autoSalvando()) return;
+    if (!this.form.destinatarioId || !this.form.naturezaOperacao.trim()) return;
+    if (this.itens().length === 0) return;
+    if (!this.itens().every(i => i.produtoId && i.quantidade > 0)) return;
+
+    this.autoSalvando.set(true);
+    this.autoSalvo.set(false);
+    if (this._autoSalvoTimer) clearTimeout(this._autoSalvoTimer);
+
+    const aoTerminar = () => {
+      this.autoSalvando.set(false);
+      this.autoSalvo.set(true);
+      this._autoSalvoTimer = setTimeout(() => this.autoSalvo.set(false), 2500);
+    };
+
+    if (this.isNew()) {
+      const req: CreatePedidoRequest = { clienteId: this.clienteId, ...this._montarRequest() };
+      this._pedidoSvc.create(req).subscribe({
+        next: p => { aoTerminar(); this._irParaPedidoCriado(p.id); },
+        error: () => this.autoSalvando.set(false),
+      });
+    } else {
+      this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest() }).subscribe({
+        next: () => aoTerminar(),
+        error: () => this.autoSalvando.set(false),
+      });
+    }
+  }
+
+  private _irParaPedidoCriado(id: string): void {
+    this.pedidoId = id;
+    this.isNew.set(false);
+    this._router.navigate(['/clientes', this.clienteId, 'pedidos', id], { replaceUrl: true });
   }
 
   itemTotal(item: PedidoItemInput): number {
@@ -1067,16 +1208,17 @@ export class PedidoFormComponent implements OnInit {
 
     this.salvando.set(true);
     this.erro.set(null);
+    this._cancelarAutoSave();
 
     if (this.isNew()) {
       const req: CreatePedidoRequest = { clienteId: this.clienteId, ...this._montarRequest() };
       this._pedidoSvc.create(req).subscribe({
-        next: () => { this.salvando.set(false); this.goBack(); },
+        next: p => { this.salvando.set(false); this._irParaPedidoCriado(p.id); },
         error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao criar pedido.')); },
       });
     } else {
       this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest() }).subscribe({
-        next: () => { this.salvando.set(false); this.goBack(); },
+        next: p => { this.salvando.set(false); this._carregarPedido(p); },
         error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
       });
     }
@@ -1088,10 +1230,16 @@ export class PedidoFormComponent implements OnInit {
 
     this.salvandoEEmitindo.set(true);
     this.erro.set(null);
+    this._cancelarAutoSave();
 
+    const eraNovo = this.isNew();
     const aposSalvar = (id: string) => {
       this._pedidoSvc.emitir(this.clienteId, id).subscribe({
-        next: () => { this.salvandoEEmitindo.set(false); this.goBack(); },
+        next: p => {
+          this.salvandoEEmitindo.set(false);
+          if (eraNovo) this._irParaPedidoCriado(id);
+          else this._carregarPedido(p);
+        },
         error: err => {
           this.salvandoEEmitindo.set(false);
           this.erro.set(extractErrorMessage(err, 'Pedido salvo, mas houve um erro ao emitir. Abra o pedido e emita manualmente.'));
