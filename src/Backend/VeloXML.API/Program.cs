@@ -152,6 +152,11 @@ try
         job => job.ExecuteAsync(CancellationToken.None),
         "0 6 * * *");
 
+    RecurringJob.AddOrUpdate<ConsultarNfePendentesJob>(
+        ConsultarNfePendentesJob.JobId,
+        job => job.ExecuteAsync(CancellationToken.None),
+        "*/2 * * * *");
+
     app.MapControllers();
     app.MapHealthChecks("/health");
 

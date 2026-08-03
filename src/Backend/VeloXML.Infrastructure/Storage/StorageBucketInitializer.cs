@@ -8,7 +8,7 @@ public sealed class StorageBucketInitializer(
     IStorageService storage,
     ILogger<StorageBucketInitializer> logger) : IHostedService
 {
-    private static readonly string[] BucketsLogicos = ["veloxml", "documentos", "arquivos", "thumbnails", "blog"];
+    private static readonly string[] BucketsLogicos = ["veloxml", "documentos", "arquivos", "thumbnails", "blog", "certificados"];
 
     public async Task StartAsync(CancellationToken ct)
     {

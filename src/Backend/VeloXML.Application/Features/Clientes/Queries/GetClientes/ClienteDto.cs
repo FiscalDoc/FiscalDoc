@@ -19,5 +19,15 @@ public record ClienteDto(
     bool ImapHabilitado,
     string? ImapHost,
     int ImapPort,
-    string? ImapEmail
+    string? ImapEmail,
+    string? RegimeTributario,
+    string? InscricaoEstadual,
+    string? InscricaoMunicipal,
+    string? CnaePrincipal,
+    string SerieNfe,
+    bool NfeHabilitado,
+    DateTime? CertificadoA1Validade,
+    string FocusNfeStatus,
+    string? FocusNfeErro,
+    string FocusNfeAmbiente
 );

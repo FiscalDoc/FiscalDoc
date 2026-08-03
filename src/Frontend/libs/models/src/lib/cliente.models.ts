@@ -25,6 +25,10 @@ export interface ClienteDto {
   cnaePrincipal?: string;
   serieNfe?: string;
   nfeHabilitado?: boolean;
+  certificadoA1Validade?: string;
+  focusNfeStatus: 'NaoConfigurado' | 'PendenteRegistro' | 'Registrada' | 'ErroRegistro';
+  focusNfeErro?: string;
+  focusNfeAmbiente: 'homologacao' | 'producao';
 }
 
 export interface CreateClienteRequest {

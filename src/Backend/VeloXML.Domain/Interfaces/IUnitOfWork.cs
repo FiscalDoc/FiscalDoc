@@ -20,6 +20,7 @@ public interface IUnitOfWork : IDisposable
     IBlogCategoriaRepository BlogCategorias { get; }
     IImportacaoXmlLogRepository ImportacaoXmlLogs { get; }
     IPasswordResetTokenRepository PasswordResetTokens { get; }
+    INfeEmissaoRepository NfeEmissoes { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
     Task BeginTransactionAsync(CancellationToken ct = default);

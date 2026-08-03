@@ -37,5 +37,6 @@ public record PedidoDto(
     Guid? DocumentoId,
     string? DocumentoNumero,
     string? DocumentoChaveAcesso,
+    string? DocumentoOrigem,
     DocumentoImpostosDto? DocumentoImpostos
 );

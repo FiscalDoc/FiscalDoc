@@ -30,7 +30,10 @@ public class MappingProfile : Profile
                 src.Telefone, src.Cidade, src.Estado, src.Ativo, src.ContadorId,
                 src.Contador?.Nome, src.Documentos.Count, src.AppKey,
                 src.WebhookHabilitado, src.WebhookUrl,
-                src.ImapHabilitado, src.ImapHost, src.ImapPort, src.ImapEmail))
+                src.ImapHabilitado, src.ImapHost, src.ImapPort, src.ImapEmail,
+                src.RegimeTributario, src.InscricaoEstadual, src.InscricaoMunicipal,
+                src.CnaePrincipal, src.SerieNfe, src.NfeHabilitado, src.CertificadoA1Validade,
+                src.FocusNfeStatus, src.FocusNfeErro, src.FocusNfeAmbiente))
             .ForMember(d => d.NomeContador, opt => opt.Ignore())
             .ForMember(d => d.TotalDocumentos, opt => opt.Ignore())
             .ForMember(d => d.WebhookHabilitado, opt => opt.Ignore())
@@ -38,7 +41,17 @@ public class MappingProfile : Profile
             .ForMember(d => d.ImapHabilitado, opt => opt.Ignore())
             .ForMember(d => d.ImapHost, opt => opt.Ignore())
             .ForMember(d => d.ImapPort, opt => opt.Ignore())
-            .ForMember(d => d.ImapEmail, opt => opt.Ignore());
+            .ForMember(d => d.ImapEmail, opt => opt.Ignore())
+            .ForMember(d => d.RegimeTributario, opt => opt.Ignore())
+            .ForMember(d => d.InscricaoEstadual, opt => opt.Ignore())
+            .ForMember(d => d.InscricaoMunicipal, opt => opt.Ignore())
+            .ForMember(d => d.CnaePrincipal, opt => opt.Ignore())
+            .ForMember(d => d.SerieNfe, opt => opt.Ignore())
+            .ForMember(d => d.NfeHabilitado, opt => opt.Ignore())
+            .ForMember(d => d.CertificadoA1Validade, opt => opt.Ignore())
+            .ForMember(d => d.FocusNfeStatus, opt => opt.Ignore())
+            .ForMember(d => d.FocusNfeErro, opt => opt.Ignore())
+            .ForMember(d => d.FocusNfeAmbiente, opt => opt.Ignore());
 
         CreateMap<Documento, DocumentoDto>()
             .ConstructUsing((src, _) => new DocumentoDto(

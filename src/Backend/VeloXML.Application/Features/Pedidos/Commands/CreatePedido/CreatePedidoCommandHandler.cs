@@ -87,7 +87,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
         )).ToList(),
         p.NaturezaOperacao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
-        p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso,
+        p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
         p.Documento is null ? null : new DocumentoImpostosDto(
             p.Documento.ValorBaseCalculoIcms,
             p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,

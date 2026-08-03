@@ -7,6 +7,7 @@ using VeloXML.Application.Common.Interfaces;
 using VeloXML.Infrastructure.Auth;
 using VeloXML.Infrastructure.Cache;
 using VeloXML.Infrastructure.Email;
+using VeloXML.Infrastructure.Fiscal;
 using VeloXML.Infrastructure.Jobs;
 using VeloXML.Infrastructure.Storage;
 using VeloXML.Infrastructure.Webhooks;
@@ -23,6 +24,12 @@ public static class DependencyInjection
         services.Configure<S3Options>(config.GetSection(S3Options.Section));
         services.Configure<EmailOptions>(config.GetSection(EmailOptions.Section));
         services.Configure<CacheOptions>(config.GetSection(CacheOptions.Section));
+        services.Configure<FocusNfeOptions>(config.GetSection(FocusNfeOptions.Section));
+
+        // Usado só pra proteger a senha do certificado A1 em repouso (dado legalmente sensível) —
+        // não existe outra criptografia em repouso no resto do código hoje, mas esse campo
+        // específico justifica o esforço extra.
+        services.AddDataProtection();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUserService>();
@@ -45,9 +52,14 @@ public static class DependencyInjection
         services.AddScoped<ImportarXmlEmailJob>();
         services.AddScoped<MigrarArquivosParaS3Job>();
         services.AddScoped<AlertaPedidoParadoJob>();
+        services.AddScoped<ConsultarNfePendentesJob>();
         services.AddScoped<IWebhookService, WebhookService>();
         services.AddHttpClient("webhook").ConfigurePrimaryHttpMessageHandler(() =>
             new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });
+
+        services.AddScoped<IFocusNfeService, FocusNfeService>();
+        services.AddHttpClient("focus-nfe");
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 
         var jwtOpts = config.GetSection(JwtOptions.Section).Get<JwtOptions>()!;
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

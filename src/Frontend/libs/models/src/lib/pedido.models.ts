@@ -38,6 +38,7 @@ export interface PedidoDto {
   documentoId?: string;
   documentoNumero?: string;
   documentoChaveAcesso?: string;
+  documentoOrigem?: 'Manual' | 'ImportacaoEmail' | 'ApiIngest' | 'FocusNfe';
   documentoImpostos?: DocumentoImpostosDto;
 }
 
@@ -92,5 +93,18 @@ export interface PedidoHistoricoDto {
   tipo: string;
   descricao: string;
   usuarioNome?: string;
+  createdAt: string;
+}
+
+export type NfeEmissaoStatus = 'Enviada' | 'Processando' | 'Autorizada' | 'Rejeitada' | 'Erro' | 'Cancelada';
+
+export interface NfeEmissaoDto {
+  id: string;
+  status: NfeEmissaoStatus;
+  mensagemErro?: string;
+  chaveAcesso?: string;
+  numero?: string;
+  serie?: string;
+  documentoId?: string;
   createdAt: string;
 }

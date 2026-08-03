@@ -49,6 +49,11 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.Property(e => e.CertificadoA1Senha).HasColumnName("certificado_a1_senha").HasMaxLength(500);
         b.Property(e => e.CertificadoA1Validade).HasColumnName("certificado_a1_validade");
 
+        b.Property(e => e.FocusNfeEmpresaId).HasColumnName("focus_nfe_empresa_id").HasMaxLength(50);
+        b.Property(e => e.FocusNfeStatus).HasColumnName("focus_nfe_status").HasMaxLength(30).HasDefaultValue("NaoConfigurado");
+        b.Property(e => e.FocusNfeErro).HasColumnName("focus_nfe_erro").HasMaxLength(1000);
+        b.Property(e => e.FocusNfeAmbiente).HasColumnName("focus_nfe_ambiente").HasMaxLength(20).HasDefaultValue("homologacao");
+
         b.HasIndex(e => new { e.TenantId, e.Cnpj }).IsUnique().HasFilter("deleted_at IS NULL");
         b.HasIndex(e => e.TenantId);
         b.HasIndex(e => e.ContadorId);

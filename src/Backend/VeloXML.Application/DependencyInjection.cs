@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using VeloXML.Application.Common.Behaviors;
 using VeloXML.Application.Common.Mappings;
+using VeloXML.Application.Features.Pedidos.Common;
 
 namespace VeloXML.Application;
 
@@ -20,6 +21,7 @@ public static class DependencyInjection
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddAutoMapper(typeof(MappingProfile).Assembly);
+        services.AddScoped<NfeEmissaoFinalizer>();
 
         return services;
     }

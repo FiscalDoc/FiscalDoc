@@ -81,6 +81,45 @@ import { ClienteDto } from '@veloxml/models';
             </span>
             <span class="field-hint">Apenas o administrador pode habilitar a emissão de NF-e.</span>
           </div>
+
+          <div class="cert-status-row">
+            <span class="label">Certificado digital A1</span>
+            <span class="badge" [class]="focusStatusClass()">{{ focusStatusLabel() }}</span>
+          </div>
+          @if (cliente()!.focusNfeErro) {
+            <div class="alert-error">{{ cliente()!.focusNfeErro }}</div>
+          }
+          @if (cliente()!.certificadoA1Validade) {
+            <p class="field-hint">Certificado válido até {{ formatDate(cliente()!.certificadoA1Validade!) }}.</p>
+          }
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="label">Ambiente</label>
+              <select class="input" [(ngModel)]="ambiente">
+                <option value="homologacao">Homologação (testes)</option>
+                <option value="producao">Produção</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label">Arquivo do certificado (.pfx/.p12)</label>
+              <input class="input" type="file" accept=".pfx,.p12" (change)="onCertificadoSelecionado($event)"/>
+            </div>
+            <div class="field col-2">
+              <label class="label">Senha do certificado</label>
+              <input class="input" type="password" [(ngModel)]="certificadoSenha" autocomplete="new-password"/>
+            </div>
+          </div>
+
+          @if (erroCertificado()) { <div class="alert-error">{{ erroCertificado() }}</div> }
+          @if (sucessoCertificado()) { <div class="alert-ok">Certificado enviado e processado!</div> }
+
+          <div class="form-actions">
+            <span></span>
+            <button class="btn-primary" [disabled]="enviandoCertificado() || !certificadoArquivo() || !certificadoSenha" (click)="enviarCertificado()">
+              {{ enviandoCertificado() ? 'Enviando...' : 'Enviar certificado' }}
+            </button>
+          </div>
         </div>
 
         <div class="card section">
@@ -169,6 +208,8 @@ import { ClienteDto } from '@veloxml/models';
     .input:disabled { opacity: .6; cursor: not-allowed; }
 
     .status-row { display: flex; align-items: center; gap: 10px; }
+    .cert-status-row { display: flex; align-items: center; gap: 10px; padding-top: .5rem; border-top: 1px solid var(--border); }
+    .badge-yellow { background: rgba(255,193,7,.12); color: #ffc107; }
     .field-hint { font-size: 12px; color: var(--text2); }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
     .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
@@ -222,6 +263,31 @@ export class ClienteEmpresaComponent implements OnInit {
   readonly keyLoading = signal(false);
   readonly keyCopied  = signal(false);
 
+  readonly certificadoArquivo   = signal<File | null>(null);
+  readonly enviandoCertificado  = signal(false);
+  readonly erroCertificado      = signal<string | null>(null);
+  readonly sucessoCertificado   = signal(false);
+  certificadoSenha = '';
+  ambiente: 'homologacao' | 'producao' = 'homologacao';
+
+  readonly focusStatusLabel = computed(() => {
+    switch (this.cliente()?.focusNfeStatus) {
+      case 'Registrada': return 'Certificado registrado';
+      case 'PendenteRegistro': return 'Processando registro...';
+      case 'ErroRegistro': return 'Erro ao registrar';
+      default: return 'Não configurado';
+    }
+  });
+
+  readonly focusStatusClass = computed(() => {
+    switch (this.cliente()?.focusNfeStatus) {
+      case 'Registrada': return 'badge badge-green';
+      case 'PendenteRegistro': return 'badge badge-yellow';
+      case 'ErroRegistro': return 'badge badge-red';
+      default: return 'badge badge-gray';
+    }
+  });
+
   readonly curlExemplo = computed(() => {
     const c = this.cliente();
     const appKey = c?.appKey ?? '<sua-appkey>';
@@ -244,6 +310,7 @@ export class ClienteEmpresaComponent implements OnInit {
           telefone: c.telefone ?? '', cidade: c.cidade ?? '', estado: c.estado ?? '',
         };
         this._syncImap(c);
+        this.ambiente = c.focusNfeAmbiente ?? 'homologacao';
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -299,6 +366,40 @@ export class ClienteEmpresaComponent implements OnInit {
   formatCnpj(cnpj: string): string {
     if (!cnpj || cnpj.length !== 14) return cnpj;
     return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('pt-BR');
+  }
+
+  onCertificadoSelecionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.certificadoArquivo.set(input.files?.[0] ?? null);
+  }
+
+  enviarCertificado(): void {
+    const c = this.cliente();
+    const arquivo = this.certificadoArquivo();
+    if (!c || !arquivo || !this.certificadoSenha || this.enviandoCertificado()) return;
+
+    this.enviandoCertificado.set(true);
+    this.erroCertificado.set(null);
+    this.sucessoCertificado.set(false);
+
+    this._svc.uploadCertificado(c.id, arquivo, this.certificadoSenha, this.ambiente).subscribe({
+      next: updated => {
+        this.cliente.set(updated);
+        this.enviandoCertificado.set(false);
+        this.certificadoSenha = '';
+        this.certificadoArquivo.set(null);
+        this.sucessoCertificado.set(true);
+        setTimeout(() => this.sucessoCertificado.set(false), 4000);
+      },
+      error: err => {
+        this.enviandoCertificado.set(false);
+        this.erroCertificado.set(extractErrorMessage(err, 'Erro ao enviar certificado.'));
+      },
+    });
   }
 
   salvar(): void {

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VeloXML.Persistence.Context;
@@ -12,9 +13,11 @@ using VeloXML.Persistence.Context;
 namespace VeloXML.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260803224957_AddFocusNfeCliente")]
+    partial class AddFocusNfeCliente
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1328,94 +1331,6 @@ namespace VeloXML.Persistence.Migrations
                     b.HasIndex("TenantId", "Origem");
 
                     b.ToTable("importacao_xml_logs", (string)null);
-                });
-
-            modelBuilder.Entity("VeloXML.Domain.Entities.NfeEmissao", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Ambiente")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("homologacao")
-                        .HasColumnName("ambiente");
-
-                    b.Property<string>("ChaveAcesso")
-                        .HasMaxLength(44)
-                        .HasColumnType("character varying(44)")
-                        .HasColumnName("chave_acesso");
-
-                    b.Property<Guid>("ClienteId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("cliente_id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DocumentoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("documento_id");
-
-                    b.Property<string>("MensagemErro")
-                        .HasColumnType("text")
-                        .HasColumnName("mensagem_erro");
-
-                    b.Property<string>("Numero")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("numero");
-
-                    b.Property<Guid>("PedidoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("pedido_id");
-
-                    b.Property<string>("Ref")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("ref");
-
-                    b.Property<string>("Serie")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
-                        .HasColumnName("serie");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tenant_id");
-
-                    b.Property<string>("UltimoPayloadRespostaJson")
-                        .HasColumnType("text")
-                        .HasColumnName("ultimo_payload_resposta_json");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Ref")
-                        .IsUnique();
-
-                    b.HasIndex("PedidoId", "CreatedAt");
-
-                    b.ToTable("nfe_emissoes", (string)null);
                 });
 
             modelBuilder.Entity("VeloXML.Domain.Entities.PasswordResetToken", b =>

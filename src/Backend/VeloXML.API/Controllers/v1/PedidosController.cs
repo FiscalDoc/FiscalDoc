@@ -5,9 +5,11 @@ using VeloXML.Application.Features.Pedidos.Commands.CancelarPedido;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
 using VeloXML.Application.Features.Pedidos.Commands.DeletePedido;
 using VeloXML.Application.Features.Pedidos.Commands.DuplicarPedido;
+using VeloXML.Application.Features.Pedidos.Commands.EmitirNfeFocus;
 using VeloXML.Application.Features.Pedidos.Commands.EmitirPedido;
 using VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
 using VeloXML.Application.Features.Pedidos.Commands.VincularDocumento;
+using VeloXML.Application.Features.Pedidos.Queries.GetNfeEmissao;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoById;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoHistorico;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoVizinhos;
@@ -119,6 +121,21 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new DesvincularDocumentoCommand(id, clienteId), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/emitir-nfe")]
+    public async Task<IActionResult> EmitirNfe(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new EmitirNfeFocusCommand(id, clienteId), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:guid}/nfe-emissao")]
+    public async Task<IActionResult> GetNfeEmissao(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetNfeEmissaoQuery(id, clienteId), ct);
+        if (!result.IsSuccess) return NotFound(result.Error);
+        return result.Value is null ? NoContent() : Ok(result.Value);
     }
 }
 

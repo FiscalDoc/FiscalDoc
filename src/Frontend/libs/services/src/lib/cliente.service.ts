@@ -47,4 +47,12 @@ export class ClienteService {
   updateFiscal(id: string, req: UpdateClienteFiscalRequest): Observable<ClienteDto> {
     return this._api.put<ClienteDto>(`/clientes/${id}/fiscal`, req);
   }
+
+  uploadCertificado(id: string, certificado: File, senha: string, ambiente: string): Observable<ClienteDto> {
+    const fd = new FormData();
+    fd.append('certificado', certificado);
+    fd.append('senha', senha);
+    fd.append('ambiente', ambiente);
+    return this._api.postForm<ClienteDto>(`/clientes/${id}/certificado`, fd);
+  }
 }

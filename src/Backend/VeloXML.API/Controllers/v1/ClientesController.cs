@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Common.DTOs;
 using VeloXML.Application.Features.Clientes.Commands.CreateCliente;
 using VeloXML.Application.Features.Clientes.Commands.DeleteCliente;
 using VeloXML.Application.Features.Clientes.Commands.UpdateCliente;
@@ -8,6 +9,7 @@ using VeloXML.Application.Features.Clientes.Commands.ConfigurarImap;
 using VeloXML.Application.Features.Clientes.Commands.ConfigurarWebhook;
 using VeloXML.Application.Features.Clientes.Commands.CriarContaCliente;
 using VeloXML.Application.Features.Clientes.Commands.RegenerarAppKey;
+using VeloXML.Application.Features.Clientes.Commands.RegistrarCertificadoNfe;
 using VeloXML.Application.Features.Clientes.Queries.GetClienteById;
 using VeloXML.Application.Features.Clientes.Queries.GetClientes;
 using VeloXML.Application.Features.Clientes.Commands.UpdateClienteFiscal;
@@ -90,6 +92,18 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new UpdateClienteFiscalCommand(
             id, body.RegimeTributario, body.InscricaoEstadual, body.InscricaoMunicipal,
             body.CnaePrincipal, body.SerieNfe ?? "1", body.NfeHabilitado), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/certificado")]
+    [RequestSizeLimit(10_485_760)]
+    public async Task<IActionResult> RegistrarCertificado(
+        Guid id, [FromForm] IFormFile certificado, [FromForm] string senha, [FromForm] string ambiente = "homologacao", CancellationToken ct = default)
+    {
+        if (certificado.Length == 0) return BadRequest(new { message = "Arquivo vazio." });
+
+        var dto = new FileUploadDto(certificado.OpenReadStream(), certificado.FileName, certificado.ContentType, certificado.Length);
+        var result = await mediator.Send(new RegistrarCertificadoNfeCommand(id, dto, senha, ambiente), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 }

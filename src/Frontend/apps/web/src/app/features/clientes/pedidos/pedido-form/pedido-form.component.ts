@@ -1,14 +1,15 @@
-import { Component, HostListener, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, extractErrorMessage } from '@veloxml/services';
-import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto } from '@veloxml/models';
+import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, ClienteService, extractErrorMessage } from '@veloxml/services';
+import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
 
 interface DocumentoVinculadoInfo {
   id: string;
   numero: string;
   chaveAcesso?: string;
+  origem?: string;
 }
 
 interface ConfirmState {
@@ -90,14 +91,21 @@ interface ConfirmState {
                 </svg>
                 <span>Imprimir</span>
               </button>
-              <button class="icon-btn" disabled title="Emissão de Nota Fiscal — em breve">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 13H8M16 17H8M10 9H8"/>
-                </svg>
-                <span>Gerar Nota Fiscal</span>
-              </button>
+              @if (focusNfeDisponivel() && pedidoStatus() === 'Rascunho' && !documentoVinculado()) {
+                <button
+                  class="icon-btn"
+                  [disabled]="emitindoNfeFocus() || nfeEmissao()?.status === 'Processando'"
+                  (click)="emitirNfeFocus()"
+                  title="Emitir NF-e"
+                >
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 13H8M16 17H8M10 9H8"/>
+                  </svg>
+                  <span>{{ emitindoNfeFocus() || nfeEmissao()?.status === 'Processando' ? 'Emitindo...' : 'Emitir NF-e' }}</span>
+                </button>
+              }
               <button class="icon-btn" [disabled]="duplicando()" (click)="duplicar()" title="Duplicar Pedido">
                 <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="12" height="12" rx="2"/>
@@ -143,7 +151,7 @@ interface ConfirmState {
           <div class="card section nfe-card-wrap">
             <div class="nfe-card-row">
               <div class="nfe-card-info">
-                <span class="badge badge-emitido">Emitido externamente</span>
+                <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
                 <div>
                   <p class="nfe-card-title">NF-e nº {{ doc.numero }}</p>
                   <p class="nfe-card-chave mono">{{ doc.chaveAcesso }}</p>
@@ -158,10 +166,34 @@ interface ConfirmState {
               </div>
             </div>
           </div>
+        } @else if (focusNfeDisponivel() && nfeEmissao()?.status === 'Processando') {
+          <div class="card section nfe-card">
+            <div class="nfe-card-info">
+              <span class="badge badge-processando">Processando na SEFAZ...</span>
+              <span class="field-hint">Ainda estamos autorizando essa nota na SEFAZ — a página atualiza sozinha.</span>
+            </div>
+          </div>
+        } @else if (focusNfeDisponivel() && (nfeEmissao()?.status === 'Rejeitada' || nfeEmissao()?.status === 'Erro')) {
+          <div class="card section nfe-card">
+            <div class="nfe-card-info">
+              <span class="badge badge-rejeitado">{{ nfeEmissao()?.status === 'Rejeitada' ? 'NF-e rejeitada' : 'Erro na emissão' }}</span>
+              <span class="field-hint">{{ nfeEmissao()?.mensagemErro || 'Não foi possível emitir a NF-e.' }}</span>
+            </div>
+            <div class="nfe-card-actions">
+              <button class="btn-ghost-sm" [disabled]="emitindoNfeFocus()" (click)="emitirNfeFocus()">
+                {{ emitindoNfeFocus() ? 'Tentando...' : 'Tentar novamente' }}
+              </button>
+              <button class="btn-ghost-sm" (click)="abrirVincularDocumento()">Vincular NF-e importada</button>
+            </div>
+          </div>
         } @else {
           <div class="card section nfe-card">
             <div class="nfe-card-info">
-              <span class="field-hint">Esse pedido ainda não tem uma NF-e real vinculada. Se ela já foi emitida em outro sistema, vincule o XML importado aqui.</span>
+              @if (focusNfeDisponivel()) {
+                <span class="field-hint">Esse pedido ainda não tem uma NF-e real vinculada. Emita a NF-e direto por aqui ou, se ela já foi emitida em outro sistema, vincule o XML importado aqui.</span>
+              } @else {
+                <span class="field-hint">Esse pedido ainda não tem uma NF-e real vinculada. Se ela já foi emitida em outro sistema, vincule o XML importado aqui.</span>
+              }
             </div>
             <div class="nfe-card-actions">
               <button class="btn-ghost-sm" (click)="abrirVincularDocumento()">Vincular NF-e importada</button>
@@ -532,6 +564,8 @@ interface ConfirmState {
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
     .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
+    .badge-processando { background: rgba(255,193,7,.12); color: #ffc107; }
+    .badge-rejeitado { background: rgba(255,77,109,.12); color: var(--red); }
     .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -661,8 +695,9 @@ interface ConfirmState {
     .btn-primary.danger { background: var(--red); }
   `],
 })
-export class PedidoFormComponent implements OnInit {
+export class PedidoFormComponent implements OnInit, OnDestroy {
   private readonly _pedidoSvc = inject(PedidoService);
+  private readonly _clienteSvc = inject(ClienteService);
   private readonly _prodSvc   = inject(ProdutoService);
   private readonly _destSvc   = inject(DestinatarioService);
   private readonly _docSvc    = inject(DocumentoService);
@@ -684,6 +719,16 @@ export class PedidoFormComponent implements OnInit {
   readonly excluindo      = signal(false);
 
   readonly documentoVinculado = signal<DocumentoVinculadoInfo | null>(null);
+  readonly nfeEmissao = signal<NfeEmissaoDto | null>(null);
+  readonly emitindoNfeFocus = signal(false);
+  private _nfeEmissaoPollTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly cliente = signal<ClienteDto | null>(null);
+  // Emissão via Focus NFe só aparece pro cliente que o Administrador habilitou E que já tem
+  // certificado registrado na Focus — sem isso, a tela continua exatamente como era antes
+  // (só a opção de vincular uma NF-e importada de outro sistema).
+  readonly focusNfeDisponivel = computed(() =>
+    !!this.cliente()?.nfeHabilitado && this.cliente()?.focusNfeStatus === 'Registrada');
   readonly documentoImpostos = signal<PedidoDto['documentoImpostos'] | null>(null);
   readonly historico = signal<PedidoHistoricoDto[]>([]);
   readonly impostosAbertos = signal(false);
@@ -758,6 +803,8 @@ export class PedidoFormComponent implements OnInit {
       this.isNew.set(!this.pedidoId || this.pedidoId === 'novo');
       this._resetState();
 
+      this._clienteSvc.getById(this.clienteId).subscribe({ next: c => this.cliente.set(c) });
+
       if (!this.isNew()) {
         this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({
           next: p => { this._carregarPedido(p); this._carregarVizinhos(); },
@@ -766,11 +813,18 @@ export class PedidoFormComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    if (this._nfeEmissaoPollTimer) clearTimeout(this._nfeEmissaoPollTimer);
+  }
+
   private _resetState(): void {
     this.erro.set(null);
     this.pedidoStatus.set('Rascunho');
     this.numero.set(null);
     this.documentoVinculado.set(null);
+    this.nfeEmissao.set(null);
+    this.cliente.set(null);
+    if (this._nfeEmissaoPollTimer) { clearTimeout(this._nfeEmissaoPollTimer); this._nfeEmissaoPollTimer = null; }
     this.documentoImpostos.set(null);
     this.impostosAbertos.set(false);
     this.vizinhoAnteriorId.set(null);
@@ -861,7 +915,7 @@ export class PedidoFormComponent implements OnInit {
     this.pedidoStatus.set(p.status);
     this.numero.set(p.numero);
     this.documentoVinculado.set(p.documentoId
-      ? { id: p.documentoId, numero: p.documentoNumero ?? '', chaveAcesso: p.documentoChaveAcesso }
+      ? { id: p.documentoId, numero: p.documentoNumero ?? '', chaveAcesso: p.documentoChaveAcesso, origem: p.documentoOrigem }
       : null);
     this.documentoImpostos.set(p.documentoImpostos ?? null);
     this.form = {
@@ -889,6 +943,48 @@ export class PedidoFormComponent implements OnInit {
     this._dirty = false;
     this._carregarProdutosFrequentes(p.destinatarioId);
     this._carregarHistorico();
+    if (!p.documentoId) this._carregarNfeEmissao();
+  }
+
+  private _carregarNfeEmissao(): void {
+    if (!this.pedidoId) return;
+    this._pedidoSvc.getNfeEmissao(this.clienteId, this.pedidoId).subscribe({
+      next: ne => {
+        this.nfeEmissao.set(ne);
+        if (ne?.status === 'Processando') this._agendarPollNfeEmissao();
+      },
+    });
+  }
+
+  private _agendarPollNfeEmissao(): void {
+    if (this._nfeEmissaoPollTimer) clearTimeout(this._nfeEmissaoPollTimer);
+    this._nfeEmissaoPollTimer = setTimeout(() => {
+      this._pedidoSvc.getNfeEmissao(this.clienteId, this.pedidoId).subscribe({
+        next: ne => {
+          this.nfeEmissao.set(ne);
+          if (ne?.status === 'Processando') {
+            this._agendarPollNfeEmissao();
+          } else if (ne?.status === 'Autorizada') {
+            this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({ next: p => this._carregarPedido(p) });
+          }
+        },
+      });
+    }, 5000);
+  }
+
+  emitirNfeFocus(): void {
+    if (this.emitindoNfeFocus() || this.nfeEmissao()?.status === 'Processando') return;
+    this.emitindoNfeFocus.set(true);
+    this.erro.set(null);
+    this._pedidoSvc.emitirNfeFocus(this.clienteId, this.pedidoId).subscribe({
+      next: ne => {
+        this.emitindoNfeFocus.set(false);
+        this.nfeEmissao.set(ne);
+        if (ne.status === 'Processando') this._agendarPollNfeEmissao();
+        else if (ne.status === 'Autorizada') this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({ next: p => this._carregarPedido(p) });
+      },
+      error: err => { this.emitindoNfeFocus.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao emitir NF-e.')); },
+    });
   }
 
   private _carregarProdutosFrequentes(destinatarioId: string): void {
