@@ -34,6 +34,11 @@ services:
       - S3__SecretKey=${AWS_S3_SECRET_KEY}
       - S3__BucketName=${AWS_S3_BUCKET}
       - S3__Region=${AWS_S3_REGION:-sa-east-1}
+      # URL pública real do app (ex.: https://app.fiscaldoc.com.br) — usada pra montar o link
+      # de download assinado. Em branco aqui (dev local), o backend cai de volta pro
+      # Request.Scheme/Host normal; em produção, PRECISA ser setado no .env do servidor,
+      # porque não dá pra confiar no proxy da Coolify repassar X-Forwarded-Proto direito.
+      - App__PublicUrl=${APP_PUBLIC_URL:-}
     depends_on:
       postgres:
         condition: service_healthy

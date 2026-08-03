@@ -24,7 +24,8 @@ public sealed class DocumentosController(
     IMediator mediator,
     IUnitOfWork uow,
     IStorageService storage,
-    DocumentoDownloadTokenService downloadTokens) : ControllerBase
+    DocumentoDownloadTokenService downloadTokens,
+    IConfiguration configuration) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(
@@ -70,7 +71,17 @@ public sealed class DocumentosController(
         if (!existe) return NotFound();
 
         var token = downloadTokens.Gerar(id, TimeSpan.FromMinutes(2));
-        var url = Url.Action(nameof(DownloadPorToken), null, new { token }, Request.Scheme);
+
+        // Prioriza App:PublicUrl (configurado via env var) em vez de Request.Scheme/Host —
+        // atrás do proxy da Coolify, o ForwardedHeadersMiddleware depende do proxy realmente
+        // enviar X-Forwarded-Proto corretamente, o que na prática não estava acontecendo
+        // (o link saía "http://" mesmo com a requisição chegando via https, fazendo o Chrome
+        // bloquear o download por ser inseguro). Uma URL pública fixa elimina essa incerteza.
+        var publicUrl = configuration["App:PublicUrl"];
+        var url = !string.IsNullOrWhiteSpace(publicUrl)
+            ? $"{publicUrl.TrimEnd('/')}/api/v1/documentos/download?token={Uri.EscapeDataString(token)}"
+            : Url.Action(nameof(DownloadPorToken), null, new { token }, Request.Scheme);
+
         return Ok(new { url });
     }
 
