@@ -59,24 +59,27 @@ public sealed class DocumentosController(
         return await ServirArquivoAsync(doc, ct);
     }
 
-    // Gera um link de download de curta duração (2 min), assinado, sem exigir o header
-    // Authorization — permite que o front navegue direto pro link (em vez de baixar bytes via
-    // JS e montar um blob: URL), o que evita o aviso do Chrome "isso pode danificar seu
-    // dispositivo" (esse aviso é específico de downloads disparados via blob:, não de uma
-    // navegação normal pra uma URL).
+    // Gera um link de download de curta duração. Quando o documento tem um arquivo real
+    // armazenado, usa uma URL pré-assinada direto do S3/MinIO — o storage já sabe montar uma
+    // URL pública e correta sozinho, sem depender de Request.Scheme/proxy nenhum (o link
+    // assinado próprio, via App:PublicUrl, ficava refém de o proxy da Coolify repassar
+    // X-Forwarded-Proto direito, o que na prática falhava e fazia o Chrome bloquear o download
+    // por ser inseguro). Só cai no link assinado próprio quando não há arquivo real (documento
+    // sintético/demo, cujo XML é gerado on-the-fly e não existe no storage pra presignar).
     [HttpGet("{id:guid}/link-download")]
     public async Task<IActionResult> GetLinkDownload(Guid id, CancellationToken ct)
     {
-        var existe = await uow.Documentos.ExistsAsync(d => d.Id == id, ct);
-        if (!existe) return NotFound();
+        var doc = await uow.Documentos.GetByIdWithArquivosAsync(id, ct);
+        if (doc is null) return NotFound();
+
+        var arquivo = doc.Arquivos.FirstOrDefault();
+        if (arquivo is not null)
+        {
+            var presignedUrl = await storage.GetPresignedUrlAsync(arquivo.ObjectKey, arquivo.Bucket, expiresInSeconds: 120);
+            return Ok(new { url = presignedUrl });
+        }
 
         var token = downloadTokens.Gerar(id, TimeSpan.FromMinutes(2));
-
-        // Prioriza App:PublicUrl (configurado via env var) em vez de Request.Scheme/Host —
-        // atrás do proxy da Coolify, o ForwardedHeadersMiddleware depende do proxy realmente
-        // enviar X-Forwarded-Proto corretamente, o que na prática não estava acontecendo
-        // (o link saía "http://" mesmo com a requisição chegando via https, fazendo o Chrome
-        // bloquear o download por ser inseguro). Uma URL pública fixa elimina essa incerteza.
         var publicUrl = configuration["App:PublicUrl"];
         var url = !string.IsNullOrWhiteSpace(publicUrl)
             ? $"{publicUrl.TrimEnd('/')}/api/v1/documentos/download?token={Uri.EscapeDataString(token)}"
