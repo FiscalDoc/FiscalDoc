@@ -173,15 +173,34 @@ public sealed class FocusNfeService(
         _ => 1, // Simples Nacional (inclui o valor legado "SimpesNacional")
     };
 
+    // A "mensagem" de topo da Focus costuma ser só um rótulo genérico ("Erro de validação") —
+    // o motivo de verdade fica no array "erros", um objeto {campo, mensagem} por problema.
+    // Sem isso, o usuário só via "Erro de validação" sem nenhuma pista do que corrigir.
     private static string? ExtrairMensagemErro(string body)
     {
         try
         {
             using var doc = JsonDocument.Parse(body);
-            if (doc.RootElement.TryGetProperty("mensagem", out var msg))
-                return msg.GetString();
-            if (doc.RootElement.TryGetProperty("erros", out var erros))
-                return erros.ToString();
+            var mensagemTopo = doc.RootElement.TryGetProperty("mensagem", out var msg) ? msg.GetString() : null;
+
+            if (doc.RootElement.TryGetProperty("erros", out var erros) && erros.ValueKind == JsonValueKind.Array)
+            {
+                var detalhes = erros.EnumerateArray()
+                    .Select(e =>
+                    {
+                        var campo = e.TryGetProperty("campo", out var c) ? c.GetString() : null;
+                        var mensagemCampo = e.TryGetProperty("mensagem", out var m) ? m.GetString() : e.ToString();
+                        return string.IsNullOrEmpty(campo) ? mensagemCampo : $"{campo}: {mensagemCampo}";
+                    })
+                    .Where(s => !string.IsNullOrWhiteSpace(s));
+
+                var junto = string.Join(" | ", detalhes);
+                if (!string.IsNullOrWhiteSpace(junto))
+                    return string.IsNullOrEmpty(mensagemTopo) ? junto : $"{mensagemTopo}: {junto}";
+            }
+
+            if (!string.IsNullOrEmpty(mensagemTopo))
+                return mensagemTopo;
         }
         catch (JsonException) { /* corpo não é JSON — usa o texto cru */ }
         return body;
