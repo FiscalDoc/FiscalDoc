@@ -19,9 +19,10 @@ public sealed class CreateClienteCommandHandler(
         if (exists is not null)
             return Result.Failure<ClienteDto>(ResultError.Conflict("Cliente"));
 
+        // Um Administrador pode cadastrar um Cliente sem vincular a nenhum Contador — nesse
+        // caso o Cliente fica visível/gerenciável só pelo próprio Administrador. Um Contador
+        // logado sempre tem currentUser.ContadorId, então esse caminho nunca fica nulo pra ele.
         var contadorId = currentUser.ContadorId ?? request.ContadorId;
-        if (contadorId is null)
-            return Result.Failure<ClienteDto>(ResultError.Validation("ContadorId", "Informe o contador responsável."));
 
         var cliente = new Cliente
         {
@@ -32,9 +33,15 @@ public sealed class CreateClienteCommandHandler(
             Email = request.Email,
             Telefone = request.Telefone,
             Endereco = request.Endereco,
+            Logradouro = request.Logradouro,
+            Numero = request.Numero,
+            Complemento = request.Complemento,
+            Bairro = request.Bairro,
+            Cep = request.Cep,
+            CodigoIbgeCidade = request.CodigoIbgeCidade,
             Cidade = request.Cidade,
             Estado = request.Estado,
-            ContadorId = contadorId.Value,
+            ContadorId = contadorId,
             CreatedBy = currentUser.Email
         };
 

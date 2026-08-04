@@ -13,5 +13,11 @@ public record CreateClienteCommand(
     string? Endereco,
     string? Cidade,
     string? Estado,
-    Guid? ContadorId = null
+    Guid? ContadorId = null,
+    string? Logradouro = null,
+    string? Numero = null,
+    string? Complemento = null,
+    string? Bairro = null,
+    string? Cep = null,
+    string? CodigoIbgeCidade = null
 ) : IRequest<Result<ClienteDto>>;

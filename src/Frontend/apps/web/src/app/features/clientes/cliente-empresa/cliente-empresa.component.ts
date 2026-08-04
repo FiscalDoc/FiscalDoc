@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ClienteService, extractErrorMessage } from '@veloxml/services';
+import { ClienteService, CepService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto } from '@veloxml/models';
 
 @Component({
@@ -52,6 +52,27 @@ import { ClienteDto } from '@veloxml/models';
             <div class="field">
               <label class="label">Telefone</label>
               <input class="input" [(ngModel)]="form.telefone" placeholder="(11) 99999-9999"/>
+            </div>
+            <div class="field">
+              <label class="label">CEP</label>
+              <input class="input" [(ngModel)]="form.cep" (ngModelChange)="onCepChange($event)" placeholder="00000-000" maxlength="9"/>
+              @if (buscandoCep()) { <span class="field-hint">Buscando endereço...</span> }
+            </div>
+            <div class="field col-2">
+              <label class="label">Logradouro</label>
+              <input class="input" [(ngModel)]="form.logradouro" placeholder="Rua/Av."/>
+            </div>
+            <div class="field">
+              <label class="label">Número</label>
+              <input class="input" [(ngModel)]="form.numero"/>
+            </div>
+            <div class="field">
+              <label class="label">Complemento</label>
+              <input class="input" [(ngModel)]="form.complemento"/>
+            </div>
+            <div class="field">
+              <label class="label">Bairro</label>
+              <input class="input" [(ngModel)]="form.bairro"/>
             </div>
             <div class="field">
               <label class="label">Cidade</label>
@@ -245,8 +266,10 @@ import { ClienteDto } from '@veloxml/models';
   `],
 })
 export class ClienteEmpresaComponent implements OnInit {
-  private readonly _svc   = inject(ClienteService);
-  private readonly _route = inject(ActivatedRoute);
+  private readonly _svc    = inject(ClienteService);
+  private readonly _cepSvc = inject(CepService);
+  private readonly _route  = inject(ActivatedRoute);
+  readonly buscandoCep = signal(false);
 
   private clienteId = '';
 
@@ -297,7 +320,11 @@ export class ClienteEmpresaComponent implements OnInit {
   --data-binary @nota.xml`;
   });
 
-  form = { razaoSocial: '', nomeFantasia: '', email: '', telefone: '', cidade: '', estado: '' };
+  form = {
+    razaoSocial: '', nomeFantasia: '', email: '', telefone: '',
+    cep: '', logradouro: '', numero: '', complemento: '', bairro: '', codigoIbgeCidade: '',
+    cidade: '', estado: '',
+  };
   imap = { habilitado: false, host: '', port: 993, email: '', senha: '' };
 
   ngOnInit(): void {
@@ -307,13 +334,33 @@ export class ClienteEmpresaComponent implements OnInit {
         this.cliente.set(c);
         this.form = {
           razaoSocial: c.razaoSocial, nomeFantasia: c.nomeFantasia ?? '', email: c.email ?? '',
-          telefone: c.telefone ?? '', cidade: c.cidade ?? '', estado: c.estado ?? '',
+          telefone: c.telefone ?? '',
+          cep: c.cep ?? '', logradouro: c.logradouro ?? '', numero: c.numero ?? '',
+          complemento: c.complemento ?? '', bairro: c.bairro ?? '', codigoIbgeCidade: c.codigoIbgeCidade ?? '',
+          cidade: c.cidade ?? '', estado: c.estado ?? '',
         };
         this._syncImap(c);
         this.ambiente = c.focusNfeAmbiente ?? 'homologacao';
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
+    });
+  }
+
+  onCepChange(valor: string): void {
+    const digitos = (valor || '').replace(/\D/g, '');
+    if (digitos.length !== 8) return;
+
+    this.buscandoCep.set(true);
+    this._cepSvc.buscar(digitos).subscribe(r => {
+      this.buscandoCep.set(false);
+      if (!r) return;
+      this.form.logradouro = r.logradouro || this.form.logradouro;
+      this.form.bairro = r.bairro || this.form.bairro;
+      this.form.complemento = r.complemento || this.form.complemento;
+      this.form.cidade = r.localidade || this.form.cidade;
+      this.form.estado = r.uf || this.form.estado;
+      this.form.codigoIbgeCidade = r.ibge || this.form.codigoIbgeCidade;
     });
   }
 
@@ -415,6 +462,12 @@ export class ClienteEmpresaComponent implements OnInit {
       nomeFantasia: this.form.nomeFantasia || undefined,
       email: this.form.email || undefined,
       telefone: this.form.telefone || undefined,
+      cep: this.form.cep || undefined,
+      logradouro: this.form.logradouro || undefined,
+      numero: this.form.numero || undefined,
+      complemento: this.form.complemento || undefined,
+      bairro: this.form.bairro || undefined,
+      codigoIbgeCidade: this.form.codigoIbgeCidade || undefined,
       cidade: this.form.cidade || undefined,
       estado: this.form.estado || undefined,
       ativo: c.ativo,

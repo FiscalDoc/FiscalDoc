@@ -23,7 +23,7 @@ public sealed class SwitchContextCommandHandler(
             || perfil is not (PerfilEnum.Contador or PerfilEnum.Cliente))
             return Result.Failure<SwitchContextResponse>(ResultError.Validation("Perfil", "Perfil inválido — escolha Contador ou Cliente."));
 
-        Contador? contador;
+        Contador? contador = null;
         Cliente? cliente = null;
 
         if (perfil == PerfilEnum.Cliente)
@@ -36,10 +36,14 @@ public sealed class SwitchContextCommandHandler(
                 return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Cliente"));
 
             // Contador sempre derivado do próprio Cliente — o Admin seleciona o Cliente
-            // diretamente, sem precisar escolher o Contador antes.
-            contador = await uow.Contadores.GetByIdAsync(cliente.ContadorId, ct);
-            if (contador is null)
-                return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Contador"));
+            // diretamente, sem precisar escolher o Contador antes. Um Cliente cadastrado
+            // direto pelo Administrador (sem Contador) simplesmente não tem um pra carregar.
+            if (cliente.ContadorId.HasValue)
+            {
+                contador = await uow.Contadores.GetByIdAsync(cliente.ContadorId.Value, ct);
+                if (contador is null)
+                    return Result.Failure<SwitchContextResponse>(ResultError.NotFound("Contador"));
+            }
         }
         else
         {
@@ -55,13 +59,14 @@ public sealed class SwitchContextCommandHandler(
         if (admin is null)
             return Result.Failure<SwitchContextResponse>(ResultError.Unauthorized());
 
-        var empresa = contador.Empresa ?? contador.Nome;
+        var tenantId = contador?.TenantId ?? cliente!.TenantId;
+        var empresa = contador is not null ? (contador.Empresa ?? contador.Nome) : (cliente!.NomeFantasia ?? cliente.RazaoSocial);
         var accessToken = tokenService.GenerateContextToken(
-            admin, perfil.ToString(), contador.TenantId, contador.Id, cliente?.Id, empresa);
+            admin, perfil.ToString(), tenantId, contador?.Id, cliente?.Id, empresa);
 
         logger.LogInformation(
             "[SwitchContext] Admin {AdminId} ({AdminEmail}) passou a atuar como {Perfil} — Contador {ContadorId} ({Empresa}){ClienteInfo}",
-            admin.Id, admin.Email, perfil, contador.Id, empresa,
+            admin.Id, admin.Email, perfil, contador?.Id, empresa,
             cliente is not null ? $" | Cliente {cliente.Id} ({cliente.RazaoSocial})" : "");
 
         return Result.Success(new SwitchContextResponse(accessToken, DateTime.UtcNow.AddMinutes(60), perfil.ToString(), empresa));

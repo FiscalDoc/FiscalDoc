@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService, ClienteService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
+import { AuthService, ClienteService, ConfiguracaoService, CepService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse, ImportacaoXmlClienteStatusDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
@@ -115,6 +115,27 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
               <div class="field">
                 <label class="label">Telefone</label>
                 <input class="input" [(ngModel)]="edit.telefone" placeholder="(11) 99999-9999"/>
+              </div>
+              <div class="field">
+                <label class="label">CEP</label>
+                <input class="input" [(ngModel)]="edit.cep" (ngModelChange)="onCepChange($event)" placeholder="00000-000" maxlength="9"/>
+                @if (buscandoCep()) { <span class="field-hint">Buscando endereço...</span> }
+              </div>
+              <div class="field col-2">
+                <label class="label">Logradouro</label>
+                <input class="input" [(ngModel)]="edit.logradouro" placeholder="Rua/Av."/>
+              </div>
+              <div class="field">
+                <label class="label">Número</label>
+                <input class="input" [(ngModel)]="edit.numero"/>
+              </div>
+              <div class="field">
+                <label class="label">Complemento</label>
+                <input class="input" [(ngModel)]="edit.complemento"/>
+              </div>
+              <div class="field">
+                <label class="label">Bairro</label>
+                <input class="input" [(ngModel)]="edit.bairro"/>
               </div>
               <div class="field">
                 <label class="label">Cidade</label>
@@ -572,6 +593,8 @@ export class ClienteDetailComponent implements OnInit {
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
   private readonly _config = inject(ConfiguracaoService);
+  private readonly _cepSvc = inject(CepService);
+  readonly buscandoCep = signal(false);
 
   readonly isAdmin = computed(() => this._auth.currentUser()?.perfil === 'Administrador');
 
@@ -616,7 +639,11 @@ export class ClienteDetailComponent implements OnInit {
   readonly erroFiscal     = signal<string | null>(null);
   readonly sucessoFiscal  = signal(false);
 
-  edit    = { razaoSocial: '', nomeFantasia: '', email: '', telefone: '', cidade: '', estado: '', ativo: true };
+  edit    = {
+    razaoSocial: '', nomeFantasia: '', email: '', telefone: '',
+    cep: '', logradouro: '', numero: '', complemento: '', bairro: '', codigoIbgeCidade: '',
+    cidade: '', estado: '', ativo: true,
+  };
   fiscal  = { regimeTributario: '', inscricaoEstadual: '', inscricaoMunicipal: '', cnaePrincipal: '', serieNfe: '1', nfeHabilitado: false };
   imap    = { habilitado: false, host: '', port: 993, email: '', senha: '' };
   webhook = { habilitado: false, url: '' };
@@ -651,7 +678,29 @@ export class ClienteDetailComponent implements OnInit {
   }
 
   private _syncEdit(c: ClienteDto): void {
-    this.edit = { razaoSocial: c.razaoSocial, nomeFantasia: c.nomeFantasia ?? '', email: c.email ?? '', telefone: c.telefone ?? '', cidade: c.cidade ?? '', estado: c.estado ?? '', ativo: c.ativo };
+    this.edit = {
+      razaoSocial: c.razaoSocial, nomeFantasia: c.nomeFantasia ?? '', email: c.email ?? '', telefone: c.telefone ?? '',
+      cep: c.cep ?? '', logradouro: c.logradouro ?? '', numero: c.numero ?? '', complemento: c.complemento ?? '',
+      bairro: c.bairro ?? '', codigoIbgeCidade: c.codigoIbgeCidade ?? '',
+      cidade: c.cidade ?? '', estado: c.estado ?? '', ativo: c.ativo,
+    };
+  }
+
+  onCepChange(valor: string): void {
+    const digitos = (valor || '').replace(/\D/g, '');
+    if (digitos.length !== 8) return;
+
+    this.buscandoCep.set(true);
+    this._cepSvc.buscar(digitos).subscribe(r => {
+      this.buscandoCep.set(false);
+      if (!r) return;
+      this.edit.logradouro = r.logradouro || this.edit.logradouro;
+      this.edit.bairro = r.bairro || this.edit.bairro;
+      this.edit.complemento = r.complemento || this.edit.complemento;
+      this.edit.cidade = r.localidade || this.edit.cidade;
+      this.edit.estado = r.uf || this.edit.estado;
+      this.edit.codigoIbgeCidade = r.ibge || this.edit.codigoIbgeCidade;
+    });
   }
 
   private _syncFiscal(c: ClienteDto): void {
@@ -685,7 +734,14 @@ export class ClienteDetailComponent implements OnInit {
     this.salvando.set(true);
     this.erroSave.set(null);
     this.sucessoSave.set(false);
-    this._svc.update(c.id, { id: c.id, razaoSocial: this.edit.razaoSocial, nomeFantasia: this.edit.nomeFantasia || undefined, email: this.edit.email || undefined, telefone: this.edit.telefone || undefined, cidade: this.edit.cidade || undefined, estado: this.edit.estado || undefined, ativo: this.edit.ativo }).subscribe({
+    this._svc.update(c.id, {
+      id: c.id, razaoSocial: this.edit.razaoSocial, nomeFantasia: this.edit.nomeFantasia || undefined,
+      email: this.edit.email || undefined, telefone: this.edit.telefone || undefined,
+      cep: this.edit.cep || undefined, logradouro: this.edit.logradouro || undefined,
+      numero: this.edit.numero || undefined, complemento: this.edit.complemento || undefined,
+      bairro: this.edit.bairro || undefined, codigoIbgeCidade: this.edit.codigoIbgeCidade || undefined,
+      cidade: this.edit.cidade || undefined, estado: this.edit.estado || undefined, ativo: this.edit.ativo,
+    }).subscribe({
       next: updated => { this.cliente.set(updated); this._syncEdit(updated); this.salvando.set(false); this.sucessoSave.set(true); setTimeout(() => this.sucessoSave.set(false), 3000); },
       error: err => { this.salvando.set(false); this.erroSave.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });

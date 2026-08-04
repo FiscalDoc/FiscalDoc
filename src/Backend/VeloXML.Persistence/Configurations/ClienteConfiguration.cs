@@ -22,6 +22,12 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.Property(e => e.Email).HasColumnName("email").HasMaxLength(256);
         b.Property(e => e.Telefone).HasColumnName("telefone").HasMaxLength(20);
         b.Property(e => e.Endereco).HasColumnName("endereco").HasMaxLength(500);
+        b.Property(e => e.Logradouro).HasColumnName("logradouro").HasMaxLength(200);
+        b.Property(e => e.Numero).HasColumnName("numero").HasMaxLength(20);
+        b.Property(e => e.Complemento).HasColumnName("complemento").HasMaxLength(100);
+        b.Property(e => e.Bairro).HasColumnName("bairro").HasMaxLength(100);
+        b.Property(e => e.Cep).HasColumnName("cep").HasMaxLength(8);
+        b.Property(e => e.CodigoIbgeCidade).HasColumnName("codigo_ibge_cidade").HasMaxLength(10);
         b.Property(e => e.Cidade).HasColumnName("cidade").HasMaxLength(100);
         b.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(2);
         b.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true);

@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ClienteService, ContadorService, AuthService, extractErrorMessage } from '@veloxml/services';
+import { ClienteService, ContadorService, AuthService, CepService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
 
 @Component({
@@ -95,16 +95,13 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
               <div class="form-grid">
                 @if (isAdmin) {
                   <div class="field col-2">
-                    <label class="label">Contador Responsável *</label>
+                    <label class="label">Contador Responsável</label>
                     <select class="input" formControlName="contadorId">
-                      <option value="" disabled>Selecione o contador...</option>
+                      <option value="">Nenhum (cliente direto do Administrador)</option>
                       @for (c of contadores(); track c.id) {
                         <option [value]="c.id">{{ c.nome }}</option>
                       }
                     </select>
-                    @if (form.controls['contadorId'].touched && form.controls['contadorId'].errors?.['required']) {
-                      <span class="field-error">Selecione o contador responsável.</span>
-                    }
                   </div>
                 }
                 <div class="field col-2">
@@ -132,6 +129,27 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
                 <div class="field">
                   <label class="label">Telefone</label>
                   <input class="input" formControlName="telefone" placeholder="(11) 99999-9999"/>
+                </div>
+                <div class="field">
+                  <label class="label">CEP</label>
+                  <input class="input" formControlName="cep" (ngModelChange)="onCepChange($event)" placeholder="00000-000" maxlength="9"/>
+                  @if (buscandoCep()) { <span class="field-hint">Buscando endereço...</span> }
+                </div>
+                <div class="field col-2">
+                  <label class="label">Logradouro</label>
+                  <input class="input" formControlName="logradouro" placeholder="Rua/Av."/>
+                </div>
+                <div class="field">
+                  <label class="label">Número</label>
+                  <input class="input" formControlName="numero"/>
+                </div>
+                <div class="field">
+                  <label class="label">Complemento</label>
+                  <input class="input" formControlName="complemento"/>
+                </div>
+                <div class="field">
+                  <label class="label">Bairro</label>
+                  <input class="input" formControlName="bairro"/>
                 </div>
                 <div class="field">
                   <label class="label">Cidade</label>
@@ -240,6 +258,7 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
     .input:focus { border-color: var(--accent); }
     select.input { cursor: pointer; }
     .field-error { font-size: 11px; color: var(--red); }
+    .field-hint { font-size: 11px; color: var(--text2); }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
   `],
@@ -247,9 +266,11 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
 export class ClientesListComponent implements OnInit {
   private readonly _svc         = inject(ClienteService);
   private readonly _contadorSvc = inject(ContadorService);
+  private readonly _cepSvc      = inject(CepService);
   private readonly _fb          = inject(FormBuilder);
   private readonly _router      = inject(Router);
   readonly auth = inject(AuthService);
+  readonly buscandoCep = signal(false);
 
   readonly clientes     = signal<ClienteDto[]>([]);
   readonly loading      = signal(true);
@@ -275,11 +296,35 @@ export class ClientesListComponent implements OnInit {
     cnpj: [''],
     email: ['', Validators.email],
     telefone: [''],
-    endereco: [''],
+    cep: [''],
+    logradouro: [''],
+    numero: [''],
+    complemento: [''],
+    bairro: [''],
+    codigoIbgeCidade: [''],
     cidade: [''],
     estado: [''],
     ativo: [true],
   });
+
+  onCepChange(valor: string): void {
+    const digitos = (valor || '').replace(/\D/g, '');
+    if (digitos.length !== 8) return;
+
+    this.buscandoCep.set(true);
+    this._cepSvc.buscar(digitos).subscribe(r => {
+      this.buscandoCep.set(false);
+      if (!r) return;
+      this.form.patchValue({
+        logradouro: r.logradouro || this.form.controls.logradouro.value,
+        bairro: r.bairro || this.form.controls.bairro.value,
+        complemento: r.complemento || this.form.controls.complemento.value,
+        cidade: r.localidade || this.form.controls.cidade.value,
+        estado: r.uf || this.form.controls.estado.value,
+        codigoIbgeCidade: r.ibge || this.form.controls.codigoIbgeCidade.value,
+      });
+    });
+  }
 
   ngOnInit(): void {
     this.load();
@@ -316,12 +361,8 @@ export class ClientesListComponent implements OnInit {
     this.form.reset();
     this.form.controls.cnpj.setValidators([Validators.required, Validators.minLength(14)]);
     this.form.controls.cnpj.updateValueAndValidity();
-    if (this.isAdmin) {
-      this.form.controls.contadorId.setValidators([Validators.required]);
-    } else {
-      this.form.controls.contadorId.clearValidators();
-    }
-    this.form.controls.contadorId.updateValueAndValidity();
+    // Contador é sempre opcional — quando o Administrador não escolhe nenhum, o cliente fica
+    // cadastrado direto por ele, sem vínculo com nenhum escritório.
     this.showModal.set(true);
   }
 
@@ -340,6 +381,12 @@ export class ClientesListComponent implements OnInit {
       cnpj: v.cnpj,
       email: v.email || undefined,
       telefone: v.telefone || undefined,
+      cep: v.cep || undefined,
+      logradouro: v.logradouro || undefined,
+      numero: v.numero || undefined,
+      complemento: v.complemento || undefined,
+      bairro: v.bairro || undefined,
+      codigoIbgeCidade: v.codigoIbgeCidade || undefined,
       cidade: v.cidade || undefined,
       estado: v.estado || undefined,
     } as CreateClienteRequest).subscribe({

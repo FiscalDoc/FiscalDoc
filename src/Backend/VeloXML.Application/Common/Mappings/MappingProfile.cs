@@ -27,7 +27,8 @@ public class MappingProfile : Profile
         CreateMap<Cliente, ClienteDto>()
             .ConstructUsing((src, _) => new ClienteDto(
                 src.Id, src.RazaoSocial, src.NomeFantasia, src.Cnpj, src.Email,
-                src.Telefone, src.Cidade, src.Estado, src.Ativo, src.ContadorId,
+                src.Telefone, src.Logradouro, src.Numero, src.Complemento, src.Bairro,
+                src.Cep, src.CodigoIbgeCidade, src.Cidade, src.Estado, src.Ativo, src.ContadorId,
                 src.Contador?.Nome, src.Documentos.Count, src.AppKey,
                 src.WebhookHabilitado, src.WebhookUrl,
                 src.ImapHabilitado, src.ImapHost, src.ImapPort, src.ImapEmail,

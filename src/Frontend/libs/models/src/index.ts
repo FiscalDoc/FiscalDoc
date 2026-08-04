@@ -13,3 +13,4 @@ export * from './lib/produto.models';
 export * from './lib/destinatario.models';
 export * from './lib/pedido.models';
 export * from './lib/blog.models';
+export * from './lib/cep.models';

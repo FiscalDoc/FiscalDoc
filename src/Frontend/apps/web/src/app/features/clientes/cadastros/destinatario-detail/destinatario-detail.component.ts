@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinatarioService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { DestinatarioService, CepService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { DestinatarioDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'endereco';
@@ -101,7 +101,8 @@ type Tab = 'cadastro' | 'endereco';
               </div>
               <div class="field">
                 <label class="label">CEP</label>
-                <input class="input" [(ngModel)]="form.cep" placeholder="00000-000"/>
+                <input class="input" [(ngModel)]="form.cep" (ngModelChange)="onCepChange($event)" placeholder="00000-000" maxlength="9"/>
+                @if (buscandoCep()) { <span class="field-hint">Buscando endereço...</span> }
               </div>
               <div class="field">
                 <label class="label">Cidade</label>
@@ -158,6 +159,7 @@ type Tab = 'cadastro' | 'endereco';
     .input:focus { border-color: var(--accent); }
     .input.error { border-color: var(--red); }
     .field-error { font-size: 11px; color: var(--red); }
+    .field-hint { font-size: 11px; color: var(--text2); }
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
@@ -173,6 +175,7 @@ type Tab = 'cadastro' | 'endereco';
 })
 export class DestinatarioDetailComponent implements OnInit {
   private readonly _svc    = inject(DestinatarioService);
+  private readonly _cepSvc = inject(CepService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
 
@@ -186,8 +189,26 @@ export class DestinatarioDetailComponent implements OnInit {
   readonly sucesso  = signal(false);
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly tab      = signal<Tab>('cadastro');
+  readonly buscandoCep = signal(false);
 
   form = this._empty();
+
+  onCepChange(valor: string): void {
+    const digitos = (valor || '').replace(/\D/g, '');
+    if (digitos.length !== 8) return;
+
+    this.buscandoCep.set(true);
+    this._cepSvc.buscar(digitos).subscribe(r => {
+      this.buscandoCep.set(false);
+      if (!r) return;
+      this.form.logradouro = r.logradouro || this.form.logradouro;
+      this.form.bairro = r.bairro || this.form.bairro;
+      this.form.complemento = r.complemento || this.form.complemento;
+      this.form.cidade = r.localidade || this.form.cidade;
+      this.form.estado = r.uf || this.form.estado;
+      this.form.codigoIbgeCidade = r.ibge || this.form.codigoIbgeCidade;
+    });
+  }
 
   ngOnInit(): void {
     this.clienteId = this._route.snapshot.paramMap.get('id')!;

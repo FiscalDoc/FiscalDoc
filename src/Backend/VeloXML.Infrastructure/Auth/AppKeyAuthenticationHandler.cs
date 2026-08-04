@@ -45,10 +45,11 @@ public sealed class AppKeyAuthenticationHandler(
             new("sub", cliente.Id.ToString()),
             new("cliente_id", cliente.Id.ToString()),
             new("tenant_id", cliente.TenantId.ToString()),
-            new("contador_id", cliente.ContadorId.ToString()),
             new("role", "Cliente"),
             new("name", cliente.RazaoSocial),
         };
+        if (cliente.ContadorId.HasValue)
+            claims.Add(new Claim("contador_id", cliente.ContadorId.Value.ToString()));
         if (!string.IsNullOrWhiteSpace(cliente.Email))
             claims.Add(new Claim("email", cliente.Email));
 

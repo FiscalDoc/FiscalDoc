@@ -16,3 +16,4 @@ export * from './lib/cliente-usuario.service';
 export * from './lib/blog.service';
 export * from './lib/blog-admin.service';
 export * from './lib/cobranca.service';
+export * from './lib/cep.service';

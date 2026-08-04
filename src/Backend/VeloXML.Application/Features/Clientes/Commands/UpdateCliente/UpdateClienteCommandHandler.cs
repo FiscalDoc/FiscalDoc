@@ -22,6 +22,12 @@ public sealed class UpdateClienteCommandHandler(
         cliente.Email = request.Email;
         cliente.Telefone = request.Telefone;
         cliente.Endereco = request.Endereco;
+        cliente.Logradouro = request.Logradouro;
+        cliente.Numero = request.Numero;
+        cliente.Complemento = request.Complemento;
+        cliente.Bairro = request.Bairro;
+        cliente.Cep = request.Cep;
+        cliente.CodigoIbgeCidade = request.CodigoIbgeCidade;
         cliente.Cidade = request.Cidade;
         cliente.Estado = request.Estado;
         cliente.Ativo = request.Ativo;

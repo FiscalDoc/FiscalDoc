@@ -9,11 +9,21 @@ public class Cliente : BaseEntity, IAuditableEntity
     public string Cnpj { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Telefone { get; set; }
+    // Mantido por compatibilidade com cadastros antigos (texto livre, pré-CEP estruturado) —
+    // telas novas usam os campos estruturados abaixo, preenchidos via ViaCEP.
     public string? Endereco { get; set; }
+    public string? Logradouro { get; set; }
+    public string? Numero { get; set; }
+    public string? Complemento { get; set; }
+    public string? Bairro { get; set; }
+    public string? Cep { get; set; }
+    public string? CodigoIbgeCidade { get; set; }
     public string? Cidade { get; set; }
     public string? Estado { get; set; }
     public bool Ativo { get; set; } = true;
-    public Guid ContadorId { get; set; }
+    // Nulo quando o Cliente não está vinculado a nenhum Contador (cadastro direto pelo
+    // Administrador) — nesse caso ele só é visível/gerenciável pelo próprio Administrador.
+    public Guid? ContadorId { get; set; }
     public string AppKey { get; set; } = Guid.NewGuid().ToString("N");
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
