@@ -72,8 +72,11 @@ public sealed class FocusNfeService(
                 return new FocusEmpresaResult(false, null, ExtrairMensagemErro(body));
             }
 
-            var resultado = JsonSerializer.Deserialize<FocusEmpresaResponse>(body, JsonOpts);
-            return new FocusEmpresaResult(true, resultado?.Id, null);
+            // A Focus já confirmou o cadastro pelo status HTTP nesse ponto — uma falha ao
+            // extrair o "id" da resposta não pode reverter isso pra "erro", senão um cadastro
+            // que deu certo do lado deles aparece como falho aqui (já aconteceu: o "id" volta
+            // como número, não string, e um Deserialize<T> tipado quebrava em cima disso).
+            return new FocusEmpresaResult(true, ExtrairIdEmpresa(body), null);
         }
         catch (Exception ex)
         {
@@ -206,6 +209,27 @@ public sealed class FocusNfeService(
         return body;
     }
 
+    // Lê o "id" manualmente (em vez de um tipo forte) porque a Focus devolve ele como número,
+    // não string — ler via JsonDocument aceita os dois formatos sem arriscar exceção.
+    private static string? ExtrairIdEmpresa(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (!doc.RootElement.TryGetProperty("id", out var idEl)) return null;
+            return idEl.ValueKind switch
+            {
+                JsonValueKind.String => idEl.GetString(),
+                JsonValueKind.Number => idEl.GetRawText(),
+                _ => idEl.GetRawText(),
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
     private sealed record FocusEmpresaRequest(
@@ -227,8 +251,6 @@ public sealed class FocusNfeService(
         [property: JsonPropertyName("habilita_nfe")] bool HabilitaNfe,
         [property: JsonPropertyName("arquivo_certificado_base64")] string ArquivoCertificadoBase64,
         [property: JsonPropertyName("senha_certificado")] string SenhaCertificado);
-
-    private sealed record FocusEmpresaResponse([property: JsonPropertyName("id")] string? Id);
 
     private sealed record FocusNfeStatusResponse(
         [property: JsonPropertyName("status")] string? Status,
