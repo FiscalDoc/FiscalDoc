@@ -439,8 +439,14 @@ export class ClienteEmpresaComponent implements OnInit {
         this.enviandoCertificado.set(false);
         this.certificadoSenha = '';
         this.certificadoArquivo.set(null);
-        this.sucessoCertificado.set(true);
-        setTimeout(() => this.sucessoCertificado.set(false), 4000);
+        // O upload em si sempre "dá certo" (o arquivo foi aceito e processado) — mas só é
+        // sucesso de verdade se a Focus também aceitou o cadastro. Rejeição vira "ErroRegistro"
+        // e já aparece no badge/alerta de erro logo acima, então evita mostrar as duas
+        // mensagens contraditórias juntas ("enviado!" + erro).
+        if (updated.focusNfeStatus === 'Registrada') {
+          this.sucessoCertificado.set(true);
+          setTimeout(() => this.sucessoCertificado.set(false), 4000);
+        }
       },
       error: err => {
         this.enviandoCertificado.set(false);
