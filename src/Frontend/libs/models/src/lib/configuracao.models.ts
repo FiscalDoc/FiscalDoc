@@ -19,6 +19,18 @@ export interface SaveSmtpConfigRequest {
   replyTo?: string;
 }
 
+export interface FocusNfeConfigDto {
+  tokenHomologacaoConfigurado: boolean;
+  tokenProducaoConfigurado: boolean;
+  webhookSecret?: string;
+}
+
+export interface SaveFocusNfeConfigRequest {
+  tokenHomologacao?: string;
+  tokenProducao?: string;
+  webhookSecret?: string;
+}
+
 export interface SocialConfigDto {
   instagram?: string;
   facebook?: string;

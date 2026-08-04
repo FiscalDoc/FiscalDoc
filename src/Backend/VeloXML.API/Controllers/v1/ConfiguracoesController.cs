@@ -2,11 +2,13 @@ using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Features.Configuracoes.Commands.SaveFocusNfeConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveIntervaloImportacao;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSmtpConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SaveSocialConfig;
 using VeloXML.Application.Features.Configuracoes.Commands.SendConvite;
 using VeloXML.Application.Features.Configuracoes.Commands.TestSmtpConfig;
+using VeloXML.Application.Features.Configuracoes.Queries.GetFocusNfeConfig;
 using VeloXML.Application.Features.Configuracoes.Queries.GetImportacaoXmlStatus;
 using VeloXML.Application.Features.Configuracoes.Queries.GetIntervaloImportacao;
 using VeloXML.Application.Features.Configuracoes.Queries.GetSmtpConfig;
@@ -129,5 +131,21 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
     {
         BackgroundJob.Enqueue<MigrarArquivosParaS3Job>(job => job.ExecuteAsync(CancellationToken.None));
         return Ok();
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpGet("focus-nfe")]
+    public async Task<IActionResult> GetFocusNfe(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetFocusNfeConfigQuery(), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpPut("focus-nfe")]
+    public async Task<IActionResult> SaveFocusNfe([FromBody] SaveFocusNfeConfigCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 }

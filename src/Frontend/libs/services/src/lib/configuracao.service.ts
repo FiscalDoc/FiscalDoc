@@ -2,7 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
+  FocusNfeConfigDto,
   ImportacaoXmlStatusDto,
+  SaveFocusNfeConfigRequest,
   SaveSmtpConfigRequest,
   SendConviteRequest,
   SmtpConfigDto,
@@ -60,5 +62,13 @@ export class ConfiguracaoService {
 
   migrarArquivosParaS3(): Observable<void> {
     return this._api.post<void>('/configuracoes/storage/migrar-s3', {});
+  }
+
+  getFocusNfe(): Observable<FocusNfeConfigDto> {
+    return this._api.get<FocusNfeConfigDto>('/configuracoes/focus-nfe');
+  }
+
+  saveFocusNfe(req: SaveFocusNfeConfigRequest): Observable<FocusNfeConfigDto> {
+    return this._api.put<FocusNfeConfigDto>('/configuracoes/focus-nfe', req);
   }
 }

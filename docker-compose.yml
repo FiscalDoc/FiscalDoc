@@ -39,11 +39,6 @@ services:
       # Request.Scheme/Host normal; em produção, PRECISA ser setado no .env do servidor,
       # porque não dá pra confiar no proxy da Coolify repassar X-Forwarded-Proto direito.
       - App__PublicUrl=${APP_PUBLIC_URL:-}
-      # Focus NFe — conta única da plataforma (não por cliente). Em branco aqui (dev local sem
-      # conta ainda), qualquer emissão simplesmente falha ao contatar a Focus; nada quebra.
-      - FocusNfe__TokenHomologacao=${FOCUS_NFE_TOKEN_HOMOLOGACAO:-}
-      - FocusNfe__TokenProducao=${FOCUS_NFE_TOKEN_PRODUCAO:-}
-      - FocusNfe__WebhookSecret=${FOCUS_NFE_WEBHOOK_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy

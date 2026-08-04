@@ -4,15 +4,20 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using VeloXML.Application.Common;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Domain.Entities;
+using VeloXML.Domain.Interfaces;
 
 namespace VeloXML.Infrastructure.Fiscal;
 
+// O token de autenticação da Focus NFe é configurado pelo Administrador direto na tela de
+// Configurações (Configuracao, chaves em FocusNfeConfigKeys) — não por variável de ambiente,
+// já que é um dado que o próprio Admin cadastra/atualiza pelo sistema, não um segredo de
+// infraestrutura.
 public sealed class FocusNfeService(
     IHttpClientFactory httpFactory,
-    IOptions<FocusNfeOptions> opts,
+    IUnitOfWork uow,
     ILogger<FocusNfeService> logger) : IFocusNfeService
 {
     private const string BaseUrlProducao = "https://api.focusnfe.com.br/v2";
@@ -40,7 +45,9 @@ public sealed class FocusNfeService(
             ArquivoCertificadoBase64: certificadoBase64,
             SenhaCertificado: certificadoSenha);
 
-        var http = CriarCliente(cliente.FocusNfeAmbiente);
+        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct);
+        if (http is null)
+            return new FocusEmpresaResult(false, null, "Token da Focus NFe não configurado. Configure em Configurações > Focus NFe.");
 
         try
         {
@@ -67,7 +74,10 @@ public sealed class FocusNfeService(
 
     public async Task<FocusNfeSubmissaoResult> EmitirNfeAsync(Cliente cliente, string refId, object payload, CancellationToken ct = default)
     {
-        var http = CriarCliente(cliente.FocusNfeAmbiente);
+        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct);
+        if (http is null)
+            return new FocusNfeSubmissaoResult(true, false, null, null, null, null, null, "Token da Focus NFe não configurado.", "");
+
         var resp = await http.PostAsJsonAsync($"nfe?ref={Uri.EscapeDataString(refId)}", payload, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
         return InterpretarResposta(body);
@@ -75,7 +85,10 @@ public sealed class FocusNfeService(
 
     public async Task<FocusNfeSubmissaoResult> ConsultarNfeAsync(Cliente cliente, string refId, CancellationToken ct = default)
     {
-        var http = CriarCliente(cliente.FocusNfeAmbiente);
+        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct);
+        if (http is null)
+            return new FocusNfeSubmissaoResult(true, false, null, null, null, null, null, "Token da Focus NFe não configurado.", "");
+
         var resp = await http.GetAsync($"nfe/{Uri.EscapeDataString(refId)}", ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
         return InterpretarResposta(body);
@@ -87,7 +100,8 @@ public sealed class FocusNfeService(
         var raiz = producao ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br";
         var url = caminhoOuUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? caminhoOuUrl : raiz + caminhoOuUrl;
 
-        var http = CriarCliente(cliente.FocusNfeAmbiente);
+        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct)
+            ?? throw new InvalidOperationException("Token da Focus NFe não configurado.");
         var resp = await http.GetAsync(url, ct);
         resp.EnsureSuccessStatusCode();
         return await resp.Content.ReadAsByteArrayAsync(ct);
@@ -120,10 +134,17 @@ public sealed class FocusNfeService(
         };
     }
 
-    private HttpClient CriarCliente(string ambiente)
+    // Retorna null quando o token do ambiente pedido ainda não foi configurado pelo
+    // Administrador — os chamadores tratam isso como uma falha de submissão normal, sem
+    // exceção, já que é um estado esperado antes da primeira configuração.
+    private async Task<HttpClient?> CriarClienteAsync(string ambiente, CancellationToken ct)
     {
         var producao = ambiente.Equals("producao", StringComparison.OrdinalIgnoreCase);
-        var token = producao ? opts.Value.TokenProducao : opts.Value.TokenHomologacao;
+        var chave = producao ? FocusNfeConfigKeys.TokenProducao : FocusNfeConfigKeys.TokenHomologacao;
+        var config = await uow.Configuracoes.GetByChaveAsync(chave, ct);
+        var token = config?.Valor;
+        if (string.IsNullOrWhiteSpace(token))
+            return null;
 
         var http = httpFactory.CreateClient("focus-nfe");
         http.BaseAddress = new Uri((producao ? BaseUrlProducao : BaseUrlHomologacao) + "/");

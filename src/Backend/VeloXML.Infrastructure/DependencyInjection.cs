@@ -24,7 +24,8 @@ public static class DependencyInjection
         services.Configure<S3Options>(config.GetSection(S3Options.Section));
         services.Configure<EmailOptions>(config.GetSection(EmailOptions.Section));
         services.Configure<CacheOptions>(config.GetSection(CacheOptions.Section));
-        services.Configure<FocusNfeOptions>(config.GetSection(FocusNfeOptions.Section));
+        // Focus NFe não usa Options/env var — o token é configurado pelo Admin na tela de
+        // Configurações e lido em runtime via Configuracao (ver FocusNfeConfigKeys).
 
         // Usado só pra proteger a senha do certificado A1 em repouso (dado legalmente sensível) —
         // não existe outra criptografia em repouso no resto do código hoje, mas esse campo

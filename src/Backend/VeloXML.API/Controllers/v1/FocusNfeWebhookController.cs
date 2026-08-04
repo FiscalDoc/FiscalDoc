@@ -4,9 +4,9 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
+using VeloXML.Application.Common;
 using VeloXML.Application.Features.Pedidos.Commands.ProcessarWebhookFocusNfe;
-using VeloXML.Infrastructure.Fiscal;
+using VeloXML.Domain.Interfaces;
 
 namespace VeloXML.API.Controllers.v1;
 
@@ -16,12 +16,13 @@ namespace VeloXML.API.Controllers.v1;
 [ApiController]
 [Route("api/v1/webhooks/focus-nfe")]
 [AllowAnonymous]
-public sealed class FocusNfeWebhookController(IMediator mediator, IOptions<FocusNfeOptions> opts) : ControllerBase
+public sealed class FocusNfeWebhookController(IMediator mediator, IUnitOfWork uow) : ControllerBase
 {
     [HttpPost("{secretToken}")]
     public async Task<IActionResult> Receber(string secretToken, CancellationToken ct)
     {
-        var esperado = opts.Value.WebhookSecret;
+        var config = await uow.Configuracoes.GetByChaveAsync(FocusNfeConfigKeys.WebhookSecret, ct);
+        var esperado = config?.Valor;
         if (string.IsNullOrEmpty(esperado) || !SecretConfere(secretToken, esperado))
             return NotFound();
 

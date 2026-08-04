@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
+import { FocusNfeConfigDto } from '@veloxml/models';
 
-type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
+type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe';
 
 @Component({
   selector: 'app-configuracoes',
@@ -27,6 +28,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
     <button class="tab-btn" [class.active]="tab() === 'convite'" (click)="tab.set('convite')">Convidar</button>
     <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); carregarIntervalo()">Importação de E-mails</button>
     <button class="tab-btn" [class.active]="tab() === 'storage'" (click)="tab.set('storage')">Armazenamento</button>
+    <button class="tab-btn" [class.active]="tab() === 'focusNfe'" (click)="tab.set('focusNfe'); carregarFocusNfe()">Focus NFe</button>
   </nav>
 
   <!-- ══ E-MAIL (SMTP) ══ -->
@@ -300,6 +302,76 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
       </div>
     </div>
   }
+
+  <!-- ══ FOCUS NFE ══ -->
+  @if (tab() === 'focusNfe') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Emissão de NF-e (Focus NFe)</div>
+          <div class="section-sub">Conta única da plataforma — cada cliente é registrado como uma "empresa" dentro dela, usando o próprio certificado digital</div>
+        </div>
+      </div>
+
+      @if (loadingFocusNfe()) {
+        <div class="empty-state">Carregando configurações...</div>
+      } @else {
+        <form [formGroup]="focusNfeForm" (ngSubmit)="saveFocusNfe()" class="settings-form">
+          <div class="form-row">
+            <div class="field">
+              <label class="label">
+                Token de Homologação
+                @if (focusNfeConfig()?.tokenHomologacaoConfigurado) { <span class="tag-ok">configurado</span> }
+              </label>
+              <input class="input" type="password" formControlName="tokenHomologacao" placeholder="Deixe em branco para não alterar" autocomplete="new-password"/>
+            </div>
+            <div class="field">
+              <label class="label">
+                Token de Produção
+                @if (focusNfeConfig()?.tokenProducaoConfigurado) { <span class="tag-ok">configurado</span> }
+              </label>
+              <input class="input" type="password" formControlName="tokenProducao" placeholder="Deixe em branco para não alterar" autocomplete="new-password"/>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Segredo do Webhook</label>
+            <input class="input" type="text" formControlName="webhookSecret" placeholder="Ex.: um texto aleatório só seu"/>
+            <p class="section-sub" style="margin:2px 0 0">
+              Embutido na URL que a Focus chama quando o status de uma nota muda — diferente
+              dos tokens, esse valor é seu (não vem da Focus), por isso continua visível aqui.
+              @if (!focusNfeForm.value.webhookSecret) {
+                <button type="button" class="btn-ghost" style="padding:2px 8px;font-size:11px;margin-left:6px" (click)="gerarWebhookSecret()">Gerar aleatório</button>
+              }
+            </p>
+          </div>
+
+          @if (webhookUrl()) {
+            <div class="field">
+              <label class="label">URL do Webhook (cole no painel da Focus NFe)</label>
+              <input class="input" type="text" [value]="webhookUrl()" readonly (click)="copiarWebhookUrl()"/>
+              @if (webhookUrlCopiado()) { <span class="section-sub">Copiado!</span> }
+            </div>
+          }
+
+          @if (focusNfeSuccess()) { <div class="alert-success">{{ checkIcon() }} Configurações salvas com sucesso!</div> }
+          @if (focusNfeError()) { <div class="alert-error">{{ focusNfeError() }}</div> }
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="savingFocusNfe()">
+              {{ savingFocusNfe() ? 'Salvando...' : 'Salvar Configurações' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
 </div>
   `,
   styles: [`
@@ -358,6 +430,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage';
     }
     .input:focus { border-color: var(--accent); }
     .field-error { font-size: 11px; color: var(--red); }
+    .tag-ok { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0; background: rgba(0,229,160,.12); color: var(--accent); }
 
     .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
     .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
@@ -449,6 +522,28 @@ export class ConfiguracoesComponent implements OnInit {
   migrando          = signal(false);
   migracaoSucesso   = signal(false);
   migracaoErro      = signal<string | null>(null);
+
+  // Focus NFe
+  loadingFocusNfe  = signal(false);
+  savingFocusNfe   = signal(false);
+  focusNfeSuccess  = signal(false);
+  focusNfeError    = signal<string | null>(null);
+  focusNfeConfig   = signal<FocusNfeConfigDto | null>(null);
+  webhookUrlCopiado = signal(false);
+  private _focusNfeCarregado = false;
+
+  focusNfeForm = this._fb.group({
+    tokenHomologacao: [''],
+    tokenProducao: [''],
+    webhookSecret: [''],
+  });
+
+  // Método simples (não signal) — o Reactive Forms não expõe o valor como signal, então isso
+  // só precisa ser reavaliado a cada change detection, que já acontece a cada tecla digitada.
+  webhookUrl(): string {
+    const secret = this.focusNfeForm.value.webhookSecret;
+    return secret ? `${location.origin}/api/v1/webhooks/focus-nfe/${secret}` : '';
+  }
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -632,6 +727,61 @@ export class ConfiguracoesComponent implements OnInit {
       error: err => {
         this.migrando.set(false);
         this.migracaoErro.set(extractErrorMessage(err, 'Erro ao disparar a migração.'));
+      },
+    });
+  }
+
+  carregarFocusNfe(): void {
+    if (this._focusNfeCarregado) return;
+    this._focusNfeCarregado = true;
+    this.loadingFocusNfe.set(true);
+    this._svc.getFocusNfe().subscribe({
+      next: c => {
+        this.focusNfeConfig.set(c);
+        this.focusNfeForm.patchValue({ webhookSecret: c.webhookSecret ?? '' });
+        this.loadingFocusNfe.set(false);
+      },
+      error: () => this.loadingFocusNfe.set(false),
+    });
+  }
+
+  gerarWebhookSecret(): void {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const secret = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    this.focusNfeForm.patchValue({ webhookSecret: secret });
+  }
+
+  copiarWebhookUrl(): void {
+    const url = this.webhookUrl();
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    this.webhookUrlCopiado.set(true);
+    setTimeout(() => this.webhookUrlCopiado.set(false), 2000);
+  }
+
+  saveFocusNfe(): void {
+    if (this.savingFocusNfe()) return;
+    this.savingFocusNfe.set(true);
+    this.focusNfeSuccess.set(false);
+    this.focusNfeError.set(null);
+    const v = this.focusNfeForm.getRawValue();
+
+    this._svc.saveFocusNfe({
+      tokenHomologacao: v.tokenHomologacao || undefined,
+      tokenProducao: v.tokenProducao || undefined,
+      webhookSecret: v.webhookSecret || undefined,
+    }).subscribe({
+      next: c => {
+        this.focusNfeConfig.set(c);
+        this.focusNfeForm.patchValue({ tokenHomologacao: '', tokenProducao: '' });
+        this.savingFocusNfe.set(false);
+        this.focusNfeSuccess.set(true);
+        setTimeout(() => this.focusNfeSuccess.set(false), 4000);
+      },
+      error: err => {
+        this.savingFocusNfe.set(false);
+        this.focusNfeError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
       },
     });
   }
