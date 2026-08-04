@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ClienteService, ContadorService, AuthService, CepService, extractErrorMessage } from '@veloxml/services';
+import { ClienteService, ContadorService, AuthService, CepService, CnpjService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
 
 @Component({
@@ -117,10 +117,16 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
                 </div>
                 <div class="field col-2">
                   <label class="label">CNPJ * (somente dígitos)</label>
-                  <input class="input" formControlName="cnpj" placeholder="00000000000000" maxlength="14"/>
+                  <div class="combo-row">
+                    <input class="input" formControlName="cnpj" placeholder="00000000000000" maxlength="14"/>
+                    <button type="button" class="btn-inline" [disabled]="buscandoCnpj()" (click)="buscarCnpj()">
+                      {{ buscandoCnpj() ? 'Buscando...' : 'Buscar dados' }}
+                    </button>
+                  </div>
                   @if (form.controls['cnpj'].touched && form.controls['cnpj'].errors) {
                     <span class="field-error">CNPJ inválido</span>
                   }
+                  @if (erroCnpj()) { <span class="field-error">{{ erroCnpj() }}</span> }
                 </div>
                 <div class="field">
                   <label class="label">E-mail</label>
@@ -259,6 +265,11 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
     select.input { cursor: pointer; }
     .field-error { font-size: 11px; color: var(--red); }
     .field-hint { font-size: 11px; color: var(--text2); }
+    .combo-row { display: flex; gap: 6px; }
+    .combo-row .input { flex: 1; }
+    .btn-inline { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem .75rem; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+    .btn-inline:hover { color: var(--accent); border-color: var(--accent); }
+    .btn-inline:disabled { opacity: .5; cursor: not-allowed; }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
   `],
@@ -267,10 +278,13 @@ export class ClientesListComponent implements OnInit {
   private readonly _svc         = inject(ClienteService);
   private readonly _contadorSvc = inject(ContadorService);
   private readonly _cepSvc      = inject(CepService);
+  private readonly _cnpjSvc     = inject(CnpjService);
   private readonly _fb          = inject(FormBuilder);
   private readonly _router      = inject(Router);
   readonly auth = inject(AuthService);
   readonly buscandoCep = signal(false);
+  readonly buscandoCnpj = signal(false);
+  readonly erroCnpj = signal<string | null>(null);
 
   readonly clientes     = signal<ClienteDto[]>([]);
   readonly loading      = signal(true);
@@ -322,6 +336,34 @@ export class ClientesListComponent implements OnInit {
         cidade: r.localidade || this.form.controls.cidade.value,
         estado: r.uf || this.form.controls.estado.value,
         codigoIbgeCidade: r.ibge || this.form.controls.codigoIbgeCidade.value,
+      });
+    });
+  }
+
+  buscarCnpj(): void {
+    const digitos = (this.form.controls.cnpj.value || '').replace(/\D/g, '');
+    if (digitos.length !== 14) {
+      this.erroCnpj.set('Digite os 14 dígitos do CNPJ antes de buscar.');
+      return;
+    }
+
+    this.buscandoCnpj.set(true);
+    this.erroCnpj.set(null);
+    this._cnpjSvc.buscar(digitos).subscribe(r => {
+      this.buscandoCnpj.set(false);
+      if (!r) { this.erroCnpj.set('CNPJ não encontrado.'); return; }
+      this.form.patchValue({
+        razaoSocial: r.razaoSocial || this.form.controls.razaoSocial.value,
+        nomeFantasia: r.nomeFantasia || this.form.controls.nomeFantasia.value,
+        telefone: r.telefone || this.form.controls.telefone.value,
+        email: r.email || this.form.controls.email.value,
+        cep: r.cep || this.form.controls.cep.value,
+        logradouro: r.logradouro || this.form.controls.logradouro.value,
+        numero: r.numero || this.form.controls.numero.value,
+        complemento: r.complemento || this.form.controls.complemento.value,
+        bairro: r.bairro || this.form.controls.bairro.value,
+        cidade: r.municipio || this.form.controls.cidade.value,
+        estado: r.uf || this.form.controls.estado.value,
       });
     });
   }

@@ -11,8 +11,12 @@ public class Pedido : BaseEntity, IAuditableEntity
     public string? Observacoes { get; set; }
     public decimal ValorTotal { get; set; }
 
-    // Dados necessários para, futuramente, gerar a NF-e a partir deste pedido.
+    // Dados necessários para gerar a NF-e a partir deste pedido.
     public string NaturezaOperacao { get; set; } = "Venda de mercadoria";
+    // "Normal" | "Complementar" | "Ajuste" | "Devolucao" — a Focus NFe chama isso de
+    // finalidade_emissao (1/2/3/4); cada pedido pode ter uma finalidade diferente, por isso
+    // fica aqui e não na configuração fiscal do Cliente.
+    public string FinalidadeEmissao { get; set; } = "Normal";
     public DateTime? DataSaida { get; set; }
     public string? FormaPagamento { get; set; }              // "AVista" | "APrazo"
     public string? MeioPagamento { get; set; }                // "Dinheiro" | "Cartao" | "Pix" | "Boleto" | "Outros"

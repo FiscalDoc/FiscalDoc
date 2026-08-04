@@ -40,6 +40,14 @@ public sealed class EmitirNfeFocusCommandHandler(
             return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
                 "FocusNfeStatus", "O certificado digital ainda não foi registrado. Configure-o na tela Empresa antes de emitir."));
 
+        // Confere NCM/CFOP de cada item ANTES de chamar a Focus — sem isso, a rejeição só
+        // aparece depois de ida e volta pra API deles, com uma mensagem bem menos clara sobre
+        // qual produto especificamente está incompleto.
+        var itemIncompleto = pedido.Itens.FirstOrDefault(i => string.IsNullOrWhiteSpace(i.Ncm) || string.IsNullOrWhiteSpace(i.Cfop));
+        if (itemIncompleto is not null)
+            return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                "Itens", $"O produto \"{itemIncompleto.Descricao}\" está sem NCM ou CFOP — preencha no cadastro do produto antes de emitir."));
+
         var refId = $"pedido-{pedido.Id:N}-{DateTime.UtcNow:yyyyMMddHHmmss}";
         var emissao = new NfeEmissao
         {

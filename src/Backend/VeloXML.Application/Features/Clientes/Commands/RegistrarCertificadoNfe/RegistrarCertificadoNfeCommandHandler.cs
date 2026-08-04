@@ -29,6 +29,20 @@ public sealed class RegistrarCertificadoNfeCommandHandler(
         if (cliente is null)
             return Result.Failure<ClienteDto>(ResultError.NotFound("Cliente"));
 
+        // Confere o cadastro fiscal ANTES de gastar uma chamada com a Focus — sem isso, o
+        // usuário só descobre o que falta depois de um erro genérico vindo de lá.
+        var faltando = new List<string>();
+        if (string.IsNullOrWhiteSpace(cliente.RegimeTributario)) faltando.Add("Regime Tributário");
+        if (string.IsNullOrWhiteSpace(cliente.Logradouro)) faltando.Add("Logradouro");
+        if (string.IsNullOrWhiteSpace(cliente.Numero)) faltando.Add("Número");
+        if (string.IsNullOrWhiteSpace(cliente.Bairro)) faltando.Add("Bairro");
+        if (string.IsNullOrWhiteSpace(cliente.Cidade)) faltando.Add("Cidade");
+        if (string.IsNullOrWhiteSpace(cliente.Estado)) faltando.Add("UF");
+        if (string.IsNullOrWhiteSpace(cliente.Cep)) faltando.Add("CEP");
+        if (faltando.Count > 0)
+            return Result.Failure<ClienteDto>(ResultError.Validation(
+                "CadastroIncompleto", $"Complete o cadastro antes de enviar o certificado — faltando: {string.Join(", ", faltando)}."));
+
         var certificadoBytes = new MemoryStream();
         await request.Certificado.Content.CopyToAsync(certificadoBytes, ct);
         certificadoBytes.Position = 0;

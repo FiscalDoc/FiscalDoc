@@ -250,6 +250,15 @@ interface ConfirmState {
             <input class="input" [disabled]="readonly()" [ngModel]="form.naturezaOperacao" (ngModelChange)="form.naturezaOperacao = $event; marcarSujo()" placeholder="Venda de mercadoria"/>
           </div>
           <div class="field">
+            <label class="label">Finalidade de Emissão</label>
+            <select class="input" [disabled]="readonly()" [ngModel]="form.finalidadeEmissao" (ngModelChange)="form.finalidadeEmissao = $event; marcarSujo()">
+              <option value="Normal">Normal</option>
+              <option value="Complementar">Complementar</option>
+              <option value="Ajuste">Ajuste</option>
+              <option value="Devolucao">Devolução</option>
+            </select>
+          </div>
+          <div class="field">
             <label class="label">Data de Saída</label>
             <input class="input" type="date" [disabled]="readonly()" [ngModel]="form.dataSaida" (ngModelChange)="form.dataSaida = $event; marcarSujo()"/>
           </div>
@@ -908,7 +917,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     const hoje = new Date();
     const dataSaidaPadrao = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     return {
-      destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria',
+      destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria', finalidadeEmissao: 'Normal',
       dataSaida: dataSaidaPadrao, formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
     };
   }
@@ -923,6 +932,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.form = {
       destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '',
       naturezaOperacao: p.naturezaOperacao || 'Venda de mercadoria',
+      finalidadeEmissao: p.finalidadeEmissao || 'Normal',
       dataSaida: p.dataSaida ? p.dataSaida.slice(0, 10) : '',
       formaPagamento: p.formaPagamento ?? '', meioPagamento: p.meioPagamento ?? '',
       informacoesComplementares: p.informacoesComplementares ?? '',
@@ -1421,6 +1431,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       itens: this.itens(),
       destinatarioId: this.form.destinatarioId,
       naturezaOperacao: this.form.naturezaOperacao,
+      finalidadeEmissao: (this.form.finalidadeEmissao || undefined) as CreatePedidoRequest['finalidadeEmissao'],
       dataSaida: this.form.dataSaida || undefined,
       formaPagamento: (this.form.formaPagamento || undefined) as CreatePedidoRequest['formaPagamento'],
       meioPagamento: (this.form.meioPagamento || undefined) as CreatePedidoRequest['meioPagamento'],

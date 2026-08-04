@@ -19,8 +19,8 @@ internal static class FocusNfePayloadBuilder
         {
             natureza_operacao = pedido.NaturezaOperacao,
             data_emissao = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz"),
-            tipo_documento = 1,      // 1 = saída
-            finalidade_emissao = 1,  // 1 = NF-e normal
+            tipo_documento = 1,      // 1 = saída (o Cliente é sempre o emitente aqui)
+            finalidade_emissao = MapearFinalidadeEmissao(pedido.FinalidadeEmissao),
             presenca_comprador = 9,  // 9 = não se aplica (operação não presencial)
             cnpj_emitente = SoDigitos(cliente.Cnpj),
 
@@ -63,4 +63,14 @@ internal static class FocusNfePayloadBuilder
 
     private static string? SoDigitos(string? valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : new string(valor.Where(char.IsDigit).ToArray());
+
+    // Códigos da SEFAZ pro campo finalidade_emissao: 1=Normal, 2=Complementar, 3=Ajuste,
+    // 4=Devolução/Retorno.
+    private static int MapearFinalidadeEmissao(string finalidade) => finalidade switch
+    {
+        "Complementar" => 2,
+        "Ajuste" => 3,
+        "Devolucao" => 4,
+        _ => 1,
+    };
 }

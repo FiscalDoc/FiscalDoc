@@ -18,6 +18,7 @@ export interface PedidoItemDto {
 
 export type FormaPagamento = 'AVista' | 'APrazo';
 export type MeioPagamento = 'Dinheiro' | 'Cartao' | 'Pix' | 'Boleto' | 'Outros';
+export type FinalidadeEmissao = 'Normal' | 'Complementar' | 'Ajuste' | 'Devolucao';
 
 export interface PedidoDto {
   id: string;
@@ -31,6 +32,7 @@ export interface PedidoDto {
   createdAt: string;
   itens: PedidoItemDto[];
   naturezaOperacao: string;
+  finalidadeEmissao: FinalidadeEmissao;
   dataSaida?: string;
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
@@ -62,6 +64,7 @@ export interface CreatePedidoRequest {
   observacoes?: string;
   itens: PedidoItemInput[];
   naturezaOperacao: string;
+  finalidadeEmissao?: FinalidadeEmissao;
   dataSaida?: string;
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
@@ -74,6 +77,7 @@ export interface UpdatePedidoRequest {
   observacoes?: string;
   itens: PedidoItemInput[];
   naturezaOperacao: string;
+  finalidadeEmissao?: FinalidadeEmissao;
   dataSaida?: string;
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;

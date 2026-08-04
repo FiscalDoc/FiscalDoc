@@ -5,6 +5,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ClienteService, CepService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto } from '@veloxml/models';
 
+type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
+
 @Component({
   selector: 'app-cliente-empresa',
   standalone: true,
@@ -21,192 +23,266 @@ import { ClienteDto } from '@veloxml/models';
           <p class="page-sub">Dados cadastrais da sua empresa</p>
         </div>
 
-        <div class="card section">
-          <h4 class="section-title">Dados da Empresa</h4>
-          <div class="form-grid">
-            <div class="field">
-              <label class="label">CNPJ</label>
-              <input class="input" [value]="formatCnpj(cliente()!.cnpj)" disabled/>
-            </div>
-            <div class="field">
-              <label class="label">Status</label>
-              <div class="status-row">
-                <span class="badge" [class.badge-green]="cliente()!.ativo" [class.badge-red]="!cliente()!.ativo">
-                  {{ cliente()!.ativo ? 'Ativo' : 'Inativo' }}
-                </span>
-                <span class="field-hint">Alteração de status é feita pelo seu escritório contábil.</span>
-              </div>
-            </div>
-            <div class="field col-2">
-              <label class="label">Razão Social *</label>
-              <input class="input" [(ngModel)]="form.razaoSocial" placeholder="Razão Social"/>
-            </div>
-            <div class="field col-2">
-              <label class="label">Nome Fantasia</label>
-              <input class="input" [(ngModel)]="form.nomeFantasia" placeholder="Opcional"/>
-            </div>
-            <div class="field">
-              <label class="label">E-mail</label>
-              <input class="input" type="email" [(ngModel)]="form.email" autocomplete="off"/>
-            </div>
-            <div class="field">
-              <label class="label">Telefone</label>
-              <input class="input" [(ngModel)]="form.telefone" placeholder="(11) 99999-9999"/>
-            </div>
-            <div class="field">
-              <label class="label">CEP</label>
-              <input class="input" [(ngModel)]="form.cep" (ngModelChange)="onCepChange($event)" placeholder="00000-000" maxlength="9"/>
-              @if (buscandoCep()) { <span class="field-hint">Buscando endereço...</span> }
-            </div>
-            <div class="field col-2">
-              <label class="label">Logradouro</label>
-              <input class="input" [(ngModel)]="form.logradouro" placeholder="Rua/Av."/>
-            </div>
-            <div class="field">
-              <label class="label">Número</label>
-              <input class="input" [(ngModel)]="form.numero"/>
-            </div>
-            <div class="field">
-              <label class="label">Complemento</label>
-              <input class="input" [(ngModel)]="form.complemento"/>
-            </div>
-            <div class="field">
-              <label class="label">Bairro</label>
-              <input class="input" [(ngModel)]="form.bairro"/>
-            </div>
-            <div class="field">
-              <label class="label">Cidade</label>
-              <input class="input" [(ngModel)]="form.cidade"/>
-            </div>
-            <div class="field">
-              <label class="label">UF</label>
-              <input class="input" [(ngModel)]="form.estado" maxlength="2" placeholder="SP"/>
-            </div>
-          </div>
+        <nav class="tabs">
+          <button class="tab-btn" [class.active]="tab() === 'dados'" (click)="tab.set('dados')">Dados Principais</button>
+          <button class="tab-btn" [class.active]="tab() === 'endereco'" (click)="tab.set('endereco')">Endereço</button>
+          <button class="tab-btn" [class.active]="tab() === 'fiscal'" (click)="tab.set('fiscal')">Fiscal</button>
+          <button class="tab-btn" [class.active]="tab() === 'parametros'" (click)="tab.set('parametros')">Parâmetros</button>
+        </nav>
 
-          @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
-          @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
-
-          <div class="form-actions">
-            <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-              {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="card section">
-          <h4 class="section-title">Emissão de NF-e</h4>
-          <div class="status-row">
-            <span class="badge" [class.badge-green]="cliente()!.nfeHabilitado" [class.badge-gray]="!cliente()!.nfeHabilitado">
-              {{ cliente()!.nfeHabilitado ? 'Habilitada' : 'Não habilitada' }}
-            </span>
-            <span class="field-hint">Apenas o administrador pode habilitar a emissão de NF-e.</span>
-          </div>
-
-          <div class="cert-status-row">
-            <span class="label">Certificado digital A1</span>
-            <span class="badge" [class]="focusStatusClass()">{{ focusStatusLabel() }}</span>
-          </div>
-          @if (cliente()!.focusNfeErro) {
-            <div class="alert-error">{{ cliente()!.focusNfeErro }}</div>
-          }
-          @if (cliente()!.certificadoA1Validade) {
-            <p class="field-hint">Certificado válido até {{ formatDate(cliente()!.certificadoA1Validade!) }}.</p>
-          }
-
-          <div class="form-grid">
-            <div class="field">
-              <label class="label">Ambiente</label>
-              <select class="input" [(ngModel)]="ambiente">
-                <option value="homologacao">Homologação (testes)</option>
-                <option value="producao">Produção</option>
-              </select>
-            </div>
-            <div class="field">
-              <label class="label">Arquivo do certificado (.pfx/.p12)</label>
-              <input class="input" type="file" accept=".pfx,.p12" (change)="onCertificadoSelecionado($event)"/>
-            </div>
-            <div class="field col-2">
-              <label class="label">Senha do certificado</label>
-              <input class="input" type="password" [(ngModel)]="certificadoSenha" autocomplete="new-password"/>
-            </div>
-          </div>
-
-          @if (erroCertificado()) { <div class="alert-error">{{ erroCertificado() }}</div> }
-          @if (sucessoCertificado()) { <div class="alert-ok">Certificado enviado e processado!</div> }
-
-          <div class="form-actions">
-            <span></span>
-            <button class="btn-primary" [disabled]="enviandoCertificado() || !certificadoArquivo() || !certificadoSenha" (click)="enviarCertificado()">
-              {{ enviandoCertificado() ? 'Enviando...' : 'Enviar certificado' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="card section">
-          <div class="section-header-row">
-            <div>
-              <h4 class="section-title" style="margin-bottom:4px">Importação de XML por E-mail</h4>
-              <p class="field-hint" style="margin:0">Quando habilitado, o sistema lê a caixa de entrada configurada e importa anexos XML automaticamente.</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" [(ngModel)]="imap.habilitado"/>
-              <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            </label>
-          </div>
-          @if (imap.habilitado) {
-            <div class="form-grid" style="margin-top:1rem">
+        <!-- ── Dados Principais ── -->
+        @if (tab() === 'dados') {
+          <div class="card section">
+            <h4 class="section-title">Dados da Empresa</h4>
+            <div class="form-grid">
               <div class="field">
-                <label class="label">Host IMAP</label>
-                <input class="input" [(ngModel)]="imap.host" placeholder="imap.gmail.com"/>
+                <label class="label">CNPJ</label>
+                <input class="input" [value]="formatCnpj(cliente()!.cnpj)" disabled/>
               </div>
               <div class="field">
-                <label class="label">Porta</label>
-                <input class="input" type="number" [(ngModel)]="imap.port" placeholder="993"/>
+                <label class="label">Status</label>
+                <div class="status-row">
+                  <span class="badge" [class.badge-green]="cliente()!.ativo" [class.badge-red]="!cliente()!.ativo">
+                    {{ cliente()!.ativo ? 'Ativo' : 'Inativo' }}
+                  </span>
+                  <span class="field-hint">Alteração de status é feita pelo seu escritório contábil.</span>
+                </div>
               </div>
               <div class="field col-2">
+                <label class="label">Razão Social *</label>
+                <input class="input" [(ngModel)]="form.razaoSocial" placeholder="Razão Social"/>
+              </div>
+              <div class="field col-2">
+                <label class="label">Nome Fantasia</label>
+                <input class="input" [(ngModel)]="form.nomeFantasia" placeholder="Opcional"/>
+              </div>
+              <div class="field">
                 <label class="label">E-mail</label>
-                <input class="input" [(ngModel)]="imap.email" type="email" placeholder="fiscal@empresa.com" autocomplete="off"/>
+                <input class="input" type="email" [(ngModel)]="form.email" autocomplete="off"/>
+              </div>
+              <div class="field">
+                <label class="label">Telefone</label>
+                <input class="input" [(ngModel)]="form.telefone" placeholder="(11) 99999-9999"/>
+              </div>
+            </div>
+
+            @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
+            @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
+
+            <div class="form-actions">
+              <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
+                {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── Endereço ── -->
+        @if (tab() === 'endereco') {
+          <div class="card section">
+            <h4 class="section-title">Endereço</h4>
+            <p class="field-hint" style="margin:0">Todos os campos abaixo são obrigatórios pra registrar o certificado digital e emitir NF-e.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label">CEP *</label>
+                <input class="input" [(ngModel)]="form.cep" (ngModelChange)="onCepChange($event)" placeholder="00000-000" maxlength="9"/>
+                @if (buscandoCep()) { <span class="field-hint">Buscando endereço...</span> }
               </div>
               <div class="field col-2">
-                <label class="label">Senha</label>
-                <input class="input" [(ngModel)]="imap.senha" type="password" placeholder="{{ cliente()!.imapEmail ? '••••••••' : 'Senha do e-mail' }}" autocomplete="new-password"/>
-                @if (cliente()!.imapEmail) {
-                  <span class="field-hint">Deixe em branco para manter a senha atual.</span>
-                }
+                <label class="label">Logradouro *</label>
+                <input class="input" [(ngModel)]="form.logradouro" placeholder="Rua/Av."/>
+              </div>
+              <div class="field">
+                <label class="label">Número *</label>
+                <input class="input" [(ngModel)]="form.numero"/>
+              </div>
+              <div class="field">
+                <label class="label">Complemento</label>
+                <input class="input" [(ngModel)]="form.complemento"/>
+              </div>
+              <div class="field">
+                <label class="label">Bairro *</label>
+                <input class="input" [(ngModel)]="form.bairro"/>
+              </div>
+              <div class="field">
+                <label class="label">Cidade *</label>
+                <input class="input" [(ngModel)]="form.cidade"/>
+              </div>
+              <div class="field">
+                <label class="label">UF *</label>
+                <input class="input" [(ngModel)]="form.estado" maxlength="2" placeholder="SP"/>
               </div>
             </div>
-          }
-          @if (erroImap()) { <div class="alert-error">{{ erroImap() }}</div> }
-          @if (sucessoImap()) { <div class="alert-ok">Configuração de e-mail salva!</div> }
-          <div class="form-actions">
-            <a routerLink="/logs" class="link-ghost">Ver histórico em Logs</a>
-            <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
-              {{ salvandoImap() ? 'Salvando...' : 'Salvar configuração de e-mail' }}
-            </button>
-          </div>
-        </div>
 
-        <div class="card section">
-          <h4 class="section-title">Integração via API</h4>
-          <p class="field-hint">Use esta chave no header <code>X-App-Key</code> para o seu ERP ou emissor de nota enviar XMLs direto pra cá, sem login.</p>
-          <div class="appkey-box">
-            <code class="appkey-value">{{ cliente()!.appKey }}</code>
-            <div class="appkey-actions">
-              <button class="appkey-btn" (click)="copyAppKey()" [class.copied]="keyCopied()">
-                {{ keyCopied() ? 'Copiado' : 'Copiar' }}
-              </button>
-              <button class="appkey-btn appkey-btn-warn" (click)="regenerarKey()" [disabled]="keyLoading()">
-                {{ keyLoading() ? 'Gerando...' : 'Regenerar' }}
+            @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
+            @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
+
+            <div class="form-actions">
+              <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
+                {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
               </button>
             </div>
           </div>
-          <p class="field-hint">Ao regenerar, a chave anterior deixa de funcionar imediatamente.</p>
-          <div class="field">
-            <label class="label">Exemplo (curl)</label>
-            <pre class="docs-code">{{ curlExemplo() }}</pre>
+        }
+
+        <!-- ── Fiscal ── -->
+        @if (tab() === 'fiscal') {
+          <div class="card section">
+            <h4 class="section-title">Configuração Fiscal</h4>
+            <p class="field-hint" style="margin:0">Usado no registro da empresa junto ao emissor de NF-e — preencha antes de enviar o certificado.</p>
+            <div class="form-grid">
+              <div class="field col-2">
+                <label class="label">Regime Tributário *</label>
+                <select class="input" [(ngModel)]="fiscal.regimeTributario">
+                  <option value="">Não informado</option>
+                  <option value="SimplesNacional">Simples Nacional</option>
+                  <option value="LucroPresumido">Lucro Presumido</option>
+                  <option value="LucroReal">Lucro Real</option>
+                  <option value="Mei">MEI</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label">Inscrição Estadual</label>
+                <input class="input" [(ngModel)]="fiscal.inscricaoEstadual" placeholder="Opcional"/>
+              </div>
+              <div class="field">
+                <label class="label">Inscrição Municipal</label>
+                <input class="input" [(ngModel)]="fiscal.inscricaoMunicipal" placeholder="Opcional"/>
+              </div>
+              <div class="field">
+                <label class="label">CNAE Principal</label>
+                <input class="input" [(ngModel)]="fiscal.cnaePrincipal" placeholder="0000-0/00"/>
+              </div>
+            </div>
+
+            @if (erroFiscal()) { <div class="alert-error">{{ erroFiscal() }}</div> }
+            @if (sucessoFiscal()) { <div class="alert-ok">Configuração fiscal salva!</div> }
+
+            <div class="form-actions">
+              <span></span>
+              <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
+                {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
+              </button>
+            </div>
           </div>
-        </div>
+
+          <div class="card section">
+            <h4 class="section-title">Emissão de NF-e</h4>
+            <div class="status-row">
+              <span class="badge" [class.badge-green]="cliente()!.nfeHabilitado" [class.badge-gray]="!cliente()!.nfeHabilitado">
+                {{ cliente()!.nfeHabilitado ? 'Habilitada' : 'Não habilitada' }}
+              </span>
+              <span class="field-hint">Apenas o administrador pode habilitar a emissão de NF-e.</span>
+            </div>
+
+            <div class="cert-status-row">
+              <span class="label">Certificado digital A1</span>
+              <span class="badge" [class]="focusStatusClass()">{{ focusStatusLabel() }}</span>
+            </div>
+            @if (cliente()!.focusNfeErro) {
+              <div class="alert-error">{{ cliente()!.focusNfeErro }}</div>
+            }
+            @if (cliente()!.certificadoA1Validade) {
+              <p class="field-hint">Certificado válido até {{ formatDate(cliente()!.certificadoA1Validade!) }}.</p>
+            }
+
+            <div class="form-grid">
+              <div class="field">
+                <label class="label">Ambiente</label>
+                <select class="input" [(ngModel)]="ambiente">
+                  <option value="homologacao">Homologação (testes)</option>
+                  <option value="producao">Produção</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label">Arquivo do certificado (.pfx/.p12)</label>
+                <input class="input" type="file" accept=".pfx,.p12" (change)="onCertificadoSelecionado($event)"/>
+              </div>
+              <div class="field col-2">
+                <label class="label">Senha do certificado</label>
+                <input class="input" type="password" [(ngModel)]="certificadoSenha" autocomplete="new-password"/>
+              </div>
+            </div>
+
+            @if (erroCertificado()) { <div class="alert-error">{{ erroCertificado() }}</div> }
+            @if (sucessoCertificado()) { <div class="alert-ok">Certificado enviado e processado!</div> }
+
+            <div class="form-actions">
+              <span></span>
+              <button class="btn-primary" [disabled]="enviandoCertificado() || !certificadoArquivo() || !certificadoSenha" (click)="enviarCertificado()">
+                {{ enviandoCertificado() ? 'Enviando...' : 'Enviar certificado' }}
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── Parâmetros ── -->
+        @if (tab() === 'parametros') {
+          <div class="card section">
+            <div class="section-header-row">
+              <div>
+                <h4 class="section-title" style="margin-bottom:4px">Importação de XML por E-mail</h4>
+                <p class="field-hint" style="margin:0">Quando habilitado, o sistema lê a caixa de entrada configurada e importa anexos XML automaticamente.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="imap.habilitado"/>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            @if (imap.habilitado) {
+              <div class="form-grid" style="margin-top:1rem">
+                <div class="field">
+                  <label class="label">Host IMAP</label>
+                  <input class="input" [(ngModel)]="imap.host" placeholder="imap.gmail.com"/>
+                </div>
+                <div class="field">
+                  <label class="label">Porta</label>
+                  <input class="input" type="number" [(ngModel)]="imap.port" placeholder="993"/>
+                </div>
+                <div class="field col-2">
+                  <label class="label">E-mail</label>
+                  <input class="input" [(ngModel)]="imap.email" type="email" placeholder="fiscal@empresa.com" autocomplete="off"/>
+                </div>
+                <div class="field col-2">
+                  <label class="label">Senha</label>
+                  <input class="input" [(ngModel)]="imap.senha" type="password" placeholder="{{ cliente()!.imapEmail ? '••••••••' : 'Senha do e-mail' }}" autocomplete="new-password"/>
+                  @if (cliente()!.imapEmail) {
+                    <span class="field-hint">Deixe em branco para manter a senha atual.</span>
+                  }
+                </div>
+              </div>
+            }
+            @if (erroImap()) { <div class="alert-error">{{ erroImap() }}</div> }
+            @if (sucessoImap()) { <div class="alert-ok">Configuração de e-mail salva!</div> }
+            <div class="form-actions">
+              <a routerLink="/logs" class="link-ghost">Ver histórico em Logs</a>
+              <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
+                {{ salvandoImap() ? 'Salvando...' : 'Salvar configuração de e-mail' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="card section">
+            <h4 class="section-title">Integração via API</h4>
+            <p class="field-hint">Use esta chave no header <code>X-App-Key</code> para o seu ERP ou emissor de nota enviar XMLs direto pra cá, sem login.</p>
+            <div class="appkey-box">
+              <code class="appkey-value">{{ cliente()!.appKey }}</code>
+              <div class="appkey-actions">
+                <button class="appkey-btn" (click)="copyAppKey()" [class.copied]="keyCopied()">
+                  {{ keyCopied() ? 'Copiado' : 'Copiar' }}
+                </button>
+                <button class="appkey-btn appkey-btn-warn" (click)="regenerarKey()" [disabled]="keyLoading()">
+                  {{ keyLoading() ? 'Gerando...' : 'Regenerar' }}
+                </button>
+              </div>
+            </div>
+            <p class="field-hint">Ao regenerar, a chave anterior deixa de funcionar imediatamente.</p>
+            <div class="field">
+              <label class="label">Exemplo (curl)</label>
+              <pre class="docs-code">{{ curlExemplo() }}</pre>
+            </div>
+          </div>
+        }
       </div>
     }
   `,
@@ -216,6 +292,11 @@ import { ClienteDto } from '@veloxml/models';
     .page-header { display: flex; flex-direction: column; gap: .25rem; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .page-sub { color: var(--text2); font-size: 13px; margin: 0; }
+
+    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+    .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms, border-color 120ms; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -270,6 +351,7 @@ export class ClienteEmpresaComponent implements OnInit {
   private readonly _cepSvc = inject(CepService);
   private readonly _route  = inject(ActivatedRoute);
   readonly buscandoCep = signal(false);
+  readonly tab = signal<Tab>('dados');
 
   private clienteId = '';
 
@@ -292,6 +374,11 @@ export class ClienteEmpresaComponent implements OnInit {
   readonly sucessoCertificado   = signal(false);
   certificadoSenha = '';
   ambiente: 'homologacao' | 'producao' = 'homologacao';
+
+  readonly salvandoFiscal = signal(false);
+  readonly erroFiscal     = signal<string | null>(null);
+  readonly sucessoFiscal  = signal(false);
+  fiscal = { regimeTributario: '', inscricaoEstadual: '', inscricaoMunicipal: '', cnaePrincipal: '' };
 
   readonly focusStatusLabel = computed(() => {
     switch (this.cliente()?.focusNfeStatus) {
@@ -341,6 +428,10 @@ export class ClienteEmpresaComponent implements OnInit {
         };
         this._syncImap(c);
         this.ambiente = c.focusNfeAmbiente ?? 'homologacao';
+        this.fiscal = {
+          regimeTributario: c.regimeTributario ?? '', inscricaoEstadual: c.inscricaoEstadual ?? '',
+          inscricaoMunicipal: c.inscricaoMunicipal ?? '', cnaePrincipal: c.cnaePrincipal ?? '',
+        };
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -485,6 +576,36 @@ export class ClienteEmpresaComponent implements OnInit {
         setTimeout(() => this.sucesso.set(false), 3000);
       },
       error: err => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao salvar dados da empresa.')); },
+    });
+  }
+
+  salvarFiscal(): void {
+    const c = this.cliente();
+    if (!c || this.salvandoFiscal()) return;
+    this.salvandoFiscal.set(true);
+    this.erroFiscal.set(null);
+    this.sucessoFiscal.set(false);
+
+    // serieNfe/nfeHabilitado não são editáveis nessa tela — manda os valores atuais pra não
+    // sobrescrever com o default do backend (nfeHabilitado continua exclusivo do Administrador).
+    this._svc.updateFiscal(c.id, {
+      regimeTributario: this.fiscal.regimeTributario || undefined,
+      inscricaoEstadual: this.fiscal.inscricaoEstadual || undefined,
+      inscricaoMunicipal: this.fiscal.inscricaoMunicipal || undefined,
+      cnaePrincipal: this.fiscal.cnaePrincipal || undefined,
+      serieNfe: c.serieNfe ?? '1',
+      nfeHabilitado: c.nfeHabilitado ?? false,
+    }).subscribe({
+      next: updated => {
+        this.cliente.set(updated);
+        this.salvandoFiscal.set(false);
+        this.sucessoFiscal.set(true);
+        setTimeout(() => this.sucessoFiscal.set(false), 3000);
+      },
+      error: err => {
+        this.salvandoFiscal.set(false);
+        this.erroFiscal.set(extractErrorMessage(err, 'Erro ao salvar configuração fiscal.'));
+      },
     });
   }
 }

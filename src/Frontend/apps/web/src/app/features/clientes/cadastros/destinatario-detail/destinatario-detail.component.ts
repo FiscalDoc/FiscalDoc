@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinatarioService, CepService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { DestinatarioService, CepService, CnpjService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { DestinatarioDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'endereco';
@@ -51,7 +51,15 @@ type Tab = 'cadastro' | 'endereco';
               </div>
               <div class="field">
                 <label class="label">CPF / CNPJ</label>
-                <input class="input" [(ngModel)]="form.cpfCnpj" placeholder="00.000.000/0001-00"/>
+                <div class="combo-row">
+                  <input class="input" [(ngModel)]="form.cpfCnpj" placeholder="00.000.000/0001-00"/>
+                  @if (ehCnpj()) {
+                    <button type="button" class="btn-inline" [disabled]="buscandoCnpj()" (click)="buscarCnpj()">
+                      {{ buscandoCnpj() ? 'Buscando...' : 'Buscar dados' }}
+                    </button>
+                  }
+                </div>
+                @if (erroCnpj()) { <span class="field-error">{{ erroCnpj() }}</span> }
               </div>
               <div class="field">
                 <label class="label">Inscrição Estadual</label>
@@ -160,6 +168,11 @@ type Tab = 'cadastro' | 'endereco';
     .input.error { border-color: var(--red); }
     .field-error { font-size: 11px; color: var(--red); }
     .field-hint { font-size: 11px; color: var(--text2); }
+    .combo-row { display: flex; gap: 6px; }
+    .combo-row .input { flex: 1; }
+    .btn-inline { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem .75rem; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+    .btn-inline:hover { color: var(--accent); border-color: var(--accent); }
+    .btn-inline:disabled { opacity: .5; cursor: not-allowed; }
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
@@ -174,10 +187,11 @@ type Tab = 'cadastro' | 'endereco';
   `],
 })
 export class DestinatarioDetailComponent implements OnInit {
-  private readonly _svc    = inject(DestinatarioService);
-  private readonly _cepSvc = inject(CepService);
-  private readonly _route  = inject(ActivatedRoute);
-  private readonly _router = inject(Router);
+  private readonly _svc     = inject(DestinatarioService);
+  private readonly _cepSvc  = inject(CepService);
+  private readonly _cnpjSvc = inject(CnpjService);
+  private readonly _route   = inject(ActivatedRoute);
+  private readonly _router  = inject(Router);
 
   private clienteId = '';
   private destinatarioId = '';
@@ -190,8 +204,37 @@ export class DestinatarioDetailComponent implements OnInit {
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly tab      = signal<Tab>('cadastro');
   readonly buscandoCep = signal(false);
+  readonly buscandoCnpj = signal(false);
+  readonly erroCnpj = signal<string | null>(null);
 
   form = this._empty();
+
+  ehCnpj(): boolean {
+    return (this.form.cpfCnpj || '').replace(/\D/g, '').length === 14;
+  }
+
+  buscarCnpj(): void {
+    const digitos = (this.form.cpfCnpj || '').replace(/\D/g, '');
+    if (digitos.length !== 14) return;
+
+    this.buscandoCnpj.set(true);
+    this.erroCnpj.set(null);
+    this._cnpjSvc.buscar(digitos).subscribe(r => {
+      this.buscandoCnpj.set(false);
+      if (!r) { this.erroCnpj.set('CNPJ não encontrado.'); return; }
+      this.form.razaoSocial = r.razaoSocial || this.form.razaoSocial;
+      this.form.nomeFantasia = r.nomeFantasia || this.form.nomeFantasia;
+      this.form.telefone = r.telefone || this.form.telefone;
+      this.form.email = r.email || this.form.email;
+      this.form.logradouro = r.logradouro || this.form.logradouro;
+      this.form.numero = r.numero || this.form.numero;
+      this.form.complemento = r.complemento || this.form.complemento;
+      this.form.bairro = r.bairro || this.form.bairro;
+      this.form.cep = r.cep || this.form.cep;
+      this.form.cidade = r.municipio || this.form.cidade;
+      this.form.estado = r.uf || this.form.estado;
+    });
+  }
 
   onCepChange(valor: string): void {
     const digitos = (valor || '').replace(/\D/g, '');

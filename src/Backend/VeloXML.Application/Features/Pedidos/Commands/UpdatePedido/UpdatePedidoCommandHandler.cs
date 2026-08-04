@@ -42,6 +42,7 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
         pedido.DestinatarioId = request.DestinatarioId;
         pedido.Observacoes = request.Observacoes;
         pedido.NaturezaOperacao = request.NaturezaOperacao;
+        pedido.FinalidadeEmissao = request.FinalidadeEmissao;
         pedido.DataSaida = request.DataSaida;
         pedido.FormaPagamento = request.FormaPagamento;
         pedido.MeioPagamento = request.MeioPagamento;

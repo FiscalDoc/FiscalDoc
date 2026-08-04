@@ -26,5 +26,6 @@ public record CreatePedidoCommand(
     DateTime? DataSaida,
     string? FormaPagamento,
     string? MeioPagamento,
-    string? InformacoesComplementares
+    string? InformacoesComplementares,
+    string FinalidadeEmissao = "Normal"
 ) : IRequest<Result<PedidoDto>>;

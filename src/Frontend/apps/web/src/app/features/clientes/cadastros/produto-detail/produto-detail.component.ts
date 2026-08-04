@@ -75,13 +75,14 @@ type Tab = 'geral' | 'fiscal';
         @if (tab() === 'fiscal') {
           <div class="card section">
             <h4 class="section-title">Dados Fiscais</h4>
+            <p class="field-hint" style="margin:0">NCM e CFOP são obrigatórios pra emitir NF-e — sem eles, a emissão desse produto é rejeitada.</p>
             <div class="form-grid">
               <div class="field">
-                <label class="label">NCM</label>
+                <label class="label">NCM (p/ NF-e)</label>
                 <input class="input" [(ngModel)]="form.ncm" placeholder="0000.00.00"/>
               </div>
               <div class="field">
-                <label class="label">CFOP</label>
+                <label class="label">CFOP (p/ NF-e)</label>
                 <input class="input" [(ngModel)]="form.cfop" placeholder="5102"/>
               </div>
               <div class="field">
@@ -139,6 +140,7 @@ type Tab = 'geral' | 'fiscal';
     .input:focus { border-color: var(--accent); }
     .input.error { border-color: var(--red); }
     .field-error { font-size: 11px; color: var(--red); }
+    .field-hint { font-size: 12px; color: var(--text2); }
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }

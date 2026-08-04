@@ -30,6 +30,7 @@ public record PedidoDto(
     DateTime CreatedAt,
     List<PedidoItemDto> Itens,
     string NaturezaOperacao,
+    string FinalidadeEmissao,
     DateTime? DataSaida,
     string? FormaPagamento,
     string? MeioPagamento,

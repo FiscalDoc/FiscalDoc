@@ -44,6 +44,7 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             ValorTotal = itens.Sum(i => i.ValorTotal),
             Itens = itens,
             NaturezaOperacao = original.NaturezaOperacao,
+            FinalidadeEmissao = original.FinalidadeEmissao,
             DataSaida = null,
             FormaPagamento = original.FormaPagamento,
             MeioPagamento = original.MeioPagamento,

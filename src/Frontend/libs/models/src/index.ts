@@ -14,3 +14,4 @@ export * from './lib/destinatario.models';
 export * from './lib/pedido.models';
 export * from './lib/blog.models';
 export * from './lib/cep.models';
+export * from './lib/cnpj.models';
