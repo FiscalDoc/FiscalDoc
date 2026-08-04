@@ -30,24 +30,34 @@ public sealed class FocusNfeService(
         await certificadoPfx.CopyToAsync(ms, ct);
         var certificadoBase64 = Convert.ToBase64String(ms.ToArray());
 
-        // Schema baseado na documentação pública da Focus NFe — precisa ser confirmado/ajustado
-        // contra a conta real de homologação assim que criada (ver plano, questão em aberto #1).
         var payload = new FocusEmpresaRequest(
             Nome: cliente.RazaoSocial,
             NomeFantasia: cliente.NomeFantasia,
             Cnpj: cliente.Cnpj,
             InscricaoEstadual: cliente.InscricaoEstadual,
             InscricaoMunicipal: cliente.InscricaoMunicipal,
+            Logradouro: cliente.Logradouro,
+            Numero: cliente.Numero,
+            Complemento: cliente.Complemento,
+            Bairro: cliente.Bairro,
             Municipio: cliente.Cidade,
             Uf: cliente.Estado,
+            Cep: cliente.Cep,
+            Telefone: cliente.Telefone,
+            Email: cliente.Email,
             RegimeTributario: MapearRegimeTributario(cliente.RegimeTributario),
             HabilitaNfe: true,
             ArquivoCertificadoBase64: certificadoBase64,
             SenhaCertificado: certificadoSenha);
 
-        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct);
+        // Cadastro de empresa é um recurso de CONTA, não de ambiente — confirmado empiricamente:
+        // POST /v2/empresas devolve 404 "Endpoint não encontrado" em homologacao.focusnfe.com.br
+        // (a rota não existe lá) e 401 (rota existe, só falta auth) em api.focusnfe.com.br. Por
+        // isso sempre usa produção aqui, independente do FocusNfeAmbiente do cliente — esse campo
+        // só controla o ambiente de EMISSÃO (EmitirNfeAsync/ConsultarNfeAsync), não o cadastro.
+        var http = await CriarClienteAsync("producao", ct);
         if (http is null)
-            return new FocusEmpresaResult(false, null, "Token da Focus NFe não configurado. Configure em Configurações > Focus NFe.");
+            return new FocusEmpresaResult(false, null, "Token de produção da Focus NFe não configurado. Configure em Configurações > Focus NFe.");
 
         try
         {
@@ -153,12 +163,14 @@ public sealed class FocusNfeService(
         return http;
     }
 
-    private static string MapearRegimeTributario(string? regime) => regime switch
+    // Códigos confirmados na doc da Focus: 1=Simples Nacional, 2=Simples c/ excesso, 3=Normal
+    // (Lucro Presumido/Real), 4=MEI.
+    private static int MapearRegimeTributario(string? regime) => regime switch
     {
-        "LucroReal" => "3",
-        "LucroPresumido" => "3",
-        "Mei" => "1",
-        _ => "1", // Simples Nacional (inclui o valor legado "SimpesNacional")
+        "LucroReal" => 3,
+        "LucroPresumido" => 3,
+        "Mei" => 4,
+        _ => 1, // Simples Nacional (inclui o valor legado "SimpesNacional")
     };
 
     private static string? ExtrairMensagemErro(string body)
@@ -183,9 +195,16 @@ public sealed class FocusNfeService(
         [property: JsonPropertyName("cnpj")] string Cnpj,
         [property: JsonPropertyName("inscricao_estadual")] string? InscricaoEstadual,
         [property: JsonPropertyName("inscricao_municipal")] string? InscricaoMunicipal,
+        [property: JsonPropertyName("logradouro")] string? Logradouro,
+        [property: JsonPropertyName("numero")] string? Numero,
+        [property: JsonPropertyName("complemento")] string? Complemento,
+        [property: JsonPropertyName("bairro")] string? Bairro,
         [property: JsonPropertyName("municipio")] string? Municipio,
         [property: JsonPropertyName("uf")] string? Uf,
-        [property: JsonPropertyName("regime_tributario")] string RegimeTributario,
+        [property: JsonPropertyName("cep")] string? Cep,
+        [property: JsonPropertyName("telefone")] string? Telefone,
+        [property: JsonPropertyName("email")] string? Email,
+        [property: JsonPropertyName("regime_tributario")] int RegimeTributario,
         [property: JsonPropertyName("habilita_nfe")] bool HabilitaNfe,
         [property: JsonPropertyName("arquivo_certificado_base64")] string ArquivoCertificadoBase64,
         [property: JsonPropertyName("senha_certificado")] string SenhaCertificado);
