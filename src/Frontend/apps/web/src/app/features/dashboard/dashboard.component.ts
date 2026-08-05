@@ -178,16 +178,16 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
             </div>
 
             <div class="card">
-              <h3 class="card-title">Pedidos por Status</h3>
+              <h3 class="card-title">Pedidos e Notas Fiscais por Status</h3>
               <div class="status-list">
                 <div class="status-row-item" (click)="irParaPedidos()">
                   <span class="status-dot status-dot-neutral"></span>
-                  <span class="status-name">Rascunho</span>
+                  <span class="status-name">Pedido (rascunho)</span>
                   <span class="status-qty">{{ c.pedidosRascunho }}</span>
                 </div>
                 <div class="status-row-item" (click)="irParaPedidos()">
                   <span class="status-dot status-dot-ok"></span>
-                  <span class="status-name">Emitido</span>
+                  <span class="status-name">Nota Fiscal</span>
                   <span class="status-qty">{{ c.pedidosEmitidos }}</span>
                 </div>
                 <div class="status-row-item" (click)="irParaPedidos()">

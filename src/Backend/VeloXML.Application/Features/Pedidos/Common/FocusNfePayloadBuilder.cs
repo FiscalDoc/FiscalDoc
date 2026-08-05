@@ -67,35 +67,56 @@ internal static class FocusNfePayloadBuilder
             telefone_destinatario = destinatario.Telefone,
             email_destinatario = destinatario.Email,
 
-            items = pedido.Itens.Select((item, i) => new
+            items = pedido.Itens.Select((item, i) =>
             {
-                numero_item = i + 1,
-                codigo_produto = item.Produto?.Codigo ?? item.ProdutoId.ToString(),
-                descricao = item.Descricao,
-                cfop = item.Cfop,
-                codigo_ncm = item.Ncm,
-                unidade_comercial = item.Unidade,
-                quantidade_comercial = item.Quantidade,
-                valor_unitario_comercial = item.PrecoUnitario,
-                valor_bruto = item.ValorTotal,
-                unidade_tributavel = item.Unidade,
-                quantidade_tributavel = item.Quantidade,
-                valor_unitario_tributavel = item.PrecoUnitario,
-                icms_origem = 0,
-                icms_situacao_tributaria = item.CstIcms,
-                pis_situacao_tributaria = item.CstPis,
-                cofins_situacao_tributaria = item.CstCofins,
-                // IBS/CBS (reforma tributária, LC 214/2025) — cCST/cClassTrib vêm do cadastro
-                // do produto; as alíquotas do período de teste (2026) são FIXAS por lei (Art.
-                // 343 da LC 214/2025) pra todo mundo, não é dado de cadastro — SEFAZ chega a
-                // rejeitar (erro 1026) se vier valor diferente de 0,1%/0%/0,9% em 2026. Só
-                // manda o grupo quando o produto já tem a classificação preenchida — clientes
-                // do Simples Nacional/MEI só precisam disso a partir de 04/2027.
-                ibs_cbs_situacao_tributaria = item.IbsCbsCst,
-                ibs_cbs_classificacao_tributaria = item.IbsCbsClassificacaoTributaria,
-                ibs_uf_aliquota = item.IbsCbsCst is not null ? 0.1m : (decimal?)null,
-                ibs_mun_aliquota = item.IbsCbsCst is not null ? 0m : (decimal?)null,
-                cbs_aliquota = item.IbsCbsCst is not null ? 0.9m : (decimal?)null,
+                // Prioriza o cadastro ATUAL do Produto sobre a "foto" gravada no item quando
+                // ele foi adicionado ao pedido — completar o cadastro fiscal do produto depois
+                // precisa refletir aqui, mesma lógica da validação prévia em
+                // EmitirNfeFocusCommandHandler (que já barra a emissão se faltar isso).
+                var ncm = item.Produto?.Ncm ?? item.Ncm;
+                var cfop = item.Produto?.Cfop ?? item.Cfop;
+                var cstIcms = item.Produto?.CstIcms ?? item.CstIcms;
+                var cstPis = item.Produto?.CstPis ?? item.CstPis;
+                var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
+                var ibsCbsCst = item.Produto?.IbsCbsCst ?? item.IbsCbsCst;
+                var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
+
+                return new
+                {
+                    numero_item = i + 1,
+                    codigo_produto = item.Produto?.Codigo ?? item.ProdutoId.ToString(),
+                    descricao = item.Descricao,
+                    cfop,
+                    codigo_ncm = ncm,
+                    unidade_comercial = item.Unidade,
+                    quantidade_comercial = item.Quantidade,
+                    valor_unitario_comercial = item.PrecoUnitario,
+                    valor_bruto = item.ValorTotal,
+                    unidade_tributavel = item.Unidade,
+                    quantidade_tributavel = item.Quantidade,
+                    valor_unitario_tributavel = item.PrecoUnitario,
+                    icms_origem = 0,
+                    icms_situacao_tributaria = cstIcms,
+                    // A Focus calcula vBC (base de cálculo) sozinha a partir do valor_bruto
+                    // quando o CST exige, mas não tem como adivinhar a modalidade — sem esse
+                    // campo, o XML gerado tem <vBC> sem o <modBC> obrigatório antes dele
+                    // (rejeição de schema). 3 = valor da operação, a modalidade padrão pra
+                    // venda comum (não é cálculo de ICMS-ST por pauta/margem).
+                    icms_modalidade_base_calculo = 3,
+                    pis_situacao_tributaria = cstPis,
+                    cofins_situacao_tributaria = cstCofins,
+                    // IBS/CBS (reforma tributária, LC 214/2025) — cCST/cClassTrib vêm do cadastro
+                    // do produto; as alíquotas do período de teste (2026) são FIXAS por lei (Art.
+                    // 343 da LC 214/2025) pra todo mundo, não é dado de cadastro — SEFAZ chega a
+                    // rejeitar (erro 1026) se vier valor diferente de 0,1%/0%/0,9% em 2026. Só
+                    // manda o grupo quando o produto já tem a classificação preenchida — clientes
+                    // do Simples Nacional/MEI só precisam disso a partir de 04/2027.
+                    ibs_cbs_situacao_tributaria = ibsCbsCst,
+                    ibs_cbs_classificacao_tributaria = ibsCbsClassificacao,
+                    ibs_uf_aliquota = ibsCbsCst is not null ? 0.1m : (decimal?)null,
+                    ibs_mun_aliquota = ibsCbsCst is not null ? 0m : (decimal?)null,
+                    cbs_aliquota = ibsCbsCst is not null ? 0.9m : (decimal?)null,
+                };
             }).ToList(),
 
             informacoes_adicionais_contribuinte = MontarInformacoesComplementares(cliente, pedido),

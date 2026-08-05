@@ -2,7 +2,7 @@ import { Component, HostListener, inject, OnDestroy, OnInit, signal, computed } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, ClienteService, extractErrorMessage } from '@veloxml/services';
+import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, ClienteService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
 
 interface DocumentoVinculadoInfo {
@@ -862,6 +862,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   private readonly _docSvc    = inject(DocumentoService);
   private readonly _route     = inject(ActivatedRoute);
   private readonly _router    = inject(Router);
+  private readonly _toast     = inject(ToastService);
 
   private clienteId = '';
   private pedidoId  = '';
@@ -1013,6 +1014,13 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly totalImpostos = computed(() =>
     this.itens().reduce((sum, i) => sum + this.itemImpostos(i), 0)
   );
+
+  // Toast flutuante no topo, além do texto inline — sem isso a mensagem só aparecia lá embaixo
+  // na tela, exigindo rolar pra ver se salvou ou deu erro.
+  private _erro(mensagem: string): void {
+    this.erro.set(mensagem);
+    this._toast.error(mensagem);
+  }
 
   ngOnInit(): void {
     // Assina paramMap (em vez de ler o snapshot uma vez só) porque "Anterior/Próximo" navega
@@ -1218,7 +1226,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         if (ne.status === 'Processando') this._agendarPollNfeEmissao();
         else if (ne.status === 'Autorizada') this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({ next: p => this._carregarPedido(p) });
       },
-      error: err => { this.emitindoNfeFocus.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao emitir NF-e.')); },
+      error: err => { this.emitindoNfeFocus.set(false); this._erro(extractErrorMessage(err, 'Erro ao emitir NF-e.')); },
     });
   }
 
@@ -1467,7 +1475,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         this.erro.set(null);
         this._pedidoSvc.emitir(this.clienteId, this.pedidoId).subscribe({
           next: p => { this.emitindo.set(false); this._carregarPedido(p); },
-          error: err => { this.emitindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao emitir pedido.')); },
+          error: err => { this.emitindo.set(false); this._erro(extractErrorMessage(err, 'Erro ao emitir pedido.')); },
         });
       },
     );
@@ -1483,7 +1491,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         this.erro.set(null);
         this._pedidoSvc.cancelar(this.clienteId, this.pedidoId).subscribe({
           next: () => { this.cancelando.set(false); this.pedidoStatus.set('Cancelado'); this._carregarHistorico(); },
-          error: err => { this.cancelando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao cancelar pedido.')); },
+          error: err => { this.cancelando.set(false); this._erro(extractErrorMessage(err, 'Erro ao cancelar pedido.')); },
         });
       },
       true,
@@ -1496,7 +1504,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.erro.set(null);
     this._pedidoSvc.duplicar(this.clienteId, this.pedidoId).subscribe({
       next: novo => { this.duplicando.set(false); this._router.navigate(['/clientes', this.clienteId, 'pedidos', novo.id]); },
-      error: err => { this.duplicando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao duplicar pedido.')); },
+      error: err => { this.duplicando.set(false); this._erro(extractErrorMessage(err, 'Erro ao duplicar pedido.')); },
     });
   }
 
@@ -1510,7 +1518,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         this.erro.set(null);
         this._pedidoSvc.delete(this.clienteId, this.pedidoId).subscribe({
           next: () => { this.excluindo.set(false); this.goBack(); },
-          error: err => { this.excluindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao excluir pedido.')); },
+          error: err => { this.excluindo.set(false); this._erro(extractErrorMessage(err, 'Erro ao excluir pedido.')); },
         });
       },
       true,
@@ -1552,7 +1560,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.desvinculando.set(true);
     this._pedidoSvc.desvincularDocumento(this.clienteId, this.pedidoId).subscribe({
       next: p => { this.desvinculando.set(false); this._carregarPedido(p); },
-      error: err => { this.desvinculando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao desvincular documento.')); },
+      error: err => { this.desvinculando.set(false); this._erro(extractErrorMessage(err, 'Erro ao desvincular documento.')); },
     });
   }
 
@@ -1635,6 +1643,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       this.autoSalvando.set(false);
       this.autoSalvo.set(true);
       this._dirty = false;
+      this._toast.success('Salvo automaticamente.', 2000);
       this._autoSalvoTimer = setTimeout(() => this.autoSalvo.set(false), 2500);
     };
 
@@ -1686,14 +1695,14 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     });
 
     this.rowErrors.set(invalidas);
-    if (primeiraMensagem) { this.erro.set(primeiraMensagem); return false; }
+    if (primeiraMensagem) { this._erro(primeiraMensagem); return false; }
     return true;
   }
 
   private _validarFormulario(): boolean {
-    if (!this.form.destinatarioId) { this.erro.set('Selecione um destinatário.'); return false; }
-    if (!this.form.naturezaOperacao.trim()) { this.erro.set('Informe a natureza da operação.'); return false; }
-    if (this.itens().length === 0) { this.erro.set('Adicione pelo menos um item.'); return false; }
+    if (!this.form.destinatarioId) { this._erro('Selecione um destinatário.'); return false; }
+    if (!this.form.naturezaOperacao.trim()) { this._erro('Informe a natureza da operação.'); return false; }
+    if (this.itens().length === 0) { this._erro('Adicione pelo menos um item.'); return false; }
     return this._validarItens();
   }
 
@@ -1723,13 +1732,13 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     if (this.isNew()) {
       const req: CreatePedidoRequest = { clienteId: this.clienteId, ...this._montarRequest() };
       this._pedidoSvc.create(req).subscribe({
-        next: p => { this.salvando.set(false); this._irParaPedidoCriado(p.id); },
-        error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao criar pedido.')); },
+        next: p => { this.salvando.set(false); this._toast.success('Pedido criado com sucesso.'); this._irParaPedidoCriado(p.id); },
+        error: (err) => { this.salvando.set(false); this._erro(extractErrorMessage(err, 'Erro ao criar pedido.')); },
       });
     } else {
       this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest(), origem: 'manual' }).subscribe({
-        next: p => { this.salvando.set(false); this._carregarPedido(p); },
-        error: (err) => { this.salvando.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
+        next: p => { this.salvando.set(false); this._toast.success('Pedido salvo com sucesso.'); this._carregarPedido(p); },
+        error: (err) => { this.salvando.set(false); this._erro(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
       });
     }
   }
@@ -1757,7 +1766,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
           },
           error: err => {
             this.salvandoEEmitindo.set(false);
-            this.erro.set(extractErrorMessage(err, 'Pedido salvo, mas houve um erro ao emitir a NF-e. Abra o pedido e tente novamente.'));
+            this._erro(extractErrorMessage(err, 'Pedido salvo, mas houve um erro ao emitir a NF-e. Abra o pedido e tente novamente.'));
             if (eraNovo) this._irParaPedidoCriado(id);
           },
         });
@@ -1771,7 +1780,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         },
         error: err => {
           this.salvandoEEmitindo.set(false);
-          this.erro.set(extractErrorMessage(err, 'Pedido salvo, mas houve um erro ao emitir. Abra o pedido e emita manualmente.'));
+          this._erro(extractErrorMessage(err, 'Pedido salvo, mas houve um erro ao emitir. Abra o pedido e emita manualmente.'));
         },
       });
     };
@@ -1780,12 +1789,12 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       const req: CreatePedidoRequest = { clienteId: this.clienteId, ...this._montarRequest() };
       this._pedidoSvc.create(req).subscribe({
         next: p => aposSalvar(p.id),
-        error: (err) => { this.salvandoEEmitindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao criar pedido.')); },
+        error: (err) => { this.salvandoEEmitindo.set(false); this._erro(extractErrorMessage(err, 'Erro ao criar pedido.')); },
       });
     } else {
       this._pedidoSvc.update(this.clienteId, this.pedidoId, { id: this.pedidoId, ...this._montarRequest(), origem: 'manual' }).subscribe({
         next: p => aposSalvar(p.id),
-        error: (err) => { this.salvandoEEmitindo.set(false); this.erro.set(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
+        error: (err) => { this.salvandoEEmitindo.set(false); this._erro(extractErrorMessage(err, 'Erro ao atualizar pedido.')); },
       });
     }
   }

@@ -54,7 +54,10 @@ public sealed class GetClienteDashboardQueryHandler(IUnitOfWork uow, ICurrentUse
 
         var totalPedidos = pedidos.Count;
         var pedidosRascunho = pedidos.Count(p => p.Status == "Rascunho");
-        var pedidosEmitidos = pedidos.Count(p => p.Status == "Emitido");
+        // "Emitido" sozinho é só o flip interno antigo (sem NF-e real) — pra bater com a
+        // mesma distinção já feita na lista de Pedidos, conta como Nota Fiscal só quem
+        // realmente tem um Documento vinculado (emitido via Focus ou NF-e importada/vinculada).
+        var pedidosEmitidos = pedidos.Count(p => p.DocumentoId.HasValue);
         var pedidosCancelados = pedidos.Count(p => p.Status == "Cancelado");
         var valorPedidosMes = pedidos.Where(p => p.CreatedAt >= inicioMes).Sum(p => p.ValorTotal);
 

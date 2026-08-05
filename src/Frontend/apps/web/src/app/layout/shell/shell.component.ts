@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService, ContadorService } from '@veloxml/services';
+import { ToastContainerComponent } from '../toast-container/toast-container.component';
 
 interface NavItem {
   label: string;
@@ -13,7 +14,7 @@ interface NavItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent],
   template: `
     <div class="shell">
       <aside class="sidebar">
@@ -166,6 +167,8 @@ interface NavItem {
         <router-outlet />
       </main>
     </div>
+
+    <app-toast-container />
 
     <!-- ── Modal de upgrade de plano ── -->
     @if (showUpgradeModal()) {
