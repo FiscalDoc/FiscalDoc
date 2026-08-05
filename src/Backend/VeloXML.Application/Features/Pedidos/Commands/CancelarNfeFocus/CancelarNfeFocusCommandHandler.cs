@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VeloXML.Application.Common;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Pedidos.Commands.EmitirNfeFocus;
 using VeloXML.Domain.Entities;
@@ -13,6 +14,7 @@ namespace VeloXML.Application.Features.Pedidos.Commands.CancelarNfeFocus;
 public sealed class CancelarNfeFocusCommandHandler(
     IUnitOfWork uow,
     IFocusNfeService focusNfe,
+    IStorageService storage,
     ICurrentUser currentUser,
     ILogger<CancelarNfeFocusCommandHandler> logger) : IRequestHandler<CancelarNfeFocusCommand, Result<NfeEmissaoDto>>
 {
@@ -60,6 +62,41 @@ public sealed class CancelarNfeFocusCommandHandler(
                 documento.MotivoCancelamento = justificativa;
                 documento.DataCancelamento = DateTime.UtcNow;
                 uow.Documentos.Update(documento);
+
+                // Guarda o XML de cancelamento junto do XML de autorização já existente — "Baixar"
+                // na tela de Documentos passa a zipar os dois quando o documento está cancelado
+                // (ver DocumentosController.GetLinkDownload).
+                if (!string.IsNullOrEmpty(resultado.CaminhoXmlCancelamento))
+                {
+                    try
+                    {
+                        var xmlBytes = await focusNfe.BaixarArquivoAsync(cliente, resultado.CaminhoXmlCancelamento, ct);
+                        var bucket = storage.ResolveBucket("documentos");
+                        await storage.EnsureBucketExistsAsync(bucket, ct);
+                        var objectKey = StorageKeyHelper.MontarChaveDocumento(
+                            cliente.Cnpj, documento.DataEmissao, $"{documento.ChaveAcesso}-cancelamento", "xml");
+                        using var xmlStream = new MemoryStream(xmlBytes);
+                        await storage.UploadAsync(xmlStream, objectKey, bucket, "application/xml", ct);
+
+                        await uow.Arquivos.AddAsync(new Arquivo
+                        {
+                            TenantId     = cliente.TenantId,
+                            NomeArquivo  = Path.GetFileName(objectKey),
+                            NomeOriginal = $"cancelamento-{documento.ChaveAcesso ?? documento.Numero}.xml",
+                            Bucket       = bucket,
+                            ObjectKey    = objectKey,
+                            MimeType     = "application/xml",
+                            Tamanho      = xmlBytes.LongLength,
+                            DocumentoId  = documento.Id,
+                        }, ct);
+                    }
+                    catch (Exception ex)
+                    {
+                        // O cancelamento já foi confirmado pela SEFAZ nesse ponto — não falha por
+                        // causa disso, só loga pra investigar o download manualmente depois.
+                        logger.LogError(ex, "NF-e {ChaveAcesso} cancelada mas falhou ao baixar/gravar o XML de cancelamento", documento.ChaveAcesso);
+                    }
+                }
             }
         }
 

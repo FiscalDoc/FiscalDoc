@@ -10,6 +10,7 @@ using VeloXML.Application.Features.Documentos.Commands.DeleteDocumentosLote;
 using VeloXML.Application.Features.Documentos.Commands.UploadDocumento;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentoById;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
+using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 using VeloXML.Infrastructure.Auth;
@@ -89,7 +90,13 @@ public sealed class DocumentosController(
         var doc = await uow.Documentos.GetByIdWithArquivosAsync(id, ct);
         if (doc is null) return NotFound();
 
-        var arquivo = doc.Arquivos.FirstOrDefault();
+        // Cancelada com autorização + cancelamento guardados: zip dos dois — uma URL
+        // pré-assinada só aponta pra um objeto por vez, não dá pra representar isso.
+        var xmlArquivos = doc.Arquivos.Where(a => a.MimeType == "application/xml").ToList();
+        if (doc.Status == StatusDocumentoEnum.Cancelado && xmlArquivos.Count > 1)
+            return Ok(new { url = MontarUrlToken(id) });
+
+        var arquivo = MelhorArquivoParaDownload(doc);
         if (arquivo is not null)
         {
             var presignedUrl = await storage.GetPresignedUrlAsync(
@@ -97,13 +104,16 @@ public sealed class DocumentosController(
             return Ok(new { url = presignedUrl });
         }
 
+        return Ok(new { url = MontarUrlToken(id) });
+    }
+
+    private string MontarUrlToken(Guid id)
+    {
         var token = downloadTokens.Gerar(id, TimeSpan.FromMinutes(2));
         var publicUrl = configuration["App:PublicUrl"];
-        var url = !string.IsNullOrWhiteSpace(publicUrl)
+        return !string.IsNullOrWhiteSpace(publicUrl)
             ? $"{publicUrl.TrimEnd('/')}/api/v1/documentos/download?token={Uri.EscapeDataString(token)}"
-            : Url.Action(nameof(DownloadPorToken), null, new { token }, Request.Scheme);
-
-        return Ok(new { url });
+            : Url.Action(nameof(DownloadPorToken), null, new { token }, Request.Scheme)!;
     }
 
     [HttpGet("download")]
@@ -118,9 +128,21 @@ public sealed class DocumentosController(
         return await ServirArquivoAsync(doc, ct);
     }
 
-    private async Task<IActionResult> ServirArquivoAsync(VeloXML.Domain.Entities.Documento doc, CancellationToken ct)
+    // "Baixar" sempre precisa devolver o XML fiscal, nunca o PDF do DANFE (guardado à parte,
+    // no mesmo Documento, desde que passamos a baixar o DANFE oficial da Focus) — sem
+    // preferir explicitamente o XML aqui, a ordem em que o Postgres devolve doc.Arquivos não é
+    // garantida por ordem de inserção, e "Baixar" podia acabar pegando o PDF (foi exatamente o
+    // bug: funcionava antes de existir o PDF, quebrou depois).
+    private static Arquivo? MelhorArquivoParaDownload(Documento doc) =>
+        doc.Arquivos.FirstOrDefault(a => a.MimeType == "application/xml") ?? doc.Arquivos.FirstOrDefault();
+
+    private async Task<IActionResult> ServirArquivoAsync(Documento doc, CancellationToken ct)
     {
-        var arquivo = doc.Arquivos.FirstOrDefault();
+        var xmlArquivos = doc.Arquivos.Where(a => a.MimeType == "application/xml").ToList();
+        if (doc.Status == StatusDocumentoEnum.Cancelado && xmlArquivos.Count > 1)
+            return await ServirZipCancelamentoAsync(doc, xmlArquivos, ct);
+
+        var arquivo = MelhorArquivoParaDownload(doc);
         if (arquivo is null)
         {
             // Gera XML sintético quando não há arquivo armazenado (modo demo / seed)
@@ -131,6 +153,23 @@ public sealed class DocumentosController(
 
         var stream = await storage.DownloadAsync(arquivo.ObjectKey, arquivo.Bucket, ct);
         return File(stream, arquivo.MimeType ?? "application/octet-stream", arquivo.NomeOriginal);
+    }
+
+    private async Task<IActionResult> ServirZipCancelamentoAsync(Documento doc, List<Arquivo> xmlArquivos, CancellationToken ct)
+    {
+        var ms = new MemoryStream();
+        using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var arquivo in xmlArquivos)
+            {
+                var entry = zip.CreateEntry(arquivo.NomeOriginal, CompressionLevel.Fastest);
+                await using var entryStream = entry.Open();
+                var fileStream = await storage.DownloadAsync(arquivo.ObjectKey, arquivo.Bucket, ct);
+                await fileStream.CopyToAsync(entryStream, ct);
+            }
+        }
+        ms.Position = 0;
+        return File(ms, "application/zip", $"{MontarNomeArquivo(doc)}.zip");
     }
 
     private static string MontarNomeArquivo(VeloXML.Domain.Entities.Documento doc)
