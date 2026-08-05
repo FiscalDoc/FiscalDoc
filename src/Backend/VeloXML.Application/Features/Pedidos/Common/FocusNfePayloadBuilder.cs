@@ -14,12 +14,16 @@ internal static class FocusNfePayloadBuilder
     {
         var destinatario = pedido.Destinatario!;
         var cpfCnpjDigitos = SoDigitos(destinatario.CpfCnpj);
-        var temIe = !string.IsNullOrWhiteSpace(destinatario.InscricaoEstadual);
-        // A tag <IE> do XML da NF-e só aceita "[0-9]{2,14}" ou o literal "ISENTO" — nunca vazia,
-        // e a Focus manda a tag vazia quando não recebe nada (foi exatamente o erro que veio da
-        // SEFAZ). Por isso, sem IE cadastrada, manda "ISENTO" — não deixa null/vazio — junto do
-        // indicador 9 (não contribuinte), que é o caso mais comum pra destinatário sem cadastro
-        // de IE. Com IE cadastrada, indicador 1 (contribuinte) e o valor real.
+        // Pessoa física (CPF) NUNCA pode ser Contribuinte ICMS (indIEDest=1) — mesmo que
+        // sobre algum valor no campo IE do cadastro, não conta. Sem essa checagem, um
+        // destinatário CPF com IE preenchida por engano manda indicador=1 com uma IE que a
+        // SEFAZ não aceita como válida pra pessoa física, causando a Rejeição 728 ("NF-e sem
+        // informação da IE do destinatário") mesmo com o campo tecnicamente preenchido.
+        var ehPessoaFisica = cpfCnpjDigitos?.Length == 11;
+        var temIe = !ehPessoaFisica && !string.IsNullOrWhiteSpace(destinatario.InscricaoEstadual);
+        // A tag <IE> do XML da NF-e só aceita "[0-9]{2,14}" ou o literal "ISENTO" — nunca vazia.
+        // Sem IE (ou pessoa física), manda "ISENTO" + indicador 9 (não contribuinte). Com IE
+        // cadastrada (só possível pra CNPJ), indicador 1 (contribuinte) e o valor real.
         var ieDestinatario = temIe ? destinatario.InscricaoEstadual : "ISENTO";
         var indicadorIeDestinatario = temIe ? 1 : 9;
 

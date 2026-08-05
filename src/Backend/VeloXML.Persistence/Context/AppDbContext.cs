@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using VeloXML.Application.Common.Interfaces;
@@ -6,11 +7,17 @@ using VeloXML.SharedKernel;
 
 namespace VeloXML.Persistence.Context;
 
+// IDataProtectionKeyContext: guarda a chave de criptografia (senha do certificado A1, tokens
+// da Focus NFe) direto no Postgres em vez de num volume de arquivo — sem depender de o
+// ambiente de deploy montar/persistir um volume corretamente, e sem ambiguidade se aplicou ou
+// não numa recriação de container (motivo de já ter causado perda de dado criptografado antes).
 public class AppDbContext(
     DbContextOptions<AppDbContext> options,
     ICurrentTenant currentTenant,
-    ICurrentUser currentUser) : DbContext(options), IApplicationDbContext
+    ICurrentUser currentUser) : DbContext(options), IApplicationDbContext, IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();

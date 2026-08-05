@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +24,15 @@ public static class DependencyInjection
 
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+        // Chaves de Data Protection (senha do certificado A1, tokens da Focus NFe) persistidas
+        // no Postgres — precisa ficar aqui (não em VeloXML.Infrastructure) porque
+        // PersistKeysToDbContext exige o tipo concreto AppDbContext, e Infrastructure não
+        // referencia Persistence (Clean Architecture). Fica no mesmo banco que já é
+        // comprovadamente durável entre recriações de container — sem depender de volume.
+        services.AddDataProtection()
+            .SetApplicationName("FiscalDoc")
+            .PersistKeysToDbContext<AppDbContext>();
 
         return services;
     }
