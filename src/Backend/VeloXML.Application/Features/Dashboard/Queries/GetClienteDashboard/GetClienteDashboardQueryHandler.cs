@@ -54,11 +54,12 @@ public sealed class GetClienteDashboardQueryHandler(IUnitOfWork uow, ICurrentUse
 
         var totalPedidos = pedidos.Count;
         var pedidosRascunho = pedidos.Count(p => p.Status == "Rascunho");
-        // "Emitido" sozinho é só o flip interno antigo (sem NF-e real) — pra bater com a
-        // mesma distinção já feita na lista de Pedidos, conta como Nota Fiscal só quem
-        // realmente tem um Documento vinculado (emitido via Focus ou NF-e importada/vinculada).
+        // Card do dashboard é só sobre Nota Fiscal agora (não mistura mais com Pedido/Rascunho)
+        // — "Emitido" conta quem tem Documento vinculado de verdade (via Focus ou NF-e
+        // importada/vinculada), "Cancelado" conta o Documento cancelado, não o Pedido cancelado
+        // (são conceitos diferentes: um Pedido pode ser cancelado sem nunca ter tido NF-e).
         var pedidosEmitidos = pedidos.Count(p => p.DocumentoId.HasValue);
-        var pedidosCancelados = pedidos.Count(p => p.Status == "Cancelado");
+        var pedidosCancelados = documentos.Count(d => d.Status == StatusDocumentoEnum.Cancelado);
         var valorPedidosMes = pedidos.Where(p => p.CreatedAt >= inicioMes).Sum(p => p.ValorTotal);
 
         return Result.Success(new ClienteDashboardDto(

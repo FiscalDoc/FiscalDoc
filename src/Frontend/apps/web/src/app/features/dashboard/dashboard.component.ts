@@ -178,13 +178,8 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
             </div>
 
             <div class="card">
-              <h3 class="card-title">Pedidos e Notas Fiscais por Status</h3>
+              <h3 class="card-title">Notas Fiscais por Status</h3>
               <div class="status-list">
-                <div class="status-row-item" (click)="irParaPedidos()">
-                  <span class="status-dot status-dot-neutral"></span>
-                  <span class="status-name">Pedido (rascunho)</span>
-                  <span class="status-qty">{{ c.pedidosRascunho }}</span>
-                </div>
                 <div class="status-row-item" (click)="irParaPedidos()">
                   <span class="status-dot status-dot-ok"></span>
                   <span class="status-name">Nota Fiscal</span>
@@ -192,7 +187,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
                 </div>
                 <div class="status-row-item" (click)="irParaPedidos()">
                   <span class="status-dot status-dot-err"></span>
-                  <span class="status-name">Cancelado</span>
+                  <span class="status-name">Cancelada</span>
                   <span class="status-qty">{{ c.pedidosCancelados }}</span>
                 </div>
                 @if (c.totalPedidos === 0) {
