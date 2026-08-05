@@ -52,6 +52,8 @@ public static class DependencyInjection
         services.AddScoped<MigrarArquivosParaS3Job>();
         services.AddScoped<AlertaPedidoParadoJob>();
         services.AddScoped<ConsultarNfePendentesJob>();
+        // Roda a cada 15s (fora do Hangfire — cron não expressa menos de 1 minuto).
+        services.AddHostedService<ConsultarNfePendentesBackgroundService>();
         services.AddScoped<IWebhookService, WebhookService>();
         services.AddHttpClient("webhook").ConfigurePrimaryHttpMessageHandler(() =>
             new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });

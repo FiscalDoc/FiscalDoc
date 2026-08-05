@@ -16,7 +16,7 @@ public sealed class ConsultarNfePendentesJob(
 
     public async Task ExecuteAsync(CancellationToken ct = default)
     {
-        var limite = DateTime.UtcNow.AddSeconds(-60);
+        var limite = DateTime.UtcNow.AddSeconds(-10);
         var pendentes = await uow.NfeEmissoes.GetPendentesAsync(limite, ct);
         if (pendentes.Count == 0) return;
 

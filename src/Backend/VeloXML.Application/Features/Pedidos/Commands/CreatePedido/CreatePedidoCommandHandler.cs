@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using VeloXML.Application.Features.Documentos.Queries.GetDocumentos;
@@ -79,20 +80,35 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
         return Result.Success(ToDto(withDest!));
     }
 
-    internal static PedidoDto ToDto(Pedido p) => new(
-        p.Id, p.Numero, p.ClienteId, p.DestinatarioId,
-        p.Destinatario?.RazaoSocial ?? string.Empty,
-        p.Status, p.Observacoes, p.ValorTotal, p.CreatedAt,
-        p.Itens.Select(i => new PedidoItemDto(
-            i.Id, i.ProdutoId, i.Descricao, i.Unidade,
-            i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
-            i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
-        )).ToList(),
-        p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
-        p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
-        p.Documento is null ? null : new DocumentoImpostosDto(
-            p.Documento.ValorBaseCalculoIcms,
-            p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,
-            p.Documento.ValorIcms, p.Documento.ValorIpi, p.Documento.ValorPis, p.Documento.ValorCofins,
-            p.Documento.ValorOutrasDespesas, p.Documento.ValorAproxTributos));
+    internal static PedidoDto ToDto(Pedido p)
+    {
+        var danfe = DeserializarDanfe(p.Documento?.DanfeJson);
+        return new(
+            p.Id, p.Numero, p.ClienteId, p.DestinatarioId,
+            p.Destinatario?.RazaoSocial ?? string.Empty,
+            p.Status, p.Observacoes, p.ValorTotal, p.CreatedAt,
+            p.Itens.Select(i => new PedidoItemDto(
+                i.Id, i.ProdutoId, i.Descricao, i.Unidade,
+                i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
+                i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
+            )).ToList(),
+            p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
+            p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
+            p.Documento?.Status.ToString(), danfe?.ProtocoloAutorizacao, danfe?.DataAutorizacao,
+            p.Documento?.MotivoCancelamento, p.Documento?.DataCancelamento,
+            p.Documento is null ? null : new DocumentoImpostosDto(
+                p.Documento.ValorBaseCalculoIcms,
+                p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,
+                p.Documento.ValorIcms, p.Documento.ValorIpi, p.Documento.ValorPis, p.Documento.ValorCofins,
+                p.Documento.ValorOutrasDespesas, p.Documento.ValorAproxTributos));
+    }
+
+    // DanfeJson só existe pra documentos com NFe real (emitida via Focus ou importada); nunca
+    // falha o ToDto por causa disso, só não mostra protocolo/data se não der pra ler.
+    private static DanfeDadosDto? DeserializarDanfe(string? danfeJson)
+    {
+        if (string.IsNullOrEmpty(danfeJson)) return null;
+        try { return JsonSerializer.Deserialize<DanfeDadosDto>(danfeJson); }
+        catch (JsonException) { return null; }
+    }
 }

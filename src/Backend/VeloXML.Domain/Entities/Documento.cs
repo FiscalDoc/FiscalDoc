@@ -21,6 +21,11 @@ public class Documento : BaseEntity, IAuditableEntity
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 
+    // Preenchidos só quando a NF-e é cancelada de verdade na SEFAZ via Focus (não é o mesmo
+    // que "Pedido cancelado" — um Pedido pode ser cancelado sem nunca ter tido NF-e).
+    public string? MotivoCancelamento { get; set; }
+    public DateTime? DataCancelamento { get; set; }
+
     // Totais de impostos extraídos de <total><ICMSTot> do XML — só preenchido pra NFe.
     public decimal? ValorBaseCalculoIcms { get; set; }
     public decimal? ValorProdutos { get; set; }

@@ -43,6 +43,11 @@ export interface PedidoDto {
   documentoNumero?: string;
   documentoChaveAcesso?: string;
   documentoOrigem?: 'Manual' | 'ImportacaoEmail' | 'ApiIngest' | 'FocusNfe';
+  documentoStatus?: 'Pendente' | 'Valido' | 'Alerta' | 'Duplicado' | 'Cancelado';
+  documentoProtocoloAutorizacao?: string;
+  documentoDataAutorizacao?: string;
+  documentoMotivoCancelamento?: string;
+  documentoDataCancelamento?: string;
   documentoImpostos?: DocumentoImpostosDto;
 }
 

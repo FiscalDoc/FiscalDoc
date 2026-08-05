@@ -24,6 +24,10 @@ export class DocumentoService {
     return this._api.get<{ url: string }>(`/documentos/${id}/link-download`);
   }
 
+  getDanfePdfLink(id: string): Observable<{ url: string }> {
+    return this._api.get<{ url: string }>(`/documentos/${id}/danfe-pdf-link`);
+  }
+
   downloadLote(clienteId: string, mes: number, ano: number): Observable<Blob> {
     return this._api.getBlob('/documentos/lote', { clienteId, mes, ano });
   }

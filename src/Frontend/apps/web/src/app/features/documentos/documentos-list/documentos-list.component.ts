@@ -233,12 +233,12 @@ interface UploadItem { file: File; tipo: string; }
                   <td><span class="badge" [ngClass]="statusClass(d.status)">{{ statusLabel(d.status) }}</span></td>
                   <td><span class="badge" [ngClass]="origemClass(d.origemImportacao)">{{ origemLabel(d.origemImportacao) }}</span></td>
                   <td class="actions" (click)="$event.stopPropagation()">
-                    <a class="icon-btn" title="Visualizar DANFE" [href]="danfeUrl(d.id)" target="_blank">
+                    <button class="icon-btn" title="Visualizar DANFE" (click)="visualizarDanfe(d.id, d.origemImportacao)">
                       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
                       </svg>
-                    </a>
+                    </button>
                     <button class="icon-btn" title="Baixar arquivo" (click)="download(d)">
                       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -281,13 +281,13 @@ interface UploadItem { file: File; tipo: string; }
               <h3 class="modal-title font-heading">{{ tipoLabel(detail()!.tipo) }} {{ detail()!.numero || '—' }}</h3>
             </div>
             <div class="modal-header-actions">
-              <a class="btn-ghost btn-sm" [href]="danfeUrl(detail()!.id)" target="_blank">
+              <button class="btn-ghost btn-sm" (click)="visualizarDanfe(detail()!.id, detail()!.origemImportacao)">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
                 </svg>
                 Visualizar DANFE
-              </a>
+              </button>
               <button class="btn-primary btn-sm" (click)="download(detail()!)" [disabled]="downloading()">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -873,8 +873,16 @@ export class DocumentosListComponent implements OnInit {
   }
   closeDetail(): void { this.detail.set(null); }
 
-  danfeUrl(id: string): string {
-    return `/imprimir/danfe/${id}`;
+  // Documento emitido pelo FiscalDoc (via Focus NFe) tem o PDF oficial gerado pela SEFAZ
+  // guardado — usa ele direto (via link pré-assinado). Documento importado de outro sistema
+  // nunca tem esse PDF (ou a emissão é anterior a essa funcionalidade), então cai no
+  // renderizador HTML próprio (montado a partir do XML).
+  visualizarDanfe(id: string, origem?: string): void {
+    if (origem !== 'FocusNfe') { window.open(`/imprimir/danfe/${id}`, '_blank'); return; }
+    this._docSvc.getDanfePdfLink(id).subscribe({
+      next: ({ url }) => window.open(url, '_blank'),
+      error: () => window.open(`/imprimir/danfe/${id}`, '_blank'),
+    });
   }
 
   download(doc: DocumentoDto): void {

@@ -110,6 +110,43 @@ public sealed class FocusNfeService(
         return InterpretarResposta(body);
     }
 
+    // DELETE /nfe/{ref} com corpo {"justificativa": "..."} — diferente da emissão/consulta,
+    // é síncrono: a Focus já devolve o resultado final da comunicação com a SEFAZ na resposta,
+    // sem precisar de polling/webhook.
+    public async Task<FocusNfeCancelamentoResult> CancelarNfeAsync(Cliente cliente, string refId, string justificativa, CancellationToken ct = default)
+    {
+        var http = await CriarClienteEmpresaAsync(cliente);
+        if (http is null)
+            return new FocusNfeCancelamentoResult(false, null, MensagemTokenEmpresaAusente, "");
+
+        using var req = new HttpRequestMessage(HttpMethod.Delete, $"nfe/{Uri.EscapeDataString(refId)}")
+        {
+            Content = JsonContent.Create(new { justificativa }),
+        };
+        var resp = await http.SendAsync(req, ct);
+        var body = await resp.Content.ReadAsStringAsync(ct);
+
+        CancelamentoStatusResponse? parsed;
+        try
+        {
+            parsed = JsonSerializer.Deserialize<CancelamentoStatusResponse>(body, JsonOpts);
+        }
+        catch (JsonException)
+        {
+            return new FocusNfeCancelamentoResult(false, null, "Resposta inesperada ao cancelar a NF-e.", body);
+        }
+
+        return parsed?.Status == "cancelado"
+            ? new FocusNfeCancelamentoResult(true, parsed.CaminhoXmlCancelamento, null, body)
+            : new FocusNfeCancelamentoResult(false, null, parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body);
+    }
+
+    private sealed record CancelamentoStatusResponse(
+        [property: JsonPropertyName("status")] string? Status,
+        [property: JsonPropertyName("status_sefaz")] string? StatusSefaz,
+        [property: JsonPropertyName("mensagem_sefaz")] string? MensagemSefaz,
+        [property: JsonPropertyName("caminho_xml_cancelamento")] string? CaminhoXmlCancelamento);
+
     public async Task<byte[]> BaixarArquivoAsync(Cliente cliente, string caminhoOuUrl, CancellationToken ct = default)
     {
         var producao = cliente.FocusNfeAmbiente.Equals("producao", StringComparison.OrdinalIgnoreCase);

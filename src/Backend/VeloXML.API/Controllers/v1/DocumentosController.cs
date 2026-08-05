@@ -59,6 +59,23 @@ public sealed class DocumentosController(
         return await ServirArquivoAsync(doc, ct);
     }
 
+    // DANFE oficial gerado pela Focus/SEFAZ (guardado por NfeEmissaoFinalizer só pra
+    // documentos emitidos via FiscalDoc) — URL pré-assinada, mesmo padrão de GetLinkDownload
+    // (link direto pro storage, sem passar pelo header de auth de novo). 404 quando não existe
+    // esse arquivo — o frontend cai de volta pro renderizador HTML próprio nesse caso
+    // (documentos importados de outro sistema nunca têm esse PDF).
+    [HttpGet("{id:guid}/danfe-pdf-link")]
+    public async Task<IActionResult> GetDanfePdfLink(Guid id, CancellationToken ct)
+    {
+        var doc = await uow.Documentos.GetByIdWithArquivosAsync(id, ct);
+        var arquivo = doc?.Arquivos.FirstOrDefault(a => a.MimeType == "application/pdf");
+        if (arquivo is null) return NotFound();
+
+        var presignedUrl = await storage.GetPresignedUrlAsync(
+            arquivo.ObjectKey, arquivo.Bucket, expiresInSeconds: 120, downloadFileName: arquivo.NomeOriginal);
+        return Ok(new { url = presignedUrl });
+    }
+
     // Gera um link de download de curta duração. Quando o documento tem um arquivo real
     // armazenado, usa uma URL pré-assinada direto do S3/MinIO — o storage já sabe montar uma
     // URL pública e correta sozinho, sem depender de Request.Scheme/proxy nenhum (o link

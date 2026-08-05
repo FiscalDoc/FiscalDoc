@@ -70,7 +70,7 @@ import { PedidoDto } from '@veloxml/models';
                   <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
                   <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td>
-                    <span class="badge" [class]="statusClass(p.status)">{{ p.status }}</span>
+                    <span class="badge" [class]="statusClass(p)">{{ statusLabel(p) }}</span>
                   </td>
                 </tr>
               }
@@ -176,11 +176,22 @@ export class PedidosComponent implements OnInit {
     });
   }
 
-  statusClass(status: string): string {
+  // "Emitido" sozinho é só o flip interno antigo (sem NF-e real). Quando o pedido tem um
+  // Documento vinculado (emitido via Focus ou uma NF-e importada/vinculada), deixa claro que
+  // virou uma nota fiscal de verdade, não só um status interno.
+  statusLabel(p: PedidoDto): string {
+    if (p.status === 'Emitido' && p.documentoId) {
+      return p.documentoStatus === 'Cancelado' ? 'NF-e cancelada' : 'Nota Fiscal Emitida';
+    }
+    return p.status;
+  }
+
+  statusClass(p: PedidoDto): string {
+    if (p.status === 'Emitido' && p.documentoId && p.documentoStatus === 'Cancelado') return 'badge badge-cancelado';
     return {
       Rascunho: 'badge badge-rascunho',
       Emitido: 'badge badge-emitido',
       Cancelado: 'badge badge-cancelado',
-    }[status] ?? 'badge';
+    }[p.status] ?? 'badge';
   }
 }

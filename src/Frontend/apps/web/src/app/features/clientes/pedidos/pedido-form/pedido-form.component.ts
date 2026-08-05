@@ -10,6 +10,11 @@ interface DocumentoVinculadoInfo {
   numero: string;
   chaveAcesso?: string;
   origem?: string;
+  status?: string;
+  protocoloAutorizacao?: string;
+  dataAutorizacao?: string;
+  motivoCancelamento?: string;
+  dataCancelamento?: string;
 }
 
 interface ConfirmState {
@@ -83,14 +88,16 @@ interface ConfirmState {
               </button>
             }
             @if (!isNew()) {
-              <button class="icon-btn" (click)="imprimir()" title="Imprimir Pedido">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 14h12v8H6z"/>
-                </svg>
-                <span>Imprimir</span>
-              </button>
+              @if (!documentoVinculado()) {
+                <button class="icon-btn" (click)="imprimir()" title="Imprimir Pedido">
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 14h12v8H6z"/>
+                  </svg>
+                  <span>Imprimir</span>
+                </button>
+              }
               @if (focusNfeDisponivel() && pedidoStatus() === 'Rascunho' && !documentoVinculado()) {
                 <button
                   class="icon-btn"
@@ -130,7 +137,7 @@ interface ConfirmState {
                   <span>{{ excluindo() ? 'Excluindo...' : 'Excluir' }}</span>
                 </button>
               }
-              @if (pedidoStatus() !== 'Cancelado') {
+              @if (pedidoStatus() !== 'Cancelado' && !documentoVinculado()) {
                 <button class="icon-btn danger" [disabled]="cancelando()" (click)="cancelar()" title="Cancelar Pedido">
                   <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
@@ -138,6 +145,17 @@ interface ConfirmState {
                   </svg>
                   <span>{{ cancelando() ? 'Cancelando...' : 'Cancelar' }}</span>
                 </button>
+              }
+              @if (documentoVinculado(); as doc) {
+                @if (doc.origem === 'FocusNfe' && doc.status !== 'Cancelado') {
+                  <button class="icon-btn danger" (click)="abrirCancelarNfe()" title="Cancelar NF-e">
+                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6"/>
+                    </svg>
+                    <span>Cancelar NF-e</span>
+                  </button>
+                }
               }
             }
           </div>
@@ -153,18 +171,30 @@ interface ConfirmState {
           <div class="card section nfe-card-wrap">
             <div class="nfe-card-row">
               <div class="nfe-card-info">
-                <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
+                @if (doc.status === 'Cancelado') {
+                  <span class="badge badge-rejeitado">NF-e cancelada</span>
+                } @else {
+                  <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
+                }
                 <div>
                   <p class="nfe-card-title">NF-e nº {{ doc.numero }}</p>
                   <p class="nfe-card-chave mono">{{ doc.chaveAcesso }}</p>
+                  @if (doc.protocoloAutorizacao) {
+                    <p class="nfe-card-protocolo">Protocolo de autorização: <span class="mono">{{ doc.protocoloAutorizacao }}</span>{{ doc.dataAutorizacao ? (' — ' + (doc.dataAutorizacao | date:'dd/MM/yyyy HH:mm:ss')) : '' }}</p>
+                  }
+                  @if (doc.status === 'Cancelado') {
+                    <p class="nfe-card-protocolo">Cancelada{{ doc.dataCancelamento ? (' em ' + (doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss')) : '' }}: {{ doc.motivoCancelamento }}</p>
+                  }
                 </div>
               </div>
               <div class="nfe-card-actions">
-                <a class="btn-ghost-sm" target="_blank" [href]="danfeUrl(doc.id)">Visualizar DANFE</a>
+                <button class="btn-ghost-sm" (click)="visualizarDanfe(doc.id, doc.origem)">Visualizar DANFE</button>
                 <a class="btn-ghost-sm" [routerLink]="['/documentos']" [queryParams]="{ id: doc.id }">Ver documento</a>
-                <button class="btn-ghost-sm" [disabled]="desvinculando()" (click)="desvincularDocumento()">
-                  {{ desvinculando() ? 'Removendo...' : 'Desvincular' }}
-                </button>
+                @if (doc.status !== 'Cancelado') {
+                  <button class="btn-ghost-sm" [disabled]="desvinculando()" (click)="desvincularDocumento()">
+                    {{ desvinculando() ? 'Removendo...' : 'Desvincular' }}
+                  </button>
+                }
               </div>
             </div>
           </div>
@@ -585,6 +615,27 @@ interface ConfirmState {
         </div>
       </div>
     }
+
+    @if (showCancelarNfeModal()) {
+      <div class="overlay" (click)="fecharCancelarNfe()">
+        <div class="modal-quick" (click)="$event.stopPropagation()">
+          <h3 class="confirm-title">Cancelar NF-e</h3>
+          <p class="quick-hint">Isso cancela a nota fiscal de verdade na SEFAZ (via Focus NFe) — não dá pra desfazer. A justificativa precisa ter entre 15 e 255 caracteres.</p>
+          <div class="field">
+            <label class="label">Justificativa *</label>
+            <textarea class="input" [(ngModel)]="justificativaCancelamento" rows="3" placeholder="Motivo do cancelamento (mín. 15 caracteres)" maxlength="255"></textarea>
+            <span class="field-hint">{{ justificativaCancelamento.trim().length }}/255</span>
+          </div>
+          @if (erroCancelarNfe()) { <div class="alert-error">{{ erroCancelarNfe() }}</div> }
+          <div class="confirm-actions">
+            <button class="btn-ghost" (click)="fecharCancelarNfe()">Voltar</button>
+            <button class="btn-primary danger" [disabled]="cancelandoNfe() || justificativaCancelamento.trim().length < 15" (click)="confirmarCancelarNfe()">
+              {{ cancelandoNfe() ? 'Cancelando...' : 'Cancelar NF-e' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -669,6 +720,7 @@ interface ConfirmState {
     .nfe-card-info { display: flex; align-items: center; gap: 12px; }
     .nfe-card-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
     .nfe-card-chave { margin: 2px 0 0; font-size: 11px; color: var(--text2); word-break: break-all; }
+    .nfe-card-protocolo { margin: 3px 0 0; font-size: 10.5px; color: var(--text2); }
     .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
     .nfe-impostos-grid { display: flex; gap: 1.5rem; flex-wrap: wrap; }
     .nfe-imposto-item { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text); }
@@ -778,6 +830,10 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly nfeEmissao = signal<NfeEmissaoDto | null>(null);
   readonly emitindoNfeFocus = signal(false);
   readonly showErroNfeModal = signal(false);
+  readonly showCancelarNfeModal = signal(false);
+  readonly cancelandoNfe = signal(false);
+  readonly erroCancelarNfe = signal<string | null>(null);
+  justificativaCancelamento = '';
   private _nfeEmissaoPollTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Traduz cada {campo, mensagem} que a Focus devolveu numa explicação em português e, quando
@@ -1030,7 +1086,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.pedidoStatus.set(p.status);
     this.numero.set(p.numero);
     this.documentoVinculado.set(p.documentoId
-      ? { id: p.documentoId, numero: p.documentoNumero ?? '', chaveAcesso: p.documentoChaveAcesso, origem: p.documentoOrigem }
+      ? {
+          id: p.documentoId, numero: p.documentoNumero ?? '', chaveAcesso: p.documentoChaveAcesso, origem: p.documentoOrigem,
+          status: p.documentoStatus, protocoloAutorizacao: p.documentoProtocoloAutorizacao, dataAutorizacao: p.documentoDataAutorizacao,
+          motivoCancelamento: p.documentoMotivoCancelamento, dataCancelamento: p.documentoDataCancelamento,
+        }
       : null);
     this.documentoImpostos.set(p.documentoImpostos ?? null);
     this.form = {
@@ -1106,6 +1166,32 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  abrirCancelarNfe(): void {
+    this.justificativaCancelamento = '';
+    this.erroCancelarNfe.set(null);
+    this.showCancelarNfeModal.set(true);
+  }
+
+  fecharCancelarNfe(): void {
+    this.showCancelarNfeModal.set(false);
+  }
+
+  confirmarCancelarNfe(): void {
+    const justificativa = this.justificativaCancelamento.trim();
+    if (justificativa.length < 15) return;
+    this.cancelandoNfe.set(true);
+    this.erroCancelarNfe.set(null);
+    this._pedidoSvc.cancelarNfeFocus(this.clienteId, this.pedidoId, justificativa).subscribe({
+      next: () => {
+        this.cancelandoNfe.set(false);
+        this.showCancelarNfeModal.set(false);
+        this._carregarHistorico();
+        this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({ next: p => this._carregarPedido(p) });
+      },
+      error: err => { this.cancelandoNfe.set(false); this.erroCancelarNfe.set(extractErrorMessage(err, 'Não foi possível cancelar a NF-e.')); },
+    });
+  }
+
   private _carregarProdutosFrequentes(destinatarioId: string): void {
     if (!destinatarioId) { this.produtosFrequentes.set([]); return; }
     this._pedidoSvc.getProdutosFrequentes(this.clienteId, destinatarioId).subscribe({
@@ -1141,8 +1227,16 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     window.open(`/imprimir/pedidos/${this.clienteId}/${this.pedidoId}`, '_blank');
   }
 
-  danfeUrl(documentoId: string): string {
-    return `/imprimir/danfe/${documentoId}`;
+  // Documento emitido pelo FiscalDoc (via Focus NFe) tem o PDF oficial gerado pela SEFAZ
+  // guardado — usa ele direto (via link pré-assinado). Documento importado de outro sistema
+  // nunca tem esse PDF (ou a emissão é anterior a essa funcionalidade), então cai no
+  // renderizador HTML próprio (montado a partir do XML).
+  visualizarDanfe(documentoId: string, origem?: string): void {
+    if (origem !== 'FocusNfe') { window.open(`/imprimir/danfe/${documentoId}`, '_blank'); return; }
+    this._docSvc.getDanfePdfLink(documentoId).subscribe({
+      next: ({ url }) => window.open(url, '_blank'),
+      error: () => window.open(`/imprimir/danfe/${documentoId}`, '_blank'),
+    });
   }
 
   // ── Destinatário: busca + quick-create ──────────────────────────────────

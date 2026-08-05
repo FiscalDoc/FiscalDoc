@@ -107,6 +107,41 @@ public sealed class NfeEmissaoFinalizer(
             documento.Status      = StatusDocumentoEnum.Valido;
         }
 
+        // DANFE oficial gerado pela própria Focus/SEFAZ — baixa e guarda igual ao XML, pra
+        // servir esse PDF de verdade em vez de depender só do renderizador HTML próprio (que é
+        // uma aproximação do layout, montada a partir do XML pra casos sem PDF disponível).
+        if (!string.IsNullOrEmpty(resultado.CaminhoDanfe))
+        {
+            try
+            {
+                var pdfBytes = await focusNfe.BaixarArquivoAsync(cliente, resultado.CaminhoDanfe, ct);
+                var bucket = storage.ResolveBucket(BucketName);
+                await storage.EnsureBucketExistsAsync(bucket, ct);
+                var objectKey = StorageKeyHelper.MontarChaveDocumento(cliente.Cnpj, documento.DataEmissao, resultado.ChaveAcesso, "pdf");
+                using var pdfStream = new MemoryStream(pdfBytes);
+                await storage.UploadAsync(pdfStream, objectKey, bucket, "application/pdf", ct);
+
+                await uow.Arquivos.AddAsync(new Arquivo
+                {
+                    TenantId     = cliente.TenantId,
+                    NomeArquivo  = Path.GetFileName(objectKey),
+                    NomeOriginal = $"DANFE-{resultado.ChaveAcesso ?? documento.Numero}.pdf",
+                    Bucket       = bucket,
+                    ObjectKey    = objectKey,
+                    MimeType     = "application/pdf",
+                    Tamanho      = pdfBytes.LongLength,
+                    DocumentoId  = documento.Id,
+                }, ct);
+            }
+            catch (Exception ex)
+            {
+                // Mesma lógica do XML — a nota já está autorizada, não vale falhar a emissão
+                // por causa do PDF. O frontend cai de volta pro renderizador HTML se este
+                // arquivo não existir.
+                logger.LogError(ex, "NF-e {ChaveAcesso} autorizada mas falhou ao baixar/gravar o DANFE", resultado.ChaveAcesso);
+            }
+        }
+
         await uow.Documentos.AddAsync(documento, ct);
 
         PedidoEmissaoHelper.VincularDocumentoAutorizado(pedido, documento);

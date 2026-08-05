@@ -67,4 +67,8 @@ export class PedidoService {
   getNfeEmissao(clienteId: string, id: string): Observable<NfeEmissaoDto | null> {
     return this._api.get<NfeEmissaoDto | null>(`/clientes/${clienteId}/pedidos/${id}/nfe-emissao`);
   }
+
+  cancelarNfeFocus(clienteId: string, id: string, justificativa: string): Observable<NfeEmissaoDto> {
+    return this._api.post<NfeEmissaoDto>(`/clientes/${clienteId}/pedidos/${id}/cancelar-nfe`, { justificativa });
+  }
 }
