@@ -10,7 +10,7 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
 {
     public async Task<PagedResult<Pedido>> SearchAsync(Guid clienteId, string? status, string? termo, DateTime? de, DateTime? ate, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = DbSet.Include(p => p.Destinatario).Where(p => p.ClienteId == clienteId).AsQueryable();
+        var query = DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Where(p => p.ClienteId == clienteId).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(p => p.Status == status);

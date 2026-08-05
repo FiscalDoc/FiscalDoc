@@ -176,16 +176,7 @@ interface ConfirmState {
                 } @else {
                   <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
                 }
-                <div>
-                  <p class="nfe-card-title">NF-e nº {{ doc.numero }}</p>
-                  <p class="nfe-card-chave mono">{{ doc.chaveAcesso }}</p>
-                  @if (doc.protocoloAutorizacao) {
-                    <p class="nfe-card-protocolo">Protocolo de autorização: <span class="mono">{{ doc.protocoloAutorizacao }}</span>{{ doc.dataAutorizacao ? (' — ' + (doc.dataAutorizacao | date:'dd/MM/yyyy HH:mm:ss')) : '' }}</p>
-                  }
-                  @if (doc.status === 'Cancelado') {
-                    <p class="nfe-card-protocolo">Cancelada{{ doc.dataCancelamento ? (' em ' + (doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss')) : '' }}: {{ doc.motivoCancelamento }}</p>
-                  }
-                </div>
+                <p class="nfe-card-title">NF-e nº {{ doc.numero }}</p>
               </div>
               <div class="nfe-card-actions">
                 <button class="btn-ghost-sm" (click)="visualizarDanfe(doc.id, doc.origem)">Visualizar DANFE</button>
@@ -196,6 +187,30 @@ interface ConfirmState {
                   </button>
                 }
               </div>
+            </div>
+            <div class="nfe-fields">
+              <div class="nfe-field">
+                <span class="nfe-field-label">Chave de acesso</span>
+                <span class="nfe-field-value mono">{{ chaveFormatada(doc.chaveAcesso) }}</span>
+              </div>
+              @if (doc.protocoloAutorizacao) {
+                <div class="nfe-field">
+                  <span class="nfe-field-label">Protocolo de autorização</span>
+                  <span class="nfe-field-value">
+                    <span class="mono">{{ doc.protocoloAutorizacao }}</span>
+                    @if (doc.dataAutorizacao) { <span class="nfe-field-data">{{ doc.dataAutorizacao | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
+                  </span>
+                </div>
+              }
+              @if (doc.status === 'Cancelado') {
+                <div class="nfe-field nfe-field--alerta">
+                  <span class="nfe-field-label">Cancelamento</span>
+                  <span class="nfe-field-value">
+                    {{ doc.motivoCancelamento }}
+                    @if (doc.dataCancelamento) { <span class="nfe-field-data">{{ doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
+                  </span>
+                </div>
+              }
             </div>
           </div>
         } @else if (focusNfeDisponivel() && nfeEmissao()?.status === 'Processando') {
@@ -720,8 +735,14 @@ interface ConfirmState {
     .nfe-card-info { display: flex; align-items: center; gap: 12px; }
     .nfe-card-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
     .nfe-card-chave { margin: 2px 0 0; font-size: 11px; color: var(--text2); word-break: break-all; }
-    .nfe-card-protocolo { margin: 3px 0 0; font-size: 10.5px; color: var(--text2); }
     .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .nfe-fields { display: flex; flex-direction: column; gap: 6px; margin-top: 1rem; padding-top: .875rem; border-top: 1px solid var(--border); }
+    .nfe-field { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+    .nfe-field-label { flex-shrink: 0; min-width: 160px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text2); }
+    .nfe-field-value { font-size: 12.5px; color: var(--text); word-break: break-all; }
+    .nfe-field-data { margin-left: 8px; color: var(--text2); font-size: 11.5px; }
+    .nfe-field--alerta .nfe-field-label, .nfe-field--alerta .nfe-field-value { color: var(--red); }
+    .nfe-field--alerta .nfe-field-data { color: var(--red); opacity: .75; }
     .nfe-impostos-grid { display: flex; gap: 1.5rem; flex-wrap: wrap; }
     .nfe-imposto-item { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text); }
     .nfe-imposto-item--destaque span:last-child { color: var(--accent); font-weight: 700; }
@@ -1237,6 +1258,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       next: ({ url }) => window.open(url, '_blank'),
       error: () => window.open(`/imprimir/danfe/${documentoId}`, '_blank'),
     });
+  }
+
+  chaveFormatada(chave?: string): string {
+    if (!chave) return '—';
+    return chave.replace(/(\d{4})(?=\d)/g, '$1 ');
   }
 
   // ── Destinatário: busca + quick-create ──────────────────────────────────
