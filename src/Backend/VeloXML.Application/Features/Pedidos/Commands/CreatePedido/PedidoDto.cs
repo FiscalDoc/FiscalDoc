@@ -43,6 +43,7 @@ public record PedidoDto(
     string? InformacoesComplementares,
     Guid? DocumentoId,
     string? DocumentoNumero,
+    string? DocumentoSerie,
     string? DocumentoChaveAcesso,
     string? DocumentoOrigem,
     string? DocumentoStatus,

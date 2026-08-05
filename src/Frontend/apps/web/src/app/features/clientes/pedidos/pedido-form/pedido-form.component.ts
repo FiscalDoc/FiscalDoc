@@ -8,6 +8,7 @@ import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRe
 interface DocumentoVinculadoInfo {
   id: string;
   numero: string;
+  serie?: string;
   chaveAcesso?: string;
   origem?: string;
   status?: string;
@@ -176,7 +177,7 @@ interface ConfirmState {
                 } @else {
                   <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
                 }
-                <p class="nfe-card-title">NF-e nº {{ doc.numero }}</p>
+                <p class="nfe-card-title">NF-e nº {{ doc.numero }}{{ doc.serie ? ' — Série ' + doc.serie : '' }}</p>
               </div>
               <div class="nfe-card-actions">
                 <button class="btn-ghost-sm" (click)="visualizarDanfe(doc.id, doc.origem)">Visualizar DANFE</button>
@@ -1108,7 +1109,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.numero.set(p.numero);
     this.documentoVinculado.set(p.documentoId
       ? {
-          id: p.documentoId, numero: p.documentoNumero ?? '', chaveAcesso: p.documentoChaveAcesso, origem: p.documentoOrigem,
+          id: p.documentoId, numero: p.documentoNumero ?? '', serie: p.documentoSerie, chaveAcesso: p.documentoChaveAcesso, origem: p.documentoOrigem,
           status: p.documentoStatus, protocoloAutorizacao: p.documentoProtocoloAutorizacao, dataAutorizacao: p.documentoDataAutorizacao,
           motivoCancelamento: p.documentoMotivoCancelamento, dataCancelamento: p.documentoDataCancelamento,
         }

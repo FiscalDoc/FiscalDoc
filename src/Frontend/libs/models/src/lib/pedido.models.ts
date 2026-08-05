@@ -46,6 +46,7 @@ export interface PedidoDto {
   informacoesComplementares?: string;
   documentoId?: string;
   documentoNumero?: string;
+  documentoSerie?: string;
   documentoChaveAcesso?: string;
   documentoOrigem?: 'Manual' | 'ImportacaoEmail' | 'ApiIngest' | 'FocusNfe';
   documentoStatus?: 'Pendente' | 'Valido' | 'Alerta' | 'Duplicado' | 'Cancelado';

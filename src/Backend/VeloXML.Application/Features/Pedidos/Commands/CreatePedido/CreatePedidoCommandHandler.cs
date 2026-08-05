@@ -99,7 +99,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 i.CstIcms, i.CstPis, i.CstCofins, i.IbsCbsCst, i.IbsCbsClassificacaoTributaria
             )).ToList(),
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
-            p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
+            p.DocumentoId, p.Documento?.Numero, danfe?.Serie, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
             p.Documento?.Status.ToString(), danfe?.ProtocoloAutorizacao, danfe?.DataAutorizacao,
             p.Documento?.MotivoCancelamento, p.Documento?.DataCancelamento,
             p.Documento is null ? null : new DocumentoImpostosDto(

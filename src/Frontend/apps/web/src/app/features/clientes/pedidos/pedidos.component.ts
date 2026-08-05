@@ -60,12 +60,15 @@ import { PedidoDto } from '@veloxml/models';
         } @else {
           <table class="table">
             <thead>
-              <tr><th>Nº</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th></tr>
+              <tr><th>Nº</th><th>Tipo</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th></tr>
             </thead>
             <tbody>
               @for (p of pedidos(); track p.id) {
                 <tr class="row-link" (click)="abrirPedido(p)">
                   <td class="mono">{{ p.numero }}</td>
+                  <td>
+                    <span class="badge-tipo" [class.badge-tipo--nf]="!!p.documentoId">{{ p.documentoId ? 'Nota Fiscal' : 'Pedido' }}</span>
+                  </td>
                   <td>{{ p.destinatarioNome }}</td>
                   <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
                   <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
@@ -114,6 +117,8 @@ import { PedidoDto } from '@veloxml/models';
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
     .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
+    .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
+    .badge-tipo--nf { background: rgba(0,229,160,.12); color: var(--accent); }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .row-link { cursor: pointer; }
