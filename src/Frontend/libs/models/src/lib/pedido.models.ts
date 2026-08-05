@@ -19,6 +19,7 @@ export interface PedidoItemDto {
 export type FormaPagamento = 'AVista' | 'APrazo';
 export type MeioPagamento = 'Dinheiro' | 'Cartao' | 'Pix' | 'Boleto' | 'Outros';
 export type FinalidadeEmissao = 'Normal' | 'Complementar' | 'Ajuste' | 'Devolucao';
+export type ModalidadeFrete = 'SemFrete' | 'EmitenteContaFrete' | 'DestinatarioContaFrete' | 'Terceiros';
 
 export interface PedidoDto {
   id: string;
@@ -33,6 +34,7 @@ export interface PedidoDto {
   itens: PedidoItemDto[];
   naturezaOperacao: string;
   finalidadeEmissao: FinalidadeEmissao;
+  modalidadeFrete: ModalidadeFrete;
   dataSaida?: string;
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
@@ -65,6 +67,7 @@ export interface CreatePedidoRequest {
   itens: PedidoItemInput[];
   naturezaOperacao: string;
   finalidadeEmissao?: FinalidadeEmissao;
+  modalidadeFrete?: ModalidadeFrete;
   dataSaida?: string;
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
@@ -78,6 +81,7 @@ export interface UpdatePedidoRequest {
   itens: PedidoItemInput[];
   naturezaOperacao: string;
   finalidadeEmissao?: FinalidadeEmissao;
+  modalidadeFrete?: ModalidadeFrete;
   dataSaida?: string;
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
@@ -102,6 +106,11 @@ export interface PedidoHistoricoDto {
 
 export type NfeEmissaoStatus = 'Enviada' | 'Processando' | 'Autorizada' | 'Rejeitada' | 'Erro' | 'Cancelada';
 
+export interface NfeCampoErroDto {
+  campo?: string;
+  mensagem: string;
+}
+
 export interface NfeEmissaoDto {
   id: string;
   status: NfeEmissaoStatus;
@@ -111,4 +120,5 @@ export interface NfeEmissaoDto {
   serie?: string;
   documentoId?: string;
   createdAt: string;
+  errosDetalhados?: NfeCampoErroDto[];
 }

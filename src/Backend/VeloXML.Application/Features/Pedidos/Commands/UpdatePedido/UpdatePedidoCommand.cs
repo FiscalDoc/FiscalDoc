@@ -16,6 +16,7 @@ public record UpdatePedidoCommand(
     string? MeioPagamento,
     string? InformacoesComplementares,
     string FinalidadeEmissao = "Normal",
+    string ModalidadeFrete = "SemFrete",
     // "auto" = auto-save silencioso (não gera entrada no histórico do pedido, senão o
     // histórico ficaria cheio de "editado" repetido a cada poucos segundos digitando).
     string Origem = "manual"

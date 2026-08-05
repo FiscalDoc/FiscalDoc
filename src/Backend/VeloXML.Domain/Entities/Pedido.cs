@@ -17,6 +17,11 @@ public class Pedido : BaseEntity, IAuditableEntity
     // finalidade_emissao (1/2/3/4); cada pedido pode ter uma finalidade diferente, por isso
     // fica aqui e não na configuração fiscal do Cliente.
     public string FinalidadeEmissao { get; set; } = "Normal";
+    // "SemFrete" | "EmitenteContaFrete" | "DestinatarioContaFrete" | "Terceiros" — a Focus NFe
+    // chama isso de modalidade_frete (9/0/1/2) e é campo obrigatório na emissão real (mesmo a
+    // doc pública listando como opcional). "SemFrete" cobre a maioria dos casos de quem não é
+    // transportadora.
+    public string ModalidadeFrete { get; set; } = "SemFrete";
     public DateTime? DataSaida { get; set; }
     public string? FormaPagamento { get; set; }              // "AVista" | "APrazo"
     public string? MeioPagamento { get; set; }                // "Dinheiro" | "Cartao" | "Pix" | "Boleto" | "Outros"

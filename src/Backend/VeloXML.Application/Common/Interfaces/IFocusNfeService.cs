@@ -7,6 +7,11 @@ namespace VeloXML.Application.Common.Interfaces;
 // empresas. É esse par que deve ser usado em toda chamada de emissão pra essa empresa.
 public record FocusEmpresaResult(bool Sucesso, string? EmpresaId, string? TokenHomologacao, string? TokenProducao, string? Erro);
 
+// Um item do array "erros" que a Focus devolve numa rejeição — Campo é o path do JSON
+// rejeitado (ex.: "itens.1.codigo_ncm"), usado pelo frontend pra explicar o erro e apontar
+// pra onde corrigir (produto/cadastro do pedido), em vez de só mostrar o texto cru.
+public record FocusNfeCampoErro(string? Campo, string Mensagem);
+
 // Concluida = true quando a Focus já deu uma resposta final (autorizado/rejeitado/erro);
 // false enquanto ainda está "processando_autorizacao" — nesse caso Sucesso é sempre false e
 // os demais campos ficam vazios, o chamador deve tentar de novo depois (webhook ou polling).
@@ -19,7 +24,8 @@ public record FocusNfeSubmissaoResult(
     string? CaminhoXml,
     string? CaminhoDanfe,
     string? MensagemErro,
-    string RespostaBrutaJson);
+    string RespostaBrutaJson,
+    IReadOnlyList<FocusNfeCampoErro>? ErrosDetalhados = null);
 
 public interface IFocusNfeService
 {

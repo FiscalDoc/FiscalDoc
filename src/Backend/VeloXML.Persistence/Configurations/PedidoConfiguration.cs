@@ -27,6 +27,7 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
 
         b.Property(e => e.NaturezaOperacao).HasColumnName("natureza_operacao").HasMaxLength(60).IsRequired().HasDefaultValue("Venda de mercadoria");
         b.Property(e => e.FinalidadeEmissao).HasColumnName("finalidade_emissao").HasMaxLength(20).IsRequired().HasDefaultValue("Normal");
+        b.Property(e => e.ModalidadeFrete).HasColumnName("modalidade_frete").HasMaxLength(30).IsRequired().HasDefaultValue("SemFrete");
         b.Property(e => e.DataSaida).HasColumnName("data_saida");
         b.Property(e => e.FormaPagamento).HasColumnName("forma_pagamento").HasMaxLength(20);
         b.Property(e => e.MeioPagamento).HasColumnName("meio_pagamento").HasMaxLength(20);

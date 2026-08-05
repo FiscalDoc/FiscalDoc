@@ -20,4 +20,12 @@ public class NfeEmissao : BaseEntity
     public string? Serie { get; set; }
     public Guid? DocumentoId { get; set; }
     public string? UltimoPayloadRespostaJson { get; set; }
+    // Quem clicou em "Emitir NF-e" — gravado na criação e reaproveitado pelo NfeEmissaoFinalizer
+    // pra atribuir corretamente as entradas de histórico geradas depois, mesmo quando quem
+    // fecha o ciclo é o webhook/job de polling (sem ICurrentUser).
+    public string? SolicitadoPorNome { get; set; }
+    // JSON de List<FocusNfeCampoErro> (campo/mensagem) — persistido pra sobreviver a um reload
+    // da tela, já que MensagemErro é só o texto plano. Usado pelo frontend pra montar o modal
+    // de erro por campo (com explicação e link de correção).
+    public string? ErrosDetalhadosJson { get; set; }
 }

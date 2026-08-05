@@ -28,6 +28,8 @@ public class NfeEmissaoConfiguration : IEntityTypeConfiguration<NfeEmissao>
         b.Property(e => e.Serie).HasColumnName("serie").HasMaxLength(10);
         b.Property(e => e.DocumentoId).HasColumnName("documento_id");
         b.Property(e => e.UltimoPayloadRespostaJson).HasColumnName("ultimo_payload_resposta_json").HasColumnType("text");
+        b.Property(e => e.SolicitadoPorNome).HasColumnName("solicitado_por_nome").HasMaxLength(256);
+        b.Property(e => e.ErrosDetalhadosJson).HasColumnName("erros_detalhados_json").HasColumnType("text");
 
         b.HasIndex(e => e.Ref).IsUnique();
         b.HasIndex(e => new { e.PedidoId, e.CreatedAt });

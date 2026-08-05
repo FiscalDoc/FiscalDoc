@@ -182,6 +182,7 @@ interface ConfirmState {
               <span class="field-hint">{{ nfeEmissao()?.mensagemErro || 'Não foi possível emitir a NF-e.' }}</span>
             </div>
             <div class="nfe-card-actions">
+              <button class="btn-ghost-sm" (click)="showErroNfeModal.set(true)">Ver detalhes e como corrigir</button>
               <button class="btn-ghost-sm" [disabled]="emitindoNfeFocus()" (click)="emitirNfeFocus()">
                 {{ emitindoNfeFocus() ? 'Tentando...' : 'Tentar novamente' }}
               </button>
@@ -256,6 +257,15 @@ interface ConfirmState {
               <option value="Complementar">Complementar</option>
               <option value="Ajuste">Ajuste</option>
               <option value="Devolucao">Devolução</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label">Tipo de Frete</label>
+            <select class="input" [disabled]="readonly()" [ngModel]="form.modalidadeFrete" (ngModelChange)="form.modalidadeFrete = $event; marcarSujo()">
+              <option value="SemFrete">Sem frete</option>
+              <option value="EmitenteContaFrete">Por conta do emitente</option>
+              <option value="DestinatarioContaFrete">Por conta do destinatário</option>
+              <option value="Terceiros">Por conta de terceiros</option>
             </select>
           </div>
           <div class="field">
@@ -549,6 +559,32 @@ interface ConfirmState {
         </div>
       </div>
     }
+
+    @if (showErroNfeModal()) {
+      <div class="overlay" (click)="showErroNfeModal.set(false)">
+        <div class="modal-quick modal-erro-nfe" (click)="$event.stopPropagation()">
+          <h3 class="confirm-title">Por que a NF-e foi rejeitada</h3>
+          <p class="quick-hint">A SEFAZ (via Focus NFe) recusou a emissão pelos motivos abaixo. Corrija cada um e clique em "Tentar novamente".</p>
+          <div class="erro-nfe-lista">
+            @for (e of erroNfeDetalhes(); track e.titulo + e.explicacao) {
+              <div class="erro-nfe-item">
+                <p class="erro-nfe-titulo">{{ e.titulo }}</p>
+                <p class="erro-nfe-explicacao">{{ e.explicacao }}</p>
+                @if (e.acaoLabel && e.acaoLink) {
+                  <a class="btn-ghost-sm" [routerLink]="e.acaoLink" (click)="showErroNfeModal.set(false)">{{ e.acaoLabel }}</a>
+                }
+              </div>
+            }
+          </div>
+          <div class="confirm-actions">
+            <button class="btn-ghost" (click)="showErroNfeModal.set(false)">Fechar</button>
+            <button class="btn-primary" [disabled]="emitindoNfeFocus()" (click)="showErroNfeModal.set(false); emitirNfeFocus()">
+              {{ emitindoNfeFocus() ? 'Tentando...' : 'Tentar novamente' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -702,6 +738,12 @@ interface ConfirmState {
     .confirm-title { margin: 0; font-size: 15px; font-weight: 700; color: var(--text); }
     .confirm-msg { margin: 0; font-size: 13.5px; color: var(--text2); }
     .quick-hint { margin: 0; font-size: 12px; color: var(--text2); }
+    .modal-erro-nfe { max-width: 480px; }
+    .erro-nfe-lista { display: flex; flex-direction: column; gap: .625rem; max-height: 340px; overflow-y: auto; }
+    .erro-nfe-item { display: flex; flex-direction: column; gap: 4px; padding: .625rem .75rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; }
+    .erro-nfe-titulo { margin: 0; font-size: 13px; font-weight: 700; color: var(--red); }
+    .erro-nfe-explicacao { margin: 0; font-size: 12.5px; color: var(--text2); }
+    .erro-nfe-item .btn-ghost-sm { align-self: flex-start; margin-top: 2px; }
     .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover:not(:disabled) { opacity: .88; }
@@ -735,7 +777,65 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly documentoVinculado = signal<DocumentoVinculadoInfo | null>(null);
   readonly nfeEmissao = signal<NfeEmissaoDto | null>(null);
   readonly emitindoNfeFocus = signal(false);
+  readonly showErroNfeModal = signal(false);
   private _nfeEmissaoPollTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Traduz cada {campo, mensagem} que a Focus devolveu numa explicação em português e, quando
+  // dá pra identificar onde corrigir (item de um produto, destinatário, dados fiscais da
+  // empresa), aponta um link direto — em vez de só repetir o texto cru da API terceira.
+  readonly erroNfeDetalhes = computed(() => {
+    const ne = this.nfeEmissao();
+    if (!ne) return [];
+    const erros = ne.errosDetalhados;
+    if (erros && erros.length > 0) return erros.map(e => this._explicarErroNfe(e.campo, e.mensagem));
+    return [{ titulo: 'Erro na emissão', explicacao: ne.mensagemErro || 'Não foi possível emitir a NF-e.' }];
+  });
+
+  private _explicarErroNfe(campo: string | undefined, mensagem: string): { titulo: string; explicacao: string; acaoLabel?: string; acaoLink?: unknown[] } {
+    if (!campo) return { titulo: 'Erro de validação', explicacao: mensagem };
+
+    if (campo === 'modalidade_frete') {
+      return { titulo: 'Tipo de Frete não preenchido', explicacao: 'Escolha o Tipo de Frete no cabeçalho deste pedido (logo abaixo) e tente novamente.' };
+    }
+    if (campo === 'natureza_operacao') {
+      return { titulo: 'Natureza da Operação não preenchida', explicacao: 'Preencha a Natureza da Operação no cabeçalho deste pedido e tente novamente.' };
+    }
+
+    const itemMatch = /^itens\.(\d+)\.(.+)$/.exec(campo);
+    if (itemMatch) {
+      const idx = Number(itemMatch[1]) - 1;
+      const subcampo = itemMatch[2];
+      const item = this.itens()[idx];
+      const nomeItem = item?.descricao ? `"${item.descricao}"` : `item ${idx + 1}`;
+      const campoLabel = subcampo === 'codigo_ncm' ? 'NCM' : subcampo === 'cfop' ? 'CFOP' : subcampo;
+      return {
+        titulo: `${campoLabel} do produto ${nomeItem} está incorreto`,
+        explicacao: `${mensagem} — corrija o cadastro desse produto.`,
+        acaoLabel: item?.produtoId ? 'Editar produto' : undefined,
+        acaoLink: item?.produtoId ? ['/clientes', this.clienteId, 'cadastros', 'produtos', item.produtoId] : undefined,
+      };
+    }
+
+    if (campo.endsWith('_destinatario')) {
+      return {
+        titulo: 'Dado do destinatário incompleto',
+        explicacao: `${mensagem} — corrija o cadastro do destinatário deste pedido.`,
+        acaoLabel: 'Editar destinatário',
+        acaoLink: this.form.destinatarioId ? ['/clientes', this.clienteId, 'cadastros', 'destinatarios', this.form.destinatarioId] : undefined,
+      };
+    }
+
+    if (campo.endsWith('_emitente') || campo.includes('regime') || campo.includes('inscricao')) {
+      return {
+        titulo: 'Dado fiscal da empresa incompleto',
+        explicacao: `${mensagem} — corrija na tela Empresa.`,
+        acaoLabel: 'Ir para Empresa',
+        acaoLink: ['/clientes', this.clienteId, 'empresa'],
+      };
+    }
+
+    return { titulo: campo, explicacao: mensagem };
+  }
 
   readonly cliente = signal<ClienteDto | null>(null);
   // Emissão via Focus NFe só aparece pro cliente que o Administrador habilitou E que já tem
@@ -921,6 +1021,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     const dataSaidaPadrao = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     return {
       destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria', finalidadeEmissao: 'Normal',
+      modalidadeFrete: 'SemFrete',
       dataSaida: dataSaidaPadrao, formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
     };
   }
@@ -936,6 +1037,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '',
       naturezaOperacao: p.naturezaOperacao || 'Venda de mercadoria',
       finalidadeEmissao: p.finalidadeEmissao || 'Normal',
+      modalidadeFrete: p.modalidadeFrete || 'SemFrete',
       dataSaida: p.dataSaida ? p.dataSaida.slice(0, 10) : '',
       formaPagamento: p.formaPagamento ?? '', meioPagamento: p.meioPagamento ?? '',
       informacoesComplementares: p.informacoesComplementares ?? '',
@@ -1437,6 +1539,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       destinatarioId: this.form.destinatarioId,
       naturezaOperacao: this.form.naturezaOperacao,
       finalidadeEmissao: (this.form.finalidadeEmissao || undefined) as CreatePedidoRequest['finalidadeEmissao'],
+      modalidadeFrete: (this.form.modalidadeFrete || undefined) as CreatePedidoRequest['modalidadeFrete'],
       dataSaida: this.form.dataSaida || undefined,
       formaPagamento: (this.form.formaPagamento || undefined) as CreatePedidoRequest['formaPagamento'],
       meioPagamento: (this.form.meioPagamento || undefined) as CreatePedidoRequest['meioPagamento'],

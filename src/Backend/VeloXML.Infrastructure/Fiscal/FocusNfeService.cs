@@ -149,7 +149,7 @@ public sealed class FocusNfeService(
                 false, false, null, null, null, null, null, null, body),
             _ => new FocusNfeSubmissaoResult(
                 true, false, null, null, null, null, null,
-                parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body),
+                parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body, ExtrairErrosDetalhados(body)),
         };
     }
 
@@ -241,6 +241,32 @@ public sealed class FocusNfeService(
         }
         catch (JsonException) { /* corpo não é JSON — usa o texto cru */ }
         return body;
+    }
+
+    // Mesma leitura do array "erros" que ExtrairMensagemErro, mas devolvendo os pares
+    // campo/mensagem estruturados em vez de um texto já concatenado — é isso que o frontend
+    // usa pra montar o modal de erro com explicação e link de correção por campo.
+    private static List<FocusNfeCampoErro> ExtrairErrosDetalhados(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (!doc.RootElement.TryGetProperty("erros", out var erros) || erros.ValueKind != JsonValueKind.Array)
+                return [];
+
+            return erros.EnumerateArray()
+                .Select(e =>
+                {
+                    var campo = e.TryGetProperty("campo", out var c) ? c.GetString() : null;
+                    var mensagemCampo = (e.TryGetProperty("mensagem", out var m) ? m.GetString() : null) ?? e.ToString();
+                    return new FocusNfeCampoErro(campo, mensagemCampo);
+                })
+                .ToList();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     // Lê id/token_producao/token_homologacao manualmente (em vez de um tipo forte) porque a

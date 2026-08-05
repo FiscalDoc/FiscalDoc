@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using VeloXML.Application.Common.Interfaces;
@@ -14,6 +15,7 @@ public sealed class EmitirNfeFocusCommandHandler(
     IUnitOfWork uow,
     IFocusNfeService focusNfe,
     NfeEmissaoFinalizer finalizer,
+    ICurrentUser currentUser,
     ILogger<EmitirNfeFocusCommandHandler> logger) : IRequestHandler<EmitirNfeFocusCommand, Result<NfeEmissaoDto>>
 {
     public async Task<Result<NfeEmissaoDto>> Handle(EmitirNfeFocusCommand request, CancellationToken ct)
@@ -48,15 +50,18 @@ public sealed class EmitirNfeFocusCommandHandler(
             return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
                 "Itens", $"O produto \"{itemIncompleto.Descricao}\" está sem NCM ou CFOP — preencha no cadastro do produto antes de emitir."));
 
+        var solicitadoPorNome = currentUser.Name ?? currentUser.Email ?? "FiscalDoc";
+
         var refId = $"pedido-{pedido.Id:N}-{DateTime.UtcNow:yyyyMMddHHmmss}";
         var emissao = new NfeEmissao
         {
-            TenantId  = pedido.TenantId,
-            PedidoId  = pedido.Id,
-            ClienteId = cliente.Id,
-            Ref       = refId,
-            Ambiente  = cliente.FocusNfeAmbiente,
-            Status    = NfeEmissaoStatusEnum.Enviada,
+            TenantId          = pedido.TenantId,
+            PedidoId          = pedido.Id,
+            ClienteId         = cliente.Id,
+            Ref               = refId,
+            Ambiente          = cliente.FocusNfeAmbiente,
+            Status            = NfeEmissaoStatusEnum.Enviada,
+            SolicitadoPorNome = solicitadoPorNome,
         };
         await uow.NfeEmissoes.AddAsync(emissao, ct);
         await uow.SaveChangesAsync(ct);
@@ -79,7 +84,7 @@ public sealed class EmitirNfeFocusCommandHandler(
                 PedidoId    = pedido.Id,
                 Tipo        = "ErroEmissaoNfe",
                 Descricao   = "Falha ao tentar emitir a NF-e — não foi possível se comunicar com o serviço de emissão.",
-                UsuarioNome = "FiscalDoc",
+                UsuarioNome = solicitadoPorNome,
             }, ct);
             await uow.SaveChangesAsync(ct);
             return Result.Success(ToDto(emissao));
@@ -96,7 +101,7 @@ public sealed class EmitirNfeFocusCommandHandler(
                 PedidoId    = pedido.Id,
                 Tipo        = "NfeProcessando",
                 Descricao   = "Emissão de NF-e enviada — processando na SEFAZ.",
-                UsuarioNome = "FiscalDoc",
+                UsuarioNome = solicitadoPorNome,
             }, ct);
             await uow.SaveChangesAsync(ct);
             return Result.Success(ToDto(emissao));
@@ -107,5 +112,8 @@ public sealed class EmitirNfeFocusCommandHandler(
     }
 
     internal static NfeEmissaoDto ToDto(NfeEmissao e) => new(
-        e.Id, e.Status.ToString(), e.MensagemErro, e.ChaveAcesso, e.Numero, e.Serie, e.DocumentoId, e.CreatedAt);
+        e.Id, e.Status.ToString(), e.MensagemErro, e.ChaveAcesso, e.Numero, e.Serie, e.DocumentoId, e.CreatedAt,
+        string.IsNullOrEmpty(e.ErrosDetalhadosJson)
+            ? null
+            : JsonSerializer.Deserialize<List<NfeCampoErroDto>>(e.ErrosDetalhadosJson));
 }

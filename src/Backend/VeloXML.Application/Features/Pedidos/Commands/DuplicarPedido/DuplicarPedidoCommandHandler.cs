@@ -45,6 +45,7 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             Itens = itens,
             NaturezaOperacao = original.NaturezaOperacao,
             FinalidadeEmissao = original.FinalidadeEmissao,
+            ModalidadeFrete = original.ModalidadeFrete,
             DataSaida = null,
             FormaPagamento = original.FormaPagamento,
             MeioPagamento = original.MeioPagamento,

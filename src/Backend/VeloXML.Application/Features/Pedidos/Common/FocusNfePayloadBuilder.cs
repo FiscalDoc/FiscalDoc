@@ -22,6 +22,7 @@ internal static class FocusNfePayloadBuilder
             tipo_documento = 1,      // 1 = saída (o Cliente é sempre o emitente aqui)
             finalidade_emissao = MapearFinalidadeEmissao(pedido.FinalidadeEmissao),
             presenca_comprador = 9,  // 9 = não se aplica (operação não presencial)
+            modalidade_frete = MapearModalidadeFrete(pedido.ModalidadeFrete),
             cnpj_emitente = SoDigitos(cliente.Cnpj),
 
             cnpj_destinatario = cpfCnpjDigitos?.Length == 14 ? cpfCnpjDigitos : null,
@@ -45,7 +46,7 @@ internal static class FocusNfePayloadBuilder
                 codigo_produto = item.Produto?.Codigo ?? item.ProdutoId.ToString(),
                 descricao = item.Descricao,
                 cfop = item.Cfop,
-                ncm = item.Ncm,
+                codigo_ncm = item.Ncm,
                 unidade_comercial = item.Unidade,
                 quantidade_comercial = item.Quantidade,
                 valor_unitario_comercial = item.PrecoUnitario,
@@ -53,7 +54,7 @@ internal static class FocusNfePayloadBuilder
                 unidade_tributavel = item.Unidade,
                 quantidade_tributavel = item.Quantidade,
                 valor_unitario_tributavel = item.PrecoUnitario,
-                icms_origem = "0",
+                icms_origem = 0,
                 icms_situacao_tributaria = "102", // CSOSN Simples Nacional sem crédito — ajustar por regime
                 pis_situacao_tributaria = "07",
                 cofins_situacao_tributaria = "07",
@@ -89,5 +90,15 @@ internal static class FocusNfePayloadBuilder
         "Ajuste" => 3,
         "Devolucao" => 4,
         _ => 1,
+    };
+
+    // Códigos da SEFAZ pro campo modalidade_frete: 0=emitente, 1=destinatário, 2=terceiros,
+    // 9=sem frete.
+    private static int MapearModalidadeFrete(string modalidade) => modalidade switch
+    {
+        "EmitenteContaFrete" => 0,
+        "DestinatarioContaFrete" => 1,
+        "Terceiros" => 2,
+        _ => 9,
     };
 }

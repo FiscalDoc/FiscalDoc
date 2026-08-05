@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VeloXML.Persistence.Context;
@@ -12,9 +13,11 @@ using VeloXML.Persistence.Context;
 namespace VeloXML.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260805002538_AddNfeEmissaoSolicitadoPor")]
+    partial class AddNfeEmissaoSolicitadoPor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1406,10 +1409,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("documento_id");
 
-                    b.Property<string>("ErrosDetalhadosJson")
-                        .HasColumnType("text")
-                        .HasColumnName("erros_detalhados_json");
-
                     b.Property<string>("MensagemErro")
                         .HasColumnType("text")
                         .HasColumnName("mensagem_erro");
@@ -1575,14 +1574,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("meio_pagamento");
-
-                    b.Property<string>("ModalidadeFrete")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasDefaultValue("SemFrete")
-                        .HasColumnName("modalidade_frete");
 
                     b.Property<string>("NaturezaOperacao")
                         .IsRequired()

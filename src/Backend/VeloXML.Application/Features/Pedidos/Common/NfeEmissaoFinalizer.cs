@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using VeloXML.Application.Common;
 using VeloXML.Application.Common.Interfaces;
@@ -25,6 +26,8 @@ public sealed class NfeEmissaoFinalizer(
         {
             emissao.Status = NfeEmissaoStatusEnum.Rejeitada;
             emissao.MensagemErro = resultado.MensagemErro ?? "Não foi possível autorizar a emissão desta NF-e.";
+            if (resultado.ErrosDetalhados is { Count: > 0 })
+                emissao.ErrosDetalhadosJson = JsonSerializer.Serialize(resultado.ErrosDetalhados);
             uow.NfeEmissoes.Update(emissao);
             await uow.PedidoHistoricos.AddAsync(new PedidoHistorico
             {
@@ -32,7 +35,7 @@ public sealed class NfeEmissaoFinalizer(
                 PedidoId    = emissao.PedidoId,
                 Tipo        = "NfeRejeitada",
                 Descricao   = $"NF-e rejeitada: {emissao.MensagemErro}",
-                UsuarioNome = "FiscalDoc",
+                UsuarioNome = emissao.SolicitadoPorNome ?? "FiscalDoc",
             }, ct);
             await uow.SaveChangesAsync(ct);
             return;
@@ -115,7 +118,7 @@ public sealed class NfeEmissaoFinalizer(
             PedidoId    = pedido.Id,
             Tipo        = "EmitidoNfeFocus",
             Descricao   = $"NF-e nº {resultado.Numero} emitida",
-            UsuarioNome = "FiscalDoc",
+            UsuarioNome = emissao.SolicitadoPorNome ?? "FiscalDoc",
         }, ct);
 
         emissao.Status      = NfeEmissaoStatusEnum.Autorizada;

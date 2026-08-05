@@ -31,6 +31,7 @@ public record PedidoDto(
     List<PedidoItemDto> Itens,
     string NaturezaOperacao,
     string FinalidadeEmissao,
+    string ModalidadeFrete,
     DateTime? DataSaida,
     string? FormaPagamento,
     string? MeioPagamento,

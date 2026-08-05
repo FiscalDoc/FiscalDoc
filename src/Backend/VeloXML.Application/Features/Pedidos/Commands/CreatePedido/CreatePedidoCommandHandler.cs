@@ -60,6 +60,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             Itens = itens,
             NaturezaOperacao = request.NaturezaOperacao,
             FinalidadeEmissao = request.FinalidadeEmissao,
+            ModalidadeFrete = request.ModalidadeFrete,
             DataSaida = request.DataSaida,
             FormaPagamento = request.FormaPagamento,
             MeioPagamento = request.MeioPagamento,
@@ -87,7 +88,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
             i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
         )).ToList(),
-        p.NaturezaOperacao, p.FinalidadeEmissao, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
+        p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
         p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
         p.Documento is null ? null : new DocumentoImpostosDto(
             p.Documento.ValorBaseCalculoIcms,
