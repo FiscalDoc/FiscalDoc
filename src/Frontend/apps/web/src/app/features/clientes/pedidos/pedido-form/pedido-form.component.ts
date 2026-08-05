@@ -177,7 +177,7 @@ interface ConfirmState {
                 } @else {
                   <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
                 }
-                <p class="nfe-card-title">NF-e nº {{ doc.numero }}{{ doc.serie ? ' — Série ' + doc.serie : '' }}</p>
+                <p class="nfe-card-title">Nota Fiscal: {{ doc.numero }}{{ doc.serie ? '-' + doc.serie : '' }}</p>
               </div>
               <div class="nfe-card-actions">
                 <button class="btn-ghost-sm" (click)="visualizarDanfe(doc.id, doc.origem)">Visualizar DANFE</button>
@@ -351,14 +351,13 @@ interface ConfirmState {
       @if (documentoImpostos(); as imp) {
         <div class="accordion" [class.accordion--aberto]="impostosAbertos()">
           <button type="button" class="accordion-header" (click)="impostosAbertos.set(!impostosAbertos())">
-            <span>Impostos da Nota</span>
+            <span>Totais da Nota Fiscal</span>
             <svg class="accordion-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
           @if (impostosAbertos()) {
             <div class="accordion-body">
-              <p class="field-hint" style="margin:0 0 .75rem">Todos os valores de cálculo da nota, mesmo quando zerados — campos bloqueados, vêm direto do XML autorizado pela SEFAZ.</p>
               <div class="form-grid impostos-form-grid">
                 <div class="field"><label class="label">Produtos</label><input class="input-sm" disabled [value]="imp.valorProdutos ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
                 <div class="field"><label class="label">Base Cálc. ICMS</label><input class="input-sm" disabled [value]="imp.valorBaseCalculoIcms ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
@@ -638,7 +637,7 @@ interface ConfirmState {
       <div class="overlay" (click)="showErroNfeModal.set(false)">
         <div class="modal-quick modal-erro-nfe" (click)="$event.stopPropagation()">
           <h3 class="confirm-title">Por que a NF-e foi rejeitada</h3>
-          <p class="quick-hint">A SEFAZ (via Focus NFe) recusou a emissão pelos motivos abaixo. Corrija cada um e clique em "Tentar novamente".</p>
+          <p class="quick-hint">A SEFAZ recusou a emissão pelos motivos abaixo. Corrija cada um e clique em "Tentar novamente".</p>
           <div class="erro-nfe-lista">
             @for (e of erroNfeDetalhes(); track e.titulo + e.explicacao) {
               <div class="erro-nfe-item">
@@ -664,7 +663,7 @@ interface ConfirmState {
       <div class="overlay" (click)="fecharCancelarNfe()">
         <div class="modal-quick" (click)="$event.stopPropagation()">
           <h3 class="confirm-title">Cancelar NF-e</h3>
-          <p class="quick-hint">Isso cancela a nota fiscal de verdade na SEFAZ (via Focus NFe) — não dá pra desfazer. A justificativa precisa ter entre 15 e 255 caracteres.</p>
+          <p class="quick-hint">Isso cancela a nota fiscal de verdade na SEFAZ — não dá pra desfazer. A justificativa precisa ter entre 15 e 255 caracteres.</p>
           <div class="field">
             <label class="label">Justificativa *</label>
             <textarea class="input" [(ngModel)]="justificativaCancelamento" rows="3" placeholder="Motivo do cancelamento (mín. 15 caracteres)" maxlength="255"></textarea>

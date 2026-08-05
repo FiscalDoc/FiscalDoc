@@ -572,6 +572,9 @@ export class ShellComponent implements OnInit {
     cobrancas: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>`,
+    relatorios: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V9m4 8V5m4 12v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+    </svg>`,
   };
 
   private get adminNavItems(): NavItem[] {
@@ -600,6 +603,7 @@ export class ShellComponent implements OnInit {
         icon: this._adminIcons.gerencial,
         children: [
           { label: 'Contas a Receber', route: '/cobrancas', icon: this._adminIcons.cobrancas },
+          { label: 'Relatórios', route: '/relatorios', icon: this._adminIcons.relatorios },
           { label: 'Alertas', route: '/alertas', icon: this._adminIcons.alertas },
           { label: 'Logs', route: '/logs', icon: this._adminIcons.logs },
           { label: 'Blog', route: '/admin/blog', icon: this._adminIcons.blog },
@@ -675,6 +679,13 @@ export class ShellComponent implements OnInit {
           route: `/clientes/${id}/pedidos`,
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>`,
+        },
+        {
+          label: 'Relatórios',
+          route: `/clientes/${id}/relatorios`,
+          icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V9m4 8V5m4 12v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/>
           </svg>`,
         },
       );

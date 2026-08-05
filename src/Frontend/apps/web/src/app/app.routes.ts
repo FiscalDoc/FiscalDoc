@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, clienteScopeGuard, landingDomainGuard } from '@veloxml/guards';
+import { authGuard, clienteScopeGuard, landingDomainGuard, roleGuard } from '@veloxml/guards';
 
 export const routes: Routes = [
   {
@@ -90,6 +90,13 @@ export const routes: Routes = [
         path: 'cobrancas',
         loadComponent: () =>
           import('./features/cobrancas/cobrancas.component').then((m) => m.CobrancasComponent),
+      },
+      {
+        path: 'relatorios',
+        canActivate: [roleGuard],
+        data: { roles: ['Administrador'] },
+        loadComponent: () =>
+          import('./features/relatorios/relatorios-admin.component').then((m) => m.RelatoriosAdminComponent),
       },
     ],
   },

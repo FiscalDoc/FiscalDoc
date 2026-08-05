@@ -18,3 +18,4 @@ export * from './lib/blog-admin.service';
 export * from './lib/cobranca.service';
 export * from './lib/cep.service';
 export * from './lib/cnpj.service';
+export * from './lib/relatorio.service';
