@@ -41,6 +41,9 @@ public sealed class EmitirNfeFocusCommandHandler(
         if (cliente.FocusNfeStatus != "Registrada")
             return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
                 "FocusNfeStatus", "O certificado digital ainda não foi registrado. Configure-o na tela Empresa antes de emitir."));
+        if (string.IsNullOrWhiteSpace(cliente.InscricaoEstadual))
+            return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                "InscricaoEstadual", "Preencha a Inscrição Estadual da empresa na tela Empresa (aba Fiscal) antes de emitir."));
 
         // Confere NCM/CFOP de cada item ANTES de chamar a Focus — sem isso, a rejeição só
         // aparece depois de ida e volta pra API deles, com uma mensagem bem menos clara sobre

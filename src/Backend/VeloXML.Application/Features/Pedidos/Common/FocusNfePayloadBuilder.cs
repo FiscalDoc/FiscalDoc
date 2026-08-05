@@ -32,6 +32,20 @@ internal static class FocusNfePayloadBuilder
             presenca_comprador = 9,  // 9 = não se aplica (operação não presencial)
             modalidade_frete = MapearModalidadeFrete(pedido.ModalidadeFrete),
             cnpj_emitente = SoDigitos(cliente.Cnpj),
+            // A Focus tenta completar o resto do emitente a partir do cadastro feito no
+            // registro do certificado (POST /empresas), mas se dado fiscal do Cliente mudar
+            // DEPOIS desse registro (ex.: IE preenchida só depois na tela Empresa), isso nunca
+            // fica sincronizado de volta lá — manda tudo explícito aqui pra não depender disso.
+            nome_emitente = cliente.RazaoSocial,
+            nome_fantasia_emitente = cliente.NomeFantasia,
+            logradouro_emitente = cliente.Logradouro,
+            numero_emitente = cliente.Numero,
+            bairro_emitente = cliente.Bairro,
+            municipio_emitente = cliente.Cidade,
+            uf_emitente = cliente.Estado,
+            cep_emitente = SoDigitos(cliente.Cep),
+            inscricao_estadual_emitente = string.IsNullOrWhiteSpace(cliente.InscricaoEstadual) ? null : cliente.InscricaoEstadual,
+            regime_tributario_emitente = MapearRegimeTributario(cliente.RegimeTributario),
 
             cnpj_destinatario = cpfCnpjDigitos?.Length == 14 ? cpfCnpjDigitos : null,
             cpf_destinatario = cpfCnpjDigitos?.Length == 11 ? cpfCnpjDigitos : null,
@@ -109,5 +123,17 @@ internal static class FocusNfePayloadBuilder
         "DestinatarioContaFrete" => 1,
         "Terceiros" => 2,
         _ => 9,
+    };
+
+    // Mesmo mapeamento de FocusNfeService.MapearRegimeTributario (Infrastructure) — duplicado
+    // aqui porque Application não pode depender de Infrastructure; é só 4 linhas, não vale a
+    // pena criar uma dependência cruzada pra isso. 1=Simples Nacional, 2=Simples c/ excesso,
+    // 3=Normal (Lucro Presumido/Real), 4=MEI.
+    private static int MapearRegimeTributario(string? regime) => regime switch
+    {
+        "LucroReal" => 3,
+        "LucroPresumido" => 3,
+        "Mei" => 4,
+        _ => 1,
     };
 }
