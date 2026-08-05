@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -27,10 +28,18 @@ public static class DependencyInjection
         // Focus NFe não usa Options/env var — o token é configurado pelo Admin na tela de
         // Configurações e lido em runtime via Configuracao (ver FocusNfeConfigKeys).
 
-        // Usado só pra proteger a senha do certificado A1 em repouso (dado legalmente sensível) —
-        // não existe outra criptografia em repouso no resto do código hoje, mas esse campo
-        // específico justifica o esforço extra.
-        services.AddDataProtection();
+        // Usado pra proteger em repouso a senha do certificado A1 e os tokens por-empresa da
+        // Focus NFe. SEM PersistKeysToFileSystem, a chave de criptografia é gerada do zero a
+        // cada vez que o container é recriado (rebuild/redeploy — não um simples restart), e
+        // tudo que já foi criptografado com a chave antiga vira ilegível, obrigando o usuário a
+        // reenviar certificado/token de novo. "DataProtection:KeysPath" só é setado no
+        // ambiente Docker (ver docker-compose.yml, volume dedicado); em dev local via
+        // `dotnet run` fica em branco e cai no comportamento padrão do framework (perfil do
+        // usuário no Windows), que já persiste normalmente entre execuções.
+        var dataProtectionBuilder = services.AddDataProtection().SetApplicationName("FiscalDoc");
+        var keysPath = config["DataProtection:KeysPath"];
+        if (!string.IsNullOrWhiteSpace(keysPath))
+            dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUserService>();

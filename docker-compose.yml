@@ -39,6 +39,11 @@ services:
       # Request.Scheme/Host normal; em produção, PRECISA ser setado no .env do servidor,
       # porque não dá pra confiar no proxy da Coolify repassar X-Forwarded-Proto direito.
       - App__PublicUrl=${APP_PUBLIC_URL:-}
+      # Sem isso, a chave de criptografia (senha do certificado A1, tokens da Focus NFe) é
+      # gerada do zero a cada recriação do container e tudo cadastrado antes vira ilegível.
+      - DataProtection__KeysPath=/keys
+    volumes:
+      - dataprotection_keys:/keys
     depends_on:
       postgres:
         condition: service_healthy
@@ -147,6 +152,7 @@ volumes:
   redis_data:
   minio_data:
   pgadmin_data:
+  dataprotection_keys:
 
 networks:
   veloxml:

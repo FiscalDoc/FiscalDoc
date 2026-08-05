@@ -20,6 +20,10 @@ RUN dotnet publish "Backend/VeloXML.API/VeloXML.API.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
+# Chaves de Data Protection (ver DependencyInjection.cs) — precisa existir e pertencer ao
+# usuário não-root antes do volume ser montado por cima, senão o container não consegue
+# escrever nele.
+RUN mkdir -p /keys && chown $APP_UID /keys
 EXPOSE 8080
 USER $APP_UID
 ENTRYPOINT ["dotnet", "VeloXML.API.dll"]
