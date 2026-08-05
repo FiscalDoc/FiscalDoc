@@ -14,6 +14,14 @@ internal static class FocusNfePayloadBuilder
     {
         var destinatario = pedido.Destinatario!;
         var cpfCnpjDigitos = SoDigitos(destinatario.CpfCnpj);
+        var temIe = !string.IsNullOrWhiteSpace(destinatario.InscricaoEstadual);
+        // A tag <IE> do XML da NF-e só aceita "[0-9]{2,14}" ou o literal "ISENTO" — nunca vazia,
+        // e a Focus manda a tag vazia quando não recebe nada (foi exatamente o erro que veio da
+        // SEFAZ). Por isso, sem IE cadastrada, manda "ISENTO" — não deixa null/vazio — junto do
+        // indicador 9 (não contribuinte), que é o caso mais comum pra destinatário sem cadastro
+        // de IE. Com IE cadastrada, indicador 1 (contribuinte) e o valor real.
+        var ieDestinatario = temIe ? destinatario.InscricaoEstadual : "ISENTO";
+        var indicadorIeDestinatario = temIe ? 1 : 9;
 
         return new
         {
@@ -28,7 +36,8 @@ internal static class FocusNfePayloadBuilder
             cnpj_destinatario = cpfCnpjDigitos?.Length == 14 ? cpfCnpjDigitos : null,
             cpf_destinatario = cpfCnpjDigitos?.Length == 11 ? cpfCnpjDigitos : null,
             nome_destinatario = destinatario.RazaoSocial,
-            inscricao_estadual_destinatario = destinatario.InscricaoEstadual,
+            inscricao_estadual_destinatario = ieDestinatario,
+            indicador_inscricao_estadual_destinatario = indicadorIeDestinatario,
             logradouro_destinatario = destinatario.Logradouro,
             numero_destinatario = destinatario.Numero,
             complemento_destinatario = destinatario.Complemento,
