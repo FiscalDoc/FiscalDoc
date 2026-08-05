@@ -23,7 +23,10 @@ public class NfeEmissaoConfiguration : IEntityTypeConfiguration<NfeEmissao>
         b.Property(e => e.Ambiente).HasColumnName("ambiente").HasMaxLength(20).HasDefaultValue("homologacao");
         b.Property(e => e.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20);
         b.Property(e => e.MensagemErro).HasColumnName("mensagem_erro").HasColumnType("text");
-        b.Property(e => e.ChaveAcesso).HasColumnName("chave_acesso").HasMaxLength(44);
+        // 64, não 44 (o tamanho "oficial" da chave de acesso) — de propósito: já vimos a Focus
+        // devolver esse campo maior que 44 em algum cenário real, e isso é só armazenamento
+        // (não validação), então uma coluna curta demais só derruba a finalização à toa.
+        b.Property(e => e.ChaveAcesso).HasColumnName("chave_acesso").HasMaxLength(64);
         b.Property(e => e.Numero).HasColumnName("numero").HasMaxLength(20);
         b.Property(e => e.Serie).HasColumnName("serie").HasMaxLength(10);
         b.Property(e => e.DocumentoId).HasColumnName("documento_id");
