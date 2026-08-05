@@ -106,7 +106,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 p.Documento.ValorBaseCalculoIcms,
                 p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,
                 p.Documento.ValorIcms, p.Documento.ValorIpi, p.Documento.ValorPis, p.Documento.ValorCofins,
-                p.Documento.ValorOutrasDespesas, p.Documento.ValorAproxTributos));
+                p.Documento.ValorOutrasDespesas, p.Documento.ValorAproxTributos, p.Documento.ValorIbs, p.Documento.ValorCbs));
     }
 
     // DanfeJson só existe pra documentos com NFe real (emitida via Focus ou importada); nunca

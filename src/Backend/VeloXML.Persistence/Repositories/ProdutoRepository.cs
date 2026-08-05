@@ -13,7 +13,7 @@ public sealed class ProdutoRepository(AppDbContext context) : BaseRepository<Pro
         var query = DbSet.Where(p => p.ClienteId == clienteId).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(termo))
-            query = query.Where(p => p.Descricao.Contains(termo) || p.Codigo.Contains(termo));
+            query = query.Where(p => EF.Functions.ILike(p.Descricao, $"%{termo}%") || EF.Functions.ILike(p.Codigo, $"%{termo}%"));
 
         var total = await query.LongCountAsync(ct);
         var items = await query.OrderBy(p => p.Descricao).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);

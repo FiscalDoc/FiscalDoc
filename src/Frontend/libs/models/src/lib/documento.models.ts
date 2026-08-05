@@ -31,6 +31,8 @@ export interface DocumentoImpostosDto {
   valorCofins?: number;
   valorOutrasDespesas?: number;
   valorAproxTributos?: number;
+  valorIbs?: number;
+  valorCbs?: number;
 }
 
 export interface DanfeEnderecoDto {

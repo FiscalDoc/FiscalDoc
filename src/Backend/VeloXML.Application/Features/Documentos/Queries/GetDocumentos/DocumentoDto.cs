@@ -28,7 +28,9 @@ public record DocumentoImpostosDto(
     decimal? ValorPis,
     decimal? ValorCofins,
     decimal? ValorOutrasDespesas,
-    decimal? ValorAproxTributos
+    decimal? ValorAproxTributos,
+    decimal? ValorIbs,
+    decimal? ValorCbs
 );
 
 public record DanfeEnderecoDto(

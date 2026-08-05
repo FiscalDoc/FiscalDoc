@@ -17,4 +17,16 @@ public sealed class NfeEmissaoRepository(AppDbContext context)
 
     public async Task<IReadOnlyList<NfeEmissao>> GetPendentesAsync(DateTime criadasAntesDe, CancellationToken ct = default) =>
         await DbSet.Where(e => e.Status == NfeEmissaoStatusEnum.Processando && e.CreatedAt < criadasAntesDe).ToListAsync(ct);
+
+    public async Task<IReadOnlyList<NfeEmissao>> GetEmitidasNoPeriodoAsync(int mes, int ano, Guid? clienteId, CancellationToken ct = default)
+    {
+        var query = DbSet.Where(e =>
+            (e.Status == NfeEmissaoStatusEnum.Autorizada || e.Status == NfeEmissaoStatusEnum.Cancelada)
+            && e.CreatedAt.Month == mes && e.CreatedAt.Year == ano);
+
+        if (clienteId.HasValue)
+            query = query.Where(e => e.ClienteId == clienteId.Value);
+
+        return await query.OrderByDescending(e => e.CreatedAt).ToListAsync(ct);
+    }
 }

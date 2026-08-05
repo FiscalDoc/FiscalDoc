@@ -358,13 +358,21 @@ interface ConfirmState {
           </button>
           @if (impostosAbertos()) {
             <div class="accordion-body">
-              <div class="nfe-impostos-grid">
-                @if (imp.valorProdutos != null) { <div class="nfe-imposto-item"><span class="footer-label">Produtos</span><span>{{ imp.valorProdutos | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorIcms != null) { <div class="nfe-imposto-item"><span class="footer-label">ICMS</span><span>{{ imp.valorIcms | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorIpi != null) { <div class="nfe-imposto-item"><span class="footer-label">IPI</span><span>{{ imp.valorIpi | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorPis != null) { <div class="nfe-imposto-item"><span class="footer-label">PIS</span><span>{{ imp.valorPis | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorCofins != null) { <div class="nfe-imposto-item"><span class="footer-label">COFINS</span><span>{{ imp.valorCofins | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
-                @if (imp.valorAproxTributos != null) { <div class="nfe-imposto-item nfe-imposto-item--destaque"><span class="footer-label">Aprox. Tributos*</span><span>{{ imp.valorAproxTributos | currency:'BRL':'symbol':'1.2-2' }}</span></div> }
+              <p class="field-hint" style="margin:0 0 .75rem">Todos os valores de cálculo da nota, mesmo quando zerados — campos bloqueados, vêm direto do XML autorizado pela SEFAZ.</p>
+              <div class="form-grid impostos-form-grid">
+                <div class="field"><label class="label">Produtos</label><input class="input-sm" disabled [value]="imp.valorProdutos ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">Base Cálc. ICMS</label><input class="input-sm" disabled [value]="imp.valorBaseCalculoIcms ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">ICMS</label><input class="input-sm" disabled [value]="imp.valorIcms ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">IPI</label><input class="input-sm" disabled [value]="imp.valorIpi ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">PIS</label><input class="input-sm" disabled [value]="imp.valorPis ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">COFINS</label><input class="input-sm" disabled [value]="imp.valorCofins ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">IBS</label><input class="input-sm" disabled [value]="imp.valorIbs ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">CBS</label><input class="input-sm" disabled [value]="imp.valorCbs ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">Frete</label><input class="input-sm" disabled [value]="imp.valorFrete ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">Seguro</label><input class="input-sm" disabled [value]="imp.valorSeguro ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">Desconto</label><input class="input-sm" disabled [value]="imp.valorDesconto ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">Outras Despesas</label><input class="input-sm" disabled [value]="imp.valorOutrasDespesas ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                <div class="field"><label class="label">Aprox. Tributos*</label><input class="input-sm imposto-destaque" disabled [value]="imp.valorAproxTributos ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
               </div>
             </div>
           }
@@ -467,6 +475,26 @@ interface ConfirmState {
                         <div class="field">
                           <label class="label">NCM</label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.ncm" (ngModelChange)="item.ncm = $event; marcarSujo()"/>
+                        </div>
+                        <div class="field">
+                          <label class="label">CST/CSOSN ICMS</label>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cstIcms" (ngModelChange)="item.cstIcms = $event; marcarSujo()"/>
+                        </div>
+                        <div class="field">
+                          <label class="label">CST PIS</label>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cstPis" (ngModelChange)="item.cstPis = $event; marcarSujo()"/>
+                        </div>
+                        <div class="field">
+                          <label class="label">CST COFINS</label>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cstCofins" (ngModelChange)="item.cstCofins = $event; marcarSujo()"/>
+                        </div>
+                        <div class="field">
+                          <label class="label">CST IBS/CBS</label>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.ibsCbsCst" (ngModelChange)="item.ibsCbsCst = $event; marcarSujo()"/>
+                        </div>
+                        <div class="field">
+                          <label class="label">Classif. IBS/CBS</label>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.ibsCbsClassificacaoTributaria" (ngModelChange)="item.ibsCbsClassificacaoTributaria = $event; marcarSujo()"/>
                         </div>
                       </div>
                     </td>
@@ -710,6 +738,8 @@ interface ConfirmState {
     .input-sm:disabled { opacity: .6; cursor: not-allowed; }
     .input-sm.num { text-align: right; }
     .input-sm.error, select.input-sm.error { border-color: var(--red); }
+    .impostos-form-grid { grid-template-columns: repeat(4, 1fr); gap: .75rem .875rem; }
+    .imposto-destaque:disabled { color: var(--accent); font-weight: 700; opacity: 1; border-color: rgba(0,229,160,.35); }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 1.5rem; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }

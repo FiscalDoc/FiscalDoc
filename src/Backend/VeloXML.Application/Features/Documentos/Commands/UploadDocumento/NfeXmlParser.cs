@@ -42,7 +42,12 @@ internal static class NfeXmlParser
         var enderEmit = emit?.Element(ns + "enderEmit");
         var dest = infNFe.Element(ns + "dest");
         var enderDest = dest?.Element(ns + "enderDest");
-        var tot  = infNFe.Element(ns + "total")?.Element(ns + "ICMSTot");
+        var totalEl = infNFe.Element(ns + "total");
+        var tot  = totalEl?.Element(ns + "ICMSTot");
+        // Reforma tributária (NT 2025.002) — grupo separado do ICMSTot, mesmo nível dentro de <total>.
+        var ibsCbsTot = totalEl?.Element(ns + "IBSCBSTot");
+        var gIbs = ibsCbsTot?.Element(ns + "gIBS");
+        var gCbs = ibsCbsTot?.Element(ns + "gCBS");
         var infProt = doc.Descendants(ns + "infProt").FirstOrDefault();
         var transp = infNFe.Element(ns + "transp");
         var transporta = transp?.Element(ns + "transporta");
@@ -142,6 +147,8 @@ internal static class NfeXmlParser
             ValorCofins:         ParseDecimalNullable(tot?.Element(ns + "vCOFINS")?.Value),
             ValorOutrasDespesas: ParseDecimalNullable(tot?.Element(ns + "vOutro")?.Value),
             ValorAproxTributos:  ParseDecimalNullable(tot?.Element(ns + "vTotTrib")?.Value),
+            ValorIbs:            ParseDecimalNullable(gIbs?.Element(ns + "vIBS")?.Value),
+            ValorCbs:            ParseDecimalNullable(gCbs?.Element(ns + "vCBS")?.Value),
 
             Itens: itens
         );
@@ -284,6 +291,8 @@ internal record ParsedDocumento(
     decimal? ValorCofins = null,
     decimal? ValorOutrasDespesas = null,
     decimal? ValorAproxTributos = null,
+    decimal? ValorIbs = null,
+    decimal? ValorCbs = null,
 
     List<ParsedDocumentoItem>? Itens = null
 );

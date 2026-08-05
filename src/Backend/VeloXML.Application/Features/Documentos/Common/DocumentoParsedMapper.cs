@@ -35,6 +35,8 @@ internal static class DocumentoParsedMapper
         documento.ValorCofins         = parsed.ValorCofins;
         documento.ValorOutrasDespesas = parsed.ValorOutrasDespesas;
         documento.ValorAproxTributos  = parsed.ValorAproxTributos;
+        documento.ValorIbs            = parsed.ValorIbs;
+        documento.ValorCbs            = parsed.ValorCbs;
         if (parsed.Itens is { Count: > 0 })
             documento.ItensJson = JsonSerializer.Serialize(parsed.Itens.Select(i => new DocumentoItemDto(
                 i.CodigoProduto, i.Descricao, i.Ncm, i.Cfop, i.Unidade, i.Quantidade, i.ValorUnitario, i.ValorTotal,

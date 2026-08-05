@@ -38,6 +38,10 @@ public class Documento : BaseEntity, IAuditableEntity
     public decimal? ValorCofins { get; set; }
     public decimal? ValorOutrasDespesas { get; set; }
     public decimal? ValorAproxTributos { get; set; }
+    // IBS/CBS (reforma tributária, NT 2025.002) — extraídos de <total><IBSCBSTot> do XML
+    // autorizado, mesmo padrão dos demais totais acima.
+    public decimal? ValorIbs { get; set; }
+    public decimal? ValorCbs { get; set; }
 
     // Itens (produtos/serviços) da nota, serializados em JSON — só pra exibição, não
     // normalizado em tabela própria porque nada além do modal de detalhe consulta isso.

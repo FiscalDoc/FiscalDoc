@@ -13,7 +13,7 @@ public sealed class DestinatarioRepository(AppDbContext context) : BaseRepositor
         var query = DbSet.Where(d => d.ClienteId == clienteId).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(termo))
-            query = query.Where(d => d.RazaoSocial.Contains(termo) || (d.CpfCnpj != null && d.CpfCnpj.Contains(termo)));
+            query = query.Where(d => EF.Functions.ILike(d.RazaoSocial, $"%{termo}%") || (d.CpfCnpj != null && d.CpfCnpj.Contains(termo)));
 
         var total = await query.LongCountAsync(ct);
         var items = await query.OrderBy(d => d.RazaoSocial).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);

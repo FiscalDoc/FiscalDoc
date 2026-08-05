@@ -69,7 +69,7 @@ public class MappingProfile : Profile
                     src.ValorBaseCalculoIcms,
                     src.ValorProdutos, src.ValorFrete, src.ValorSeguro, src.ValorDesconto,
                     src.ValorIcms, src.ValorIpi, src.ValorPis, src.ValorCofins,
-                    src.ValorOutrasDespesas, src.ValorAproxTributos),
+                    src.ValorOutrasDespesas, src.ValorAproxTributos, src.ValorIbs, src.ValorCbs),
                 DeserializarItens(src.ItensJson),
                 DeserializarDanfe(src.DanfeJson)))
             .ForMember(d => d.NomeCliente, opt => opt.Ignore())

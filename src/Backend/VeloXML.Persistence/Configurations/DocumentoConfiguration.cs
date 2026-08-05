@@ -46,6 +46,8 @@ public class DocumentoConfiguration : IEntityTypeConfiguration<Documento>
         b.Property(e => e.ValorCofins).HasColumnName("valor_cofins").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorOutrasDespesas).HasColumnName("valor_outras_despesas").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorAproxTributos).HasColumnName("valor_aprox_tributos").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorIbs).HasColumnName("valor_ibs").HasColumnType("numeric(18,2)");
+        b.Property(e => e.ValorCbs).HasColumnName("valor_cbs").HasColumnType("numeric(18,2)");
         b.Property(e => e.ItensJson).HasColumnName("itens_json").HasColumnType("text");
         b.Property(e => e.DanfeJson).HasColumnName("danfe_json").HasColumnType("text");
 
