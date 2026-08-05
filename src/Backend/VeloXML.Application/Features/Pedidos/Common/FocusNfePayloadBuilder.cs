@@ -58,7 +58,24 @@ internal static class FocusNfePayloadBuilder
                 pis_situacao_tributaria = "07",
                 cofins_situacao_tributaria = "07",
             }).ToList(),
+
+            informacoes_adicionais_contribuinte = MontarInformacoesComplementares(cliente, pedido),
         };
+    }
+
+    // Em homologação a SEFAZ EXIGE esse aviso nas informações complementares — sem ele a nota
+    // é rejeitada. Concatena com o que o usuário escreveu no pedido, se houver algo.
+    private const string AvisoHomologacao = "NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
+
+    private static string? MontarInformacoesComplementares(Cliente cliente, Pedido pedido)
+    {
+        var emHomologacao = !cliente.FocusNfeAmbiente.Equals("producao", StringComparison.OrdinalIgnoreCase);
+        var texto = pedido.InformacoesComplementares;
+
+        if (!emHomologacao)
+            return string.IsNullOrWhiteSpace(texto) ? null : texto;
+
+        return string.IsNullOrWhiteSpace(texto) ? AvisoHomologacao : $"{AvisoHomologacao} - {texto}";
     }
 
     private static string? SoDigitos(string? valor) =>
