@@ -73,6 +73,14 @@ public sealed class EmitirNfeFocusCommandHandler(
             emissao.Status = NfeEmissaoStatusEnum.Erro;
             emissao.MensagemErro = "Não foi possível emitir a NF-e agora. Tente novamente em instantes.";
             uow.NfeEmissoes.Update(emissao);
+            await uow.PedidoHistoricos.AddAsync(new PedidoHistorico
+            {
+                TenantId    = pedido.TenantId,
+                PedidoId    = pedido.Id,
+                Tipo        = "ErroEmissaoNfe",
+                Descricao   = "Falha ao tentar emitir a NF-e — não foi possível se comunicar com o serviço de emissão.",
+                UsuarioNome = "FiscalDoc",
+            }, ct);
             await uow.SaveChangesAsync(ct);
             return Result.Success(ToDto(emissao));
         }
@@ -82,6 +90,14 @@ public sealed class EmitirNfeFocusCommandHandler(
             emissao.Status = NfeEmissaoStatusEnum.Processando;
             emissao.UltimoPayloadRespostaJson = resultado.RespostaBrutaJson;
             uow.NfeEmissoes.Update(emissao);
+            await uow.PedidoHistoricos.AddAsync(new PedidoHistorico
+            {
+                TenantId    = pedido.TenantId,
+                PedidoId    = pedido.Id,
+                Tipo        = "NfeProcessando",
+                Descricao   = "Emissão de NF-e enviada — processando na SEFAZ.",
+                UsuarioNome = "FiscalDoc",
+            }, ct);
             await uow.SaveChangesAsync(ct);
             return Result.Success(ToDto(emissao));
         }

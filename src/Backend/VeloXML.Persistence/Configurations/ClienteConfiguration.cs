@@ -59,6 +59,8 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.Property(e => e.FocusNfeStatus).HasColumnName("focus_nfe_status").HasMaxLength(30).HasDefaultValue("NaoConfigurado");
         b.Property(e => e.FocusNfeErro).HasColumnName("focus_nfe_erro").HasMaxLength(1000);
         b.Property(e => e.FocusNfeAmbiente).HasColumnName("focus_nfe_ambiente").HasMaxLength(20).HasDefaultValue("homologacao");
+        b.Property(e => e.FocusNfeTokenHomologacao).HasColumnName("focus_nfe_token_homologacao").HasMaxLength(500);
+        b.Property(e => e.FocusNfeTokenProducao).HasColumnName("focus_nfe_token_producao").HasMaxLength(500);
 
         b.HasIndex(e => new { e.TenantId, e.Cnpj }).IsUnique().HasFilter("deleted_at IS NULL");
         b.HasIndex(e => e.TenantId);

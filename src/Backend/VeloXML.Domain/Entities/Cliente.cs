@@ -52,12 +52,16 @@ public class Cliente : BaseEntity, IAuditableEntity
     public string? CertificadoA1Senha { get; set; }    // senha criptografada
     public DateTime? CertificadoA1Validade { get; set; }
 
-    // Focus NFe — a conta/token é da plataforma (configurada pelo Admin em Configurações), cada Cliente vira uma
-    // "empresa" registrada dentro dessa conta única, habilitada com o próprio certificado A1.
+    // Focus NFe — o token de CONTA (global, configurado pelo Admin em Configurações) só serve
+    // pra criar/gerenciar empresas; cada empresa cadastrada ganha da própria Focus um par de
+    // tokens PRÓPRIO (token_producao/token_homologacao), que é o que deve ser usado em toda
+    // chamada de emissão/consulta pra esse Cliente especificamente — guardados aqui, criptografados.
     public string? FocusNfeEmpresaId { get; set; }      // id retornado pela Focus ao registrar
     public string FocusNfeStatus { get; set; } = "NaoConfigurado"; // NaoConfigurado|PendenteRegistro|Registrada|ErroRegistro
     public string? FocusNfeErro { get; set; }
     public string FocusNfeAmbiente { get; set; } = "homologacao"; // homologacao|producao
+    public string? FocusNfeTokenHomologacao { get; set; } // criptografado
+    public string? FocusNfeTokenProducao { get; set; }    // criptografado
 
     public Contador? Contador { get; set; }
     public Tenant? Tenant { get; set; }

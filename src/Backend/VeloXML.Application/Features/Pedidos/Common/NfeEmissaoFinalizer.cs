@@ -26,6 +26,14 @@ public sealed class NfeEmissaoFinalizer(
             emissao.Status = NfeEmissaoStatusEnum.Rejeitada;
             emissao.MensagemErro = resultado.MensagemErro ?? "Não foi possível autorizar a emissão desta NF-e.";
             uow.NfeEmissoes.Update(emissao);
+            await uow.PedidoHistoricos.AddAsync(new PedidoHistorico
+            {
+                TenantId    = emissao.TenantId,
+                PedidoId    = emissao.PedidoId,
+                Tipo        = "NfeRejeitada",
+                Descricao   = $"NF-e rejeitada: {emissao.MensagemErro}",
+                UsuarioNome = "FiscalDoc",
+            }, ct);
             await uow.SaveChangesAsync(ct);
             return;
         }

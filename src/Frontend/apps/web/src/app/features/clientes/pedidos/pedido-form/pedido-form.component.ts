@@ -666,6 +666,9 @@ interface ConfirmState {
     .timeline-dot { flex-shrink: 0; width: 11px; height: 11px; border-radius: 50%; margin-top: 3px; background: var(--text2); }
     .timeline-dot--criado { background: var(--accent); }
     .timeline-dot--emitido { background: var(--accent); }
+    .timeline-dot--emitidonfefocus { background: var(--accent); }
+    .timeline-dot--nfeprocessando { background: #ffc107; }
+    .timeline-dot--nferejeitada, .timeline-dot--erroemissaonfe { background: var(--red); }
     .timeline-dot--cancelado { background: var(--red); }
     .timeline-dot--vinculonfe, .timeline-dot--desvinculonfe { background: #7c8299; }
     .timeline-desc { margin: 0; font-size: 13px; color: var(--text); }
@@ -974,6 +977,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       this._pedidoSvc.getNfeEmissao(this.clienteId, this.pedidoId).subscribe({
         next: ne => {
           this.nfeEmissao.set(ne);
+          this._carregarHistorico();
           if (ne?.status === 'Processando') {
             this._agendarPollNfeEmissao();
           } else if (ne?.status === 'Autorizada') {
@@ -992,6 +996,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       next: ne => {
         this.emitindoNfeFocus.set(false);
         this.nfeEmissao.set(ne);
+        this._carregarHistorico();
         if (ne.status === 'Processando') this._agendarPollNfeEmissao();
         else if (ne.status === 'Autorizada') this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({ next: p => this._carregarPedido(p) });
       },

@@ -79,6 +79,12 @@ public sealed class RegistrarCertificadoNfeCommandHandler(
         {
             cliente.FocusNfeEmpresaId = registro.EmpresaId;
             cliente.FocusNfeStatus = "Registrada";
+            // Tokens PRÓPRIOS dessa empresa — sem eles a emissão usa (incorretamente) o token
+            // de conta e a Focus rejeita com "Access token inválido".
+            if (!string.IsNullOrWhiteSpace(registro.TokenHomologacao))
+                cliente.FocusNfeTokenHomologacao = secretProtector.Protect(registro.TokenHomologacao);
+            if (!string.IsNullOrWhiteSpace(registro.TokenProducao))
+                cliente.FocusNfeTokenProducao = secretProtector.Protect(registro.TokenProducao);
         }
         else
         {

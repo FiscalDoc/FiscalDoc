@@ -11,13 +11,16 @@ using VeloXML.Domain.Interfaces;
 
 namespace VeloXML.Infrastructure.Fiscal;
 
-// O token de autenticação da Focus NFe é configurado pelo Administrador direto na tela de
-// Configurações (Configuracao, chaves em FocusNfeConfigKeys) — não por variável de ambiente,
-// já que é um dado que o próprio Admin cadastra/atualiza pelo sistema, não um segredo de
-// infraestrutura.
+// O token de CONTA (global) é configurado pelo Administrador na tela de Configurações
+// (Configuracao, chaves em FocusNfeConfigKeys) e só serve pra criar/gerenciar empresas. Cada
+// empresa cadastrada ganha da própria Focus um par de tokens PRÓPRIO (token_producao/
+// token_homologacao, devolvidos na resposta do cadastro), que é o que deve autenticar toda
+// chamada de emissão/consulta pra esse Cliente especificamente — usar o token de conta nessas
+// chamadas dá "Access token inválido" (a Focus não aceita o token de conta pra emitir).
 public sealed class FocusNfeService(
     IHttpClientFactory httpFactory,
     IUnitOfWork uow,
+    ISecretProtector secretProtector,
     ILogger<FocusNfeService> logger) : IFocusNfeService
 {
     private const string BaseUrlProducao = "https://api.focusnfe.com.br/v2";
@@ -53,11 +56,10 @@ public sealed class FocusNfeService(
         // Cadastro de empresa é um recurso de CONTA, não de ambiente — confirmado empiricamente:
         // POST /v2/empresas devolve 404 "Endpoint não encontrado" em homologacao.focusnfe.com.br
         // (a rota não existe lá) e 401 (rota existe, só falta auth) em api.focusnfe.com.br. Por
-        // isso sempre usa produção aqui, independente do FocusNfeAmbiente do cliente — esse campo
-        // só controla o ambiente de EMISSÃO (EmitirNfeAsync/ConsultarNfeAsync), não o cadastro.
-        var http = await CriarClienteAsync("producao", ct);
+        // isso sempre usa produção aqui, com o token de CONTA (global) — nunca o de uma empresa.
+        var http = await CriarClienteContaAsync(ct);
         if (http is null)
-            return new FocusEmpresaResult(false, null, "Token de produção da Focus NFe não configurado. Configure em Configurações > Focus NFe.");
+            return new FocusEmpresaResult(false, null, null, null, "Token de produção da Focus NFe não configurado. Configure em Configurações > Focus NFe.");
 
         try
         {
@@ -69,27 +71,28 @@ public sealed class FocusNfeService(
                 logger.LogWarning(
                     "Focus NFe rejeitou registro de empresa pro cliente {ClienteId}: {Status} {Body}",
                     cliente.Id, (int)resp.StatusCode, body);
-                return new FocusEmpresaResult(false, null, ExtrairMensagemErro(body));
+                return new FocusEmpresaResult(false, null, null, null, ExtrairMensagemErro(body));
             }
 
             // A Focus já confirmou o cadastro pelo status HTTP nesse ponto — uma falha ao
-            // extrair o "id" da resposta não pode reverter isso pra "erro", senão um cadastro
+            // extrair campos da resposta não pode reverter isso pra "erro", senão um cadastro
             // que deu certo do lado deles aparece como falho aqui (já aconteceu: o "id" volta
             // como número, não string, e um Deserialize<T> tipado quebrava em cima disso).
-            return new FocusEmpresaResult(true, ExtrairIdEmpresa(body), null);
+            var (id, tokenHomologacao, tokenProducao) = ExtrairCamposEmpresa(body);
+            return new FocusEmpresaResult(true, id, tokenHomologacao, tokenProducao, null);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Falha ao registrar empresa na Focus NFe pro cliente {ClienteId}", cliente.Id);
-            return new FocusEmpresaResult(false, null, "Não foi possível registrar o certificado agora. Tente novamente em instantes.");
+            return new FocusEmpresaResult(false, null, null, null, "Não foi possível registrar o certificado agora. Tente novamente em instantes.");
         }
     }
 
     public async Task<FocusNfeSubmissaoResult> EmitirNfeAsync(Cliente cliente, string refId, object payload, CancellationToken ct = default)
     {
-        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct);
+        var http = await CriarClienteEmpresaAsync(cliente);
         if (http is null)
-            return new FocusNfeSubmissaoResult(true, false, null, null, null, null, null, "Token da Focus NFe não configurado.", "");
+            return new FocusNfeSubmissaoResult(true, false, null, null, null, null, null, MensagemTokenEmpresaAusente, "");
 
         var resp = await http.PostAsJsonAsync($"nfe?ref={Uri.EscapeDataString(refId)}", payload, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
@@ -98,9 +101,9 @@ public sealed class FocusNfeService(
 
     public async Task<FocusNfeSubmissaoResult> ConsultarNfeAsync(Cliente cliente, string refId, CancellationToken ct = default)
     {
-        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct);
+        var http = await CriarClienteEmpresaAsync(cliente);
         if (http is null)
-            return new FocusNfeSubmissaoResult(true, false, null, null, null, null, null, "Token da Focus NFe não configurado.", "");
+            return new FocusNfeSubmissaoResult(true, false, null, null, null, null, null, MensagemTokenEmpresaAusente, "");
 
         var resp = await http.GetAsync($"nfe/{Uri.EscapeDataString(refId)}", ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
@@ -113,12 +116,15 @@ public sealed class FocusNfeService(
         var raiz = producao ? "https://api.focusnfe.com.br" : "https://homologacao.focusnfe.com.br";
         var url = caminhoOuUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? caminhoOuUrl : raiz + caminhoOuUrl;
 
-        var http = await CriarClienteAsync(cliente.FocusNfeAmbiente, ct)
-            ?? throw new InvalidOperationException("Token da Focus NFe não configurado.");
+        var http = await CriarClienteEmpresaAsync(cliente)
+            ?? throw new InvalidOperationException(MensagemTokenEmpresaAusente);
         var resp = await http.GetAsync(url, ct);
         resp.EnsureSuccessStatusCode();
         return await resp.Content.ReadAsByteArrayAsync(ct);
     }
+
+    private const string MensagemTokenEmpresaAusente =
+        "O token desta empresa na Focus NFe ainda não foi salvo. Reenvie o certificado na tela Empresa pra capturá-lo.";
 
     // Schema de resposta baseado na documentação pública da Focus NFe — assim como o registro
     // de empresa, precisa ser confirmado/ajustado contra a conta real (ver plano).
@@ -147,20 +153,48 @@ public sealed class FocusNfeService(
         };
     }
 
-    // Retorna null quando o token do ambiente pedido ainda não foi configurado pelo
-    // Administrador — os chamadores tratam isso como uma falha de submissão normal, sem
-    // exceção, já que é um estado esperado antes da primeira configuração.
-    private async Task<HttpClient?> CriarClienteAsync(string ambiente, CancellationToken ct)
+    // Token de CONTA (global) — usado só pra criar/gerenciar empresas (POST/GET/PUT /empresas),
+    // sempre em produção (ver comentário em RegistrarEmpresaAsync).
+    private async Task<HttpClient?> CriarClienteContaAsync(CancellationToken ct)
     {
-        var producao = ambiente.Equals("producao", StringComparison.OrdinalIgnoreCase);
-        var chave = producao ? FocusNfeConfigKeys.TokenProducao : FocusNfeConfigKeys.TokenHomologacao;
-        var config = await uow.Configuracoes.GetByChaveAsync(chave, ct);
+        var config = await uow.Configuracoes.GetByChaveAsync(FocusNfeConfigKeys.TokenProducao, ct);
         var token = config?.Valor;
         if (string.IsNullOrWhiteSpace(token))
             return null;
 
+        return MontarHttpClient(BaseUrlProducao, token);
+    }
+
+    // Token da EMPRESA (por Cliente, salvo em Cliente.FocusNfeTokenHomologacao/Producao) —
+    // usado em toda chamada de emissão/consulta/download pra essa empresa específica. Retorna
+    // null quando o token daquele ambiente ainda não foi capturado (cliente cadastrado antes
+    // dessa mudança, ou cadastro que falhou antes de gravar) — o chamador trata como falha de
+    // submissão normal, sem exceção.
+    private Task<HttpClient?> CriarClienteEmpresaAsync(Cliente cliente)
+    {
+        var producao = cliente.FocusNfeAmbiente.Equals("producao", StringComparison.OrdinalIgnoreCase);
+        var tokenProtegido = producao ? cliente.FocusNfeTokenProducao : cliente.FocusNfeTokenHomologacao;
+        if (string.IsNullOrWhiteSpace(tokenProtegido))
+            return Task.FromResult<HttpClient?>(null);
+
+        string token;
+        try
+        {
+            token = secretProtector.Unprotect(tokenProtegido);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao descriptografar o token Focus NFe do cliente {ClienteId}", cliente.Id);
+            return Task.FromResult<HttpClient?>(null);
+        }
+
+        return Task.FromResult<HttpClient?>(MontarHttpClient(producao ? BaseUrlProducao : BaseUrlHomologacao, token));
+    }
+
+    private HttpClient MontarHttpClient(string baseUrl, string token)
+    {
         var http = httpFactory.CreateClient("focus-nfe");
-        http.BaseAddress = new Uri((producao ? BaseUrlProducao : BaseUrlHomologacao) + "/");
+        http.BaseAddress = new Uri(baseUrl + "/");
         http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{token}:")));
         return http;
@@ -209,24 +243,28 @@ public sealed class FocusNfeService(
         return body;
     }
 
-    // Lê o "id" manualmente (em vez de um tipo forte) porque a Focus devolve ele como número,
-    // não string — ler via JsonDocument aceita os dois formatos sem arriscar exceção.
-    private static string? ExtrairIdEmpresa(string body)
+    // Lê id/token_producao/token_homologacao manualmente (em vez de um tipo forte) porque a
+    // Focus devolve "id" como número, não string — ler via JsonDocument aceita qualquer
+    // formato sem arriscar exceção (já aconteceu quebrar com Deserialize<T> tipado).
+    private static (string? Id, string? TokenHomologacao, string? TokenProducao) ExtrairCamposEmpresa(string body)
     {
         try
         {
             using var doc = JsonDocument.Parse(body);
-            if (!doc.RootElement.TryGetProperty("id", out var idEl)) return null;
-            return idEl.ValueKind switch
-            {
-                JsonValueKind.String => idEl.GetString(),
-                JsonValueKind.Number => idEl.GetRawText(),
-                _ => idEl.GetRawText(),
-            };
+            var root = doc.RootElement;
+
+            string? id = null;
+            if (root.TryGetProperty("id", out var idEl))
+                id = idEl.ValueKind == JsonValueKind.String ? idEl.GetString() : idEl.GetRawText();
+
+            string? tokenHomologacao = root.TryGetProperty("token_homologacao", out var th) ? th.GetString() : null;
+            string? tokenProducao = root.TryGetProperty("token_producao", out var tp) ? tp.GetString() : null;
+
+            return (id, tokenHomologacao, tokenProducao);
         }
         catch (JsonException)
         {
-            return null;
+            return (null, null, null);
         }
     }
 

@@ -2,7 +2,10 @@ using VeloXML.Domain.Entities;
 
 namespace VeloXML.Application.Common.Interfaces;
 
-public record FocusEmpresaResult(bool Sucesso, string? EmpresaId, string? Erro);
+// TokenHomologacao/TokenProducao são os tokens ESPECÍFICOS dessa empresa, devolvidos pela
+// Focus no cadastro — diferentes do token de conta (global) usado só pra criar/gerenciar
+// empresas. É esse par que deve ser usado em toda chamada de emissão pra essa empresa.
+public record FocusEmpresaResult(bool Sucesso, string? EmpresaId, string? TokenHomologacao, string? TokenProducao, string? Erro);
 
 // Concluida = true quando a Focus já deu uma resposta final (autorizado/rejeitado/erro);
 // false enquanto ainda está "processando_autorizacao" — nesse caso Sucesso é sempre false e
