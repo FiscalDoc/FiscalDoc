@@ -14,7 +14,12 @@ public record CreatePedidoItemInput(
     string? Ncm,
     decimal AliquotaIcms,
     decimal AliquotaPis,
-    decimal AliquotaCofins
+    decimal AliquotaCofins,
+    string? CstIcms = null,
+    string? CstPis = null,
+    string? CstCofins = null,
+    string? IbsCbsCst = null,
+    string? IbsCbsClassificacaoTributaria = null
 );
 
 public record CreatePedidoCommand(

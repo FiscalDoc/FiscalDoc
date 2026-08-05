@@ -15,7 +15,12 @@ public record PedidoItemDto(
     string? Ncm,
     decimal AliquotaIcms,
     decimal AliquotaPis,
-    decimal AliquotaCofins
+    decimal AliquotaCofins,
+    string? CstIcms,
+    string? CstPis,
+    string? CstCofins,
+    string? IbsCbsCst,
+    string? IbsCbsClassificacaoTributaria
 );
 
 public record PedidoDto(

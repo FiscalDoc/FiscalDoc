@@ -45,13 +45,28 @@ public sealed class EmitirNfeFocusCommandHandler(
             return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
                 "InscricaoEstadual", "Preencha a Inscrição Estadual da empresa na tela Empresa (aba Fiscal) antes de emitir."));
 
-        // Confere NCM/CFOP de cada item ANTES de chamar a Focus — sem isso, a rejeição só
+        // Confere NCM/CFOP/CST de cada item ANTES de chamar a Focus — sem isso, a rejeição só
         // aparece depois de ida e volta pra API deles, com uma mensagem bem menos clara sobre
         // qual produto especificamente está incompleto.
-        var itemIncompleto = pedido.Itens.FirstOrDefault(i => string.IsNullOrWhiteSpace(i.Ncm) || string.IsNullOrWhiteSpace(i.Cfop));
+        var itemIncompleto = pedido.Itens.FirstOrDefault(i =>
+            string.IsNullOrWhiteSpace(i.Ncm) || string.IsNullOrWhiteSpace(i.Cfop)
+            || string.IsNullOrWhiteSpace(i.CstIcms) || string.IsNullOrWhiteSpace(i.CstPis) || string.IsNullOrWhiteSpace(i.CstCofins));
         if (itemIncompleto is not null)
             return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                "Itens", $"O produto \"{itemIncompleto.Descricao}\" está sem NCM ou CFOP — preencha no cadastro do produto antes de emitir."));
+                "Itens", $"O produto \"{itemIncompleto.Descricao}\" está com dados fiscais incompletos (NCM/CFOP/CST) — preencha no cadastro do produto antes de emitir."));
+
+        // IBS/CBS só é obrigatório na NF-e a partir de 03/08/2026 pra empresas do regime
+        // Normal — Simples Nacional (1/2) e MEI (4) só entram a partir de 04/2027 (LC
+        // 214/2025). Não trava a emissão desses clientes por um campo que ainda não é exigível.
+        var regimeNormalExigeIbsCbs = cliente.RegimeTributario is "LucroReal" or "LucroPresumido";
+        if (regimeNormalExigeIbsCbs)
+        {
+            var itemSemIbsCbs = pedido.Itens.FirstOrDefault(i =>
+                string.IsNullOrWhiteSpace(i.IbsCbsCst) || string.IsNullOrWhiteSpace(i.IbsCbsClassificacaoTributaria));
+            if (itemSemIbsCbs is not null)
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    "Itens", $"O produto \"{itemSemIbsCbs.Descricao}\" está sem a classificação de IBS/CBS — obrigatória pra empresas do regime Normal a partir de 03/08/2026. Preencha no cadastro do produto."));
+        }
 
         var solicitadoPorNome = currentUser.Name ?? currentUser.Email ?? "FiscalDoc";
 

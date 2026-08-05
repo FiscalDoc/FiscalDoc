@@ -99,6 +99,43 @@ type Tab = 'geral' | 'fiscal';
               </div>
             </div>
           </div>
+
+          <div class="card section">
+            <h4 class="section-title">Situação Tributária (CST)</h4>
+            <p class="field-hint" style="margin:0">Também obrigatórios pra emitir — o código certo depende do regime tributário da empresa e de como esse produto é tributado (confira com o contador).</p>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label">CST/CSOSN ICMS</label>
+                <input class="input" [(ngModel)]="form.cstIcms" placeholder="102 (Simples) ou 00 (Normal)" maxlength="3"/>
+              </div>
+              <div class="field">
+                <label class="label">CST PIS</label>
+                <input class="input" [(ngModel)]="form.cstPis" placeholder="07" maxlength="2"/>
+              </div>
+              <div class="field">
+                <label class="label">CST COFINS</label>
+                <input class="input" [(ngModel)]="form.cstCofins" placeholder="07" maxlength="2"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="card section">
+            <h4 class="section-title">IBS/CBS (Reforma Tributária)</h4>
+            <p class="field-hint" style="margin:0">
+              Obrigatório a partir de 03/08/2026 pra empresas do regime Normal (Simples Nacional e MEI entram só em 04/2027).
+              As alíquotas do período de teste de 2026 (0,9% CBS + 0,1% IBS) são fixas por lei — o sistema já aplica sozinho, não precisa preencher aqui.
+            </p>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label">CST IBS/CBS</label>
+                <input class="input" [(ngModel)]="form.ibsCbsCst" placeholder="000" maxlength="3"/>
+              </div>
+              <div class="field">
+                <label class="label">Classificação Tributária (cClassTrib)</label>
+                <input class="input" [(ngModel)]="form.ibsCbsClassificacaoTributaria" placeholder="000001" maxlength="6"/>
+              </div>
+            </div>
+          </div>
         }
 
         @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
@@ -193,6 +230,8 @@ export class ProdutoDetailComponent implements OnInit {
       codigo: p.codigo, descricao: p.descricao, ncm: p.ncm ?? '', unidade: p.unidade,
       cfop: p.cfop ?? '', precoUnitario: p.precoUnitario, aliquotaIcms: p.aliquotaIcms,
       aliquotaPis: p.aliquotaPis, aliquotaCofins: p.aliquotaCofins, ativo: p.ativo,
+      cstIcms: p.cstIcms ?? '', cstPis: p.cstPis ?? '', cstCofins: p.cstCofins ?? '',
+      ibsCbsCst: p.ibsCbsCst ?? '', ibsCbsClassificacaoTributaria: p.ibsCbsClassificacaoTributaria ?? '',
     };
   }
 
@@ -215,6 +254,11 @@ export class ProdutoDetailComponent implements OnInit {
       aliquotaIcms: +this.form.aliquotaIcms,
       aliquotaPis: +this.form.aliquotaPis,
       aliquotaCofins: +this.form.aliquotaCofins,
+      cstIcms: this.form.cstIcms || undefined,
+      cstPis: this.form.cstPis || undefined,
+      cstCofins: this.form.cstCofins || undefined,
+      ibsCbsCst: this.form.ibsCbsCst || undefined,
+      ibsCbsClassificacaoTributaria: this.form.ibsCbsClassificacaoTributaria || undefined,
     };
 
     const obs = this.isNew()
@@ -246,6 +290,10 @@ export class ProdutoDetailComponent implements OnInit {
   }
 
   private _empty() {
-    return { codigo: '', descricao: '', ncm: '', unidade: 'UN', cfop: '', precoUnitario: 0, aliquotaIcms: 0, aliquotaPis: 0, aliquotaCofins: 0, ativo: true };
+    return {
+      codigo: '', descricao: '', ncm: '', unidade: 'UN', cfop: '', precoUnitario: 0,
+      aliquotaIcms: 0, aliquotaPis: 0, aliquotaCofins: 0, ativo: true,
+      cstIcms: '', cstPis: '', cstCofins: '', ibsCbsCst: '', ibsCbsClassificacaoTributaria: '',
+    };
   }
 }

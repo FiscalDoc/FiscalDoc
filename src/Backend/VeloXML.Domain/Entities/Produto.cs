@@ -14,6 +14,23 @@ public class Produto : BaseEntity, IAuditableEntity
     public decimal AliquotaIcms { get; set; }
     public decimal AliquotaPis { get; set; }
     public decimal AliquotaCofins { get; set; }
+
+    // CST/CSOSN do ICMS (código de 2-3 dígitos — qual tabela usar depende do regime tributário
+    // da empresa: CSOSN pra Simples Nacional, CST pra Lucro Presumido/Real) e CST de
+    // PIS/COFINS (2 dígitos) — obrigatórios pra emitir NF-e, antes vinham fixos no código
+    // (102/07/07) sem refletir o produto real.
+    public string? CstIcms { get; set; }
+    public string? CstPis { get; set; }
+    public string? CstCofins { get; set; }
+
+    // IBS/CBS (reforma tributária, LC 214/2025) — obrigatório na NF-e a partir de 03/08/2026
+    // pra empresas do regime Normal (Simples Nacional/MEI só a partir de 04/2027). CST (3
+    // dígitos) e cClassTrib (6 dígitos, classificação da operação numa tabela nacional) variam
+    // por produto; as alíquotas do período de teste (2026) são fixas por lei, não configuráveis
+    // aqui — ver FocusNfePayloadBuilder.
+    public string? IbsCbsCst { get; set; }
+    public string? IbsCbsClassificacaoTributaria { get; set; }
+
     public bool Ativo { get; set; } = true;
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }

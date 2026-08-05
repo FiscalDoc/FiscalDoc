@@ -82,9 +82,20 @@ internal static class FocusNfePayloadBuilder
                 quantidade_tributavel = item.Quantidade,
                 valor_unitario_tributavel = item.PrecoUnitario,
                 icms_origem = 0,
-                icms_situacao_tributaria = "102", // CSOSN Simples Nacional sem crédito — ajustar por regime
-                pis_situacao_tributaria = "07",
-                cofins_situacao_tributaria = "07",
+                icms_situacao_tributaria = item.CstIcms,
+                pis_situacao_tributaria = item.CstPis,
+                cofins_situacao_tributaria = item.CstCofins,
+                // IBS/CBS (reforma tributária, LC 214/2025) — cCST/cClassTrib vêm do cadastro
+                // do produto; as alíquotas do período de teste (2026) são FIXAS por lei (Art.
+                // 343 da LC 214/2025) pra todo mundo, não é dado de cadastro — SEFAZ chega a
+                // rejeitar (erro 1026) se vier valor diferente de 0,1%/0%/0,9% em 2026. Só
+                // manda o grupo quando o produto já tem a classificação preenchida — clientes
+                // do Simples Nacional/MEI só precisam disso a partir de 04/2027.
+                ibs_cbs_situacao_tributaria = item.IbsCbsCst,
+                ibs_cbs_classificacao_tributaria = item.IbsCbsClassificacaoTributaria,
+                ibs_uf_aliquota = item.IbsCbsCst is not null ? 0.1m : (decimal?)null,
+                ibs_mun_aliquota = item.IbsCbsCst is not null ? 0m : (decimal?)null,
+                cbs_aliquota = item.IbsCbsCst is not null ? 0.9m : (decimal?)null,
             }).ToList(),
 
             informacoes_adicionais_contribuinte = MontarInformacoesComplementares(cliente, pedido),

@@ -69,6 +69,11 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 AliquotaIcms = i.AliquotaIcms,
                 AliquotaPis = i.AliquotaPis,
                 AliquotaCofins = i.AliquotaCofins,
+                CstIcms = i.CstIcms,
+                CstPis = i.CstPis,
+                CstCofins = i.CstCofins,
+                IbsCbsCst = i.IbsCbsCst,
+                IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
             };
         }).ToList();
 

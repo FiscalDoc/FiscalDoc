@@ -34,7 +34,8 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new CreateProdutoCommand(
             clienteId, body.Codigo, body.Descricao, body.Ncm,
             body.Unidade, body.PrecoUnitario, body.Cfop,
-            body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins), ct);
+            body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins,
+            body.CstIcms, body.CstPis, body.CstCofins, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria), ct);
         return result.IsSuccess ? Created(string.Empty, result.Value) : BadRequest(result.Error);
     }
 
@@ -44,7 +45,8 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new UpdateProdutoCommand(
             id, clienteId, body.Codigo, body.Descricao, body.Ncm,
             body.Unidade, body.PrecoUnitario, body.Cfop,
-            body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins, body.Ativo), ct);
+            body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins, body.Ativo,
+            body.CstIcms, body.CstPis, body.CstCofins, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
@@ -65,7 +67,12 @@ public record CreateProdutoRequest(
     string? Cfop,
     decimal AliquotaIcms,
     decimal AliquotaPis,
-    decimal AliquotaCofins
+    decimal AliquotaCofins,
+    string? CstIcms = null,
+    string? CstPis = null,
+    string? CstCofins = null,
+    string? IbsCbsCst = null,
+    string? IbsCbsClassificacaoTributaria = null
 );
 
 public record UpdateProdutoRequest(
@@ -78,5 +85,10 @@ public record UpdateProdutoRequest(
     decimal AliquotaIcms,
     decimal AliquotaPis,
     decimal AliquotaCofins,
-    bool Ativo
+    bool Ativo,
+    string? CstIcms = null,
+    string? CstPis = null,
+    string? CstCofins = null,
+    string? IbsCbsCst = null,
+    string? IbsCbsClassificacaoTributaria = null
 );

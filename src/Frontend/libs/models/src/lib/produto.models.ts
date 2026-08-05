@@ -12,6 +12,11 @@ export interface ProdutoDto {
   aliquotaCofins: number;
   ativo: boolean;
   createdAt: string;
+  cstIcms?: string;
+  cstPis?: string;
+  cstCofins?: string;
+  ibsCbsCst?: string;
+  ibsCbsClassificacaoTributaria?: string;
 }
 
 export interface CreateProdutoRequest {
@@ -24,6 +29,11 @@ export interface CreateProdutoRequest {
   aliquotaIcms: number;
   aliquotaPis: number;
   aliquotaCofins: number;
+  cstIcms?: string;
+  cstPis?: string;
+  cstCofins?: string;
+  ibsCbsCst?: string;
+  ibsCbsClassificacaoTributaria?: string;
 }
 
 export interface UpdateProdutoRequest extends CreateProdutoRequest {

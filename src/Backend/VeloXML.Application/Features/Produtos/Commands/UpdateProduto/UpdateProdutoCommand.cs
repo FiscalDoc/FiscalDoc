@@ -16,5 +16,10 @@ public record UpdateProdutoCommand(
     decimal AliquotaIcms,
     decimal AliquotaPis,
     decimal AliquotaCofins,
-    bool Ativo
+    bool Ativo,
+    string? CstIcms = null,
+    string? CstPis = null,
+    string? CstCofins = null,
+    string? IbsCbsCst = null,
+    string? IbsCbsClassificacaoTributaria = null
 ) : IRequest<Result<ProdutoDto>>;

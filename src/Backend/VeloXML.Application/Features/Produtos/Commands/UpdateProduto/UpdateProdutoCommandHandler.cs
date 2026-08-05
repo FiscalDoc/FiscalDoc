@@ -25,6 +25,11 @@ public sealed class UpdateProdutoCommandHandler(IUnitOfWork uow)
         produto.AliquotaPis = request.AliquotaPis;
         produto.AliquotaCofins = request.AliquotaCofins;
         produto.Ativo = request.Ativo;
+        produto.CstIcms = request.CstIcms;
+        produto.CstPis = request.CstPis;
+        produto.CstCofins = request.CstCofins;
+        produto.IbsCbsCst = request.IbsCbsCst;
+        produto.IbsCbsClassificacaoTributaria = request.IbsCbsClassificacaoTributaria;
 
         uow.Produtos.Update(produto);
         await uow.SaveChangesAsync(ct);

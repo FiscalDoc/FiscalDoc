@@ -14,6 +14,11 @@ export interface PedidoItemDto {
   aliquotaIcms: number;
   aliquotaPis: number;
   aliquotaCofins: number;
+  cstIcms?: string;
+  cstPis?: string;
+  cstCofins?: string;
+  ibsCbsCst?: string;
+  ibsCbsClassificacaoTributaria?: string;
 }
 
 export type FormaPagamento = 'AVista' | 'APrazo';
@@ -63,6 +68,11 @@ export interface PedidoItemInput {
   aliquotaIcms: number;
   aliquotaPis: number;
   aliquotaCofins: number;
+  cstIcms?: string;
+  cstPis?: string;
+  cstCofins?: string;
+  ibsCbsCst?: string;
+  ibsCbsClassificacaoTributaria?: string;
 }
 
 export interface CreatePedidoRequest {

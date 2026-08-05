@@ -17,6 +17,11 @@ public class PedidoItem : BaseEntity
     public decimal AliquotaIcms { get; set; }
     public decimal AliquotaPis { get; set; }
     public decimal AliquotaCofins { get; set; }
+    public string? CstIcms { get; set; }
+    public string? CstPis { get; set; }
+    public string? CstCofins { get; set; }
+    public string? IbsCbsCst { get; set; }
+    public string? IbsCbsClassificacaoTributaria { get; set; }
 
     public Pedido? Pedido { get; set; }
     public Produto? Produto { get; set; }

@@ -13,7 +13,12 @@ public record CreateProdutoCommand(
     string? Cfop,
     decimal AliquotaIcms,
     decimal AliquotaPis,
-    decimal AliquotaCofins
+    decimal AliquotaCofins,
+    string? CstIcms = null,
+    string? CstPis = null,
+    string? CstCofins = null,
+    string? IbsCbsCst = null,
+    string? IbsCbsClassificacaoTributaria = null
 ) : IRequest<Result<ProdutoDto>>;
 
 public record ProdutoDto(
@@ -29,5 +34,10 @@ public record ProdutoDto(
     decimal AliquotaPis,
     decimal AliquotaCofins,
     bool Ativo,
-    DateTime CriadoEm
+    DateTime CriadoEm,
+    string? CstIcms,
+    string? CstPis,
+    string? CstCofins,
+    string? IbsCbsCst,
+    string? IbsCbsClassificacaoTributaria
 );

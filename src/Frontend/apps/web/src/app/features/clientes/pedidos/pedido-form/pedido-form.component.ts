@@ -1136,6 +1136,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       aliquotaIcms: i.aliquotaIcms,
       aliquotaPis: i.aliquotaPis,
       aliquotaCofins: i.aliquotaCofins,
+      cstIcms: i.cstIcms,
+      cstPis: i.cstPis,
+      cstCofins: i.cstCofins,
+      ibsCbsCst: i.ibsCbsCst,
+      ibsCbsClassificacaoTributaria: i.ibsCbsClassificacaoTributaria,
     })));
     this.produtoBusca = p.itens.map(i => i.descricao);
     this._dirty = false;
@@ -1234,6 +1239,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       aliquotaIcms: prod.aliquotaIcms,
       aliquotaPis: prod.aliquotaPis,
       aliquotaCofins: prod.aliquotaCofins,
+      cstIcms: prod.cstIcms,
+      cstPis: prod.cstPis,
+      cstCofins: prod.cstCofins,
+      ibsCbsCst: prod.ibsCbsCst,
+      ibsCbsClassificacaoTributaria: prod.ibsCbsClassificacaoTributaria,
     }]);
     this.produtoBusca.push(`${prod.codigo} — ${prod.descricao}`);
     this.marcarSujo();
@@ -1354,6 +1364,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       aliquotaIcms: prod.aliquotaIcms,
       aliquotaPis: prod.aliquotaPis,
       aliquotaCofins: prod.aliquotaCofins,
+      cstIcms: prod.cstIcms,
+      cstPis: prod.cstPis,
+      cstCofins: prod.cstCofins,
+      ibsCbsCst: prod.ibsCbsCst,
+      ibsCbsClassificacaoTributaria: prod.ibsCbsClassificacaoTributaria,
     }));
     this.produtoDropdownIndex.set(null);
   }

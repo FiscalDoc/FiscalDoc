@@ -32,6 +32,11 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             AliquotaIcms = i.AliquotaIcms,
             AliquotaPis = i.AliquotaPis,
             AliquotaCofins = i.AliquotaCofins,
+            CstIcms = i.CstIcms,
+            CstPis = i.CstPis,
+            CstCofins = i.CstCofins,
+            IbsCbsCst = i.IbsCbsCst,
+            IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
         }).ToList();
 
         // Numero é gerado pelo sequence do banco (ValueGeneratedOnAdd) — nunca copiado do original.

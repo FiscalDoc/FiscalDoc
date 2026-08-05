@@ -29,6 +29,11 @@ public class PedidoItemConfiguration : IEntityTypeConfiguration<PedidoItem>
         b.Property(e => e.AliquotaIcms).HasColumnName("aliquota_icms").HasPrecision(5, 2);
         b.Property(e => e.AliquotaPis).HasColumnName("aliquota_pis").HasPrecision(5, 2);
         b.Property(e => e.AliquotaCofins).HasColumnName("aliquota_cofins").HasPrecision(5, 2);
+        b.Property(e => e.CstIcms).HasColumnName("cst_icms").HasMaxLength(3);
+        b.Property(e => e.CstPis).HasColumnName("cst_pis").HasMaxLength(2);
+        b.Property(e => e.CstCofins).HasColumnName("cst_cofins").HasMaxLength(2);
+        b.Property(e => e.IbsCbsCst).HasColumnName("ibs_cbs_cst").HasMaxLength(3);
+        b.Property(e => e.IbsCbsClassificacaoTributaria).HasColumnName("ibs_cbs_classificacao_tributaria").HasMaxLength(6);
 
         b.HasOne(e => e.Produto).WithMany().HasForeignKey(e => e.ProdutoId).OnDelete(DeleteBehavior.Restrict);
 

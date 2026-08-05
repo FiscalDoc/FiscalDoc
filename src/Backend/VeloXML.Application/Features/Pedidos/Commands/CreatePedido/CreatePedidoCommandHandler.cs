@@ -49,6 +49,11 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 AliquotaIcms = i.AliquotaIcms,
                 AliquotaPis = i.AliquotaPis,
                 AliquotaCofins = i.AliquotaCofins,
+                CstIcms = i.CstIcms,
+                CstPis = i.CstPis,
+                CstCofins = i.CstCofins,
+                IbsCbsCst = i.IbsCbsCst,
+                IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
             };
         }).ToList();
 
@@ -90,7 +95,8 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             p.Itens.Select(i => new PedidoItemDto(
                 i.Id, i.ProdutoId, i.Descricao, i.Unidade,
                 i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
-                i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins
+                i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins,
+                i.CstIcms, i.CstPis, i.CstCofins, i.IbsCbsCst, i.IbsCbsClassificacaoTributaria
             )).ToList(),
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
             p.DocumentoId, p.Documento?.Numero, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
