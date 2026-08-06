@@ -17,7 +17,17 @@ interface NavItem {
   imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent],
   template: `
     <div class="shell">
-      <aside class="sidebar">
+      <button type="button" class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)" aria-label="Abrir menu">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+
+      @if (mobileMenuOpen()) {
+        <div class="sidebar-backdrop" (click)="mobileMenuOpen.set(false)"></div>
+      }
+
+      <aside class="sidebar" [class.open]="mobileMenuOpen()">
         <div class="sidebar-header">
           <div class="brand-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -28,6 +38,11 @@ interface NavItem {
             </svg>
           </div>
           <span class="brand-name font-heading">FiscalDoc</span>
+          <button type="button" class="sidebar-close-btn" (click)="mobileMenuOpen.set(false)" aria-label="Fechar menu">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -44,7 +59,7 @@ interface NavItem {
                 @if (isGroupExpanded(item)) {
                   <div class="nav-subitems">
                     @for (child of item.children; track child.route) {
-                      <a [routerLink]="child.route" routerLinkActive="active" class="nav-item nav-subitem">
+                      <a [routerLink]="child.route" routerLinkActive="active" class="nav-item nav-subitem" (click)="mobileMenuOpen.set(false)">
                         <span class="nav-icon" [innerHTML]="child.icon"></span>
                         <span class="nav-label">{{ child.label }}</span>
                       </a>
@@ -53,7 +68,7 @@ interface NavItem {
                 }
               </div>
             } @else {
-              <a [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+              <a [routerLink]="item.route" routerLinkActive="active" class="nav-item" (click)="mobileMenuOpen.set(false)">
                 <span class="nav-icon" [innerHTML]="item.icon"></span>
                 <span class="nav-label">{{ item.label }}</span>
               </a>
@@ -65,12 +80,19 @@ interface NavItem {
           @if (auth.currentUser()?.empresa) {
             <div class="empresa-badge">{{ auth.currentUser()?.empresa }}</div>
           }
-          <a routerLink="/perfil" routerLinkActive="nav-item-active" class="security-link">
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-            </svg>
-            Segurança / 2FA
-          </a>
+          <div class="footer-links-row">
+            <a routerLink="/perfil" routerLinkActive="nav-item-active" class="security-link">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              Segurança / 2FA
+            </a>
+            <a routerLink="/alertas" routerLinkActive="active" class="alertas-icon-link" title="Alertas">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+            </a>
+          </div>
           <div class="user-row">
           <div class="user-info">
             <div class="user-avatar" [style.background]="avatarBg()" [style.color]="avatarFg()">{{ userInitials() }}</div>
@@ -216,6 +238,38 @@ interface NavItem {
       gap: 0.5rem;
       padding: 1.25rem 1rem;
       border-bottom: 1px solid var(--border);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 0.75rem;
+      left: 0.75rem;
+      z-index: 60;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .sidebar-close-btn {
+      display: none;
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-backdrop {
+      display: none;
     }
 
     .brand-icon {
@@ -391,6 +445,15 @@ interface NavItem {
     .security-link:hover { color: var(--text); }
     .nav-item-active.security-link { color: var(--accent); }
 
+    .footer-links-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .alertas-icon-link {
+      display: flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; flex-shrink: 0;
+      color: var(--text2); border-radius: 6px; transition: color 120ms, background 120ms;
+    }
+    .alertas-icon-link:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .alertas-icon-link.active { color: var(--accent); }
+
     /* Main content */
     .content {
       flex: 1;
@@ -471,6 +534,43 @@ interface NavItem {
     }
     .btn-whatsapp:hover { opacity: .9; }
     .upgrade-hint { font-size: 12px; color: var(--text3); }
+
+    /* Tablet/iPad e mobile: sidebar vira gaveta (off-canvas) */
+    @media (max-width: 1024px) {
+      .mobile-menu-btn { display: flex; }
+      .sidebar-close-btn { display: block; }
+
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 70;
+        width: min(280px, 82vw);
+        transform: translateX(-100%);
+        transition: transform 200ms ease;
+        box-shadow: 2px 0 16px rgba(0,0,0,.35);
+      }
+      .sidebar.open { transform: translateX(0); }
+
+      .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        z-index: 65;
+      }
+
+      .content { padding: 1rem; padding-top: 3.75rem; }
+    }
+
+    @media (max-width: 640px) {
+      .content { padding: 0.75rem; padding-top: 3.5rem; }
+      .impersonation-banner, .trial-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .trial-banner-right { width: 100%; }
+      .trial-benefits { flex-wrap: wrap; }
+    }
   `],
 })
 export class ShellComponent implements OnInit {
@@ -481,6 +581,7 @@ export class ShellComponent implements OnInit {
   cobrancasAtrasadas = signal(0);
   isAdmin = signal(false);
   showUpgradeModal = signal(false);
+  mobileMenuOpen = signal(false);
   private readonly _expandedGroups = signal<Set<string>>(new Set());
 
   private readonly _whatsappNumber = '5511973982559';
@@ -528,16 +629,9 @@ export class ShellComponent implements OnInit {
       </svg>`,
     },
     {
-      label: 'Alertas',
-      route: '/alertas',
-      icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-      </svg>`,
-    },
-    {
       label: 'Logs',
       route: '/logs',
-      roles: ['Contador', 'UsuarioContador', 'Cliente'],
+      roles: ['Contador', 'UsuarioContador'],
       icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
       </svg>`,
@@ -641,11 +735,26 @@ export class ShellComponent implements OnInit {
       const id = user.clienteId;
       base.push(
         {
-          label: 'Empresa',
-          route: `/clientes/${id}/empresa`,
+          label: 'Configurações',
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4m-4 6h.01M9 15h.01M9 18h.01"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
           </svg>`,
+          children: [
+            {
+              label: 'Empresa',
+              route: `/clientes/${id}/empresa`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4m-4 6h.01M9 15h.01M9 18h.01"/>
+              </svg>`,
+            },
+            {
+              label: 'Logs',
+              route: `/logs`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+              </svg>`,
+            },
+          ],
         },
         {
           label: 'Cadastros',
@@ -669,7 +778,7 @@ export class ShellComponent implements OnInit {
               </svg>`,
             },
             {
-              label: 'Destinatários',
+              label: 'Clientes',
               route: `/clientes/${id}/cadastros/destinatarios`,
               icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12.5 3.5a3.5 3.5 0 110 7 3.5 3.5 0 010-7zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
@@ -678,11 +787,19 @@ export class ShellComponent implements OnInit {
           ],
         },
         {
-          label: 'Pedidos / NF-e',
-          route: `/clientes/${id}/pedidos`,
+          label: 'Emissão',
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>`,
+          children: [
+            {
+              label: 'Pedidos / NF-e',
+              route: `/clientes/${id}/pedidos`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>`,
+            },
+          ],
         },
         {
           label: 'Relatórios',

@@ -47,6 +47,7 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
         } @else if (posts().length === 0) {
           <div class="empty">Nenhuma postagem cadastrada.</div>
         } @else {
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr><th>Título</th><th>Categoria</th><th>Autor</th><th>Data</th><th>Status</th><th></th></tr>
@@ -71,6 +72,7 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
               }
             </tbody>
           </table>
+          </div>
 
           @if (totalPages() > 1) {
             <div class="pagination">
@@ -146,6 +148,17 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
     .page-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: pointer; }
     .page-btn:disabled { opacity: .4; cursor: not-allowed; }
     .page-info { color: var(--text2); font-size: 13px; }
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    @media (max-width: 1024px) {
+      .table { min-width: 640px; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: stretch; gap: .75rem; }
+      .header-actions { flex-direction: column; align-items: stretch; }
+      .search-box { max-width: none; }
+    }
 
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
     .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto; }

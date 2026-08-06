@@ -18,7 +18,7 @@ import { DestinatarioDto } from '@veloxml/models';
           </svg>
           Voltar ao cliente
         </button>
-        <h2 class="page-title">Destinatários</h2>
+        <h2 class="page-title">Clientes</h2>
       </div>
 
       <div class="card section">
@@ -27,15 +27,15 @@ import { DestinatarioDto } from '@veloxml/models';
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
             </svg>
-            <input class="search-input" [(ngModel)]="termo" (input)="buscar()" placeholder="Buscar destinatário..."/>
+            <input class="search-input" [(ngModel)]="termo" (input)="buscar()" placeholder="Buscar cliente..."/>
           </div>
-          <button class="btn-primary" (click)="abrirDestinatario('novo')">+ Novo Destinatário</button>
+          <button class="btn-primary" (click)="abrirDestinatario('novo')">+ Novo Cliente</button>
         </div>
 
         @if (loading()) {
           <div class="empty">Carregando...</div>
         } @else if (destinatarios().length === 0) {
-          <div class="empty">Nenhum destinatário cadastrado.</div>
+          <div class="empty">Nenhum cliente cadastrado.</div>
         } @else {
           <table class="table">
             <thead>

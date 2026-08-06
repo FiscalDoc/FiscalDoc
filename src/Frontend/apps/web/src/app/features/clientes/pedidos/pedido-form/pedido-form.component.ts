@@ -398,6 +398,7 @@ interface ConfirmState {
         @if (itens().length === 0) {
           <div class="empty">Nenhum item adicionado.</div>
         } @else {
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr>
@@ -514,6 +515,7 @@ interface ConfirmState {
               </tr>
             </tfoot>
           </table>
+          </div>
         }
       </div>
 
@@ -852,6 +854,33 @@ interface ConfirmState {
     .btn-primary:hover:not(:disabled) { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
     .btn-primary.danger { background: var(--red); }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .header-section .form-grid { grid-template-columns: 1fr 1fr; }
+      .impostos-form-grid { grid-template-columns: repeat(2, 1fr); }
+      .detail-grid { grid-template-columns: repeat(2, 1fr); }
+      .table { min-width: 720px; }
+      .nfe-field-label { min-width: 130px; }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid, .header-section .form-grid, .impostos-form-grid, .detail-grid {
+        grid-template-columns: 1fr;
+      }
+      .col-2, .col-4 { grid-column: span 1; }
+      .header-top { flex-direction: column; align-items: stretch; }
+      .section-title-row { flex-direction: column; align-items: flex-start; gap: .375rem; }
+      .list-header { flex-direction: column; align-items: stretch; gap: .5rem; }
+      .nfe-card-row, .nfe-card-actions { flex-direction: column; align-items: stretch; }
+      .nfe-card-actions { gap: 6px; }
+      .nfe-field { flex-direction: column; gap: 2px; }
+      .nfe-field-label { min-width: 0; }
+      .confirm-actions { flex-direction: column-reverse; }
+      .confirm-actions button { width: 100%; }
+    }
   `],
 })
 export class PedidoFormComponent implements OnInit, OnDestroy {

@@ -24,7 +24,7 @@ type Tab = 'cadastro' | 'endereco';
             Cadastros
           </button>
           <div class="header-top">
-            <h2 class="page-title">{{ isNew() ? 'Novo Destinatário' : form.razaoSocial || 'Destinatário' }}</h2>
+            <h2 class="page-title">{{ isNew() ? 'Novo Cliente' : form.razaoSocial || 'Cliente' }}</h2>
             @if (!isNew()) {
               <button class="btn-danger-outline" (click)="excluir()">Excluir</button>
             }
@@ -38,7 +38,7 @@ type Tab = 'cadastro' | 'endereco';
 
         @if (tab() === 'cadastro') {
           <div class="card section">
-            <h4 class="section-title">Dados do Destinatário</h4>
+            <h4 class="section-title">Dados do Cliente</h4>
             <div class="form-grid">
               <div class="field col-2">
                 <label class="label">Razão Social *</label>
@@ -79,7 +79,7 @@ type Tab = 'cadastro' | 'endereco';
                   <label class="label">Status</label>
                   <label class="toggle-row">
                     <input type="checkbox" [(ngModel)]="form.ativo" style="width:16px;height:16px;accent-color:var(--accent);"/>
-                    Destinatário ativo
+                    Cliente ativo
                   </label>
                 </div>
               }
@@ -129,7 +129,7 @@ type Tab = 'cadastro' | 'endereco';
         }
 
         @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
-        @if (sucesso()) { <div class="alert-ok">Destinatário salvo!</div> }
+        @if (sucesso()) { <div class="alert-ok">Cliente salvo!</div> }
 
         <div class="form-actions">
           <button class="btn-ghost" (click)="goBack()">Cancelar</button>
@@ -265,7 +265,7 @@ export class DestinatarioDetailComponent implements OnInit {
 
     this._svc.getById(this.clienteId, this.destinatarioId).subscribe({
       next: d => { this._sync(d); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.erro.set('Destinatário não encontrado.'); },
+      error: () => { this.loading.set(false); this.erro.set('Cliente não encontrado.'); },
     });
   }
 

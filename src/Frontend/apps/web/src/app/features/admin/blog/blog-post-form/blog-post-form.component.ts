@@ -198,6 +198,14 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .col-2 { grid-column: span 1; }
+      .header-top { flex-direction: column; align-items: stretch; gap: .5rem; }
+      .form-actions { flex-direction: column-reverse; align-items: stretch; }
+      .status-toggle { flex-direction: column; }
+    }
   `],
 })
 export class BlogPostFormComponent implements OnInit {
