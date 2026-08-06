@@ -47,31 +47,60 @@ public sealed class EmitirNfeFocusCommandHandler(
 
         // Confere NCM/CFOP/CST de cada item ANTES de chamar a Focus — sem isso, a rejeição só
         // aparece depois de ida e volta pra API deles, com uma mensagem bem menos clara sobre
-        // qual produto especificamente está incompleto. Prioriza o cadastro ATUAL do Produto
-        // (item.Produto) sobre a "foto" gravada no PedidoItem em vez de exigir só o snapshot —
-        // sem isso, completar o cadastro fiscal do produto DEPOIS de ele já estar num pedido
-        // rascunho nunca refletia aqui, travando a emissão com dado que já foi corrigido.
-        var itemIncompleto = pedido.Itens.FirstOrDefault(i =>
-            string.IsNullOrWhiteSpace(i.Produto?.Ncm ?? i.Ncm) || string.IsNullOrWhiteSpace(i.Produto?.Cfop ?? i.Cfop)
-            || string.IsNullOrWhiteSpace(i.Produto?.CstIcms ?? i.CstIcms)
-            || string.IsNullOrWhiteSpace(i.Produto?.CstPis ?? i.CstPis)
-            || string.IsNullOrWhiteSpace(i.Produto?.CstCofins ?? i.CstCofins));
-        if (itemIncompleto is not null)
-            return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                "Itens", $"O produto \"{itemIncompleto.Descricao}\" está com dados fiscais incompletos (NCM/CFOP/CST) — preencha no cadastro do produto antes de emitir."));
+        // qual produto especificamente está incompleto ou errado. Prioriza o cadastro ATUAL do
+        // Produto (item.Produto) sobre a "foto" gravada no PedidoItem em vez de exigir só o
+        // snapshot — sem isso, completar o cadastro fiscal do produto DEPOIS de ele já estar
+        // num pedido rascunho nunca refletia aqui, travando a emissão com dado já corrigido.
+        //
+        // Não basta o campo estar preenchido — precisa ser um código plausível. "0" passa numa
+        // checagem de "não vazio" mas a SEFAZ rejeita na hora (CST de PIS/COFINS tem 2 dígitos;
+        // ICMS é CST de 2 dígitos pro regime Normal ou CSOSN de 3 dígitos pro Simples
+        // Nacional/MEI — usar o tamanho errado é rejeição certa: "Informado CST para emissor do
+        // Simples Nacional").
+        var regimeNormal = cliente.RegimeTributario is "LucroReal" or "LucroPresumido";
+        var tamanhoIcmsEsperado = regimeNormal ? 2 : 3;
+        var tipoIcmsEsperado = regimeNormal ? "CST" : "CSOSN";
 
         // IBS/CBS só é obrigatório na NF-e a partir de 03/08/2026 pra empresas do regime
         // Normal — Simples Nacional (1/2) e MEI (4) só entram a partir de 04/2027 (LC
         // 214/2025). Não trava a emissão desses clientes por um campo que ainda não é exigível.
-        var regimeNormalExigeIbsCbs = cliente.RegimeTributario is "LucroReal" or "LucroPresumido";
-        if (regimeNormalExigeIbsCbs)
+        var regimeNormalExigeIbsCbs = regimeNormal;
+
+        foreach (var item in pedido.Itens)
         {
-            var itemSemIbsCbs = pedido.Itens.FirstOrDefault(i =>
-                string.IsNullOrWhiteSpace(i.Produto?.IbsCbsCst ?? i.IbsCbsCst)
-                || string.IsNullOrWhiteSpace(i.Produto?.IbsCbsClassificacaoTributaria ?? i.IbsCbsClassificacaoTributaria));
-            if (itemSemIbsCbs is not null)
+            var ncm = item.Produto?.Ncm ?? item.Ncm;
+            var cfop = item.Produto?.Cfop ?? item.Cfop;
+            var cstIcms = item.Produto?.CstIcms ?? item.CstIcms;
+            var cstPis = item.Produto?.CstPis ?? item.CstPis;
+            var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
+
+            if (string.IsNullOrWhiteSpace(ncm) || string.IsNullOrWhiteSpace(cfop))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                    "Itens", $"O produto \"{itemSemIbsCbs.Descricao}\" está sem a classificação de IBS/CBS — obrigatória pra empresas do regime Normal a partir de 03/08/2026. Preencha no cadastro do produto."));
+                    "Itens", $"O produto \"{item.Descricao}\" está sem NCM ou CFOP — preencha no cadastro do produto antes de emitir."));
+
+            if (!CodigoValido(cstIcms, tamanhoIcmsEsperado))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    "Itens",
+                    $"O produto \"{item.Descricao}\" tem um {tipoIcmsEsperado} de ICMS inválido (\"{cstIcms}\") — " +
+                    $"precisa ter {tamanhoIcmsEsperado} dígitos numéricos, já que a empresa é do regime " +
+                    $"{(regimeNormal ? "Normal" : "Simples Nacional/MEI")}. Corrija no cadastro do produto."));
+
+            if (!CodigoValido(cstPis, 2))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    "Itens", $"O produto \"{item.Descricao}\" tem um CST de PIS inválido (\"{cstPis}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
+
+            if (!CodigoValido(cstCofins, 2))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    "Itens", $"O produto \"{item.Descricao}\" tem um CST de COFINS inválido (\"{cstCofins}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
+
+            if (regimeNormalExigeIbsCbs)
+            {
+                var ibsCbsCst = item.Produto?.IbsCbsCst ?? item.IbsCbsCst;
+                var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
+                if (string.IsNullOrWhiteSpace(ibsCbsCst) || string.IsNullOrWhiteSpace(ibsCbsClassificacao))
+                    return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                        "Itens", $"O produto \"{item.Descricao}\" está sem a classificação de IBS/CBS — obrigatória pra empresas do regime Normal a partir de 03/08/2026. Preencha no cadastro do produto."));
+            }
         }
 
         var solicitadoPorNome = currentUser.Name ?? currentUser.Email ?? "FiscalDoc";
@@ -134,6 +163,9 @@ public sealed class EmitirNfeFocusCommandHandler(
         await finalizer.FinalizarAsync(emissao, cliente, resultado, ct);
         return Result.Success(ToDto(emissao));
     }
+
+    private static bool CodigoValido(string? valor, int tamanhoEsperado) =>
+        !string.IsNullOrWhiteSpace(valor) && valor.Length == tamanhoEsperado && valor.All(char.IsDigit);
 
     internal static NfeEmissaoDto ToDto(NfeEmissao e) => new(
         e.Id, e.Status.ToString(), e.MensagemErro, e.ChaveAcesso, e.Numero, e.Serie, e.DocumentoId, e.CreatedAt,

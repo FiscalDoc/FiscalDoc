@@ -175,9 +175,9 @@ interface ConfirmState {
                 @if (doc.status === 'Cancelado') {
                   <span class="badge badge-rejeitado">NF-e cancelada</span>
                 } @else {
-                  <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Emitido pelo FiscalDoc' : 'Emitido externamente' }}</span>
+                  <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Autorizado pelo SEFAZ' : 'Emitido externamente' }}</span>
                 }
-                <p class="nfe-card-title">Nota Fiscal: {{ doc.numero }}{{ doc.serie ? '-' + doc.serie : '' }}</p>
+                <p class="nfe-card-title">Nota Fiscal: {{ doc.numero }}{{ doc.serie ? '  Série: ' + doc.serie : '' }}</p>
               </div>
               <div class="nfe-card-actions">
                 <button class="btn-ghost-sm" (click)="visualizarDanfe(doc.id, doc.origem)">Visualizar DANFE</button>

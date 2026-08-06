@@ -102,11 +102,14 @@ type Tab = 'geral' | 'fiscal';
 
           <div class="card section">
             <h4 class="section-title">Situação Tributária (CST)</h4>
-            <p class="field-hint" style="margin:0">Também obrigatórios pra emitir — o código certo depende do regime tributário da empresa e de como esse produto é tributado (confira com o contador).</p>
+            <p class="field-hint" style="margin:0">
+              Obrigatórios pra emitir — precisam ser um código válido, não só "preenchido" (ex.: "0" sozinho é rejeitado pela SEFAZ). Regime <strong>Simples Nacional/MEI</strong> usa <strong>CSOSN de 3 dígitos</strong> no ICMS
+              (ex.: 102 — sem crédito, o mais comum); regime <strong>Normal</strong> (Lucro Presumido/Real) usa <strong>CST de 2 dígitos</strong> (ex.: 00 — tributada integralmente). PIS/COFINS sempre têm 2 dígitos (ex.: 07 — isento). Confira com o contador se tiver dúvida.
+            </p>
             <div class="form-grid">
               <div class="field">
                 <label class="label">CST/CSOSN ICMS</label>
-                <input class="input" [(ngModel)]="form.cstIcms" placeholder="102 (Simples) ou 00 (Normal)" maxlength="3"/>
+                <input class="input" [(ngModel)]="form.cstIcms" placeholder="102 (Simples/MEI) ou 00 (Normal)" maxlength="3"/>
               </div>
               <div class="field">
                 <label class="label">CST PIS</label>
