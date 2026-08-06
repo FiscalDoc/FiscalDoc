@@ -35,6 +35,7 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             CstIcms = i.CstIcms,
             CstPis = i.CstPis,
             CstCofins = i.CstCofins,
+            IcmsOrigem = i.IcmsOrigem,
             IbsCbsCst = i.IbsCbsCst,
             IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
         }).ToList();

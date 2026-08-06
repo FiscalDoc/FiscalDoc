@@ -25,6 +25,7 @@ public sealed class CreateProdutoCommandHandler(IUnitOfWork uow)
             CstIcms = request.CstIcms,
             CstPis = request.CstPis,
             CstCofins = request.CstCofins,
+            IcmsOrigem = request.IcmsOrigem,
             IbsCbsCst = request.IbsCbsCst,
             IbsCbsClassificacaoTributaria = request.IbsCbsClassificacaoTributaria,
         };
@@ -40,5 +41,5 @@ public sealed class CreateProdutoCommandHandler(IUnitOfWork uow)
         p.Unidade, p.PrecoUnitario, p.Cfop,
         p.AliquotaIcms, p.AliquotaPis, p.AliquotaCofins,
         p.Ativo, p.CreatedAt,
-        p.CstIcms, p.CstPis, p.CstCofins, p.IbsCbsCst, p.IbsCbsClassificacaoTributaria);
+        p.CstIcms, p.CstPis, p.CstCofins, p.IcmsOrigem, p.IbsCbsCst, p.IbsCbsClassificacaoTributaria);
 }

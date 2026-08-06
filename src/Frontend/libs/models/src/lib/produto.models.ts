@@ -15,6 +15,7 @@ export interface ProdutoDto {
   cstIcms?: string;
   cstPis?: string;
   cstCofins?: string;
+  icmsOrigem?: number;
   ibsCbsCst?: string;
   ibsCbsClassificacaoTributaria?: string;
 }
@@ -32,6 +33,7 @@ export interface CreateProdutoRequest {
   cstIcms?: string;
   cstPis?: string;
   cstCofins?: string;
+  icmsOrigem?: number;
   ibsCbsCst?: string;
   ibsCbsClassificacaoTributaria?: string;
 }

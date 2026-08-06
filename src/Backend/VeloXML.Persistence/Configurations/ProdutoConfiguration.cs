@@ -31,6 +31,7 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         b.Property(e => e.CstIcms).HasColumnName("cst_icms").HasMaxLength(3);
         b.Property(e => e.CstPis).HasColumnName("cst_pis").HasMaxLength(2);
         b.Property(e => e.CstCofins).HasColumnName("cst_cofins").HasMaxLength(2);
+        b.Property(e => e.IcmsOrigem).HasColumnName("icms_origem").HasDefaultValue(0);
         b.Property(e => e.IbsCbsCst).HasColumnName("ibs_cbs_cst").HasMaxLength(3);
         b.Property(e => e.IbsCbsClassificacaoTributaria).HasColumnName("ibs_cbs_classificacao_tributaria").HasMaxLength(6);
         b.Property(e => e.Ativo).HasColumnName("ativo");

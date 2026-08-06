@@ -78,6 +78,7 @@ internal static class FocusNfePayloadBuilder
                 var cstIcms = item.Produto?.CstIcms ?? item.CstIcms;
                 var cstPis = item.Produto?.CstPis ?? item.CstPis;
                 var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
+                var icmsOrigem = item.Produto?.IcmsOrigem ?? item.IcmsOrigem;
                 var ibsCbsCst = item.Produto?.IbsCbsCst ?? item.IbsCbsCst;
                 var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
 
@@ -95,7 +96,7 @@ internal static class FocusNfePayloadBuilder
                     unidade_tributavel = item.Unidade,
                     quantidade_tributavel = item.Quantidade,
                     valor_unitario_tributavel = item.PrecoUnitario,
-                    icms_origem = 0,
+                    icms_origem = icmsOrigem,
                     icms_situacao_tributaria = cstIcms,
                     // A Focus calcula vBC (base de cálculo) sozinha a partir do valor_bruto
                     // quando o CST exige, mas não tem como adivinhar a modalidade — sem esse

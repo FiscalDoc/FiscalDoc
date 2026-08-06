@@ -468,7 +468,7 @@ interface UploadItem { file: File; tipo: string; }
                       <td class="mono">{{ item.cfop || '—' }}</td>
                       <td class="num">{{ item.quantidade }}</td>
                       <td>{{ item.unidade }}</td>
-                      <td class="num">{{ item.valorUnitario | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+                      <td class="num">{{ item.valorUnitario | currency:'BRL':'symbol':'1.3-3':'pt-BR' }}</td>
                       <td class="num">{{ item.valorTotal | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
                     </tr>
                   }

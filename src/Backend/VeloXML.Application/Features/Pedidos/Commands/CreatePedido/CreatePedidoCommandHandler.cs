@@ -52,6 +52,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 CstIcms = i.CstIcms,
                 CstPis = i.CstPis,
                 CstCofins = i.CstCofins,
+                IcmsOrigem = i.IcmsOrigem,
                 IbsCbsCst = i.IbsCbsCst,
                 IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
             };
@@ -92,11 +93,17 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             p.Id, p.Numero, p.ClienteId, p.DestinatarioId,
             p.Destinatario?.RazaoSocial ?? string.Empty,
             p.Status, p.Observacoes, p.ValorTotal, p.CreatedAt,
+            // Prioriza o cadastro ATUAL do Produto sobre a "foto" gravada no item quando ele foi
+            // adicionado ao pedido — mesma lógica de EmitirNfeFocusCommandHandler/
+            // FocusNfePayloadBuilder, senão completar o cadastro fiscal do produto DEPOIS de já
+            // estar num pedido rascunho nunca aparece aqui (item expandido fica em branco).
             p.Itens.Select(i => new PedidoItemDto(
                 i.Id, i.ProdutoId, i.Descricao, i.Unidade,
                 i.Quantidade, i.PrecoUnitario, i.Desconto, i.ValorTotal,
-                i.Cfop, i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins,
-                i.CstIcms, i.CstPis, i.CstCofins, i.IbsCbsCst, i.IbsCbsClassificacaoTributaria
+                i.Produto?.Cfop ?? i.Cfop, i.Produto?.Ncm ?? i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins,
+                i.Produto?.CstIcms ?? i.CstIcms, i.Produto?.CstPis ?? i.CstPis, i.Produto?.CstCofins ?? i.CstCofins,
+                i.Produto?.IcmsOrigem ?? i.IcmsOrigem,
+                i.Produto?.IbsCbsCst ?? i.IbsCbsCst, i.Produto?.IbsCbsClassificacaoTributaria ?? i.IbsCbsClassificacaoTributaria
             )).ToList(),
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
             p.DocumentoId, p.Documento?.Numero, danfe?.Serie, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),

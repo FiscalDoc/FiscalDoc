@@ -18,6 +18,7 @@ public record CreatePedidoItemInput(
     string? CstIcms = null,
     string? CstPis = null,
     string? CstCofins = null,
+    int IcmsOrigem = 0,
     string? IbsCbsCst = null,
     string? IbsCbsClassificacaoTributaria = null
 );

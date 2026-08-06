@@ -72,6 +72,7 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 CstIcms = i.CstIcms,
                 CstPis = i.CstPis,
                 CstCofins = i.CstCofins,
+                IcmsOrigem = i.IcmsOrigem,
                 IbsCbsCst = i.IbsCbsCst,
                 IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
             };

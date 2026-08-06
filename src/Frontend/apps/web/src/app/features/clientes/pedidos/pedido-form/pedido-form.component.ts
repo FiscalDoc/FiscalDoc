@@ -447,7 +447,7 @@ interface ConfirmState {
                     }
                   </td>
                   <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
-                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.001"/></td>
                   <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.desconto" (input)="calcTotal(i)" min="0" step="0.01"/></td>
                   <td class="total-cell">
                     <div>{{ itemTotal(item) | currency:'BRL':'symbol':'1.2-2' }}</div>
@@ -594,7 +594,7 @@ interface ConfirmState {
           </div>
           <div class="field">
             <label class="label">Preço Unitário *</label>
-            <input class="input" type="number" min="0" step="0.01" [(ngModel)]="novoProdutoForm.precoUnitario"/>
+            <input class="input" type="number" min="0" step="0.001" [(ngModel)]="novoProdutoForm.precoUnitario"/>
           </div>
           @if (erroNovoProduto()) { <div class="alert-error">{{ erroNovoProduto() }}</div> }
           <div class="confirm-actions">
@@ -1206,6 +1206,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       cstIcms: i.cstIcms,
       cstPis: i.cstPis,
       cstCofins: i.cstCofins,
+      icmsOrigem: i.icmsOrigem,
       ibsCbsCst: i.ibsCbsCst,
       ibsCbsClassificacaoTributaria: i.ibsCbsClassificacaoTributaria,
     })));
@@ -1309,6 +1310,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       cstIcms: prod.cstIcms,
       cstPis: prod.cstPis,
       cstCofins: prod.cstCofins,
+      icmsOrigem: prod.icmsOrigem,
       ibsCbsCst: prod.ibsCbsCst,
       ibsCbsClassificacaoTributaria: prod.ibsCbsClassificacaoTributaria,
     }]);
@@ -1434,6 +1436,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       cstIcms: prod.cstIcms,
       cstPis: prod.cstPis,
       cstCofins: prod.cstCofins,
+      icmsOrigem: prod.icmsOrigem,
       ibsCbsCst: prod.ibsCbsCst,
       ibsCbsClassificacaoTributaria: prod.ibsCbsClassificacaoTributaria,
     }));

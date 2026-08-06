@@ -17,6 +17,7 @@ export interface PedidoItemDto {
   cstIcms?: string;
   cstPis?: string;
   cstCofins?: string;
+  icmsOrigem?: number;
   ibsCbsCst?: string;
   ibsCbsClassificacaoTributaria?: string;
 }
@@ -72,6 +73,7 @@ export interface PedidoItemInput {
   cstIcms?: string;
   cstPis?: string;
   cstCofins?: string;
+  icmsOrigem?: number;
   ibsCbsCst?: string;
   ibsCbsClassificacaoTributaria?: string;
 }

@@ -17,6 +17,7 @@ public record CreateProdutoCommand(
     string? CstIcms = null,
     string? CstPis = null,
     string? CstCofins = null,
+    int IcmsOrigem = 0,
     string? IbsCbsCst = null,
     string? IbsCbsClassificacaoTributaria = null
 ) : IRequest<Result<ProdutoDto>>;
@@ -38,6 +39,7 @@ public record ProdutoDto(
     string? CstIcms,
     string? CstPis,
     string? CstCofins,
+    int IcmsOrigem,
     string? IbsCbsCst,
     string? IbsCbsClassificacaoTributaria
 );

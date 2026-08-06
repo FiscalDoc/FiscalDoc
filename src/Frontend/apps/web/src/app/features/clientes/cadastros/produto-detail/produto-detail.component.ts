@@ -57,7 +57,7 @@ type Tab = 'geral' | 'fiscal';
               </div>
               <div class="field">
                 <label class="label">Preço Unitário *</label>
-                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.precoUnitario"/>
+                <input class="input" type="number" min="0" step="0.001" [(ngModel)]="form.precoUnitario"/>
               </div>
               @if (!isNew()) {
                 <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
@@ -118,6 +118,14 @@ type Tab = 'geral' | 'fiscal';
               <div class="field">
                 <label class="label">CST COFINS</label>
                 <input class="input" [(ngModel)]="form.cstCofins" placeholder="07" maxlength="2"/>
+              </div>
+              <div class="field col-2">
+                <label class="label">Origem da Mercadoria</label>
+                <select class="input" [(ngModel)]="form.icmsOrigem">
+                  @for (o of origensMercadoria; track o.valor) {
+                    <option [ngValue]="o.valor">{{ o.valor }} - {{ o.label }}</option>
+                  }
+                </select>
               </div>
             </div>
           </div>
@@ -233,6 +241,18 @@ export class ProdutoDetailComponent implements OnInit {
 
   form = this._empty();
 
+  readonly origensMercadoria = [
+    { valor: 0, label: 'Nacional' },
+    { valor: 1, label: 'Estrangeira (importação direta)' },
+    { valor: 2, label: 'Estrangeira (adquirida no mercado interno)' },
+    { valor: 3, label: 'Nacional (conteúdo de importação entre 40% e 70%)' },
+    { valor: 4, label: 'Nacional (Processos Produtivos Básicos)' },
+    { valor: 5, label: 'Nacional (conteúdo de importação até 40%)' },
+    { valor: 6, label: 'Estrangeira (importação direta, sem similar nacional)' },
+    { valor: 7, label: 'Estrangeira (mercado interno, sem similar nacional)' },
+    { valor: 8, label: 'Nacional (conteúdo de importação acima de 70%)' },
+  ];
+
   ngOnInit(): void {
     this.clienteId = this._route.snapshot.paramMap.get('id')!;
     this.produtoId = this._route.snapshot.paramMap.get('produtoId') ?? '';
@@ -255,6 +275,7 @@ export class ProdutoDetailComponent implements OnInit {
       cfop: p.cfop ?? '', precoUnitario: p.precoUnitario, aliquotaIcms: p.aliquotaIcms,
       aliquotaPis: p.aliquotaPis, aliquotaCofins: p.aliquotaCofins, ativo: p.ativo,
       cstIcms: p.cstIcms ?? '', cstPis: p.cstPis ?? '', cstCofins: p.cstCofins ?? '',
+      icmsOrigem: p.icmsOrigem ?? 0,
       ibsCbsCst: p.ibsCbsCst ?? '', ibsCbsClassificacaoTributaria: p.ibsCbsClassificacaoTributaria ?? '',
     };
   }
@@ -281,6 +302,7 @@ export class ProdutoDetailComponent implements OnInit {
       cstIcms: this.form.cstIcms || undefined,
       cstPis: this.form.cstPis || undefined,
       cstCofins: this.form.cstCofins || undefined,
+      icmsOrigem: +this.form.icmsOrigem,
       ibsCbsCst: this.form.ibsCbsCst || undefined,
       ibsCbsClassificacaoTributaria: this.form.ibsCbsClassificacaoTributaria || undefined,
     };
@@ -317,7 +339,8 @@ export class ProdutoDetailComponent implements OnInit {
     return {
       codigo: '', descricao: '', ncm: '', unidade: 'UN', cfop: '', precoUnitario: 0,
       aliquotaIcms: 0, aliquotaPis: 0, aliquotaCofins: 0, ativo: true,
-      cstIcms: '', cstPis: '', cstCofins: '', ibsCbsCst: '', ibsCbsClassificacaoTributaria: '',
+      cstIcms: '', cstPis: '', cstCofins: '', icmsOrigem: 0,
+      ibsCbsCst: '', ibsCbsClassificacaoTributaria: '',
     };
   }
 }

@@ -19,6 +19,7 @@ public record PedidoItemDto(
     string? CstIcms,
     string? CstPis,
     string? CstCofins,
+    int IcmsOrigem,
     string? IbsCbsCst,
     string? IbsCbsClassificacaoTributaria
 );

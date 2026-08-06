@@ -23,6 +23,10 @@ public class Produto : BaseEntity, IAuditableEntity
     public string? CstPis { get; set; }
     public string? CstCofins { get; set; }
 
+    // Origem da mercadoria (tabela oficial SEFAZ, 0-8 — nacional/importada/conteúdo de
+    // importação) — vai no campo icms_origem da Focus NFe, separado do CST/CSOSN.
+    public int IcmsOrigem { get; set; } = 0;
+
     // IBS/CBS (reforma tributária, LC 214/2025) — obrigatório na NF-e a partir de 03/08/2026
     // pra empresas do regime Normal (Simples Nacional/MEI só a partir de 04/2027). CST (3
     // dígitos) e cClassTrib (6 dígitos, classificação da operação numa tabela nacional) variam

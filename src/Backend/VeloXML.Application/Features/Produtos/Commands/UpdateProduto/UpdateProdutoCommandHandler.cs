@@ -28,6 +28,7 @@ public sealed class UpdateProdutoCommandHandler(IUnitOfWork uow)
         produto.CstIcms = request.CstIcms;
         produto.CstPis = request.CstPis;
         produto.CstCofins = request.CstCofins;
+        produto.IcmsOrigem = request.IcmsOrigem;
         produto.IbsCbsCst = request.IbsCbsCst;
         produto.IbsCbsClassificacaoTributaria = request.IbsCbsClassificacaoTributaria;
 

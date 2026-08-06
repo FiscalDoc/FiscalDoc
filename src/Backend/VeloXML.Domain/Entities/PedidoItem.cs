@@ -20,6 +20,7 @@ public class PedidoItem : BaseEntity
     public string? CstIcms { get; set; }
     public string? CstPis { get; set; }
     public string? CstCofins { get; set; }
+    public int IcmsOrigem { get; set; } = 0;
     public string? IbsCbsCst { get; set; }
     public string? IbsCbsClassificacaoTributaria { get; set; }
 
