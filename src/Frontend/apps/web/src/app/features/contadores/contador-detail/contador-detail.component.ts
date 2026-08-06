@@ -530,7 +530,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     .license-badge {
       font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px;
     }
-    .badge-ok    { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .badge-ok    { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
     .badge-block { background: rgba(255,77,109,0.12); color: var(--red); }
     .badge-muted { background: var(--bg3); color: var(--text2); }
 
@@ -569,7 +569,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
       width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .kpi-icon.accent { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .kpi-icon.accent { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
     .kpi-icon.blue   { background: rgba(0,102,255,0.12);  color: #4d94ff; }
     .kpi-icon.yellow { background: rgba(255,209,102,0.12); color: var(--yellow); }
     .kpi-icon.red    { background: rgba(255,77,109,0.12);  color: var(--red); }
@@ -600,7 +600,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     .cell-sub { font-size: 12px; color: var(--text2); }
     .text-mono { font-family: monospace; font-size: 12px; color: var(--text2); }
     .avatar-sm {
-      width: 28px; height: 28px; border-radius: 7px; background: rgba(0,229,160,0.12);
+      width: 28px; height: 28px; border-radius: 7px; background: oklch(0.62 0.17 254 / 0.12);
       color: var(--accent); font-size: 11px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
@@ -673,10 +673,10 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     .btn-danger:hover { background: rgba(255,77,109,0.2); }
     .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-success {
-      background: rgba(0,229,160,0.12); color: var(--accent); border: 1px solid rgba(0,229,160,0.25);
+      background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); border: 1px solid oklch(0.62 0.17 254 / 0.25);
       border-radius: 7px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
     }
-    .btn-success:hover { background: rgba(0,229,160,0.2); }
+    .btn-success:hover { background: oklch(0.62 0.17 254 / 0.2); }
     .btn-warning {
       background: rgba(255,209,102,0.12); color: var(--yellow); border: 1px solid rgba(255,209,102,0.25);
       border-radius: 7px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -689,7 +689,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     }
     .inline-success {
       font-size: 12.5px; color: var(--accent);
-      background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2);
+      background: oklch(0.62 0.17 254 / 0.08); border: 1px solid oklch(0.62 0.17 254 / 0.2);
       border-radius: 7px; padding: 8px 12px; margin-top: 4px;
     }
 

@@ -212,7 +212,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-Pendente { background: rgba(255,209,102,.15); color: var(--yellow); }
-    .badge-Pago { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-Pago { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-Atrasado { background: rgba(255,77,109,.12); color: var(--red); }
 
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -243,7 +243,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
     .input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
     .status-toggle { display: flex; gap: .5rem; }
     .status-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1.25rem; font-size: 13px; cursor: pointer; flex: 1; }
-    .status-btn.active { background: rgba(0,229,160,.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .status-btn.active { background: oklch(0.62 0.17 254 / .12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
     @media (max-width: 900px) {
       .kpis { grid-template-columns: 1fr; }

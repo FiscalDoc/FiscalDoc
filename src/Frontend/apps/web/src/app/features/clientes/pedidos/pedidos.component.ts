@@ -117,10 +117,10 @@ import { PedidoDto } from '@veloxml/models';
     .mono { font-family: monospace; font-size: 12px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-emitido  { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-tipo--nf { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-tipo--nf { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .row-link { cursor: pointer; }

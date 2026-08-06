@@ -60,22 +60,125 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 
     <!-- ─── HERO ────────────────────────────────────────────── -->
     <section class="hero">
-      <div class="hero-glow"></div>
-      <div class="container">
-        <div class="badge-pill">Sistema para Escritórios Contábeis</div>
-        <h1 class="hero-title">
-          Gerencie todos os seus<br>
-          <span class="gradient-text">clientes em um só lugar</span>
-        </h1>
-        <p class="hero-sub">
-          Receba, organize e monitore NF-e, CT-e, MDF-e e NFS-e automaticamente.<br>
-          Alertas inteligentes, histórico completo e controle total!
-        </p>
-        <div class="hero-cta">
-          <a href="#trial" class="btn btn-primary btn-lg btn-cta">
-            Faça um teste grátis
-          </a>
+      <div class="hero-bg">
+        <div class="hero-bg-overlay"></div>
+        <div class="hero-bg-fade"></div>
+      </div>
+      <div class="container hero-container">
+        <div class="hero-copy">
+          <div class="badge-pill">Sistema para Escritórios Contábeis</div>
+          <h1 class="hero-title">
+            Gerencie todos os seus<br>
+            <span class="gradient-text">clientes em um só lugar</span>
+          </h1>
+          <p class="hero-sub">
+            Receba, organize e monitore NF-e, CT-e, MDF-e e NFS-e automaticamente.
+            Alertas inteligentes, histórico completo e controle total!
+          </p>
+          <div class="hero-cta">
+            <a href="#trial" class="btn btn-primary btn-lg btn-cta">
+              Faça um teste grátis
+            </a>
+            <a href="#features" class="btn btn-outline-light btn-lg">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+              </svg>
+              Ver recursos
+            </a>
+          </div>
+          <div class="hero-checks">
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg> Configuração em minutos</span>
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg> 30 dias de teste grátis</span>
+          </div>
         </div>
+
+        <!-- App mockup preview widget -->
+        <div class="app-mockup">
+          <div class="mockup-chrome">
+            <span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span>
+            <span class="mockup-url">app.fiscaldoc.com.br/painel</span>
+          </div>
+          <div class="mockup-body">
+            <aside class="mockup-sidebar">
+              <p class="mockup-sidebar-label">Emissão</p>
+              <nav class="mockup-sidebar-nav">
+                <span class="mockup-nav-item active">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  NF-e
+                </span>
+                <span class="mockup-nav-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  NFC-e
+                </span>
+                <span class="mockup-nav-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7M9 9v.01M9 12v.01M9 15v.01"/></svg>
+                  NFS-e
+                </span>
+              </nav>
+              <p class="mockup-sidebar-label">Gestão</p>
+              <nav class="mockup-sidebar-nav muted">
+                <span class="mockup-nav-item plain">Clientes</span>
+                <span class="mockup-nav-item plain">Produtos</span>
+                <span class="mockup-nav-item plain">Relatórios</span>
+              </nav>
+            </aside>
+
+            <div class="mockup-main">
+              <div class="mockup-main-head">
+                <div>
+                  <h3>Notas emitidas em agosto</h3>
+                  <p>Atualizado há 2 minutos</p>
+                </div>
+                <span class="mockup-new-btn">Nova nota</span>
+              </div>
+
+              <div class="mockup-kpis">
+                <div class="mockup-kpi">
+                  <p class="kpi-label">Faturamento</p>
+                  <p class="kpi-value">R$ 238.104</p>
+                  <p class="kpi-delta">↑ 12,4%</p>
+                </div>
+                <div class="mockup-kpi">
+                  <p class="kpi-label">Notas autorizadas</p>
+                  <p class="kpi-value">1.284</p>
+                  <p class="kpi-delta">↑ 8,1%</p>
+                </div>
+                <div class="mockup-kpi">
+                  <p class="kpi-label">Rejeições</p>
+                  <p class="kpi-value">0,3%</p>
+                  <p class="kpi-delta down">↓ 1,2%</p>
+                </div>
+              </div>
+
+              <div class="mockup-table-wrap">
+                <table class="mockup-table">
+                  <thead>
+                    <tr><th>Documento</th><th class="hide-sm">Destinatário</th><th>Valor</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>NF-e 004512</td><td class="hide-sm">Ventura Comércio LTDA</td><td>R$ 12.480,00</td>
+                      <td><span class="mockup-status ok">Autorizada</span></td>
+                    </tr>
+                    <tr>
+                      <td>NFC-e 009274</td><td class="hide-sm">Consumidor final</td><td>R$ 289,90</td>
+                      <td><span class="mockup-status ok">Autorizada</span></td>
+                    </tr>
+                    <tr>
+                      <td>NFS-e 001188</td><td class="hide-sm">Prisma Serviços ME</td><td>R$ 3.150,00</td>
+                      <td><span class="mockup-status ok">Autorizada</span></td>
+                    </tr>
+                    <tr>
+                      <td>NF-e 004511</td><td class="hide-sm">Loja Norte Distribuidora</td><td>R$ 7.905,40</td>
+                      <td><span class="mockup-status pending">Processando</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="hero-stats">
           <div class="stat">
             <span class="stat-num">4</span>
@@ -386,56 +489,89 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     <!-- ─── FOOTER ────────────────────────────────────────────── -->
     <footer class="footer">
       <div class="container">
-        <div class="footer-inner">
-          <div class="footer-brand">
-            <span class="brand-icon">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                <path d="M6 3.5h8.5L19 8v12.5H6z" stroke-linejoin="round"/>
-                <path d="M14 3.5V8h5" stroke-linejoin="round"/>
-                <path d="M9 13h6M9 16.5h4" stroke-linecap="round"/>
-              </svg>
-            </span>
-            <span class="brand-fiscal">Fiscal</span><span class="brand-doc">Doc</span>
-          </div>
-          <p class="footer-copy">© 2025 FiscalDoc. Hub Fiscal para Contadores.</p>
-
-          @if (hasSocialLinks()) {
-            <div class="footer-social">
-              @if (social()?.instagram) {
-                <a [href]="social()!.instagram" target="_blank" rel="noopener" aria-label="Instagram" class="social-link">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                    <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path>
-                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                  </svg>
-                </a>
-              }
-              @if (social()?.facebook) {
-                <a [href]="social()!.facebook" target="_blank" rel="noopener" aria-label="Facebook" class="social-link">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
-                  </svg>
-                </a>
-              }
-              @if (social()?.linkedin) {
-                <a [href]="social()!.linkedin" target="_blank" rel="noopener" aria-label="LinkedIn" class="social-link">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"></path>
-                    <rect x="2" y="9" width="4" height="12"></rect>
-                    <circle cx="4" cy="4" r="2"></circle>
-                  </svg>
-                </a>
-              }
-              @if (social()?.tiktok) {
-                <a [href]="social()!.tiktok" target="_blank" rel="noopener" aria-label="TikTok" class="social-link">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0115.54 3h-3.09v12.4a2.592 2.592 0 01-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 004.3 1.38V7.3s-1.88.09-3.24-1.48z"/>
-                  </svg>
-                </a>
-              }
+        <div class="footer-grid">
+          <div class="footer-col footer-col-brand">
+            <div class="footer-brand">
+              <span class="brand-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                  <path d="M6 3.5h8.5L19 8v12.5H6z" stroke-linejoin="round"/>
+                  <path d="M14 3.5V8h5" stroke-linejoin="round"/>
+                  <path d="M9 13h6M9 16.5h4" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <span class="brand-fiscal">Fiscal</span><span class="brand-doc">Doc</span>
             </div>
-          }
+            <p class="footer-tagline">Receba, organize e monitore NF-e, CT-e, MDF-e e NFS-e automaticamente.</p>
 
+            @if (hasSocialLinks()) {
+              <div class="footer-social">
+                @if (social()?.instagram) {
+                  <a [href]="social()!.instagram" target="_blank" rel="noopener" aria-label="Instagram" class="social-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                      <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path>
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                  </a>
+                }
+                @if (social()?.facebook) {
+                  <a [href]="social()!.facebook" target="_blank" rel="noopener" aria-label="Facebook" class="social-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
+                    </svg>
+                  </a>
+                }
+                @if (social()?.linkedin) {
+                  <a [href]="social()!.linkedin" target="_blank" rel="noopener" aria-label="LinkedIn" class="social-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"></path>
+                      <rect x="2" y="9" width="4" height="12"></rect>
+                      <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                  </a>
+                }
+                @if (social()?.tiktok) {
+                  <a [href]="social()!.tiktok" target="_blank" rel="noopener" aria-label="TikTok" class="social-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0115.54 3h-3.09v12.4a2.592 2.592 0 01-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 004.3 1.38V7.3s-1.88.09-3.24-1.48z"/>
+                    </svg>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="footer-col">
+            <h3>Navegação</h3>
+            <ul>
+              <li><a href="#features">Recursos</a></li>
+              <li><a href="#how">Como funciona</a></li>
+              <li><a href="#plans">Planos</a></li>
+              <li><a routerLink="/blog">Blog</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Suporte</h3>
+            <ul>
+              <li><a href="#faq">FAQ</a></li>
+              <li><a href="#contact">Contato</a></li>
+              <li><a [href]="wpp" target="_blank">Falar no WhatsApp</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Sistema</h3>
+            <ul>
+              <li><a href="https://app.fiscaldoc.com.br/auth/login">Acessar sistema</a></li>
+              <li><a href="#trial">Criar conta gratuita</a></li>
+              <li><a href="#" class="link">Termos de Uso</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p class="footer-copy">© 2025 FiscalDoc. Hub Fiscal para Contadores.</p>
           <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline btn-sm">Acessar sistema</a>
         </div>
       </div>
@@ -451,28 +587,23 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
   styles: [`
     /* ─── RESET ──────────────────────────────── */
     :host {
-      --lg-bg: oklch(1 0 0);
-      --lg-fg: oklch(0.21 0.035 258);
-      --lg-muted: oklch(0.53 0.03 256);
-      --lg-muted-foreground: oklch(0.53 0.03 256);
-      --lg-border: oklch(0.92 0.012 252);
-      --lg-input: oklch(0.92 0.012 252);
-      --lg-brand: oklch(0.48 0.16 255);
-      --lg-brand-foreground: oklch(0.99 0.005 250);
-      --lg-brand-deep: oklch(0.28 0.09 262);
-      --lg-brand-soft: oklch(0.95 0.03 250);
-      --lg-cta: oklch(0.66 0.17 158);
-      --lg-cta-foreground: oklch(0.16 0.04 160);
-      --lg-secondary: oklch(0.968 0.008 250);
-      --lg-secondary-foreground: oklch(0.32 0.05 258);
-      --lg-accent: oklch(0.955 0.02 250);
-      --lg-red: oklch(0.577 0.245 27.325);
-      --lg-surface: oklch(0.982 0.006 250);
-      --lg-footer: oklch(0.28 0.09 262);
-      --lg-footer-fg: oklch(0.99 0.005 250);
-      --lg-shadow-soft: 0 1px 2px oklch(0.28 0.09 262 / 0.06), 0 8px 24px oklch(0.28 0.09 262 / 0.06);
-      --lg-shadow-lift: 0 2px 4px oklch(0.28 0.09 262 / 0.06), 0 24px 60px oklch(0.28 0.09 262 / 0.12);
-      --lg-gradient-brand: linear-gradient(135deg, var(--lg-brand-deep), var(--lg-brand));
+      --lg-bg: oklch(0.16 0.03 262);
+      --lg-fg: oklch(0.97 0.008 250);
+      --lg-muted: oklch(0.74 0.025 256);
+      --lg-border: oklch(1 0 0 / 12%);
+      --lg-input: oklch(1 0 0 / 16%);
+      --lg-brand: oklch(0.62 0.17 254);
+      --lg-brand-foreground: white;
+      --lg-brand-deep: oklch(0.97 0.01 250);
+      --lg-brand-soft: oklch(0.29 0.06 256);
+      --lg-cta: oklch(0.78 0.17 158);
+      --lg-red: oklch(0.62 0.2 25);
+      --lg-surface: oklch(0.185 0.032 262);
+      --lg-footer: oklch(0.125 0.028 262);
+      --lg-footer-fg: oklch(0.97 0.008 250);
+      --lg-shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0 0 0 / 0.35);
+      --lg-shadow-lift: 0 2px 4px oklch(0 0 0 / 0.4), 0 24px 60px oklch(0 0 0 / 0.5);
+      --lg-gradient-brand: linear-gradient(135deg, oklch(0.3 0.09 262), var(--lg-brand));
       display: block; font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
       letter-spacing: -0.011em; background: var(--lg-bg); color: var(--lg-fg);
     }
@@ -494,6 +625,8 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
     .btn-outline { border: 1px solid var(--lg-border); color: var(--lg-fg); background: transparent; }
     .btn-outline:hover { border-color: var(--lg-brand); background: var(--lg-brand-soft); }
+    .btn-outline-light { border: 1px solid oklch(1 0 0 / 25%); color: white; background: oklch(1 0 0 / 10%); backdrop-filter: blur(4px); }
+    .btn-outline-light:hover { background: oklch(1 0 0 / 20%); transform: translateY(-1px); }
     .btn-ghost { color: var(--lg-muted); background: transparent; }
     .btn-ghost:hover { color: var(--lg-fg); }
     .btn-cta { text-transform: uppercase; letter-spacing: 0.03em; }
@@ -501,7 +634,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     /* ─── NAV ────────────────────────────────── */
     .nav {
       position: sticky; top: 0; z-index: 100;
-      background: oklch(1 0 0 / 0.85); backdrop-filter: blur(12px);
+      background: oklch(0.16 0.03 262 / 0.75); backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--lg-border);
     }
     .nav-inner {
@@ -537,22 +670,31 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     /* ─── HERO ───────────────────────────────── */
     .hero {
       position: relative; overflow: hidden;
-      padding: 100px 0 80px; text-align: center; background: var(--lg-surface);
+      padding: 6.5rem 0 5rem; text-align: left; background: var(--lg-surface);
     }
-    .hero-glow {
-      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
-      width: 800px; height: 600px; border-radius: 50%;
-      background: radial-gradient(ellipse, oklch(0.48 0.16 255 / 0.12) 0%, transparent 70%);
-      pointer-events: none;
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: url('/assets/landing/hero-banner.jpg') center / cover no-repeat;
     }
+    .hero-bg-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(100deg, oklch(0.16 0.03 262 / 0.96) 12%, oklch(0.16 0.03 262 / 0.88) 45%, oklch(0.16 0.03 262 / 0.55) 100%);
+    }
+    .hero-bg-fade {
+      position: absolute; inset-inline: 0; bottom: 0; height: 9rem;
+      background: linear-gradient(to bottom, transparent, var(--lg-surface));
+    }
+    .hero-container { position: relative; z-index: 1; }
+    .hero-copy { max-width: 42rem; }
     .badge-pill {
-      display: inline-flex; align-items: center;
-      background: var(--lg-brand-soft); border: 1px solid oklch(0.48 0.16 255 / 0.2);
-      color: var(--lg-brand); border-radius: 999px; padding: 6px 16px; font-size: 13px; font-weight: 600;
-      margin-bottom: 1.5rem; letter-spacing: 0.02em;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: oklch(1 0 0 / 10%); border: 1px solid oklch(1 0 0 / 20%); backdrop-filter: blur(4px);
+      color: oklch(1 0 0 / 88%); border-radius: 999px; padding: 7px 16px; font-size: 12.5px; font-weight: 500;
+      margin-bottom: 1.75rem; letter-spacing: 0.01em;
     }
+    .badge-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--lg-cta); flex-shrink: 0; }
     .hero-title {
-      font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; line-height: 1.15;
+      font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.12;
       color: var(--lg-brand-deep); margin-bottom: 1.25rem; letter-spacing: -0.02em;
     }
     .gradient-text {
@@ -560,10 +702,53 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .hero-sub {
-      font-size: clamp(1rem, 2vw, 1.15rem); color: var(--lg-muted); line-height: 1.7;
-      max-width: 640px; margin: 0 auto 2.5rem;
+      font-size: clamp(1rem, 2vw, 1.125rem); color: oklch(1 0 0 / 78%); line-height: 1.7;
+      max-width: 640px; margin: 0 0 2.25rem;
     }
-    .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3.5rem; }
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
+    .hero-checks { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 3.5rem; }
+    .hero-checks span { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: oklch(1 0 0 / 72%); }
+    .hero-checks svg { color: var(--lg-cta); flex-shrink: 0; }
+
+    /* App mockup preview widget */
+    .app-mockup {
+      max-width: 980px; margin: 0 auto 3.5rem; border-radius: 18px; overflow: hidden;
+      background: var(--lg-bg); border: 1px solid var(--lg-border); box-shadow: var(--lg-shadow-lift);
+    }
+    .mockup-chrome { display: flex; align-items: center; gap: 7px; padding: 12px 16px; background: var(--lg-surface); border-bottom: 1px solid var(--lg-border); }
+    .mockup-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--lg-border); }
+    .mockup-url { margin-left: 10px; font-size: 11.5px; color: var(--lg-muted); background: var(--lg-bg); border-radius: 6px; padding: 4px 12px; }
+    .mockup-body { display: grid; }
+    @media (min-width: 900px) { .mockup-body { grid-template-columns: 190px minmax(0, 1fr); } }
+    .mockup-sidebar { display: none; padding: 1rem; border-right: 1px solid var(--lg-border); }
+    @media (min-width: 900px) { .mockup-sidebar { display: block; } }
+    .mockup-sidebar-label { padding: 0 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--lg-muted); }
+    .mockup-sidebar-nav { display: flex; flex-direction: column; gap: 3px; margin: 10px 0 22px; }
+    .mockup-nav-item { display: flex; align-items: center; gap: 9px; border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--lg-muted); }
+    .mockup-nav-item.active { background: var(--lg-brand-soft); color: var(--lg-brand-deep); font-weight: 600; }
+    .mockup-nav-item.plain { padding-left: 10px; }
+    .mockup-main { padding: 1.25rem 1.5rem; }
+    .mockup-main-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .mockup-main-head h3 { font-size: 15px; font-weight: 600; color: var(--lg-fg); }
+    .mockup-main-head p { font-size: 11.5px; color: var(--lg-muted); margin-top: 2px; }
+    .mockup-new-btn { flex-shrink: 0; background: var(--lg-brand); color: white; font-size: 12px; font-weight: 600; border-radius: 10px; padding: 8px 14px; }
+    .mockup-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 1.25rem; }
+    .mockup-kpi { border: 1px solid var(--lg-border); border-radius: 12px; padding: 14px; }
+    .kpi-label { font-size: 11px; color: var(--lg-muted); }
+    .kpi-value { font-size: 17px; font-weight: 700; color: var(--lg-brand-deep); margin-top: 4px; letter-spacing: -0.01em; }
+    .kpi-delta { font-size: 11px; font-weight: 600; color: var(--lg-cta); margin-top: 4px; }
+    .kpi-delta.down { color: var(--lg-red); }
+    .mockup-table-wrap { margin-top: 1.25rem; border: 1px solid var(--lg-border); border-radius: 12px; overflow: hidden; overflow-x: auto; }
+    .mockup-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+    .mockup-table thead { background: var(--lg-surface); color: var(--lg-muted); }
+    .mockup-table th { text-align: left; font-weight: 500; padding: 9px 14px; }
+    .mockup-table td { padding: 11px 14px; border-top: 1px solid var(--lg-border); color: var(--lg-fg); }
+    .mockup-table .hide-sm { display: none; }
+    @media (min-width: 640px) { .mockup-table .hide-sm { display: table-cell; } }
+    .mockup-status { display: inline-flex; border-radius: 999px; padding: 3px 9px; font-size: 10.5px; font-weight: 600; }
+    .mockup-status.ok { background: oklch(0.78 0.17 158 / 18%); color: var(--lg-cta); }
+    .mockup-status.pending { background: var(--lg-border); color: var(--lg-muted); }
+
     .hero-stats {
       display: flex; align-items: center; justify-content: center; gap: 2rem;
       flex-wrap: wrap; border-top: 1px solid var(--lg-border); padding-top: 2.5rem;
@@ -573,7 +758,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .stat-label { font-size: 12px; color: var(--lg-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
     .stat-div { width: 1px; height: 40px; background: var(--lg-border); }
 
-    /* ─── SECTION COMMON ─────────────────────── */
+    /* ─── SECTION COMMON (eyebrow + heading) ──── */
     .section-label {
       display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.1em; color: var(--lg-brand); margin-bottom: 0.75rem;
@@ -583,13 +768,16 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .section-sub { font-size: 1rem; color: var(--lg-muted); line-height: 1.7; max-width: 560px; }
 
     /* ─── FEATURES ───────────────────────────── */
-    .features { padding: 100px 0; background: var(--lg-bg); }
+    .features { padding: 5rem 0; background: var(--lg-bg); }
+    @media (min-width: 640px) { .features { padding: 7rem 0; } }
     .features > .container > .section-sub { margin-bottom: 3.5rem; }
     .features-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
     }
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .features-grid { grid-template-columns: 1fr; } }
     .feature-card {
-      background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 16px;
+      background: var(--lg-surface); border: 1px solid var(--lg-border); border-radius: 16px;
       padding: 1.75rem; display: flex; flex-direction: column; gap: 0.875rem;
       transition: border-color 200ms, transform 200ms, box-shadow 200ms;
     }
@@ -605,7 +793,8 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .feature-card p  { font-size: 14px; color: var(--lg-muted); line-height: 1.65; }
 
     /* ─── HOW IT WORKS ───────────────────────── */
-    .how { padding: 100px 0; background: var(--lg-surface); }
+    .how { padding: 5rem 0; background: var(--lg-surface); }
+    @media (min-width: 640px) { .how { padding: 7rem 0; } }
     .how .section-title { margin-bottom: 3.5rem; }
     .steps { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
     .step { flex: 1; min-width: 220px; background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 16px; padding: 2rem; box-shadow: var(--lg-shadow-soft); }
@@ -615,27 +804,33 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .step-arrow { font-size: 1.5rem; color: var(--lg-border); align-self: center; flex-shrink: 0; }
 
     /* ─── PLANS ──────────────────────────────── */
-    .plans { padding: 100px 0; background: var(--lg-bg); }
+    .plans { padding: 5rem 0; background: var(--lg-bg); }
+    @media (min-width: 640px) { .plans { padding: 7rem 0; } }
     .plans .section-sub { margin-bottom: 3.5rem; max-width: 640px; }
     .plan-card {
-      background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 16px;
+      background: var(--lg-surface); border: 1px solid var(--lg-border); border-radius: 18px;
       padding: 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; position: relative;
       box-shadow: var(--lg-shadow-soft);
     }
-    .plan-single { max-width: 480px; border-color: var(--lg-brand); box-shadow: var(--lg-shadow-lift); background: linear-gradient(145deg, var(--lg-brand-soft), var(--lg-bg)); }
+    .plan-single {
+      max-width: 480px; border-color: var(--lg-brand);
+      box-shadow: var(--lg-shadow-lift), 0 0 0 1px oklch(0.62 0.17 254 / 25%);
+      background: linear-gradient(145deg, var(--lg-brand-soft), var(--lg-surface));
+    }
     .plan-badge {
       align-self: flex-start;
       background: var(--lg-brand-soft); color: var(--lg-brand); font-size: 11px; font-weight: 800;
       padding: 5px 14px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.04em;
-      border: 1px solid oklch(0.48 0.16 255 / 0.2);
+      border: 1px solid oklch(0.62 0.17 254 / 0.3);
     }
-    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--lg-border); padding-top: 1.5rem; }
     .plan-features li { font-size: 14px; color: var(--lg-fg); display: flex; align-items: center; gap: 8px; }
     .check { color: var(--lg-cta); font-weight: 700; }
     .plans-note { text-align: left; max-width: 480px; font-size: 13px; color: var(--lg-muted); margin-top: 1.5rem; }
 
     /* ─── FAQ ────────────────────────────────── */
-    .faq { padding: 100px 0; background: var(--lg-surface); }
+    .faq { padding: 5rem 0; background: var(--lg-surface); }
+    @media (min-width: 640px) { .faq { padding: 7rem 0; } }
     .faq .section-sub { margin-bottom: 3rem; }
     .faq-list { display: flex; flex-direction: column; gap: 0.75rem; max-width: 780px; }
     .faq-item { background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 16px; overflow: hidden; transition: border-color 200ms; }
@@ -648,7 +843,8 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .faq-answer p { font-size: 14px; color: var(--lg-muted); line-height: 1.75; white-space: pre-line; }
 
     /* ─── CTA ────────────────────────────────── */
-    .cta-section { padding: 100px 0; background: var(--lg-bg); }
+    .cta-section { padding: 5rem 0; background: var(--lg-bg); }
+    @media (min-width: 640px) { .cta-section { padding: 7rem 0; } }
     .cta-card {
       position: relative; overflow: hidden;
       background: var(--lg-gradient-brand); border: none;
@@ -669,21 +865,34 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .cta-btns .btn-ghost:hover { color: white; }
 
     /* ─── FOOTER ─────────────────────────────── */
-    .footer { padding: 1.75rem 0; background: var(--lg-footer); color: var(--lg-footer-fg); }
-    .footer-inner { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .footer { padding: 4.5rem 0 0; background: var(--lg-footer); color: var(--lg-footer-fg); }
+    .footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 2.5rem; }
+    @media (max-width: 900px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-col-brand { min-width: 0; }
     .footer-brand { display: flex; align-items: center; gap: 8px; }
     .footer-brand .brand-icon { width: 28px; height: 28px; background: oklch(1 0 0 / 0.12); box-shadow: none; }
     .footer-brand .brand-fiscal { color: var(--lg-footer-fg); }
     .footer-brand .brand-doc { color: var(--lg-footer-fg); opacity: .65; }
-    .footer-copy { flex: 1; font-size: 13px; color: oklch(0.99 0.005 250 / 0.6); }
-    .footer-social { display: flex; align-items: center; gap: .625rem; }
-    .social-link { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: oklch(0.99 0.005 250 / 0.8); border: 1px solid oklch(0.99 0.005 250 / 0.15); }
-    .social-link:hover { color: white; border-color: oklch(0.99 0.005 250 / 0.4); }
-    .footer .btn-outline { border-color: oklch(0.99 0.005 250 / 0.25); color: var(--lg-footer-fg); }
-    .footer .btn-outline:hover { border-color: oklch(0.99 0.005 250 / 0.5); background: oklch(1 0 0 / 0.08); }
+    .footer-tagline { margin-top: 1rem; max-width: 22rem; font-size: 13px; line-height: 1.6; color: oklch(0.97 0.008 250 / 0.62); }
+    .footer-social { display: flex; align-items: center; gap: .625rem; margin-top: 1.5rem; }
+    .social-link { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: oklch(0.97 0.008 250 / 0.8); border: 1px solid oklch(0.97 0.008 250 / 0.15); }
+    .social-link:hover { color: white; border-color: oklch(0.97 0.008 250 / 0.4); }
+    .footer-col h3 { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: oklch(0.97 0.008 250 / 0.55); }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 1rem; }
+    .footer-col ul a { font-size: 13.5px; color: oklch(0.97 0.008 250 / 0.8); transition: color 150ms; }
+    .footer-col ul a:hover { color: white; }
+    .footer-bottom {
+      display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;
+      margin-top: 3rem; padding: 1.5rem 0; border-top: 1px solid oklch(0.97 0.008 250 / 0.12);
+    }
+    .footer-copy { font-size: 12.5px; color: oklch(0.97 0.008 250 / 0.55); }
+    .footer .btn-outline { border-color: oklch(0.97 0.008 250 / 0.25); color: var(--lg-footer-fg); }
+    .footer .btn-outline:hover { border-color: oklch(0.97 0.008 250 / 0.5); background: oklch(1 0 0 / 0.08); }
 
     /* ─── TRIAL ─────────────────────────────── */
-    .trial-section { padding: 100px 0; background: var(--lg-surface); }
+    .trial-section { padding: 5rem 0; background: var(--lg-surface); }
+    @media (min-width: 640px) { .trial-section { padding: 7rem 0; } }
     .trial-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
     .comparison-col .section-sub { margin-bottom: 2rem; }
     .comparison-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 1.5rem; }
@@ -692,7 +901,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .comparison-table td:first-child { color: var(--lg-fg); }
     .comparison-table td.yes { color: var(--lg-cta); font-weight: 600; }
     .comparison-table td.no  { color: var(--lg-muted); opacity: .6; }
-    .badge-free { display: inline-block; background: oklch(0.66 0.17 158 / 0.15); color: var(--lg-cta); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 4px; vertical-align: middle; }
+    .badge-free { display: inline-block; background: oklch(0.78 0.17 158 / 0.18); color: var(--lg-cta); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 4px; vertical-align: middle; }
 
     .register-col { position: sticky; top: 88px; }
     .register-card { background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 20px; overflow: hidden; box-shadow: var(--lg-shadow-lift); }
@@ -703,10 +912,10 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .register-form .form-group { display: flex; flex-direction: column; gap: 6px; }
     .register-form label { font-size: 13px; font-weight: 600; color: var(--lg-fg); }
     .register-form input { background: var(--lg-bg); border: 1px solid var(--lg-input); border-radius: 10px; padding: 11px 14px; color: var(--lg-fg); font-size: 14px; outline: none; transition: border-color 150ms, box-shadow 150ms; font-family: inherit; }
-    .register-form input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.48 0.16 255 / 0.15); }
+    .register-form input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.62 0.17 254 / 0.22); }
     .register-form input.error { border-color: var(--lg-red); }
     .field-error { font-size: 12px; color: var(--lg-red); }
-    .alert-form-error { background: oklch(0.577 0.245 27.325 / 0.08); border: 1px solid oklch(0.577 0.245 27.325 / 0.25); color: var(--lg-red); border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+    .alert-form-error { background: oklch(0.62 0.2 25 / 0.1); border: 1px solid oklch(0.62 0.2 25 / 0.3); color: var(--lg-red); border-radius: 10px; padding: 10px 14px; font-size: 13px; }
     .register-terms { font-size: 12px; color: var(--lg-muted); text-align: center; }
     .register-terms .link { color: var(--lg-muted); text-decoration: underline; }
     .register-success { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 3rem 2rem; text-align: center; }
@@ -740,6 +949,9 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       .cta-card { padding: 3rem 1.25rem; }
       .trial-grid { grid-template-columns: 1fr; }
       .register-col { position: static; }
+      .hero-cta a { width: 100%; justify-content: center; }
+      .mockup-kpis { grid-template-columns: 1fr; }
+      .footer-bottom { justify-content: flex-start; }
     }
   `]
 })

@@ -552,8 +552,8 @@ interface UploadItem { file: File; tipo: string; }
     /* ── Alerts ── */
     .alert-banner {
       padding: 10px 14px; border-radius: 8px; font-size: 13px;
-      background: rgba(0,229,160,0.1); color: var(--accent);
-      border: 1px solid rgba(0,229,160,0.2);
+      background: oklch(0.62 0.17 254 / 0.1); color: var(--accent);
+      border: 1px solid oklch(0.62 0.17 254 / 0.2);
     }
     .alert-error { background: rgba(255,77,109,0.1); color: var(--red); border-color: rgba(255,77,109,0.2); }
 
@@ -619,13 +619,13 @@ interface UploadItem { file: File; tipo: string; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-tipo    { background: var(--bg3); color: var(--text2); }
     .badge-Pendente { background: rgba(255,209,102,0.15); color: var(--yellow); }
-    .badge-Valido  { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .badge-Valido  { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
     .badge-Alerta  { background: rgba(255,209,102,0.15); color: var(--yellow); }
     .badge-Duplicado { background: rgba(255,77,109,0.12); color: var(--red); }
     .badge-origem-Manual { background: var(--bg3); color: var(--text2); }
     .badge-origem-ImportacaoEmail { background: rgba(77,148,255,0.12); color: #4d94ff; }
-    .badge-origem-ApiIngest { background: rgba(0,229,160,0.12); color: var(--accent); }
-    .badge-origem-FocusNfe { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .badge-origem-ApiIngest { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
+    .badge-origem-FocusNfe { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
 
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
     .pagination {

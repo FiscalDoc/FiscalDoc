@@ -516,7 +516,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .module-disabled svg:first-child { color: var(--text2); }
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-green { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-gray { background: rgba(124,130,153,.12); color: var(--text2); }
 
@@ -544,7 +544,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .nfe-info { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .75rem 0; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
-    .alert-ok { background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-ok { background: oklch(0.62 0.17 254 / .1); border: 1px solid oklch(0.62 0.17 254 / .3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }

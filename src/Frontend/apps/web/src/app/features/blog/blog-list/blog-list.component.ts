@@ -108,7 +108,7 @@ import { environment } from '../../../../environments/environment';
     .cover { width: 100%; height: 170px; object-fit: cover; }
     .cover-placeholder { background: linear-gradient(135deg, var(--bg3), var(--bg2)); }
     .card-body { padding: 1.1rem; display: flex; flex-direction: column; gap: .5rem; flex: 1; }
-    .chip { align-self: flex-start; background: rgba(0,229,160,.12); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; }
+    .chip { align-self: flex-start; background: oklch(0.62 0.17 254 / .12); color: var(--accent); border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; }
     .card-title { margin: 0; font-size: 1.1rem; font-weight: 700; line-height: 1.3; }
     .card-resumo { margin: 0; color: var(--text2); font-size: 13.5px; line-height: 1.5; flex: 1; }
     .card-meta { display: flex; gap: .75rem; color: var(--text2); font-size: 12px; }

@@ -137,7 +137,7 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
     .link-btn.danger { color: var(--red); }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-rascunho { background: rgba(255,255,255,.08); color: var(--text2); }
-    .badge-publicado { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-publicado { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-agendado { background: rgba(255,193,7,.15); color: #ffc107; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }

@@ -200,7 +200,7 @@ type Tab = 'geral' | 'acesso';
     .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 13.5px; color: var(--text); }
     .info-label { display: block; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-green { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-gray  { background: var(--bg3); color: var(--text2); }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; margin-bottom: 1.25rem; }

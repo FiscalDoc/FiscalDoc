@@ -314,12 +314,12 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .badge-yellow { background: rgba(255,193,7,.12); color: #ffc107; }
     .field-hint { font-size: 12px; color: var(--text2); }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-    .badge-green { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-green { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-red   { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-gray  { background: var(--bg3); color: var(--text2); }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
-    .alert-ok { background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-ok { background: oklch(0.62 0.17 254 / .1); border: 1px solid oklch(0.62 0.17 254 / .3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .form-actions { display: flex; align-items: center; justify-content: space-between; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }

@@ -274,11 +274,11 @@ type ModalMode = 'create';
     .avatar-blocked { background: rgba(255,77,109,.12); color: var(--red); }
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-green   { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-green   { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-red     { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-yellow  { background: rgba(255,209,102,.15); color: var(--yellow); }
     .badge-info    { background: var(--bg3); color: var(--text2); }
-    .badge-Pago    { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-Pago    { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-Pendente{ background: rgba(255,209,102,.15); color: var(--yellow); }
     .badge-Atrasado{ background: rgba(255,77,109,.12); color: var(--red); }
 
@@ -352,7 +352,7 @@ type ModalMode = 'create';
 
     /* Sucesso */
     .success-wrap { display: flex; flex-direction: column; align-items: center; padding: 2.5rem 2rem; gap: 1rem; text-align: center; }
-    .success-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,229,160,.12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
+    .success-icon { width: 60px; height: 60px; border-radius: 50%; background: oklch(0.62 0.17 254 / .12); color: var(--accent); display: flex; align-items: center; justify-content: center; }
     .success-title { margin: 0; font-size: 1.25rem; }
     .success-sub { color: var(--text2); font-size: 14px; margin: 0; }
     .success-close-btn { min-width: 140px; justify-content: center; }

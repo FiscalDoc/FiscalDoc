@@ -746,7 +746,7 @@ interface ConfirmState {
     .icon-btn.danger:hover:not(:disabled) { background: rgba(255,77,109,.1); border-color: var(--red); color: var(--red); }
     .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-emitido  { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-emitido  { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-processando { background: rgba(255,193,7,.12); color: #ffc107; }
     .badge-rejeitado { background: rgba(255,77,109,.12); color: var(--red); }
@@ -758,7 +758,7 @@ interface ConfirmState {
     .section-title-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
     .form-subheading { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); border-top: 1px solid var(--border); padding-top: .75rem; margin-top: .125rem; }
     .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-tipo--nf { background: rgba(0,229,160,.12); color: var(--accent); }
+    .badge-tipo--nf { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .list-header { display: flex; align-items: center; justify-content: space-between; }
     .frequentes-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .frequentes-label { font-size: 12px; color: var(--text2); flex-shrink: 0; }
@@ -783,7 +783,7 @@ interface ConfirmState {
     .input-sm.num { text-align: right; }
     .input-sm.error, select.input-sm.error { border-color: var(--red); }
     .impostos-form-grid { grid-template-columns: repeat(4, 1fr); gap: .75rem .875rem; }
-    .imposto-destaque:disabled { color: var(--accent); font-weight: 700; opacity: 1; border-color: rgba(0,229,160,.35); }
+    .imposto-destaque:disabled { color: var(--accent); font-weight: 700; opacity: 1; border-color: oklch(0.62 0.17 254 / .35); }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 1.5rem; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }

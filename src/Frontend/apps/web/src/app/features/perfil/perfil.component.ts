@@ -187,8 +187,8 @@ import { Setup2faResponse } from '@veloxml/models';
     .acesso-card {
       display: flex; align-items: flex-start; gap: 1rem;
       padding: 1.25rem 1.5rem;
-      border-color: rgba(0,229,160,0.25);
-      background: rgba(0,229,160,0.05);
+      border-color: oklch(0.62 0.17 254 / 0.25);
+      background: oklch(0.62 0.17 254 / 0.05);
     }
     .acesso-card.acesso-critico {
       border-color: rgba(255,209,102,0.35);
@@ -200,7 +200,7 @@ import { Setup2faResponse } from '@veloxml/models';
     }
     .acesso-icon {
       width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
-      background: rgba(0,229,160,0.12); color: var(--accent);
+      background: oklch(0.62 0.17 254 / 0.12); color: var(--accent);
       display: flex; align-items: center; justify-content: center;
     }
     .acesso-critico .acesso-icon { background: rgba(255,209,102,0.12); color: var(--yellow); }
@@ -259,7 +259,7 @@ import { Setup2faResponse } from '@veloxml/models';
     }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
-    .alert-ok { display: flex; align-items: center; gap: 8px; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-ok { display: flex; align-items: center; gap: 8px; background: oklch(0.62 0.17 254 / .1); border: 1px solid oklch(0.62 0.17 254 / .3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
     .form-actions { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); }
     .btn-primary {

@@ -321,7 +321,7 @@ interface NavItem {
     }
 
     .nav-item.active {
-      background: var(--accent-dim, rgba(0,229,160,0.12));
+      background: var(--accent-dim, oklch(0.62 0.17 254 / 0.12));
       color: var(--accent);
     }
 
@@ -357,8 +357,8 @@ interface NavItem {
       font-size: 10px;
       font-weight: 600;
       color: var(--accent);
-      background: var(--accent-dim, rgba(0,229,160,0.1));
-      border: 1px solid rgba(0,229,160,0.2);
+      background: var(--accent-dim, oklch(0.62 0.17 254 / 0.1));
+      border: 1px solid oklch(0.62 0.17 254 / 0.2);
       border-radius: 4px;
       padding: 2px 7px;
       text-transform: uppercase;
@@ -388,7 +388,7 @@ interface NavItem {
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: var(--accent-dim, rgba(0,229,160,0.15));
+      background: var(--accent-dim, oklch(0.62 0.17 254 / 0.15));
       color: var(--accent);
       font-size: 12px;
       font-weight: 700;
@@ -481,8 +481,8 @@ interface NavItem {
     /* Trial banner */
     .trial-banner {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-      background: linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(0,102,255,0.06) 100%);
-      border: 1px solid rgba(0,229,160,0.25); border-radius: var(--radius-sm, 8px);
+      background: linear-gradient(135deg, oklch(0.62 0.17 254 / 0.08) 0%, rgba(0,102,255,0.06) 100%);
+      border: 1px solid oklch(0.62 0.17 254 / 0.25); border-radius: var(--radius-sm, 8px);
       padding: 10px 16px; margin-bottom: 1rem; font-size: 13px; color: var(--text);
     }
     .trial-banner.trial-critico {

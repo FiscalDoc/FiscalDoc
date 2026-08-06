@@ -321,7 +321,7 @@ type LogsTab = 'auditoria' | 'integracao';
     .op-badge {
       border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
     }
-    .op-badge.insert { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .op-badge.insert { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
     .op-badge.update { background: rgba(255,209,102,0.12); color: var(--yellow); }
     .op-badge.delete { background: rgba(255,77,109,0.12); color: var(--red); }
 
@@ -371,7 +371,7 @@ type LogsTab = 'auditoria' | 'integracao';
 
     .op-badge.origem-manual { background: var(--bg3); color: var(--text2); }
     .op-badge.origem-importacaoemail { background: rgba(77,148,255,0.12); color: #4d94ff; }
-    .op-badge.origem-apiingest { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .op-badge.origem-apiingest { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
 
     .row-clickable { cursor: pointer; }
     .msg-preview { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

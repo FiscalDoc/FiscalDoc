@@ -52,7 +52,7 @@ import { ToastService } from '@veloxml/services';
       animation: toast-in 180ms ease-out;
       width: 100%; box-sizing: border-box;
     }
-    .toast--sucesso { border-color: rgba(0,229,160,.4); }
+    .toast--sucesso { border-color: oklch(0.62 0.17 254 / .4); }
     .toast--sucesso .toast-icon { color: var(--accent, #00e5a0); }
     .toast--erro { border-color: rgba(255,77,109,.4); }
     .toast--erro .toast-icon { color: var(--red, #ff4d6d); }

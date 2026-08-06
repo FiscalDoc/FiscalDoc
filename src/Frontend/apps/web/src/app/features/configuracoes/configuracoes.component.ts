@@ -430,7 +430,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
     }
     .input:focus { border-color: var(--accent); }
     .field-error { font-size: 11px; color: var(--red); }
-    .tag-ok { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0; background: rgba(0,229,160,.12); color: var(--accent); }
+    .tag-ok { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0; background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
 
     .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
     .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
@@ -443,7 +443,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
     }
     .alert-success {
       display: flex; align-items: center; gap: 8px;
-      background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.25);
+      background: oklch(0.62 0.17 254 / .1); border: 1px solid oklch(0.62 0.17 254 / .25);
       color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px;
     }
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }

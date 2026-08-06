@@ -43,7 +43,7 @@ import { environment } from '../../../../environments/environment';
     .post { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
     .cover { width: 100%; max-height: 420px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); }
     .meta { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
-    .chip { background: rgba(0,229,160,.12); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+    .chip { background: oklch(0.62 0.17 254 / .12); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
     .meta-item { color: var(--text2); font-size: 13px; }
     .title { margin: 0; font-size: 2rem; font-weight: 800; color: var(--text); line-height: 1.2; }
     .resumo { color: var(--text2); font-size: 1.05rem; margin: 0; }

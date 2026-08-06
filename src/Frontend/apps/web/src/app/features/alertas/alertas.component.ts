@@ -119,7 +119,7 @@ import { AlertaDto } from '@veloxml/models';
       color: var(--text2); cursor: pointer; padding: 4px 8px; font-size: 14px;
       transition: all 120ms; flex-shrink: 0; align-self: flex-start;
     }
-    .mark-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.08); }
+    .mark-btn:hover { border-color: var(--accent); color: var(--accent); background: oklch(0.62 0.17 254 / 0.08); }
 
     .empty-state { padding: 2rem; text-align: center; color: var(--text2); font-size: 14px; }
     .empty-state p { margin: 0; }

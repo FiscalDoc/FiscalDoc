@@ -90,11 +90,6 @@ import { AuthService } from '@veloxml/services';
               </button>
             </form>
 
-            <p class="signup-hint">
-              Ainda não tem conta?
-              <a routerLink="/" fragment="precos" class="link-strong">Crie aqui a sua conta</a>
-            </p>
-
             <p class="secure-note">
               <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -116,17 +111,17 @@ import { AuthService } from '@veloxml/services';
   `,
   styles: [`
     :host {
-      --lg-bg: oklch(1 0 0);
-      --lg-fg: oklch(0.21 0.035 258);
-      --lg-muted: oklch(0.53 0.03 256);
-      --lg-border: oklch(0.92 0.012 252);
-      --lg-input: oklch(0.92 0.012 252);
-      --lg-brand: oklch(0.48 0.16 255);
-      --lg-brand-deep: oklch(0.28 0.09 262);
-      --lg-brand-soft: oklch(0.95 0.03 250);
-      --lg-cta: oklch(0.66 0.17 158);
-      --lg-red: oklch(0.577 0.245 27.325);
-      --lg-shadow-soft: 0 1px 2px oklch(0.28 0.09 262 / 0.06), 0 8px 24px oklch(0.28 0.09 262 / 0.06);
+      --lg-bg: oklch(0.16 0.03 262);
+      --lg-fg: oklch(0.97 0.008 250);
+      --lg-muted: oklch(0.74 0.025 256);
+      --lg-border: oklch(1 0 0 / 12%);
+      --lg-input: oklch(1 0 0 / 16%);
+      --lg-brand: oklch(0.62 0.17 254);
+      --lg-brand-deep: oklch(0.97 0.01 250);
+      --lg-brand-soft: oklch(0.29 0.06 256);
+      --lg-cta: oklch(0.78 0.17 158);
+      --lg-red: oklch(0.62 0.2 25);
+      --lg-shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0 0 0 / 0.35);
       display: block;
       font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
       letter-spacing: -0.011em;
