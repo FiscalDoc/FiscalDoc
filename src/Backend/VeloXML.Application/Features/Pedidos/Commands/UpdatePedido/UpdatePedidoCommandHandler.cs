@@ -48,6 +48,11 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
         pedido.FormaPagamento = request.FormaPagamento;
         pedido.MeioPagamento = request.MeioPagamento;
         pedido.InformacoesComplementares = request.InformacoesComplementares;
+        pedido.ConsumidorFinal = request.ConsumidorFinal;
+        pedido.PresencaComprador = request.PresencaComprador;
+        pedido.ValorFrete = request.ValorFrete;
+        pedido.ValorSeguro = request.ValorSeguro;
+        pedido.ValorOutrasDespesas = request.ValorOutrasDespesas;
 
         var itensAntigos = pedido.Itens.ToList();
 
@@ -86,7 +91,7 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
         uow.Pedidos.SubstituirItens(itensAntigos, novosItens);
 
         pedido.Itens = novosItens;
-        pedido.ValorTotal = novosItens.Sum(i => i.ValorTotal);
+        pedido.ValorTotal = novosItens.Sum(i => i.ValorTotal) + request.ValorFrete + request.ValorSeguro + request.ValorOutrasDespesas;
 
         await uow.SaveChangesAsync(ct);
         logger.LogInformation("Pedido {PedidoId} atualizado com {ItemCount} item(ns)", pedido.Id, novosItens.Count);

@@ -49,7 +49,7 @@ import { ProdutoDto } from '@veloxml/models';
                   <td>{{ p.descricao }}</td>
                   <td class="mono">{{ p.ncm ?? '-' }}</td>
                   <td>{{ p.unidade }}</td>
-                  <td>{{ p.precoUnitario | currency:'BRL':'symbol':'1.3-3' }}</td>
+                  <td>{{ p.precoUnitario | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td><span class="badge" [class.badge-green]="p.ativo" [class.badge-red]="!p.ativo">{{ p.ativo ? 'Ativo' : 'Inativo' }}</span></td>
                 </tr>
               }

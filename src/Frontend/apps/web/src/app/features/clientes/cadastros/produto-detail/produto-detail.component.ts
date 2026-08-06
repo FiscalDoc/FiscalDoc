@@ -192,7 +192,7 @@ type Tab = 'geral' | 'fiscal';
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .section-title { margin: 0; font-size: .95rem; font-weight: 600; color: var(--text); }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .875rem; }
     .col-2 { grid-column: span 2; }
     .field { display: flex; flex-direction: column; gap: 4px; }
     .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }

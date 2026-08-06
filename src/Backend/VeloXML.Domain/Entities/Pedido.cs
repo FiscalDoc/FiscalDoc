@@ -26,6 +26,20 @@ public class Pedido : BaseEntity, IAuditableEntity
     public string? FormaPagamento { get; set; }              // "AVista" | "APrazo"
     public string? MeioPagamento { get; set; }                // "Dinheiro" | "Cartao" | "Pix" | "Boleto" | "Outros"
     public string? InformacoesComplementares { get; set; }
+
+    // Indicadores da operação — mudam a regra tributária aplicada pela SEFAZ (inclusive
+    // IBS/CBS na reforma) e são obrigatórios pra emitir. "consumidor_final"/"presenca_comprador"
+    // na Focus NFe (indFinal/indPres no XML). PresencaComprador default 9 (não presencial,
+    // outros) mantém o comportamento hardcoded que já existia antes desses campos existirem.
+    public bool ConsumidorFinal { get; set; } = true;
+    public int PresencaComprador { get; set; } = 9;
+
+    // Valores financeiros adicionais que entram no total da nota (ICMSTot: vFrete/vSeg/vOutro)
+    // além do somatório dos itens — comuns em venda B2B com frete cobrado do cliente ou taxas
+    // extras.
+    public decimal ValorFrete { get; set; } = 0;
+    public decimal ValorSeguro { get; set; } = 0;
+    public decimal ValorOutrasDespesas { get; set; } = 0;
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 

@@ -33,8 +33,12 @@ internal static class FocusNfePayloadBuilder
             data_emissao = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz"),
             tipo_documento = 1,      // 1 = saída (o Cliente é sempre o emitente aqui)
             finalidade_emissao = MapearFinalidadeEmissao(pedido.FinalidadeEmissao),
-            presenca_comprador = 9,  // 9 = não se aplica (operação não presencial)
+            consumidor_final = pedido.ConsumidorFinal ? 1 : 0,
+            presenca_comprador = pedido.PresencaComprador,
             modalidade_frete = MapearModalidadeFrete(pedido.ModalidadeFrete),
+            valor_frete = pedido.ValorFrete > 0 ? pedido.ValorFrete : (decimal?)null,
+            valor_seguro = pedido.ValorSeguro > 0 ? pedido.ValorSeguro : (decimal?)null,
+            valor_outras_despesas = pedido.ValorOutrasDespesas > 0 ? pedido.ValorOutrasDespesas : (decimal?)null,
             cnpj_emitente = SoDigitos(cliente.Cnpj),
             // A Focus tenta completar o resto do emitente a partir do cadastro feito no
             // registro do certificado (POST /empresas), mas se dado fiscal do Cliente mudar

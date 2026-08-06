@@ -63,7 +63,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             ClienteId = request.ClienteId,
             DestinatarioId = request.DestinatarioId,
             Observacoes = request.Observacoes,
-            ValorTotal = itens.Sum(i => i.ValorTotal),
+            ValorTotal = itens.Sum(i => i.ValorTotal) + request.ValorFrete + request.ValorSeguro + request.ValorOutrasDespesas,
             Itens = itens,
             NaturezaOperacao = request.NaturezaOperacao,
             FinalidadeEmissao = request.FinalidadeEmissao,
@@ -72,6 +72,11 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             FormaPagamento = request.FormaPagamento,
             MeioPagamento = request.MeioPagamento,
             InformacoesComplementares = request.InformacoesComplementares,
+            ConsumidorFinal = request.ConsumidorFinal,
+            PresencaComprador = request.PresencaComprador,
+            ValorFrete = request.ValorFrete,
+            ValorSeguro = request.ValorSeguro,
+            ValorOutrasDespesas = request.ValorOutrasDespesas,
         };
 
         await uow.Pedidos.AddAsync(pedido, ct);
@@ -106,6 +111,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 i.Produto?.IbsCbsCst ?? i.IbsCbsCst, i.Produto?.IbsCbsClassificacaoTributaria ?? i.IbsCbsClassificacaoTributaria
             )).ToList(),
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
+            p.ConsumidorFinal, p.PresencaComprador, p.ValorFrete, p.ValorSeguro, p.ValorOutrasDespesas,
             p.DocumentoId, p.Documento?.Numero, danfe?.Serie, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
             p.Documento?.Status.ToString(), danfe?.ProtocoloAutorizacao, danfe?.DataAutorizacao,
             p.Documento?.MotivoCancelamento, p.Documento?.DataCancelamento,

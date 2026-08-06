@@ -47,7 +47,7 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             DestinatarioId = original.DestinatarioId,
             Status = "Rascunho",
             Observacoes = original.Observacoes,
-            ValorTotal = itens.Sum(i => i.ValorTotal),
+            ValorTotal = itens.Sum(i => i.ValorTotal) + original.ValorFrete + original.ValorSeguro + original.ValorOutrasDespesas,
             Itens = itens,
             NaturezaOperacao = original.NaturezaOperacao,
             FinalidadeEmissao = original.FinalidadeEmissao,
@@ -56,6 +56,11 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             FormaPagamento = original.FormaPagamento,
             MeioPagamento = original.MeioPagamento,
             InformacoesComplementares = original.InformacoesComplementares,
+            ConsumidorFinal = original.ConsumidorFinal,
+            PresencaComprador = original.PresencaComprador,
+            ValorFrete = original.ValorFrete,
+            ValorSeguro = original.ValorSeguro,
+            ValorOutrasDespesas = original.ValorOutrasDespesas,
         };
 
         await uow.Pedidos.AddAsync(copia, ct);

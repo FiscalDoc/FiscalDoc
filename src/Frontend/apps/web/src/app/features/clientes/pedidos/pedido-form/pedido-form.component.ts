@@ -315,6 +315,35 @@ interface ConfirmState {
             </select>
           </div>
           <div class="field">
+            <label class="label">Presença do Comprador *</label>
+            <select class="input" [disabled]="readonly()" [ngModel]="form.presencaComprador" (ngModelChange)="form.presencaComprador = $event; marcarSujo()">
+              <option [ngValue]="1">Operação presencial</option>
+              <option [ngValue]="2">Não presencial, internet</option>
+              <option [ngValue]="3">Não presencial, teleatendimento</option>
+              <option [ngValue]="5">Presencial, fora do estabelecimento</option>
+              <option [ngValue]="9">Não presencial, outros</option>
+            </select>
+          </div>
+          <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
+            <label class="label">Consumidor Final *</label>
+            <label class="toggle-row">
+              <input type="checkbox" [disabled]="readonly()" [ngModel]="form.consumidorFinal" (ngModelChange)="form.consumidorFinal = $event; marcarSujo()" style="width:16px;height:16px;accent-color:var(--accent);"/>
+              Venda para consumidor final
+            </label>
+          </div>
+          <div class="field">
+            <label class="label">Valor do Frete (R$)</label>
+            <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorFrete" (ngModelChange)="form.valorFrete = $event; marcarSujo()"/>
+          </div>
+          <div class="field">
+            <label class="label">Valor do Seguro (R$)</label>
+            <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorSeguro" (ngModelChange)="form.valorSeguro = $event; marcarSujo()"/>
+          </div>
+          <div class="field">
+            <label class="label">Outras Despesas (R$)</label>
+            <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorOutrasDespesas" (ngModelChange)="form.valorOutrasDespesas = $event; marcarSujo()"/>
+          </div>
+          <div class="field">
             <label class="label">Data de Saída</label>
             <input class="input" type="date" [disabled]="readonly()" [ngModel]="form.dataSaida" (ngModelChange)="form.dataSaida = $event; marcarSujo()"/>
           </div>
@@ -727,6 +756,7 @@ interface ConfirmState {
     .col-4 { grid-column: span 4; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
     .field { display: flex; flex-direction: column; gap: 3px; }
+    .toggle-row { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--text); }
     .header-section .label { font-size: 10px; }
     .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
     .input, textarea.input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
@@ -1036,9 +1066,17 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly salvandoNovoProduto = signal(false);
   readonly erroNovoProduto = signal<string | null>(null);
 
-  readonly valorTotal = computed(() =>
+  readonly valorItens = computed(() =>
     this.itens().reduce((sum, i) => sum + this.itemTotal(i), 0)
   );
+
+  // Método comum (não computed) porque soma campos do `form` (frete/seguro/outras despesas),
+  // que não é um signal — um computed() só reavalia quando um signal-dependência muda
+  // (itens()), então editar só o frete sem mexer nos itens deixaria o total exibido
+  // desatualizado até a próxima mudança nos itens.
+  valorTotal(): number {
+    return this.valorItens() + (+this.form.valorFrete || 0) + (+this.form.valorSeguro || 0) + (+this.form.valorOutrasDespesas || 0);
+  }
 
   readonly totalImpostos = computed(() =>
     this.itens().reduce((sum, i) => sum + this.itemImpostos(i), 0)
@@ -1167,6 +1205,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria', finalidadeEmissao: 'Normal',
       modalidadeFrete: 'SemFrete',
       dataSaida: dataSaidaPadrao, formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
+      consumidorFinal: true, presencaComprador: 9,
+      valorFrete: 0, valorSeguro: 0, valorOutrasDespesas: 0,
     };
   }
 
@@ -1189,6 +1229,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       dataSaida: p.dataSaida ? p.dataSaida.slice(0, 10) : '',
       formaPagamento: p.formaPagamento ?? '', meioPagamento: p.meioPagamento ?? '',
       informacoesComplementares: p.informacoesComplementares ?? '',
+      consumidorFinal: p.consumidorFinal ?? true,
+      presencaComprador: p.presencaComprador ?? 9,
+      valorFrete: p.valorFrete ?? 0,
+      valorSeguro: p.valorSeguro ?? 0,
+      valorOutrasDespesas: p.valorOutrasDespesas ?? 0,
     };
     this.destinatarioSearch = p.destinatarioNome;
     this.itens.set(p.itens.map(i => ({
@@ -1750,6 +1795,11 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       formaPagamento: (this.form.formaPagamento || undefined) as CreatePedidoRequest['formaPagamento'],
       meioPagamento: (this.form.meioPagamento || undefined) as CreatePedidoRequest['meioPagamento'],
       informacoesComplementares: this.form.informacoesComplementares || undefined,
+      consumidorFinal: this.form.consumidorFinal,
+      presencaComprador: +this.form.presencaComprador,
+      valorFrete: +this.form.valorFrete || 0,
+      valorSeguro: +this.form.valorSeguro || 0,
+      valorOutrasDespesas: +this.form.valorOutrasDespesas || 0,
     };
   }
 

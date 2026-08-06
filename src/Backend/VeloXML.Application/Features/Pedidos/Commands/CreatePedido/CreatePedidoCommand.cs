@@ -34,5 +34,10 @@ public record CreatePedidoCommand(
     string? MeioPagamento,
     string? InformacoesComplementares,
     string FinalidadeEmissao = "Normal",
-    string ModalidadeFrete = "SemFrete"
+    string ModalidadeFrete = "SemFrete",
+    bool ConsumidorFinal = true,
+    int PresencaComprador = 9,
+    decimal ValorFrete = 0,
+    decimal ValorSeguro = 0,
+    decimal ValorOutrasDespesas = 0
 ) : IRequest<Result<PedidoDto>>;

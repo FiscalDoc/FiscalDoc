@@ -34,6 +34,12 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
         b.Property(e => e.InformacoesComplementares).HasColumnName("informacoes_complementares");
         b.Property(e => e.DocumentoId).HasColumnName("documento_id");
 
+        b.Property(e => e.ConsumidorFinal).HasColumnName("consumidor_final").HasDefaultValue(true);
+        b.Property(e => e.PresencaComprador).HasColumnName("presenca_comprador").HasDefaultValue(9);
+        b.Property(e => e.ValorFrete).HasColumnName("valor_frete").HasPrecision(18, 2).HasDefaultValue(0);
+        b.Property(e => e.ValorSeguro).HasColumnName("valor_seguro").HasPrecision(18, 2).HasDefaultValue(0);
+        b.Property(e => e.ValorOutrasDespesas).HasColumnName("valor_outras_despesas").HasPrecision(18, 2).HasDefaultValue(0);
+
         b.HasOne(e => e.Destinatario).WithMany().HasForeignKey(e => e.DestinatarioId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(e => e.Documento).WithMany().HasForeignKey(e => e.DocumentoId).OnDelete(DeleteBehavior.SetNull);
         b.HasMany(e => e.Itens).WithOne(i => i.Pedido).HasForeignKey(i => i.PedidoId).OnDelete(DeleteBehavior.Cascade);

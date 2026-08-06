@@ -17,6 +17,11 @@ public record UpdatePedidoCommand(
     string? InformacoesComplementares,
     string FinalidadeEmissao = "Normal",
     string ModalidadeFrete = "SemFrete",
+    bool ConsumidorFinal = true,
+    int PresencaComprador = 9,
+    decimal ValorFrete = 0,
+    decimal ValorSeguro = 0,
+    decimal ValorOutrasDespesas = 0,
     // "auto" = auto-save silencioso (não gera entrada no histórico do pedido, senão o
     // histórico ficaria cheio de "editado" repetido a cada poucos segundos digitando).
     string Origem = "manual"

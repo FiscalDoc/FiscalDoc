@@ -45,6 +45,11 @@ export interface PedidoDto {
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
   informacoesComplementares?: string;
+  consumidorFinal: boolean;
+  presencaComprador: number;
+  valorFrete: number;
+  valorSeguro: number;
+  valorOutrasDespesas: number;
   documentoId?: string;
   documentoNumero?: string;
   documentoSerie?: string;
@@ -90,6 +95,11 @@ export interface CreatePedidoRequest {
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
   informacoesComplementares?: string;
+  consumidorFinal?: boolean;
+  presencaComprador?: number;
+  valorFrete?: number;
+  valorSeguro?: number;
+  valorOutrasDespesas?: number;
 }
 
 export interface UpdatePedidoRequest {
@@ -104,6 +114,11 @@ export interface UpdatePedidoRequest {
   formaPagamento?: FormaPagamento;
   meioPagamento?: MeioPagamento;
   informacoesComplementares?: string;
+  consumidorFinal?: boolean;
+  presencaComprador?: number;
+  valorFrete?: number;
+  valorSeguro?: number;
+  valorOutrasDespesas?: number;
   origem?: 'manual' | 'auto';
 }
 
