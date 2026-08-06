@@ -300,7 +300,7 @@ type LogsTab = 'auditoria' | 'integracao';
 
     .table-card { padding: 0; overflow: hidden; }
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
     thead tr { border-bottom: 1px solid var(--border); }
     th { padding: 10px 12px; font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; white-space: nowrap; }
     td { padding: 10px 12px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -388,9 +388,6 @@ type LogsTab = 'auditoria' | 'integracao';
     .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
     .field { display: flex; flex-direction: column; gap: 6px; }
 
-    @media (max-width: 1024px) {
-      table { min-width: 720px; }
-    }
 
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: stretch; }

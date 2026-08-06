@@ -87,11 +87,7 @@ import { DestinatarioDto } from '@veloxml/models';
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    /* Tablet/iPad e mobile */
-    @media (max-width: 1024px) {
-      .table { min-width: 560px; }
-    }
+    .table { min-width: 560px; }
 
     @media (max-width: 640px) {
       .list-header { flex-direction: column; align-items: stretch; }

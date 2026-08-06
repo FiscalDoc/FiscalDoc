@@ -856,13 +856,13 @@ interface ConfirmState {
     .btn-primary.danger { background: var(--red); }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table { min-width: 720px; }
 
     /* ── Tablet (iPad) e mobile ── */
     @media (max-width: 1024px) {
       .header-section .form-grid { grid-template-columns: 1fr 1fr; }
       .impostos-form-grid { grid-template-columns: repeat(2, 1fr); }
       .detail-grid { grid-template-columns: repeat(2, 1fr); }
-      .table { min-width: 720px; }
       .nfe-field-label { min-width: 130px; }
     }
 

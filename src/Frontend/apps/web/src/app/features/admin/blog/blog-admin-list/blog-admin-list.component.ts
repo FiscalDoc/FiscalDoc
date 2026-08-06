@@ -149,10 +149,7 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
     .page-btn:disabled { opacity: .4; cursor: not-allowed; }
     .page-info { color: var(--text2); font-size: 13px; }
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    @media (max-width: 1024px) {
-      .table { min-width: 640px; }
-    }
+    .table { min-width: 640px; }
 
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: stretch; gap: .75rem; }

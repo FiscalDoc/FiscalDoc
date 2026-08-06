@@ -367,6 +367,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .bar-label { font-size: 10px; color: var(--text2); text-align: center; white-space: nowrap; }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .mini-table { min-width: 480px; }
 
     @media (max-width: 900px) {
       .kpis { grid-template-columns: 1fr 1fr; }
@@ -377,7 +378,6 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     @media (max-width: 640px) {
       .kpis { grid-template-columns: 1fr; }
       .page-header { flex-direction: column; align-items: flex-start; gap: .5rem; }
-      .mini-table { min-width: 480px; }
       .tipo-row { grid-template-columns: 3.5rem 1fr 2.5rem 2rem; gap: .375rem; }
     }
 

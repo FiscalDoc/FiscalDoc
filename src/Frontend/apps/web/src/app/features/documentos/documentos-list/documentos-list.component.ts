@@ -625,6 +625,7 @@ interface UploadItem { file: File; tipo: string; }
     .badge-origem-Manual { background: var(--bg3); color: var(--text2); }
     .badge-origem-ImportacaoEmail { background: rgba(77,148,255,0.12); color: #4d94ff; }
     .badge-origem-ApiIngest { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .badge-origem-FocusNfe { background: rgba(0,229,160,0.12); color: var(--accent); }
 
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
     .pagination {
@@ -779,10 +780,10 @@ interface UploadItem { file: File; tipo: string; }
     .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text2); font-weight: normal; text-transform: none; letter-spacing: 0; }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table { min-width: 900px; }
+    .itens-table { min-width: 640px; }
 
     @media (max-width: 1024px) {
-      .table { min-width: 900px; }
-      .itens-table { min-width: 640px; }
       .footer-grid { grid-template-columns: repeat(2, 1fr); }
       .impostos-grid { grid-template-columns: repeat(2, 1fr); }
       .imposto-item--destaque { grid-column: span 2; }
@@ -1075,7 +1076,7 @@ export class DocumentosListComponent implements OnInit {
   }
 
   origemLabel(origem: string): string {
-    const map: Record<string, string> = { Manual: 'Manual', ImportacaoEmail: 'E-mail', ApiIngest: 'API' };
+    const map: Record<string, string> = { Manual: 'Manual', ImportacaoEmail: 'E-mail', ApiIngest: 'API', FocusNfe: 'FiscalDoc' };
     return map[origem] ?? origem;
   }
 

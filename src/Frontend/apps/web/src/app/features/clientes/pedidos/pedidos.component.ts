@@ -127,11 +127,7 @@ import { PedidoDto } from '@veloxml/models';
     .row-link:hover td { background: rgba(255,255,255,.02); }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ── Tablet (iPad) e mobile ── */
-    @media (max-width: 1024px) {
-      .table { min-width: 640px; }
-    }
+    .table { min-width: 640px; }
 
     @media (max-width: 640px) {
       .header-row { flex-direction: column; align-items: stretch; gap: .5rem; }

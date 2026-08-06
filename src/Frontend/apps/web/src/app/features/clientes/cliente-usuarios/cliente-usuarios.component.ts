@@ -155,11 +155,7 @@ import { UsuarioDto } from '@veloxml/models';
     .page-info { font-size: 13px; color: var(--text2); }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ── Tablet (iPad) e mobile ── */
-    @media (max-width: 1024px) {
-      .table { min-width: 560px; }
-    }
+    .table { min-width: 560px; }
 
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: stretch; gap: .75rem; }

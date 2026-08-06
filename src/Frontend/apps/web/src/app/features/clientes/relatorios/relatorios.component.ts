@@ -118,7 +118,7 @@ const MESES = [
     .stat-value--erro { color: var(--red); }
 
     .table-wrap { overflow-x: auto; }
-    .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     .table td { padding: 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; white-space: nowrap; }
     .table tr:last-child td { border-bottom: none; }
@@ -130,7 +130,6 @@ const MESES = [
     /* ── Tablet (iPad) e mobile ── */
     @media (max-width: 1024px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .table { min-width: 640px; }
     }
 
     @media (max-width: 640px) {

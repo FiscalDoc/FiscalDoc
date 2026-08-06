@@ -275,10 +275,10 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table { min-width: 680px; }
 
     /* ── Tablet (iPad) e mobile ── */
     @media (max-width: 1024px) {
-      .table { min-width: 680px; }
       .form-grid { grid-template-columns: 1fr 1fr; }
     }
 

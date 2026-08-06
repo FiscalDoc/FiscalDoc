@@ -137,6 +137,18 @@ type Tab = 'geral' | 'fiscal';
                 <label class="label">Classificação Tributária (cClassTrib)</label>
                 <input class="input" [(ngModel)]="form.ibsCbsClassificacaoTributaria" placeholder="000001" maxlength="6"/>
               </div>
+              <div class="field">
+                <label class="label">Alíquota CBS (%)</label>
+                <input class="input" disabled value="0,90"/>
+              </div>
+              <div class="field">
+                <label class="label">Alíquota IBS — UF (%)</label>
+                <input class="input" disabled value="0,10"/>
+              </div>
+              <div class="field">
+                <label class="label">Alíquota IBS — Município (%)</label>
+                <input class="input" disabled value="0,00"/>
+              </div>
             </div>
           </div>
         }

@@ -591,11 +591,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .docs-table code { color: var(--accent); font-size: 12px; }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ── Tablet (iPad) e mobile ── */
-    @media (max-width: 1024px) {
-      .docs-table { min-width: 480px; }
-    }
+    .docs-table { min-width: 480px; }
 
     @media (max-width: 640px) {
       .form-grid { grid-template-columns: 1fr; }

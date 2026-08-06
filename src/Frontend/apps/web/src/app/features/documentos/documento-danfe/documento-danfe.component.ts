@@ -406,6 +406,7 @@ const MODALIDADE_FRETE: Record<string, string> = {
     /* On-screen only: horizontal scroll for the wide items table on tablet/mobile.
        Reset to visible for print so the original DANFE print layout is untouched. */
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dx-table { min-width: 900px; }
 
     @media (max-width: 640px) {
       .toolbar { flex-direction: column; align-items: stretch; }
@@ -418,6 +419,7 @@ const MODALIDADE_FRETE: Record<string, string> = {
       :host { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .sheet { box-shadow: none; margin: 0; max-width: none; padding: 0; }
       .table-scroll { overflow: visible; }
+      .dx-table { min-width: 0; }
     }
   `],
 })

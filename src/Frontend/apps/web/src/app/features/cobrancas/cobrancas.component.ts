@@ -250,11 +250,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
     }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    /* ── Tablet (iPad) e mobile ── */
-    @media (max-width: 1024px) {
-      .table { min-width: 640px; }
-    }
+    .table { min-width: 640px; }
 
     @media (max-width: 640px) {
       .page-header { flex-direction: column; align-items: stretch; }

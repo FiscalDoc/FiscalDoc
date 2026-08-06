@@ -694,11 +694,11 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     }
 
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table { min-width: 600px; }
 
     /* ── Tablet (iPad) e mobile ── */
     @media (max-width: 1024px) {
       .form-row-3 { grid-template-columns: repeat(2, 1fr); }
-      .table { min-width: 600px; }
     }
 
     @media (max-width: 640px) {
