@@ -142,7 +142,7 @@ type Tab = 'geral' | 'fiscal';
                 <input class="input" [(ngModel)]="form.ibsCbsCst" placeholder="000" maxlength="3"/>
               </div>
               <div class="field">
-                <label class="label">Classificação Tributária (cClassTrib)</label>
+                <label class="label" title="Classificação Tributária (cClassTrib)">Classif. Tributária</label>
                 <input class="input" [(ngModel)]="form.ibsCbsClassificacaoTributaria" placeholder="000001" maxlength="6"/>
               </div>
               <div class="field">
