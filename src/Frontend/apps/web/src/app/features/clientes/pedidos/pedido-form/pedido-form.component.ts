@@ -296,6 +296,10 @@ interface ConfirmState {
             <label class="label">Natureza da Operação *</label>
             <input class="input" [disabled]="readonly()" [ngModel]="form.naturezaOperacao" (ngModelChange)="form.naturezaOperacao = $event; marcarSujo()" placeholder="Venda de mercadoria"/>
           </div>
+        </div>
+
+        <div class="form-subheading">Indicadores da Operação</div>
+        <div class="form-grid">
           <div class="field">
             <label class="label">Finalidade de Emissão</label>
             <select class="input" [disabled]="readonly()" [ngModel]="form.finalidadeEmissao" (ngModelChange)="form.finalidadeEmissao = $event; marcarSujo()">
@@ -331,6 +335,10 @@ interface ConfirmState {
               Venda para consumidor final
             </label>
           </div>
+        </div>
+
+        <div class="form-subheading">Valores Adicionais</div>
+        <div class="form-grid">
           <div class="field">
             <label class="label">Valor do Frete (R$)</label>
             <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorFrete" (ngModelChange)="form.valorFrete = $event; marcarSujo()"/>
@@ -347,6 +355,10 @@ interface ConfirmState {
             <label class="label">Data de Saída</label>
             <input class="input" type="date" [disabled]="readonly()" [ngModel]="form.dataSaida" (ngModelChange)="form.dataSaida = $event; marcarSujo()"/>
           </div>
+        </div>
+
+        <div class="form-subheading">Pagamento e Complemento</div>
+        <div class="form-grid">
           <div class="field">
             <label class="label">Forma de Pagamento</label>
             <select class="input" [disabled]="readonly()" [ngModel]="form.formaPagamento" (ngModelChange)="form.formaPagamento = $event; marcarSujo()">
@@ -366,7 +378,7 @@ interface ConfirmState {
               <option value="Outros">Outros</option>
             </select>
           </div>
-          <div class="field">
+          <div class="field col-2">
             <label class="label">Observações (interno)</label>
             <textarea class="input" [disabled]="readonly()" [ngModel]="form.observacoes" (ngModelChange)="form.observacoes = $event; marcarSujo()" rows="1" placeholder="Opcional"></textarea>
           </div>
@@ -744,6 +756,7 @@ interface ConfirmState {
     .header-section { padding: 1.125rem 1.5rem; gap: .625rem; }
     .section-title { margin: 0; font-size: .95rem; font-weight: 600; color: var(--text); }
     .section-title-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    .form-subheading { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); border-top: 1px solid var(--border); padding-top: .75rem; margin-top: .125rem; }
     .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
     .badge-tipo--nf { background: rgba(0,229,160,.12); color: var(--accent); }
     .list-header { display: flex; align-items: center; justify-content: space-between; }
