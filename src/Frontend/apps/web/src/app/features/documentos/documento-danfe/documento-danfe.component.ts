@@ -268,6 +268,7 @@ const MODALIDADE_FRETE: Record<string, string> = {
         @if (doc()!.itens.length === 0) {
           <div class="dx-box"><span class="dx-value">Nenhum item detalhado disponível para este documento.</span></div>
         } @else {
+          <div class="table-scroll no-print-scroll">
           <table class="dx-table">
             <thead>
               <tr>
@@ -297,6 +298,7 @@ const MODALIDADE_FRETE: Record<string, string> = {
               }
             </tbody>
           </table>
+          </div>
         }
 
         <!-- Cálculo do ISSQN -->
@@ -401,10 +403,21 @@ const MODALIDADE_FRETE: Record<string, string> = {
 
     .sheet-footer { margin-top: 1.25rem; padding-top: .75rem; border-top: 1px solid #ddd; text-align: center; font-size: 9px; color: #999; }
 
+    /* On-screen only: horizontal scroll for the wide items table on tablet/mobile.
+       Reset to visible for print so the original DANFE print layout is untouched. */
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    @media (max-width: 640px) {
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-actions { justify-content: stretch; }
+      .toolbar-actions .btn-ghost, .toolbar-actions .btn-primary { flex: 1; }
+    }
+
     @media print {
       .no-print { display: none !important; }
       :host { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .sheet { box-shadow: none; margin: 0; max-width: none; padding: 0; }
+      .table-scroll { overflow: visible; }
     }
   `],
 })

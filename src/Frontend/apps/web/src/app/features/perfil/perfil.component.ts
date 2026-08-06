@@ -248,6 +248,16 @@ import { Setup2faResponse } from '@veloxml/models';
     .input-text:focus { border-color: var(--accent); }
     @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
 
+    @media (max-width: 640px) {
+      .acesso-card { flex-direction: column; align-items: stretch; }
+      .btn-upgrade { align-self: stretch; }
+      .secret-box { flex-direction: column; align-items: stretch; }
+      .verify-row { flex-direction: column; align-items: stretch; }
+      .input { width: 100%; box-sizing: border-box; }
+      .form-actions { flex-direction: column; align-items: stretch; gap: .5rem; }
+      .form-actions .btn-primary { width: 100%; justify-content: center; }
+    }
+
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { display: flex; align-items: center; gap: 8px; background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 

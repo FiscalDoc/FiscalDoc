@@ -387,6 +387,19 @@ type LogsTab = 'auditoria' | 'integracao';
     .modal-close:hover { color: var(--text); }
     .modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
     .field { display: flex; flex-direction: column; gap: 6px; }
+
+    @media (max-width: 1024px) {
+      table { min-width: 720px; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: stretch; }
+      .filter-row { flex-direction: column; align-items: stretch; }
+      .filter-field input, .filter-field select { min-width: 0; width: 100%; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .pagination { flex-direction: column; align-items: stretch; gap: 8px; }
+      .modal-header { flex-direction: column; align-items: stretch; gap: 6px; }
+    }
   `]
 })
 export class LogsComponent implements OnInit {

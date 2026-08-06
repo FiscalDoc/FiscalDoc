@@ -48,6 +48,7 @@ type ModalMode = 'create';
     } @else if (contadores().length === 0) {
       <div class="empty-state">Nenhum contador encontrado.</div>
     } @else {
+      <div class="table-scroll">
       <table class="table">
         <thead>
           <tr>
@@ -144,6 +145,7 @@ type ModalMode = 'create';
           }
         </tbody>
       </table>
+      </div>
 
       @if (totalPages() > 1) {
         <div class="pagination">
@@ -375,6 +377,21 @@ type ModalMode = 'create';
       background: rgba(255,77,109,0.10);
       border: 1px solid rgba(255,77,109,0.25);
       border-radius: 4px; padding: 1px 6px;
+    }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .table { min-width: 760px; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: stretch; gap: .75rem; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-wrap { max-width: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; align-items: stretch; }
     }
   `]
 })

@@ -281,6 +281,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
             <div class="docs-field">
               <span class="docs-label">Parâmetros</span>
+              <div class="table-scroll">
               <table class="docs-table">
                 <tbody>
                   <tr>
@@ -305,6 +306,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div class="docs-field">
@@ -334,6 +336,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
             <div class="docs-field">
               <span class="docs-label">Erros comuns</span>
+              <div class="table-scroll">
               <table class="docs-table">
                 <tbody>
                   <tr><td><code>401</code></td><td>AppKey ausente, inválida ou cliente inativo.</td></tr>
@@ -342,6 +345,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                   <tr><td><code>200</code> com <code>statusNome: "Duplicado"</code></td><td>XML com a mesma chave de acesso já foi importado antes — não é erro, é idempotência.</td></tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
@@ -585,6 +589,24 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .docs-table td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
     .docs-table tr:last-child td { border-bottom: none; }
     .docs-table code { color: var(--accent); font-size: 12px; }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .docs-table { min-width: 480px; }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .col-2 { grid-column: span 1; }
+      .profile-top { flex-direction: column; align-items: stretch; }
+      .form-actions { flex-direction: column-reverse; align-items: stretch; gap: .5rem; }
+      .imap-header, .imap-log-header { flex-direction: column; align-items: stretch; }
+      .appkey-box { flex-direction: column; align-items: stretch; }
+      .appkey-actions { justify-content: flex-end; }
+      .endpoint-info { flex-direction: column; align-items: flex-start; }
+    }
   `],
 })
 export class ClienteDetailComponent implements OnInit {

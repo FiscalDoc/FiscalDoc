@@ -118,6 +118,21 @@ import { environment } from '../../../../environments/environment';
     .page-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: pointer; }
     .page-btn:disabled { opacity: .4; cursor: not-allowed; }
     .page-info { color: var(--text2); font-size: 13px; }
+
+    /* Tablet/iPad e mobile */
+    @media (max-width: 1024px) {
+      .container { padding: 2rem 1.25rem 3.5rem; }
+    }
+
+    @media (max-width: 640px) {
+      .nav-inner { flex-wrap: wrap; gap: .5rem; }
+      .container { padding: 1.75rem 1rem 3rem; }
+      .page-title { font-size: 1.75rem; }
+      .filters { flex-direction: column; align-items: stretch; }
+      .search-box { max-width: none; }
+      .grid { grid-template-columns: 1fr; }
+      .pagination { flex-wrap: wrap; gap: .5rem; }
+    }
   `],
 })
 export class BlogListComponent implements OnInit {

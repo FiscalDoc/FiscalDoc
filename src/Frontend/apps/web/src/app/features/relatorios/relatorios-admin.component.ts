@@ -106,6 +106,12 @@ const MESES = [
     .mono { font-family: monospace; font-size: 12px; }
     .row-link { cursor: pointer; }
     .row-link:hover td { background: rgba(255,255,255,.02); }
+
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .input { min-width: 0; width: 100%; box-sizing: border-box; }
+    }
   `],
 })
 export class RelatoriosAdminComponent implements OnInit {

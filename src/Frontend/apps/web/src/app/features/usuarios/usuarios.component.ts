@@ -48,6 +48,7 @@ import { UsuarioDto } from '@veloxml/models';
     } @else if (usuarios().length === 0) {
       <div class="empty-state">Nenhum usuário encontrado.</div>
     } @else {
+      <div class="table-scroll">
       <table class="table">
         <thead>
           <tr>
@@ -94,6 +95,7 @@ import { UsuarioDto } from '@veloxml/models';
           }
         </tbody>
       </table>
+      </div>
 
       @if (totalPages() > 1) {
         <div class="pagination">
@@ -163,6 +165,20 @@ import { UsuarioDto } from '@veloxml/models';
     .page-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
     .page-btn:disabled { opacity: .4; cursor: not-allowed; }
     .page-info { font-size: 13px; color: var(--text2); }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    @media (max-width: 1024px) {
+      .table { min-width: 700px; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: stretch; gap: .75rem; }
+      .btn-primary { justify-content: center; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-wrap { max-width: none; }
+      select.search-input { max-width: none !important; }
+    }
   `]
 })
 export class UsuariosComponent implements OnInit {

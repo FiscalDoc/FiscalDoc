@@ -126,6 +126,18 @@ const MESES = [
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-autorizada { background: rgba(0,229,160,.12); color: var(--accent); }
     .badge-cancelada { background: rgba(255,77,109,.12); color: var(--red); }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .table { min-width: 640px; }
+    }
+
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .input { min-width: 0; width: 100%; box-sizing: border-box; }
+    }
   `],
 })
 export class RelatoriosComponent implements OnInit {

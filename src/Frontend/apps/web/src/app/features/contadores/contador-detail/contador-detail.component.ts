@@ -248,6 +248,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
           } @else if (clientes().length === 0) {
             <div class="empty-state">Nenhum cliente encontrado.</div>
           } @else {
+            <div class="table-scroll">
             <table class="table">
               <thead><tr><th>Cliente</th><th>CNPJ</th><th>E-mail</th><th>Status</th></tr></thead>
               <tbody>
@@ -269,6 +270,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
                 }
               </tbody>
             </table>
+            </div>
           }
         </div>
       </div>
@@ -350,6 +352,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
           @if (historico().length === 0) {
             <div class="empty-state">Nenhuma cobrança registrada.</div>
           } @else {
+            <div class="table-scroll">
             <table class="table">
               <thead>
                 <tr>
@@ -389,6 +392,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
                 }
               </tbody>
             </table>
+            </div>
           }
         </div>
       </div>
@@ -687,6 +691,23 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
       font-size: 12.5px; color: var(--accent);
       background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2);
       border-radius: 7px; padding: 8px 12px; margin-top: 4px;
+    }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .form-row-3 { grid-template-columns: repeat(2, 1fr); }
+      .table { min-width: 600px; }
+    }
+
+    @media (max-width: 640px) {
+      .profile-header { flex-direction: column; align-items: stretch; }
+      .profile-right { justify-content: space-between; gap: 1rem; }
+      .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+      .access-actions { flex-direction: column; align-items: stretch; }
+      .access-actions .input-date { max-width: none !important; }
+      .tabs { flex-wrap: wrap; }
     }
   `]
 })

@@ -37,6 +37,7 @@ import { ProdutoDto } from '@veloxml/models';
         } @else if (produtos().length === 0) {
           <div class="empty">Nenhum produto cadastrado.</div>
         } @else {
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr><th>Código</th><th>Descrição</th><th>NCM</th><th>Unidade</th><th>Preço</th><th>Status</th></tr>
@@ -54,6 +55,7 @@ import { ProdutoDto } from '@veloxml/models';
               }
             </tbody>
           </table>
+          </div>
         }
       </div>
     </div>
@@ -82,6 +84,17 @@ import { ProdutoDto } from '@veloxml/models';
     .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Tablet/iPad e mobile */
+    @media (max-width: 1024px) {
+      .table { min-width: 640px; }
+    }
+
+    @media (max-width: 640px) {
+      .list-header { flex-direction: column; align-items: stretch; }
+      .search-box { max-width: none; }
+    }
   `],
 })
 export class ProdutosListComponent implements OnInit {

@@ -344,6 +344,17 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .appkey-btn-warn:hover { color: var(--yellow); border-color: var(--yellow); }
     .appkey-btn:disabled { opacity: .5; cursor: not-allowed; }
     .docs-code { margin: 0; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .75rem; font-size: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-word; color: var(--text); overflow-x: auto; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .col-2 { grid-column: span 1; }
+      .form-actions { flex-direction: column-reverse; align-items: stretch; gap: .5rem; }
+      .section-header-row { flex-direction: column; align-items: stretch; }
+      .appkey-box { flex-direction: column; align-items: stretch; }
+      .appkey-actions { justify-content: flex-end; }
+      .status-row, .cert-status-row { flex-wrap: wrap; }
+    }
   `],
 })
 export class ClienteEmpresaComponent implements OnInit {

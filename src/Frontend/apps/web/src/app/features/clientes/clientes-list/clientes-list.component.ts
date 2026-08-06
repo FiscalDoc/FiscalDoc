@@ -41,6 +41,7 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
         <div class="empty-state">Carregando...</div>
       } @else {
         <div class="card">
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr>
@@ -71,6 +72,7 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
               }
             </tbody>
           </table>
+          </div>
 
           @if (totalPages() > 1) {
             <div class="pagination">
@@ -272,6 +274,22 @@ import { ClienteDto, CreateClienteRequest, ContadorDto } from '@veloxml/models';
     .btn-inline:disabled { opacity: .5; cursor: not-allowed; }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .table { min-width: 680px; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: stretch; }
+      .header-actions { flex-direction: column; align-items: stretch; }
+      .search-input { width: 100%; box-sizing: border-box; }
+      .form-grid { grid-template-columns: 1fr; }
+      .col-2 { grid-column: span 1; }
+      .modal-footer { flex-direction: column-reverse; align-items: stretch; }
+    }
   `],
 })
 export class ClientesListComponent implements OnInit {

@@ -210,6 +210,19 @@ type Tab = 'geral' | 'acesso';
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+    @media (max-width: 1024px) {
+      .info-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+      .header-top { flex-direction: column; align-items: stretch; gap: .5rem; }
+      .btn-danger-outline { width: 100%; }
+      .form-actions { flex-direction: column-reverse; align-items: stretch; }
+      .form-actions button { width: 100%; }
+    }
   `],
 })
 export class UsuarioDetailComponent implements OnInit {

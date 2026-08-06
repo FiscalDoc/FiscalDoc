@@ -144,6 +144,11 @@ const MEIO_PAGAMENTO_LABEL: Record<string, string> = { Dinheiro: 'Dinheiro', Car
       :host { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .sheet { box-shadow: none; margin: 0; max-width: none; }
     }
+
+    /* ── Mobile: só a barra de ações fora da folha impressa (não mexe no layout de impressão/DANFE) ── */
+    @media (max-width: 640px) {
+      .toolbar { flex-direction: column; align-items: stretch; }
+    }
   `],
 })
 export class PedidoImprimirComponent implements OnInit {

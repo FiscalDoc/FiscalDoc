@@ -452,6 +452,13 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
       .form-row { grid-template-columns: 1fr; }
       .field-sm { max-width: 100%; }
     }
+
+    @media (max-width: 640px) {
+      .intervalo-row { flex-direction: column; align-items: stretch; }
+      .test-row { flex-direction: column; align-items: stretch; }
+      .form-actions { flex-direction: column-reverse; align-items: stretch; }
+      .tabs { flex-wrap: wrap; }
+    }
   `]
 })
 export class ConfiguracoesComponent implements OnInit {

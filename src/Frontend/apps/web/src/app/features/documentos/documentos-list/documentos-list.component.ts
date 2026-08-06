@@ -192,6 +192,7 @@ interface UploadItem { file: File; tipo: string; }
           </div>
         }
         <div class="card">
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr>
@@ -257,6 +258,7 @@ interface UploadItem { file: File; tipo: string; }
               }
             </tbody>
           </table>
+          </div>
 
           @if (totalPages() > 1) {
             <div class="pagination">
@@ -452,6 +454,7 @@ interface UploadItem { file: File; tipo: string; }
             @if (detail()!.itens.length === 0) {
               <div class="empty-state" style="padding:2rem 0">Nenhum item detalhado disponível pra este documento.</div>
             } @else {
+              <div class="table-scroll">
               <table class="itens-table">
                 <thead>
                   <tr><th>Código</th><th>Descrição</th><th>NCM</th><th>CFOP</th><th>Qtd</th><th>Un.</th><th>Vlr. Unit.</th><th>Total</th></tr>
@@ -471,6 +474,7 @@ interface UploadItem { file: File; tipo: string; }
                   }
                 </tbody>
               </table>
+              </div>
             }
           }
 
@@ -773,6 +777,33 @@ interface UploadItem { file: File; tipo: string; }
       margin-top: 6px;
     }
     .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text2); font-weight: normal; text-transform: none; letter-spacing: 0; }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    @media (max-width: 1024px) {
+      .table { min-width: 900px; }
+      .itens-table { min-width: 640px; }
+      .footer-grid { grid-template-columns: repeat(2, 1fr); }
+      .impostos-grid { grid-template-columns: repeat(2, 1fr); }
+      .imposto-item--destaque { grid-column: span 2; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-wrap: wrap; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-wrap { max-width: none; }
+      .upload-controls { flex-direction: column; align-items: stretch; }
+      .modal-header { flex-direction: column; align-items: stretch; }
+      .modal-header-actions { flex-wrap: wrap; }
+      .modal-hero { flex-wrap: wrap; }
+      .hero-divider { display: none; }
+      .hero-stat { flex: 1 1 45%; padding: .75rem 1rem; }
+      .party-grid { flex-direction: column; align-items: stretch; }
+      .party-arrow { align-self: center; transform: rotate(90deg); }
+      .footer-grid { grid-template-columns: 1fr; }
+      .impostos-grid { grid-template-columns: 1fr; }
+      .imposto-item--destaque { grid-column: span 1; }
+    }
   `],
 })
 export class DocumentosListComponent implements OnInit {

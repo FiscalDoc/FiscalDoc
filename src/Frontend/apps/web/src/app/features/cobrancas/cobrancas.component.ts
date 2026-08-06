@@ -67,6 +67,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
         } @else if (cobrancas().length === 0) {
           <div class="empty">Nenhuma cobrança encontrada.</div>
         } @else {
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr><th>Entidade</th><th>Período</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr>
@@ -95,6 +96,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
               }
             </tbody>
           </table>
+          </div>
 
           @if (totalPages() > 1) {
             <div class="pagination">
@@ -245,6 +247,22 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
 
     @media (max-width: 900px) {
       .kpis { grid-template-columns: 1fr; }
+    }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .table { min-width: 640px; }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { flex-direction: column; align-items: stretch; }
+      .filters { flex-direction: column; align-items: stretch; }
+      .search-box { max-width: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal-footer { flex-direction: column-reverse; align-items: stretch; }
+      .status-toggle { flex-direction: column; }
     }
   `],
 })

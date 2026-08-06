@@ -68,6 +68,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
             @if (a.topContadores.length === 0) {
               <p class="empty">Nenhum contador cadastrado ainda.</p>
             } @else {
+              <div class="table-scroll">
               <table class="mini-table">
                 <thead>
                   <tr>
@@ -104,6 +105,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
                   }
                 </tbody>
               </table>
+              </div>
             }
           </div>
         }
@@ -268,6 +270,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
 
             <div class="card">
               <h3 class="card-title">Top Clientes</h3>
+              <div class="table-scroll">
               <table class="mini-table">
                 <thead><tr><th>Cliente</th><th>Docs</th><th>Valor</th></tr></thead>
                 <tbody>
@@ -283,6 +286,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
                   }
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         }
@@ -362,10 +366,19 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .bar-fill { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; transition: height 300ms; }
     .bar-label { font-size: 10px; color: var(--text2); text-align: center; white-space: nowrap; }
 
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
     @media (max-width: 900px) {
       .kpis { grid-template-columns: 1fr 1fr; }
       .grid-2 { grid-template-columns: 1fr; }
       .status-row { flex-direction: column; }
+    }
+
+    @media (max-width: 640px) {
+      .kpis { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: .5rem; }
+      .mini-table { min-width: 480px; }
+      .tipo-row { grid-template-columns: 3.5rem 1fr 2.5rem 2rem; gap: .375rem; }
     }
 
     /* Cliente: Pedidos por Status */

@@ -58,6 +58,7 @@ import { PedidoDto } from '@veloxml/models';
         } @else if (pedidos().length === 0) {
           <div class="empty">Nenhum pedido encontrado.</div>
         } @else {
+          <div class="table-scroll">
           <table class="table">
             <thead>
               <tr><th>Nº</th><th>Tipo</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th></tr>
@@ -79,6 +80,7 @@ import { PedidoDto } from '@veloxml/models';
               }
             </tbody>
           </table>
+          </div>
         }
       </div>
     </div>
@@ -123,6 +125,20 @@ import { PedidoDto } from '@veloxml/models';
     .btn-primary:hover { opacity: .88; }
     .row-link { cursor: pointer; }
     .row-link:hover td { background: rgba(255,255,255,.02); }
+
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── Tablet (iPad) e mobile ── */
+    @media (max-width: 1024px) {
+      .table { min-width: 640px; }
+    }
+
+    @media (max-width: 640px) {
+      .header-row { flex-direction: column; align-items: stretch; gap: .5rem; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-wrap { min-width: 0; }
+      .date-field { justify-content: space-between; }
+    }
   `],
 })
 export class PedidosComponent implements OnInit {
