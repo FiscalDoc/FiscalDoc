@@ -11,7 +11,6 @@ export interface CreateClienteUsuarioRequest {
 export interface UpdateClienteUsuarioRequest {
   nome: string;
   ativo: boolean;
-  novaSenha?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,5 +35,15 @@ export class ClienteUsuarioService {
 
   delete(clienteId: string, id: string): Observable<void> {
     return this._api.delete<void>(`/clientes/${clienteId}/usuarios/${id}`);
+  }
+
+  resetarSenha(clienteId: string, id: string): Observable<void> {
+    return this._api.post<void>(`/clientes/${clienteId}/usuarios/${id}/resetar-senha`, {});
+  }
+
+  uploadAvatar(clienteId: string, id: string, arquivo: File): Observable<{ avatarUrl: string }> {
+    const fd = new FormData();
+    fd.append('arquivo', arquivo);
+    return this._api.postForm<{ avatarUrl: string }>(`/clientes/${clienteId}/usuarios/${id}/avatar`, fd);
   }
 }

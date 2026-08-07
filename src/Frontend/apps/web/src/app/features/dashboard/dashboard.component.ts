@@ -130,6 +130,11 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
               <span class="kpi-sub">soma de todas as NF-e emitidas</span>
             </div>
             <div class="kpi-card">
+              <span class="kpi-label">Pedidos em Rascunho</span>
+              <span class="kpi-value font-heading" [class.warn]="c.pedidosRascunho > 0">{{ c.pedidosRascunho }}</span>
+              <span class="kpi-sub">ainda não viraram nota fiscal</span>
+            </div>
+            <div class="kpi-card">
               <span class="kpi-label">Alertas Ativos</span>
               <span class="kpi-value font-heading" [class.red]="c.alertasAtivos > 0">{{ c.alertasAtivos }}</span>
               <span class="kpi-sub">requerem atenção</span>
@@ -296,7 +301,8 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .loading { color: var(--text2); font-size: 14px; padding: 2rem; text-align: center; }
 
     .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-    .kpis-cliente { grid-template-columns: repeat(3, 1fr); }
+    .kpis-cliente { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 900px) { .kpis-cliente { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 640px) { .kpis-cliente { grid-template-columns: 1fr; } }
     .kpi-card {
       background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
@@ -307,6 +313,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .kpi-value { font-size: 2rem; font-weight: 700; color: var(--text); line-height: 1; }
     .kpi-value.accent { color: var(--accent); }
     .kpi-value.red { color: var(--red); }
+    .kpi-value.warn { color: var(--yellow); }
     .kpi-sub { font-size: 12px; color: var(--text2); }
 
     .status-row { display: flex; gap: .75rem; flex-wrap: wrap; }

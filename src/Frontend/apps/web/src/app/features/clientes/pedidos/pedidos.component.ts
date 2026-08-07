@@ -104,7 +104,7 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
           <div class="table-scroll">
           <table class="table">
             <thead>
-              <tr><th>Nº</th><th>Tipo</th><th>Destinatário</th><th>Data</th><th>Valor Total</th><th>Status</th></tr>
+              <tr><th>Nº</th><th>Tipo</th><th>Destinatário</th><th>Data de Emissão</th><th>Valor Total</th><th>Status</th></tr>
             </thead>
             <tbody>
               @for (p of pedidos(); track p.id) {
@@ -114,7 +114,7 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
                     <span class="badge-tipo" [class.badge-tipo--nf]="!!p.documentoId">{{ p.documentoId ? 'Nota Fiscal' : 'Pedido' }}</span>
                   </td>
                   <td>{{ p.destinatarioNome }}</td>
-                  <td>{{ p.createdAt | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ p.documentoDataEmissao ? (p.documentoDataEmissao | date:'dd/MM/yyyy') : '—' }}</td>
                   <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td>
                     <span class="badge" [class]="statusClass(p)">{{ statusLabel(p) }}</span>

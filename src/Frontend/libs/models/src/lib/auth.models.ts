@@ -39,6 +39,7 @@ export interface CurrentUser {
   planoExpiracao?: string;
   acessoExpiracao?: string; // DataLimiteAcesso do Contador (quando criado pelo admin)
   actingAdminId?: string; // presente só numa sessão "atuando como" (impersonação)
+  avatarUrl?: string;
 }
 
 export interface SwitchContextRequest {

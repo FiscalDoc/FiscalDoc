@@ -9,5 +9,6 @@ public record UserDto(
     bool Ativo,
     string Plano,
     DateTime? PlanoExpiracao,
-    DateTime? AcessoExpiracao  // DataLimiteAcesso do Contador (quando criado pelo admin)
+    DateTime? AcessoExpiracao,  // DataLimiteAcesso do Contador (quando criado pelo admin)
+    string? AvatarUrl = null
 );

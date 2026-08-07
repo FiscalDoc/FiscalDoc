@@ -38,7 +38,8 @@ public sealed class GetCurrentUserQueryHandler(
             user.TenantId, user.Ativo,
             tenant?.Plano ?? "Starter",
             tenant?.PlanoExpiracao,
-            acessoExpiracao
+            acessoExpiracao,
+            user.AvatarObjectKey
         ));
     }
 }

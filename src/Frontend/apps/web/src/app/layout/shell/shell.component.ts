@@ -3,6 +3,7 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/rou
 import { AuthService, ContadorService } from '@veloxml/services';
 import { ToastContainerComponent } from '../toast-container/toast-container.component';
 import { AssistenteChatComponent } from '../assistente-chat/assistente-chat.component';
+import { environment } from '../../../environments/environment';
 
 interface NavItem {
   label: string;
@@ -96,7 +97,11 @@ interface NavItem {
           </div>
           <div class="user-row">
           <div class="user-info">
-            <div class="user-avatar" [style.background]="avatarBg()" [style.color]="avatarFg()">{{ userInitials() }}</div>
+            @if (auth.currentUser()?.avatarUrl) {
+              <img class="user-avatar" [src]="userAvatarSrc()" alt="avatar"/>
+            } @else {
+              <div class="user-avatar" [style.background]="avatarBg()" [style.color]="avatarFg()">{{ userInitials() }}</div>
+            }
             <div class="user-details">
               <span class="user-name">{{ auth.currentUser()?.nome }}</span>
               <span class="user-role">{{ auth.currentUser()?.perfil }}</span>
@@ -399,6 +404,7 @@ interface NavItem {
       justify-content: center;
       flex-shrink: 0;
     }
+    img.user-avatar { object-fit: cover; }
 
     .user-details {
       display: flex;
@@ -845,6 +851,11 @@ export class ShellComponent implements OnInit {
 
   avatarFg(): string {
     return '#0d0f14';
+  }
+
+  userAvatarSrc(): string {
+    const id = this.auth.currentUser()?.id;
+    return `${environment.apiUrl}/usuarios/${id}/avatar?v=${this.auth.avatarVersion()}`;
   }
 
   private _hashColor(str: string): string {

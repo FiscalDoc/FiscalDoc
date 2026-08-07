@@ -1,9 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Common.DTOs;
 using VeloXML.Application.Features.Usuarios.Commands.CreateClienteUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.DeleteClienteUsuario;
+using VeloXML.Application.Features.Usuarios.Commands.ResetSenhaClienteUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.UpdateClienteUsuario;
+using VeloXML.Application.Features.Usuarios.Commands.UploadAvatarClienteUsuario;
 using VeloXML.Application.Features.Usuarios.Queries.GetClienteUsuarioById;
 using VeloXML.Application.Features.Usuarios.Queries.GetClienteUsuarios;
 
@@ -47,6 +50,24 @@ public sealed class ClienteUsuariosController(IMediator mediator) : ControllerBa
     {
         var result = await mediator.Send(new DeleteClienteUsuarioCommand(clienteId, id), ct);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/resetar-senha")]
+    public async Task<IActionResult> ResetarSenha(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ResetSenhaClienteUsuarioCommand(clienteId, id), ct);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/avatar")]
+    [RequestSizeLimit(5_242_880)]
+    public async Task<IActionResult> UploadAvatar(Guid clienteId, Guid id, IFormFile arquivo, CancellationToken ct)
+    {
+        if (arquivo.Length == 0) return BadRequest(new { message = "Arquivo vazio." });
+
+        var dto = new FileUploadDto(arquivo.OpenReadStream(), arquivo.FileName, arquivo.ContentType, arquivo.Length);
+        var result = await mediator.Send(new UploadAvatarClienteUsuarioCommand(clienteId, id, dto), ct);
+        return result.IsSuccess ? Ok(new { avatarUrl = result.Value }) : BadRequest(result.Error);
     }
 }
 

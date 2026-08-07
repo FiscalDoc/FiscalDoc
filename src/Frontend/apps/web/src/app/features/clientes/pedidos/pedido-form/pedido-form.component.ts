@@ -915,8 +915,11 @@ interface ConfirmState {
     .timeline-meta { margin: 2px 0 0; font-size: 11px; color: var(--text2); }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
-    .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
-    .btn-ghost-sm:hover { color: var(--accent); border-color: var(--accent); }
+    .btn-ghost-sm {
+      background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-block;
+    }
+    .btn-ghost-sm:hover { color: var(--accent); border-color: var(--accent); text-decoration: none; }
 
     .combo-field { position: relative; }
     .combo-row { display: flex; gap: 6px; }

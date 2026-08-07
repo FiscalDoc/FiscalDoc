@@ -12,5 +12,6 @@ public record UsuarioDto(
     string? NomeCliente,
     bool TwoFactorHabilitado,
     DateTime CreatedAt,
-    DateTime? UltimoAcessoEm
+    DateTime? UltimoAcessoEm,
+    string? AvatarUrl = null
 );

@@ -56,7 +56,7 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> Delete(Guid clienteId, Guid id, CancellationToken ct)
     {
         var result = await mediator.Send(new DeleteProdutoCommand(id, clienteId), ct);
-        return result.IsSuccess ? NoContent() : NotFound(result.Error);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 }
 

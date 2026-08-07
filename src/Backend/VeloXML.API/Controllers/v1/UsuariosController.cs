@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Usuarios.Commands.CreateUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.DeleteUsuario;
 using VeloXML.Application.Features.Usuarios.Commands.UpdateUsuario;
@@ -12,8 +13,27 @@ namespace VeloXML.API.Controllers.v1;
 [ApiController]
 [Route("api/v1/usuarios")]
 [Authorize(Roles = "Administrador")]
-public sealed class UsuariosController(IMediator mediator) : ControllerBase
+public sealed class UsuariosController(IMediator mediator, IStorageService storage) : ControllerBase
 {
+    // Anônimo de propósito (mesmo padrão de ContadoresController.GetFoto) — é só uma imagem de
+    // perfil de baixa sensibilidade, e assim qualquer tela logada (inclusive a sidebar) consegue
+    // montar o <img src> direto, sem se preocupar com o Authorize da classe (Administrador).
+    [HttpGet("{id:guid}/avatar")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAvatar(Guid id, CancellationToken ct)
+    {
+        var objectKey = $"usuarios/{id}/avatar";
+        try
+        {
+            var stream = await storage.DownloadAsync(objectKey, storage.ResolveBucket("veloxml"), ct);
+            return File(stream, "image/jpeg");
+        }
+        catch
+        {
+            return NotFound();
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? termo,

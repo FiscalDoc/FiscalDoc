@@ -21,6 +21,13 @@ export class AuthService {
   readonly currentUser    = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
 
+  // A URL do avatar (usuarios/{id}/avatar) não muda quando a foto é trocada — é a mesma chave
+  // sobrescrita no storage. Esse contador força o <img> a buscar de novo depois de um upload,
+  // em vez de continuar mostrando a foto antiga do cache do navegador.
+  private readonly _avatarVersion = signal(0);
+  readonly avatarVersion = this._avatarVersion.asReadonly();
+  bumpAvatarVersion(): void { this._avatarVersion.update(v => v + 1); }
+
   readonly isOnTrial = computed(() => this._currentUser()?.plano === 'Trial');
   readonly isImpersonating = computed(() => !!this._currentUser()?.actingAdminId);
 
@@ -167,6 +174,14 @@ export class AuthService {
     this._currentUser.set(user);
 
     // Refresh plan + access expiration info from server in background
+    this.refreshMe();
+
+    return of(undefined);
+  }
+
+  // Também usado sob demanda (ex.: depois de trocar a foto do avatar) pra sincronizar o
+  // currentUser() sem precisar de um novo login/reload de página.
+  refreshMe(): void {
     this._api.get<CurrentUser>('/auth/me').subscribe({
       next: (me) => {
         const updated = this._currentUser();
@@ -176,15 +191,15 @@ export class AuthService {
             plano: me.plano,
             planoExpiracao: me.planoExpiracao,
             acessoExpiracao: me.acessoExpiracao,
+            avatarUrl: me.avatarUrl,
           });
+          this.bumpAvatarVersion();
           if (me.plano)          localStorage.setItem(PLANO_KEY,  me.plano);
           if (me.planoExpiracao) localStorage.setItem(EXPIRA_KEY, me.planoExpiracao);
         }
       },
       error: () => {},
     });
-
-    return of(undefined);
   }
 
   private _persistSession(res: LoginResponse): void {

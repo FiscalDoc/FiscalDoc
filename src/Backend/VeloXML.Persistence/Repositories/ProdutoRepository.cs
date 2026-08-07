@@ -19,4 +19,7 @@ public sealed class ProdutoRepository(AppDbContext context) : BaseRepository<Pro
         var items = await query.OrderBy(p => p.Descricao).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
         return PagedResult<Produto>.Create(items, total, page, pageSize);
     }
+
+    public async Task<bool> EstaEmUsoAsync(Guid produtoId, CancellationToken ct = default) =>
+        await context.Set<PedidoItem>().AnyAsync(i => i.ProdutoId == produtoId, ct);
 }

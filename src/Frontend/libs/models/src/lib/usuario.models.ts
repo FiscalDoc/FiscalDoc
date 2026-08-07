@@ -11,6 +11,7 @@ export interface UsuarioDto {
   twoFactorHabilitado: boolean;
   createdAt: string;
   ultimoAcessoEm?: string;
+  avatarUrl?: string;
 }
 
 export interface CreateUsuarioRequest {
