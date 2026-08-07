@@ -29,4 +29,9 @@ public sealed class NfeEmissaoRepository(AppDbContext context)
 
         return await query.OrderByDescending(e => e.CreatedAt).ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<NfeEmissao>> GetByClienteEPeriodoAsync(Guid clienteId, int mes, int ano, CancellationToken ct = default) =>
+        await DbSet
+            .Where(e => e.ClienteId == clienteId && e.CreatedAt.Month == mes && e.CreatedAt.Year == ano)
+            .ToListAsync(ct);
 }

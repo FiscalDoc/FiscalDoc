@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PedidoService } from '@veloxml/services';
-import { PedidoDto } from '@veloxml/models';
+import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
 
 @Component({
   selector: 'app-pedidos',
@@ -23,6 +23,38 @@ import { PedidoDto } from '@veloxml/models';
           <button class="btn-primary" (click)="novoPedido()">+ Novo Pedido</button>
         </div>
       </div>
+
+      @if (resumo(); as r) {
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <p class="kpi-label">Faturamento do mês</p>
+            <p class="kpi-value">{{ r.faturamentoMes | currency:'BRL':'symbol':'1.0-0' }}</p>
+            @if (r.faturamentoVariacaoPercentual != null) {
+              <p class="kpi-delta" [class.down]="r.faturamentoVariacaoPercentual < 0">
+                {{ r.faturamentoVariacaoPercentual >= 0 ? '↑' : '↓' }} {{ Math.abs(r.faturamentoVariacaoPercentual) }}%
+              </p>
+            }
+          </div>
+          <div class="kpi-card">
+            <p class="kpi-label">Notas autorizadas</p>
+            <p class="kpi-value">{{ r.notasAutorizadasMes }}</p>
+            @if (r.notasAutorizadasVariacaoPercentual != null) {
+              <p class="kpi-delta" [class.down]="r.notasAutorizadasVariacaoPercentual < 0">
+                {{ r.notasAutorizadasVariacaoPercentual >= 0 ? '↑' : '↓' }} {{ Math.abs(r.notasAutorizadasVariacaoPercentual) }}%
+              </p>
+            }
+          </div>
+          <div class="kpi-card">
+            <p class="kpi-label">Rejeições</p>
+            <p class="kpi-value">{{ r.percentualRejeicaoMes }}%</p>
+            @if (r.percentualRejeicaoVariacaoPontos != null) {
+              <p class="kpi-delta" [class.down]="r.percentualRejeicaoVariacaoPontos < 0">
+                {{ r.percentualRejeicaoVariacaoPontos >= 0 ? '↑' : '↓' }} {{ Math.abs(r.percentualRejeicaoVariacaoPontos) }} p.p.
+              </p>
+            }
+          </div>
+        </div>
+      }
 
       <!-- Filtro de status -->
       <div class="filter-bar">
@@ -92,6 +124,14 @@ import { PedidoDto } from '@veloxml/models';
     .back-btn:hover { color: var(--accent); }
     .header-row { display: flex; align-items: center; justify-content: space-between; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    .kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi-label { margin: 0; font-size: 11.5px; color: var(--text2); }
+    .kpi-value { margin: 4px 0 0; font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .kpi-delta { margin: 4px 0 0; font-size: 11.5px; font-weight: 600; color: var(--green); }
+    .kpi-delta.down { color: var(--red); }
+    @media (max-width: 640px) { .kpi-row { grid-template-columns: 1fr; } }
+
     .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; }
     .filter-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer; }
     .filter-btn:hover { border-color: var(--text2); color: var(--text); }
@@ -117,7 +157,7 @@ import { PedidoDto } from '@veloxml/models';
     .mono { font-family: monospace; font-size: 12px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-emitido  { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-emitido  { background: var(--green-dim); color: var(--green); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
     .badge-tipo--nf { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
@@ -143,11 +183,13 @@ export class PedidosComponent implements OnInit {
   private readonly _router = inject(Router);
 
   private clienteId = '';
+  protected readonly Math = Math;
 
   readonly pedidos       = signal<PedidoDto[]>([]);
   readonly loading       = signal(false);
   readonly statusFiltro  = signal<string | null>(null);
   readonly termo         = signal('');
+  readonly resumo        = signal<PedidosResumoDto | null>(null);
   de = '';
   ate = '';
   private _searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -155,6 +197,10 @@ export class PedidosComponent implements OnInit {
   ngOnInit(): void {
     this.clienteId = this._route.snapshot.paramMap.get('id')!;
     this.carregar();
+    this._svc.getResumo(this.clienteId).subscribe({
+      next: r => this.resumo.set(r),
+      error: () => this.resumo.set(null),
+    });
   }
 
   goBack(): void { this._router.navigate(['/clientes', this.clienteId]); }

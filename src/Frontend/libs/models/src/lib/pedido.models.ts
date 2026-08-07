@@ -144,6 +144,15 @@ export interface NfeCampoErroDto {
   mensagem: string;
 }
 
+export interface PedidosResumoDto {
+  faturamentoMes: number;
+  faturamentoVariacaoPercentual?: number;
+  notasAutorizadasMes: number;
+  notasAutorizadasVariacaoPercentual?: number;
+  percentualRejeicaoMes: number;
+  percentualRejeicaoVariacaoPontos?: number;
+}
+
 export interface NfeEmissaoDto {
   id: string;
   status: NfeEmissaoStatus;

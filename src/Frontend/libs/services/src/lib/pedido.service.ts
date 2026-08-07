@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto, NfeEmissaoDto } from '@veloxml/models';
+import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto, NfeEmissaoDto, PedidosResumoDto } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -58,6 +58,10 @@ export class PedidoService {
 
   getHistorico(clienteId: string, id: string): Observable<PedidoHistoricoDto[]> {
     return this._api.get<PedidoHistoricoDto[]>(`/clientes/${clienteId}/pedidos/${id}/historico`);
+  }
+
+  getResumo(clienteId: string): Observable<PedidosResumoDto> {
+    return this._api.get<PedidosResumoDto>(`/clientes/${clienteId}/pedidos/resumo`);
   }
 
   emitirNfeFocus(clienteId: string, id: string): Observable<NfeEmissaoDto> {

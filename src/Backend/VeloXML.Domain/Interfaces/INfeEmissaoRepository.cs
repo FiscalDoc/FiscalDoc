@@ -13,4 +13,9 @@ public interface INfeEmissaoRepository : IRepository<NfeEmissao>
     // nota de verdade). Sem filtro de Tenant/Cliente aqui de propósito (mesmo motivo de
     // NfeEmissao não ter FK pra Tenant) — quem chama já valida o acesso ao Cliente antes.
     Task<IReadOnlyList<NfeEmissao>> GetEmitidasNoPeriodoAsync(int mes, int ano, Guid? clienteId, CancellationToken ct = default);
+
+    // Diferente de GetEmitidasNoPeriodoAsync: traz TODAS as tentativas de emissão do período
+    // (inclusive Rejeitada/Erro/Processando) — necessário pro cálculo de taxa de rejeição do
+    // resumo de KPIs da tela de Pedidos, que precisa do denominador completo, não só do que saiu.
+    Task<IReadOnlyList<NfeEmissao>> GetByClienteEPeriodoAsync(Guid clienteId, int mes, int ano, CancellationToken ct = default);
 }

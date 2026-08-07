@@ -1,13 +1,15 @@
 :root {
+  // Mesma paleta usada na landing/mockup do site (--lg-* em landing.component.ts) — site e app
+  // logado compartilham agora uma única identidade visual.
   // Background layers
-  --bg:          #0d0f14;
-  --bg2:         #13161e;
-  --bg3:         #1a1e28;
-  --bg4:         #222636;
+  --bg:          oklch(0.16  0.03  262);
+  --bg2:         oklch(0.185 0.032 262);
+  --bg3:         oklch(0.22  0.034 262);
+  --bg4:         oklch(0.26  0.036 262);
 
   // Borders
-  --border:      rgba(255, 255, 255, 0.07);
-  --border2:     rgba(255, 255, 255, 0.12);
+  --border:      oklch(1 0 0 / 12%);
+  --border2:     oklch(1 0 0 / 20%);
 
   // Accent colors
   --accent:      oklch(0.62 0.17 254);
@@ -16,17 +18,17 @@
   --accent2-dim: oklch(0.68 0.15 253 / 0.14);
 
   // Text
-  --text:        #e8eaf0;
-  --text2:       #7c8299;
-  --text3:       #4a5068;
+  --text:        oklch(0.97 0.008 250);
+  --text2:       oklch(0.74 0.025 256);
+  --text3:       oklch(0.42 0.02  256);
 
   // Status
-  --red:         #ff4d6d;
-  --red-dim:     rgba(255, 77, 109, 0.12);
+  --red:         oklch(0.62 0.2  25);
+  --red-dim:     oklch(0.62 0.2  25 / 0.12);
   --yellow:      #ffd166;
   --yellow-dim:  rgba(255, 209, 102, 0.12);
-  --green:       #00e5a0;
-  --green-dim:   rgba(0, 229, 160, 0.12);
+  --green:       oklch(0.78 0.17 158);
+  --green-dim:   oklch(0.78 0.17 158 / 0.12);
 
   // Layout
   --radius:      12px;
