@@ -129,6 +129,11 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
               <span class="kpi-value font-heading">{{ c.totalNotasFiscais }}</span>
               <span class="kpi-sub">de {{ c.totalDocumentos }} documentos</span>
             </div>
+            <div class="kpi-card kpi-accent">
+              <span class="kpi-label">Faturamento Total</span>
+              <span class="kpi-value font-heading accent">{{ c.faturamentoTotalNotas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+              <span class="kpi-sub">soma de todas as NF-e emitidas</span>
+            </div>
             <div class="kpi-card">
               <span class="kpi-label">Total de Pedidos</span>
               <span class="kpi-value font-heading">{{ c.totalPedidos }}</span>
@@ -300,7 +305,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .page-sub { color: var(--text2); font-size: 13px; margin-top: 2px; }
     .loading { color: var(--text2); font-size: 14px; padding: 2rem; text-align: center; }
 
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
     .kpi-card {
       background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;

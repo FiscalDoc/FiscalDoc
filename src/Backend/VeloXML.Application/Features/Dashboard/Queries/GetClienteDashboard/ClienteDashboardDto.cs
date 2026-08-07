@@ -9,6 +9,7 @@ public record ClienteDashboardDto(
     int PedidosCancelados,
     decimal ValorTotalPedidosMes,
     decimal ValorTotalDocumentosMes,
+    decimal FaturamentoTotalNotas,
     int AlertasAtivos,
     IReadOnlyList<DocumentoPorTipoClienteDto> DocumentosPorTipo,
     IReadOnlyList<DocumentoPorMesClienteDto> DocumentosPorMes

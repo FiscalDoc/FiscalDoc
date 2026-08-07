@@ -35,7 +35,8 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
             clienteId, body.Codigo, body.Descricao, body.Ncm,
             body.Unidade, body.PrecoUnitario, body.Cfop,
             body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins,
-            body.CstIcms, body.CstPis, body.CstCofins, body.IcmsOrigem, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria), ct);
+            body.CstIcms, body.CstPis, body.CstCofins, body.IcmsOrigem, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria,
+            body.ValorCusto, body.PercentualImposto), ct);
         return result.IsSuccess ? Created(string.Empty, result.Value) : BadRequest(result.Error);
     }
 
@@ -46,7 +47,8 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
             id, clienteId, body.Codigo, body.Descricao, body.Ncm,
             body.Unidade, body.PrecoUnitario, body.Cfop,
             body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins, body.Ativo,
-            body.CstIcms, body.CstPis, body.CstCofins, body.IcmsOrigem, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria), ct);
+            body.CstIcms, body.CstPis, body.CstCofins, body.IcmsOrigem, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria,
+            body.ValorCusto, body.PercentualImposto), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
@@ -73,7 +75,9 @@ public record CreateProdutoRequest(
     string? CstCofins = null,
     int IcmsOrigem = 0,
     string? IbsCbsCst = null,
-    string? IbsCbsClassificacaoTributaria = null
+    string? IbsCbsClassificacaoTributaria = null,
+    decimal ValorCusto = 0,
+    decimal PercentualImposto = 0
 );
 
 public record UpdateProdutoRequest(
@@ -92,5 +96,7 @@ public record UpdateProdutoRequest(
     string? CstCofins = null,
     int IcmsOrigem = 0,
     string? IbsCbsCst = null,
-    string? IbsCbsClassificacaoTributaria = null
+    string? IbsCbsClassificacaoTributaria = null,
+    decimal ValorCusto = 0,
+    decimal PercentualImposto = 0
 );

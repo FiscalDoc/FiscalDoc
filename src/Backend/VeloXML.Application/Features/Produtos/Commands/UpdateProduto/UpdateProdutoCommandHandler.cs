@@ -31,6 +31,8 @@ public sealed class UpdateProdutoCommandHandler(IUnitOfWork uow)
         produto.IcmsOrigem = request.IcmsOrigem;
         produto.IbsCbsCst = request.IbsCbsCst;
         produto.IbsCbsClassificacaoTributaria = request.IbsCbsClassificacaoTributaria;
+        produto.ValorCusto = request.ValorCusto;
+        produto.PercentualImposto = request.PercentualImposto;
 
         uow.Produtos.Update(produto);
         await uow.SaveChangesAsync(ct);

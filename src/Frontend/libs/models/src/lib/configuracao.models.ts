@@ -31,6 +31,14 @@ export interface SaveFocusNfeConfigRequest {
   webhookSecret?: string;
 }
 
+export interface GroqConfigDto {
+  apiKeyConfigurada: boolean;
+}
+
+export interface SaveGroqConfigRequest {
+  apiKey?: string;
+}
+
 export interface SocialConfigDto {
   instagram?: string;
   facebook?: string;

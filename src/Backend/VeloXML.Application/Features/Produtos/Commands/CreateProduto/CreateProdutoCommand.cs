@@ -19,7 +19,9 @@ public record CreateProdutoCommand(
     string? CstCofins = null,
     int IcmsOrigem = 0,
     string? IbsCbsCst = null,
-    string? IbsCbsClassificacaoTributaria = null
+    string? IbsCbsClassificacaoTributaria = null,
+    decimal ValorCusto = 0,
+    decimal PercentualImposto = 0
 ) : IRequest<Result<ProdutoDto>>;
 
 public record ProdutoDto(
@@ -41,5 +43,7 @@ public record ProdutoDto(
     string? CstCofins,
     int IcmsOrigem,
     string? IbsCbsCst,
-    string? IbsCbsClassificacaoTributaria
+    string? IbsCbsClassificacaoTributaria,
+    decimal ValorCusto,
+    decimal PercentualImposto
 );

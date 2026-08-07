@@ -150,4 +150,20 @@ public sealed class ConfiguracoesController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(command, ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpGet("groq")]
+    public async Task<IActionResult> GetGroq(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetGroqConfigQuery(), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpPut("groq")]
+    public async Task<IActionResult> SaveGroq([FromBody] SaveGroqConfigCommand command, CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
 }

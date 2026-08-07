@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
-import { FocusNfeConfigDto } from '@veloxml/models';
+import { FocusNfeConfigDto, GroqConfigDto } from '@veloxml/models';
 
-type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe';
+type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe' | 'assistenteIa';
 
 @Component({
   selector: 'app-configuracoes',
@@ -29,6 +29,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
     <button class="tab-btn" [class.active]="tab() === 'importacao'" (click)="tab.set('importacao'); carregarIntervalo()">Importação de E-mails</button>
     <button class="tab-btn" [class.active]="tab() === 'storage'" (click)="tab.set('storage')">Armazenamento</button>
     <button class="tab-btn" [class.active]="tab() === 'focusNfe'" (click)="tab.set('focusNfe'); carregarFocusNfe()">Focus NFe</button>
+    <button class="tab-btn" [class.active]="tab() === 'assistenteIa'" (click)="tab.set('assistenteIa'); carregarGroq()">Assistente IA</button>
   </nav>
 
   <!-- ══ E-MAIL (SMTP) ══ -->
@@ -372,6 +373,50 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
       }
     </div>
   }
+
+  <!-- ══ ASSISTENTE IA (GROQ) ══ -->
+  @if (tab() === 'assistenteIa') {
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Assistente Virtual (Groq)</div>
+          <div class="section-sub">Chave única da plataforma — habilita o chat de IA que orienta o usuário dentro do sistema (não emite nem altera nada sozinho)</div>
+        </div>
+      </div>
+
+      @if (loadingGroq()) {
+        <div class="empty-state">Carregando configurações...</div>
+      } @else {
+        <form [formGroup]="groqForm" (ngSubmit)="saveGroq()" class="settings-form">
+          <div class="field">
+            <label class="label">
+              Chave da API do Groq
+              @if (groqConfig()?.apiKeyConfigurada) { <span class="tag-ok">configurado</span> }
+            </label>
+            <input class="input" type="password" formControlName="apiKey" placeholder="Deixe em branco para não alterar" autocomplete="new-password"/>
+            <p class="section-sub" style="margin:2px 0 0">
+              Gere uma chave grátis em console.groq.com — sem isso, o botão do assistente fica
+              desabilitado pros usuários.
+            </p>
+          </div>
+
+          @if (groqSuccess()) { <div class="alert-success">{{ checkIcon() }} Configurações salvas com sucesso!</div> }
+          @if (groqError()) { <div class="alert-error">{{ groqError() }}</div> }
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="savingGroq()">
+              {{ savingGroq() ? 'Salvando...' : 'Salvar Configurações' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
 </div>
   `,
   styles: [`
@@ -551,6 +596,18 @@ export class ConfiguracoesComponent implements OnInit {
     const secret = this.focusNfeForm.value.webhookSecret;
     return secret ? `${location.origin}/api/v1/webhooks/focus-nfe/${secret}` : '';
   }
+
+  // Assistente IA (Groq)
+  loadingGroq = signal(false);
+  savingGroq  = signal(false);
+  groqSuccess = signal(false);
+  groqError   = signal<string | null>(null);
+  groqConfig  = signal<GroqConfigDto | null>(null);
+  private _groqCarregado = false;
+
+  groqForm = this._fb.group({
+    apiKey: [''],
+  });
 
   ngOnInit(): void {
     this.testEmailDestino = this._auth.currentUser()?.email ?? '';
@@ -789,6 +846,43 @@ export class ConfiguracoesComponent implements OnInit {
       error: err => {
         this.savingFocusNfe.set(false);
         this.focusNfeError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
+      },
+    });
+  }
+
+  carregarGroq(): void {
+    if (this._groqCarregado) return;
+    this._groqCarregado = true;
+    this.loadingGroq.set(true);
+    this._svc.getGroq().subscribe({
+      next: c => {
+        this.groqConfig.set(c);
+        this.loadingGroq.set(false);
+      },
+      error: () => this.loadingGroq.set(false),
+    });
+  }
+
+  saveGroq(): void {
+    if (this.savingGroq()) return;
+    this.savingGroq.set(true);
+    this.groqSuccess.set(false);
+    this.groqError.set(null);
+    const v = this.groqForm.getRawValue();
+
+    this._svc.saveGroq({
+      apiKey: v.apiKey || undefined,
+    }).subscribe({
+      next: c => {
+        this.groqConfig.set(c);
+        this.groqForm.patchValue({ apiKey: '' });
+        this.savingGroq.set(false);
+        this.groqSuccess.set(true);
+        setTimeout(() => this.groqSuccess.set(false), 4000);
+      },
+      error: err => {
+        this.savingGroq.set(false);
+        this.groqError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
       },
     });
   }

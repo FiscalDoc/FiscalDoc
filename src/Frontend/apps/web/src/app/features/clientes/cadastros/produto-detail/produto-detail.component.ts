@@ -57,7 +57,7 @@ type Tab = 'geral' | 'fiscal';
               </div>
               <div class="field">
                 <label class="label">Preço Unitário *</label>
-                <input class="input" type="number" min="0" step="0.001" [(ngModel)]="form.precoUnitario"/>
+                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.precoUnitario"/>
               </div>
               @if (!isNew()) {
                 <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
@@ -68,6 +68,29 @@ type Tab = 'geral' | 'fiscal';
                   </label>
                 </div>
               }
+            </div>
+          </div>
+
+          <div class="card section">
+            <h4 class="section-title">Custo e Margem</h4>
+            <p class="field-hint" style="margin:0">Não entra na nota fiscal — é só pra você acompanhar quanto sobra por venda desse produto.</p>
+            <div class="form-grid">
+              <div class="field">
+                <label class="label">Valor de Custo (R$)</label>
+                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.valorCusto"/>
+              </div>
+              <div class="field">
+                <label class="label">% Imposto (estimado)</label>
+                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.percentualImposto"/>
+              </div>
+              <div class="field">
+                <label class="label">Margem</label>
+                <input class="input" disabled [value]="margemValor() | currency:'BRL':'symbol':'1.2-2'"/>
+              </div>
+              <div class="field">
+                <label class="label">Margem (%)</label>
+                <input class="input" disabled [value]="(margemPercentual() | number:'1.1-1') + '%'"/>
+              </div>
             </div>
           </div>
         }
@@ -277,7 +300,19 @@ export class ProdutoDetailComponent implements OnInit {
       cstIcms: p.cstIcms ?? '', cstPis: p.cstPis ?? '', cstCofins: p.cstCofins ?? '',
       icmsOrigem: p.icmsOrigem ?? 0,
       ibsCbsCst: p.ibsCbsCst ?? '', ibsCbsClassificacaoTributaria: p.ibsCbsClassificacaoTributaria ?? '',
+      valorCusto: p.valorCusto ?? 0, percentualImposto: p.percentualImposto ?? 0,
     };
+  }
+
+  margemValor(): number {
+    const custoTotal = (+this.form.valorCusto || 0) + (+this.form.precoUnitario || 0) * (+this.form.percentualImposto || 0) / 100;
+    return (+this.form.precoUnitario || 0) - custoTotal;
+  }
+
+  margemPercentual(): number {
+    const preco = +this.form.precoUnitario || 0;
+    if (preco === 0) return 0;
+    return (this.margemValor() / preco) * 100;
   }
 
   goBack(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'produtos']); }
@@ -305,6 +340,8 @@ export class ProdutoDetailComponent implements OnInit {
       icmsOrigem: +this.form.icmsOrigem,
       ibsCbsCst: this.form.ibsCbsCst || undefined,
       ibsCbsClassificacaoTributaria: this.form.ibsCbsClassificacaoTributaria || undefined,
+      valorCusto: +this.form.valorCusto || 0,
+      percentualImposto: +this.form.percentualImposto || 0,
     };
 
     const obs = this.isNew()
@@ -341,6 +378,7 @@ export class ProdutoDetailComponent implements OnInit {
       aliquotaIcms: 0, aliquotaPis: 0, aliquotaCofins: 0, ativo: true,
       cstIcms: '', cstPis: '', cstCofins: '', icmsOrigem: 0,
       ibsCbsCst: '', ibsCbsClassificacaoTributaria: '',
+      valorCusto: 0, percentualImposto: 0,
     };
   }
 }

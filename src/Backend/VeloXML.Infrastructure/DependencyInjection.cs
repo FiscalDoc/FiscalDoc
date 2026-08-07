@@ -62,6 +62,11 @@ public static class DependencyInjection
         services.AddHttpClient("focus-nfe");
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 
+        // Assistente de IA (Groq) — mesmo padrão do Focus NFe: token único da plataforma,
+        // configurado pelo Admin em Configurações, lido em runtime (ver GroqConfigKeys).
+        services.AddScoped<IAssistenteChatService, Assistente.GroqChatService>();
+        services.AddHttpClient("groq");
+
         var jwtOpts = config.GetSection(JwtOptions.Section).Get<JwtOptions>()!;
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>

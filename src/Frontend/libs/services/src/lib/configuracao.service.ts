@@ -3,8 +3,10 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
   FocusNfeConfigDto,
+  GroqConfigDto,
   ImportacaoXmlStatusDto,
   SaveFocusNfeConfigRequest,
+  SaveGroqConfigRequest,
   SaveSmtpConfigRequest,
   SendConviteRequest,
   SmtpConfigDto,
@@ -70,5 +72,13 @@ export class ConfiguracaoService {
 
   saveFocusNfe(req: SaveFocusNfeConfigRequest): Observable<FocusNfeConfigDto> {
     return this._api.put<FocusNfeConfigDto>('/configuracoes/focus-nfe', req);
+  }
+
+  getGroq(): Observable<GroqConfigDto> {
+    return this._api.get<GroqConfigDto>('/configuracoes/groq');
+  }
+
+  saveGroq(req: SaveGroqConfigRequest): Observable<GroqConfigDto> {
+    return this._api.put<GroqConfigDto>('/configuracoes/groq', req);
   }
 }

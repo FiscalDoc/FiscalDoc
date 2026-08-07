@@ -123,13 +123,16 @@ import { AuthService } from '@veloxml/services';
       --lg-red: oklch(0.62 0.2 25);
       --lg-shadow-soft: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0 0 0 / 0.35);
       display: block;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
       font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
       letter-spacing: -0.011em;
     }
 
     .login-page {
       display: grid;
-      min-height: 100vh;
+      height: 100%;
       background: var(--lg-bg);
       color: var(--lg-fg);
     }
@@ -141,6 +144,7 @@ import { AuthService } from '@veloxml/services';
       display: flex;
       flex-direction: column;
       justify-content: center;
+      overflow-y: auto;
       padding: 3.5rem 1.5rem;
     }
     @media (min-width: 640px) { .login-form-side { padding: 3.5rem 2.5rem; } }
@@ -300,6 +304,6 @@ export class LoginComponent implements OnInit {
   private _destinoAposLogin(): string {
     const perfil = this._auth.currentUser()?.perfil;
     if (perfil === 'Administrador') return '/auth/selecionar-contexto';
-    return perfil === 'Cliente' ? '/documentos' : '/dashboard';
+    return '/dashboard';
   }
 }

@@ -35,6 +35,13 @@ public class Produto : BaseEntity, IAuditableEntity
     public string? IbsCbsCst { get; set; }
     public string? IbsCbsClassificacaoTributaria { get; set; }
 
+    // Custo e margem — não entra na NF-e, é só pra saber quanto sobra por venda. Preço de venda
+    // já existe (PrecoUnitario); PercentualImposto é uma taxa efetiva simples pra estimativa de
+    // margem, separada dos CSTs/alíquotas fiscais (que são pra classificação/conformidade, não
+    // pra esse cálculo gerencial).
+    public decimal ValorCusto { get; set; } = 0;
+    public decimal PercentualImposto { get; set; } = 0;
+
     public bool Ativo { get; set; } = true;
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }

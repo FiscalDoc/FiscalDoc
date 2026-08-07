@@ -30,6 +30,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
         </a>
         <nav class="nav-links">
           <a href="#features">Recursos</a>
+          <a href="#para-quem-e">Para quem é</a>
           <a href="#how">Como funciona</a>
           <a href="#plans">Planos</a>
           <a routerLink="/blog">Blog</a>
@@ -48,6 +49,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       @if (mobileMenuOpen()) {
         <nav class="mobile-nav">
           <a href="#features" (click)="mobileMenuOpen.set(false)">Recursos</a>
+          <a href="#para-quem-e" (click)="mobileMenuOpen.set(false)">Para quem é</a>
           <a href="#how" (click)="mobileMenuOpen.set(false)">Como funciona</a>
           <a href="#plans" (click)="mobileMenuOpen.set(false)">Planos</a>
           <a routerLink="/blog" (click)="mobileMenuOpen.set(false)">Blog</a>
@@ -66,13 +68,13 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       </div>
       <div class="container hero-container">
         <div class="hero-copy">
-          <div class="badge-pill">Sistema para Escritórios Contábeis</div>
+          <div class="badge-pill">Para escritórios contábeis e empresas</div>
           <h1 class="hero-title">
-            Gerencie todos os seus<br>
-            <span class="gradient-text">clientes em um só lugar</span>
+            Contabilidade organizada<br>
+            <span class="gradient-text">e notas emitidas em um só lugar</span>
           </h1>
           <p class="hero-sub">
-            Receba, organize e monitore NF-e, CT-e, MDF-e e NFS-e automaticamente.
+            Emita NF-e direto pela plataforma, integrado à SEFAZ.
             Alertas inteligentes, histórico completo e controle total!
           </p>
           <div class="hero-cta">
@@ -104,15 +106,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
               <nav class="mockup-sidebar-nav">
                 <span class="mockup-nav-item active">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                  NF-e
-                </span>
-                <span class="mockup-nav-item">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                  NFC-e
-                </span>
-                <span class="mockup-nav-item">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7M9 9v.01M9 12v.01M9 15v.01"/></svg>
-                  NFS-e
+                  Pedidos / NF-e
                 </span>
               </nav>
               <p class="mockup-sidebar-label">Gestão</p>
@@ -161,11 +155,11 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
                       <td><span class="mockup-status ok">Autorizada</span></td>
                     </tr>
                     <tr>
-                      <td>NFC-e 009274</td><td class="hide-sm">Consumidor final</td><td>R$ 289,90</td>
+                      <td>NF-e 004509</td><td class="hide-sm">Prisma Comércio ME</td><td>R$ 3.150,00</td>
                       <td><span class="mockup-status ok">Autorizada</span></td>
                     </tr>
                     <tr>
-                      <td>NFS-e 001188</td><td class="hide-sm">Prisma Serviços ME</td><td>R$ 3.150,00</td>
+                      <td>NF-e 004510</td><td class="hide-sm">Ateliê Miró</td><td>R$ 890,00</td>
                       <td><span class="mockup-status ok">Autorizada</span></td>
                     </tr>
                     <tr>
@@ -181,8 +175,8 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 
         <div class="hero-stats">
           <div class="stat">
-            <span class="stat-num">4</span>
-            <span class="stat-label">tipos de XML</span>
+            <span class="stat-num">NF-e</span>
+            <span class="stat-label">emissão direta à SEFAZ</span>
           </div>
           <div class="stat-div"></div>
           <div class="stat">
@@ -198,6 +192,47 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           <div class="stat">
             <span class="stat-num">∞</span>
             <span class="stat-label">documentos</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── PARA QUEM É ─────────────────────────────────────── -->
+    <section class="audience" id="para-quem-e">
+      <div class="container">
+        <div class="section-label">Para quem é</div>
+        <h2 class="section-title">Feito pra quem cuida da contabilidade e pra quem emite a nota</h2>
+        <p class="section-sub">Um único sistema, dois jeitos de usar — sem troca manual de arquivo entre os dois.</p>
+
+        <div class="audience-grid">
+          <div class="audience-card">
+            <div class="audience-icon accent">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.196-3.796M9 20H4v-2a4 4 0 015.196-3.796M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 3a3 3 0 11-6 0 3 3 0 016 0zM3 10a3 3 0 116 0 3 3 0 01-6 0z"/>
+              </svg>
+            </div>
+            <h3>Para escritórios contábeis</h3>
+            <p>Gerencie todos os seus clientes num só painel: receba os documentos automaticamente, acompanhe alertas de inconsistência e baixe XMLs individual ou em lote — sem depender de e-mail nem de planilha.</p>
+            <ul class="audience-list">
+              <li><span class="check">✓</span> Multi-cliente com permissões separadas</li>
+              <li><span class="check">✓</span> Recepção automática de XMLs por API</li>
+              <li><span class="check">✓</span> Download em lote e relatórios gerenciais</li>
+            </ul>
+          </div>
+
+          <div class="audience-card">
+            <div class="audience-icon blue">
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <h3>Para empresas que emitem nota</h3>
+            <p>Emita sua própria NF-e direto na plataforma, integrada à SEFAZ, sem precisar pedir pro contador pra cada venda. E quando quiser, conecte seu contador com um clique — ele acompanha tudo em tempo real, sem precisar de acesso pra emitir.</p>
+            <ul class="audience-list">
+              <li><span class="check">✓</span> Emissão de NF-e sem burocracia</li>
+              <li><span class="check">✓</span> Histórico completo de pedidos e notas</li>
+              <li><span class="check">✓</span> Vínculo direto com o seu escritório contábil</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -318,7 +353,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
         <div class="plan-card plan-single">
           <div class="plan-badge">Fale com a gente</div>
           <ul class="plan-features">
-            <li><span class="check">✓</span> NF-e, CT-e, MDF-e, NFS-e</li>
+            <li><span class="check">✓</span> Emissão de NF-e integrada à SEFAZ</li>
             <li><span class="check">✓</span> Recepção automática de XMLs por API</li>
             <li><span class="check">✓</span> Alertas automáticos de duplicidade e inconsistência</li>
             <li><span class="check">✓</span> Download individual e em lote</li>
@@ -353,7 +388,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
               <tbody>
                 <tr><td>Clientes cadastrados</td><td class="yes">Ilimitado</td><td class="yes">Ilimitado</td></tr>
                 <tr><td>XMLs processados</td><td class="yes">100/mês</td><td class="yes">Ilimitado</td></tr>
-                <tr><td>NF-e, CT-e, MDF-e</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+                <tr><td>Emissão de NF-e</td><td class="yes">✓</td><td class="yes">✓</td></tr>
                 <tr><td>Alertas automáticos</td><td class="yes">✓</td><td class="yes">✓</td></tr>
                 <tr><td>Download em lote</td><td class="no">—</td><td class="yes">✓</td></tr>
                 <tr><td>Auditoria completa</td><td class="no">—</td><td class="yes">✓</td></tr>
@@ -501,7 +536,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
               </span>
               <span class="brand-fiscal">Fiscal</span><span class="brand-doc">Doc</span>
             </div>
-            <p class="footer-tagline">Receba, organize e monitore NF-e, CT-e, MDF-e e NFS-e automaticamente.</p>
+            <p class="footer-tagline">Emissão de NF-e integrada à SEFAZ, com suporte humano de verdade.</p>
 
             @if (hasSocialLinks()) {
               <div class="footer-social">
@@ -767,6 +802,29 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .section-title { font-size: clamp(1.6rem, 3.5vw, 2.4rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; color: var(--lg-brand-deep); letter-spacing: -0.02em; }
     .section-sub { font-size: 1rem; color: var(--lg-muted); line-height: 1.7; max-width: 560px; }
 
+    /* ─── PARA QUEM É ─────────────────────────── */
+    .audience { padding: 5rem 0; background: var(--lg-surface); }
+    @media (min-width: 640px) { .audience { padding: 7rem 0; } }
+    .audience > .container > .section-sub { margin-bottom: 3.5rem; }
+    .audience-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    @media (max-width: 780px) { .audience-grid { grid-template-columns: 1fr; } }
+    .audience-card {
+      background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 20px;
+      padding: 2rem; display: flex; flex-direction: column; gap: 1rem;
+      transition: border-color 200ms, transform 200ms, box-shadow 200ms;
+    }
+    .audience-card:hover { border-color: transparent; transform: translateY(-3px); box-shadow: var(--lg-shadow-lift); }
+    .audience-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .audience-icon.accent { background: var(--lg-brand-soft); color: var(--lg-brand-deep); }
+    .audience-icon.blue { background: oklch(0.62 0.17 254 / .16); color: var(--lg-brand); }
+    .audience-card h3 { font-size: 1.15rem; font-weight: 700; color: var(--lg-fg); }
+    .audience-card p  { font-size: 14px; color: var(--lg-muted); line-height: 1.65; }
+    .audience-list { display: flex; flex-direction: column; gap: 0.625rem; margin-top: .5rem; padding-top: 1.25rem; border-top: 1px solid var(--lg-border); }
+    .audience-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; color: var(--lg-fg); }
+
     /* ─── FEATURES ───────────────────────────── */
     .features { padding: 5rem 0; background: var(--lg-bg); }
     @media (min-width: 640px) { .features { padding: 7rem 0; } }
@@ -976,15 +1034,15 @@ export class LandingComponent implements OnInit {
   readonly faqs = [
     {
       q: 'O que é o FiscalDoc e como ele funciona na gestão de documentos fiscais?',
-      a: 'O FiscalDoc é um hub fiscal inteligente desenvolvido especificamente para escritórios de contabilidade e departamentos fiscais. Ele funciona como uma plataforma centralizada na nuvem que automatiza a recepção, organização e monitoramento de XMLs (NF-e, CT-e, NFS-e e MDF-e).\nO sistema elimina o trabalho manual de importação de notas fiscais. Seus clientes enviam os arquivos (ou utilizam nossa API/e-mail exclusivo) e o FiscalDoc automaticamente valida, indexa e organiza esses documentos, permitindo que sua equipe visualize todos os clientes em uma única tela, sem depender de planilhas ou e-mails descentralizados.',
+      a: 'O FiscalDoc é um hub fiscal inteligente desenvolvido especificamente para escritórios de contabilidade e departamentos fiscais. Ele funciona como uma plataforma centralizada na nuvem que automatiza a emissão, recepção, organização e monitoramento de NF-e.\nO sistema elimina o trabalho manual de importação de notas fiscais. Seus clientes enviam os arquivos (ou utilizam nossa API/e-mail exclusivo) e o FiscalDoc automaticamente valida, indexa e organiza esses documentos, permitindo que sua equipe visualize todos os clientes em uma única tela, sem depender de planilhas ou e-mails descentralizados.',
     },
     {
       q: 'De que maneira o FiscalDoc protege o escritório e o cliente contra prejuízos financeiros e multas?',
       a: 'O FiscalDoc age como uma blindagem fiscal ativa contra erros humanos e fraudes. A conferência manual de notas fiscais é um processo lento e falho, que frequentemente resulta em pagamentos indevidos ou créditos tributários perdidos.\nNossa plataforma protege seu escritório e seus clientes de duas formas críticas:\n1. Detecção de Divergências de Valor: o sistema cruza automaticamente os dados do XML contra pedidos de compra ou valores de contrato, emitindo alertas imediatos se houver cobranças indevidas ou erros de emissão pelo fornecedor antes da contabilização.\n2. Bloqueio de Notas Duplicadas: o robô do FiscalDoc identifica XMLs duplicados (mesma chave de acesso ou número de nota) em tempo real, evitando que o financeiro pague a mesma despesa duas vezes — um erro operacional comum que gera alto ROI negativo.\nAo garantir que apenas notas fiscais validadas e íntegras sejam processadas, você elimina o risco de multas por inconsistências no SPED e blinda o caixa do seu cliente contra prejuízos diretos.',
     },
     {
-      q: 'Quais tipos de XML o FiscalDoc suporta e qual o volume de documentos suportado?',
-      a: 'O FiscalDoc é uma solução multi-tenant robusta que suporta todos os principais tipos de documentos fiscais eletrônicos do Brasil: NF-e (Nota Fiscal de Produto/Mercadoria), NFS-e (Nota Fiscal de Serviço), CT-e (Conhecimento de Transporte Eletrônico) e MDF-e (Manifesto Eletrônico de Documentos Fiscais).\nQuanto ao volume, nossa infraestrutura em nuvem é elástica e projetada para alta escala, atendendo desde pequenas empresas até grandes indústrias ou escritórios contábeis com centenas de clientes e milhares de notas processadas diariamente, mantendo a performance de busca instantânea (menos de 2 segundos por nota).',
+      q: 'O FiscalDoc emite NF-e de verdade, integrado à SEFAZ?',
+      a: 'Sim. Hoje o FiscalDoc emite NF-e (Nota Fiscal Eletrônica de Produto/Mercadoria) direto pela plataforma, com validação automática e envio real à SEFAZ — sem precisar de outro sistema.\nNossa infraestrutura em nuvem é elástica e projetada para alta escala, atendendo desde pequenas empresas até escritórios contábeis com centenas de clientes, mantendo a performance de busca instantânea (menos de 2 segundos por nota).',
     },
     {
       q: 'O sistema possui integração com ERPs e compartilhamento com o contador?',

@@ -41,6 +41,7 @@ export interface ClienteDashboardDto {
   pedidosCancelados: number;
   valorTotalPedidosMes: number;
   valorTotalDocumentosMes: number;
+  faturamentoTotalNotas: number;
   alertasAtivos: number;
   documentosPorTipo: DocumentoPorTipoClienteDto[];
   documentosPorMes: DocumentoPorMesClienteDto[];

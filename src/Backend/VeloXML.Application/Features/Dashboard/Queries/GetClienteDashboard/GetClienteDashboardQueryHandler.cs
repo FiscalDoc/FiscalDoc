@@ -26,6 +26,11 @@ public sealed class GetClienteDashboardQueryHandler(IUnitOfWork uow, ICurrentUse
         var totalDocumentos = documentos.Count;
         var totalNotasFiscais = documentos.Count(d => d.Tipo == TipoDocumentoEnum.NFe);
         var valorDocumentosMes = documentos.Where(d => d.DataEmissao >= inicioMes).Sum(d => d.ValorTotal);
+        // Faturamento total (histórico completo, não só o mês) das NF-e realmente autorizadas —
+        // exclui canceladas, senão o valor faturado incluiria notas que não valem mais nada.
+        var faturamentoTotalNotas = documentos
+            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status != StatusDocumentoEnum.Cancelado)
+            .Sum(d => d.ValorTotal);
 
         var porTipo = documentos
             .GroupBy(d => d.Tipo.ToString())
@@ -65,7 +70,7 @@ public sealed class GetClienteDashboardQueryHandler(IUnitOfWork uow, ICurrentUse
         return Result.Success(new ClienteDashboardDto(
             totalDocumentos, totalNotasFiscais, totalPedidos,
             pedidosRascunho, pedidosEmitidos, pedidosCancelados,
-            valorPedidosMes, valorDocumentosMes, alertasAtivos,
+            valorPedidosMes, valorDocumentosMes, faturamentoTotalNotas, alertasAtivos,
             porTipo, porMes));
     }
 }

@@ -488,7 +488,7 @@ interface ConfirmState {
                     }
                   </td>
                   <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
-                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.001"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
                   <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.desconto" (input)="calcTotal(i)" min="0" step="0.01"/></td>
                   <td class="total-cell">
                     <div>{{ itemTotal(item) | currency:'BRL':'symbol':'1.2-2' }}</div>
@@ -635,7 +635,7 @@ interface ConfirmState {
           </div>
           <div class="field">
             <label class="label">Preço Unitário *</label>
-            <input class="input" type="number" min="0" step="0.001" [(ngModel)]="novoProdutoForm.precoUnitario"/>
+            <input class="input" type="number" min="0" step="0.01" [(ngModel)]="novoProdutoForm.precoUnitario"/>
           </div>
           @if (erroNovoProduto()) { <div class="alert-error">{{ erroNovoProduto() }}</div> }
           <div class="confirm-actions">
@@ -776,14 +776,25 @@ interface ConfirmState {
     .header-section .input, .header-section textarea.input { padding: .375rem .625rem; font-size: 13px; }
     .header-section textarea.input { min-height: 32px; resize: vertical; }
     .input:focus, textarea.input:focus { border-color: var(--accent); }
-    .input:disabled, textarea.input:disabled { opacity: .6; cursor: not-allowed; }
+    .input:disabled, textarea.input:disabled {
+      opacity: .6; cursor: not-allowed;
+      background: var(--bg3); color: var(--text); -webkit-text-fill-color: var(--text);
+      -webkit-appearance: none; appearance: none;
+    }
     .input-sm { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 4px 8px; font-size: 12.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
     .input-sm:focus { border-color: var(--accent); }
-    .input-sm:disabled { opacity: .6; cursor: not-allowed; }
+    .input-sm:disabled {
+      opacity: .6; cursor: not-allowed;
+      background: var(--bg3); color: var(--text); -webkit-text-fill-color: var(--text);
+      -webkit-appearance: none; appearance: none;
+    }
     .input-sm.num { text-align: right; }
     .input-sm.error, select.input-sm.error { border-color: var(--red); }
     .impostos-form-grid { grid-template-columns: repeat(4, 1fr); gap: .75rem .875rem; }
-    .imposto-destaque:disabled { color: var(--accent); font-weight: 700; opacity: 1; border-color: oklch(0.62 0.17 254 / .35); }
+    .imposto-destaque:disabled {
+      color: var(--accent); -webkit-text-fill-color: var(--accent); font-weight: 700; opacity: 1;
+      background: var(--accent-dim); border-color: oklch(0.62 0.17 254 / .35);
+    }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 1.5rem; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }

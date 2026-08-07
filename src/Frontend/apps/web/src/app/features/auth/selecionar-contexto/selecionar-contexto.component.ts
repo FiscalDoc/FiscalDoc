@@ -340,7 +340,7 @@ export class SelecionarContextoComponent {
     }).subscribe({
       next: () => {
         this.entrando.set(false);
-        this._router.navigate([this.perfil === 'Cliente' ? '/documentos' : '/dashboard']);
+        this._router.navigate(['/dashboard']);
       },
       error: err => {
         this.entrando.set(false);

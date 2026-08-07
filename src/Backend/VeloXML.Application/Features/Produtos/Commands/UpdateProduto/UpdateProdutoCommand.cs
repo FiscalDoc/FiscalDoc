@@ -22,5 +22,7 @@ public record UpdateProdutoCommand(
     string? CstCofins = null,
     int IcmsOrigem = 0,
     string? IbsCbsCst = null,
-    string? IbsCbsClassificacaoTributaria = null
+    string? IbsCbsClassificacaoTributaria = null,
+    decimal ValorCusto = 0,
+    decimal PercentualImposto = 0
 ) : IRequest<Result<ProdutoDto>>;

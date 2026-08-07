@@ -307,7 +307,11 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
     .input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; }
     .input:focus { border-color: var(--accent); }
-    .input:disabled { opacity: .6; cursor: not-allowed; }
+    .input:disabled {
+      opacity: .6; cursor: not-allowed;
+      background: var(--bg3); color: var(--text); -webkit-text-fill-color: var(--text);
+      -webkit-appearance: none; appearance: none;
+    }
 
     .status-row { display: flex; align-items: center; gap: 10px; }
     .cert-status-row { display: flex; align-items: center; gap: 10px; padding-top: .5rem; border-top: 1px solid var(--border); }
