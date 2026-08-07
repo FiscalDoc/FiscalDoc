@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService, ContadorService } from '@veloxml/services';
 import { ToastContainerComponent } from '../toast-container/toast-container.component';
+import { AssistenteChatComponent } from '../assistente-chat/assistente-chat.component';
 
 interface NavItem {
   label: string;
@@ -14,7 +15,7 @@ interface NavItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent],
   template: `
     <div class="shell">
       <button type="button" class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)" aria-label="Abrir menu">
@@ -191,6 +192,7 @@ interface NavItem {
     </div>
 
     <app-toast-container />
+    <app-assistente-chat />
 
     <!-- ── Modal de upgrade de plano ── -->
     @if (showUpgradeModal()) {

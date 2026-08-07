@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, ClienteService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
+import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
 interface DocumentoVinculadoInfo {
   id: string;
@@ -28,7 +29,7 @@ interface ConfirmState {
 @Component({
   selector: 'app-pedido-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, DecimalInputDirective],
   template: `
     <div class="page">
       <div class="page-header">
@@ -341,15 +342,15 @@ interface ConfirmState {
         <div class="form-grid">
           <div class="field">
             <label class="label">Valor do Frete (R$)</label>
-            <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorFrete" (ngModelChange)="form.valorFrete = $event; marcarSujo()"/>
+            <input class="input" type="text" appDecimalInput [disabled]="readonly()" [ngModel]="form.valorFrete" (ngModelChange)="form.valorFrete = $event; marcarSujo()"/>
           </div>
           <div class="field">
             <label class="label">Valor do Seguro (R$)</label>
-            <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorSeguro" (ngModelChange)="form.valorSeguro = $event; marcarSujo()"/>
+            <input class="input" type="text" appDecimalInput [disabled]="readonly()" [ngModel]="form.valorSeguro" (ngModelChange)="form.valorSeguro = $event; marcarSujo()"/>
           </div>
           <div class="field">
             <label class="label">Outras Despesas (R$)</label>
-            <input class="input" type="number" min="0" step="0.01" [disabled]="readonly()" [ngModel]="form.valorOutrasDespesas" (ngModelChange)="form.valorOutrasDespesas = $event; marcarSujo()"/>
+            <input class="input" type="text" appDecimalInput [disabled]="readonly()" [ngModel]="form.valorOutrasDespesas" (ngModelChange)="form.valorOutrasDespesas = $event; marcarSujo()"/>
           </div>
           <div class="field">
             <label class="label">Data de Saída</label>
@@ -488,8 +489,8 @@ interface ConfirmState {
                     }
                   </td>
                   <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.quantidade" (input)="calcTotal(i)" min="0.001" step="0.001"/></td>
-                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)" min="0" step="0.01"/></td>
-                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="number" [(ngModel)]="item.desconto" (input)="calcTotal(i)" min="0" step="0.01"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="text" appDecimalInput [(ngModel)]="item.precoUnitario" (input)="calcTotal(i)"/></td>
+                  <td><input class="input-sm num" [class.error]="rowErrors().has(i)" [disabled]="readonly()" type="text" appDecimalInput [(ngModel)]="item.desconto" (input)="calcTotal(i)"/></td>
                   <td class="total-cell">
                     <div>{{ itemTotal(item) | currency:'BRL':'symbol':'1.2-2' }}</div>
                     @if (itemImpostos(item) > 0) {
@@ -635,7 +636,7 @@ interface ConfirmState {
           </div>
           <div class="field">
             <label class="label">Preço Unitário *</label>
-            <input class="input" type="number" min="0" step="0.01" [(ngModel)]="novoProdutoForm.precoUnitario"/>
+            <input class="input" type="text" appDecimalInput [(ngModel)]="novoProdutoForm.precoUnitario"/>
           </div>
           @if (erroNovoProduto()) { <div class="alert-error">{{ erroNovoProduto() }}</div> }
           <div class="confirm-actions">

@@ -20,3 +20,4 @@ export * from './lib/cep.service';
 export * from './lib/cnpj.service';
 export * from './lib/relatorio.service';
 export * from './lib/toast.service';
+export * from './lib/assistente.service';

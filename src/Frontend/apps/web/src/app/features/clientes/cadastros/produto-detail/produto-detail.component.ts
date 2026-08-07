@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProdutoService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { ProdutoDto } from '@veloxml/models';
+import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
 type Tab = 'geral' | 'fiscal';
 
 @Component({
   selector: 'app-produto-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DecimalInputDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
@@ -57,7 +58,7 @@ type Tab = 'geral' | 'fiscal';
               </div>
               <div class="field">
                 <label class="label">Preço Unitário *</label>
-                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.precoUnitario"/>
+                <input class="input" type="text" appDecimalInput [(ngModel)]="form.precoUnitario"/>
               </div>
               @if (!isNew()) {
                 <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
@@ -77,7 +78,7 @@ type Tab = 'geral' | 'fiscal';
             <div class="form-grid">
               <div class="field">
                 <label class="label">Valor de Custo (R$)</label>
-                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.valorCusto"/>
+                <input class="input" type="text" appDecimalInput [(ngModel)]="form.valorCusto"/>
               </div>
               <div class="field">
                 <label class="label">% Imposto (estimado)</label>
