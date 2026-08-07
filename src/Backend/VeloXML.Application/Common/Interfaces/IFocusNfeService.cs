@@ -29,7 +29,7 @@ public record FocusNfeSubmissaoResult(
 
 // Cancelamento é síncrono na Focus (diferente da emissão) — a resposta já vem final, sem
 // precisar de webhook/polling.
-public record FocusNfeCancelamentoResult(bool Sucesso, string? CaminhoXmlCancelamento, string? MensagemErro, string RespostaBrutaJson);
+public record FocusNfeCancelamentoResult(bool Sucesso, string? CaminhoXmlCancelamento, string? ProtocoloCancelamento, string? MensagemErro, string RespostaBrutaJson);
 
 public interface IFocusNfeService
 {

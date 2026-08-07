@@ -117,7 +117,7 @@ public sealed class FocusNfeService(
     {
         var http = await CriarClienteEmpresaAsync(cliente);
         if (http is null)
-            return new FocusNfeCancelamentoResult(false, null, MensagemTokenEmpresaAusente, "");
+            return new FocusNfeCancelamentoResult(false, null, null, MensagemTokenEmpresaAusente, "");
 
         using var req = new HttpRequestMessage(HttpMethod.Delete, $"nfe/{Uri.EscapeDataString(refId)}")
         {
@@ -133,18 +133,21 @@ public sealed class FocusNfeService(
         }
         catch (JsonException)
         {
-            return new FocusNfeCancelamentoResult(false, null, "Resposta inesperada ao cancelar a NF-e.", body);
+            return new FocusNfeCancelamentoResult(false, null, null, "Resposta inesperada ao cancelar a NF-e.", body);
         }
 
         return parsed?.Status == "cancelado"
-            ? new FocusNfeCancelamentoResult(true, parsed.CaminhoXmlCancelamento, null, body)
-            : new FocusNfeCancelamentoResult(false, null, parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body);
+            ? new FocusNfeCancelamentoResult(true, parsed.CaminhoXmlCancelamento, parsed.NumeroProtocolo, null, body)
+            : new FocusNfeCancelamentoResult(false, null, null, parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body);
     }
 
     private sealed record CancelamentoStatusResponse(
         [property: JsonPropertyName("status")] string? Status,
         [property: JsonPropertyName("status_sefaz")] string? StatusSefaz,
         [property: JsonPropertyName("mensagem_sefaz")] string? MensagemSefaz,
+        // Protocolo do EVENTO de cancelamento na SEFAZ — a Focus devolve no mesmo campo
+        // "numero_protocolo" usado na resposta de emissão, só que referente a esse evento.
+        [property: JsonPropertyName("numero_protocolo")] string? NumeroProtocolo,
         [property: JsonPropertyName("caminho_xml_cancelamento")] string? CaminhoXmlCancelamento);
 
     public async Task<byte[]> BaixarArquivoAsync(Cliente cliente, string caminhoOuUrl, CancellationToken ct = default)

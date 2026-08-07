@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PedidoService } from '@veloxml/services';
+import { AuthService, PedidoService } from '@veloxml/services';
 import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
 
 @Component({
@@ -12,12 +12,14 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
   template: `
     <div class="page">
       <div class="page-header">
-        <button class="back-btn" (click)="goBack()">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-          Voltar ao cliente
-        </button>
+        @if (!isCliente()) {
+          <button class="back-btn" (click)="goBack()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Voltar ao cliente
+          </button>
+        }
         <div class="header-row">
           <h2 class="page-title">Pedidos / Nota Fiscal</h2>
           <button class="btn-primary" (click)="novoPedido()">+ Novo Pedido</button>
@@ -45,6 +47,15 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
             }
           </div>
           <div class="kpi-card">
+            <p class="kpi-label">Notas canceladas</p>
+            <p class="kpi-value">{{ r.notasCanceladasMes }}</p>
+            @if (r.notasCanceladasVariacaoPercentual != null) {
+              <p class="kpi-delta" [class.down]="r.notasCanceladasVariacaoPercentual < 0">
+                {{ r.notasCanceladasVariacaoPercentual >= 0 ? '↑' : '↓' }} {{ Math.abs(r.notasCanceladasVariacaoPercentual) }}%
+              </p>
+            }
+          </div>
+          <div class="kpi-card">
             <p class="kpi-label">Rejeições</p>
             <p class="kpi-value">{{ r.percentualRejeicaoMes }}%</p>
             @if (r.percentualRejeicaoVariacaoPontos != null) {
@@ -60,8 +71,8 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
       <div class="filter-bar">
         <button class="filter-btn" [class.active]="statusFiltro() === null" (click)="filtrar(null)">Todos</button>
         <button class="filter-btn" [class.active]="statusFiltro() === 'Rascunho'" (click)="filtrar('Rascunho')">Rascunho</button>
-        <button class="filter-btn" [class.active]="statusFiltro() === 'Emitido'" (click)="filtrar('Emitido')">Emitido</button>
-        <button class="filter-btn" [class.active]="statusFiltro() === 'Cancelado'" (click)="filtrar('Cancelado')">Cancelado</button>
+        <button class="filter-btn" [class.active]="statusFiltro() === 'Autorizada'" (click)="filtrar('Autorizada')">Autorizada</button>
+        <button class="filter-btn" [class.active]="statusFiltro() === 'Cancelada'" (click)="filtrar('Cancelada')">Cancelada</button>
       </div>
 
       <div class="toolbar">
@@ -124,13 +135,14 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
     .back-btn:hover { color: var(--accent); }
     .header-row { display: flex; align-items: center; justify-content: space-between; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
-    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
     .kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
     .kpi-label { margin: 0; font-size: 11.5px; color: var(--text2); }
     .kpi-value { margin: 4px 0 0; font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
     .kpi-delta { margin: 4px 0 0; font-size: 11.5px; font-weight: 600; color: var(--green); }
     .kpi-delta.down { color: var(--red); }
-    @media (max-width: 640px) { .kpi-row { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .kpi-row { grid-template-columns: 1fr; } }
 
     .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; }
     .filter-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer; }
@@ -181,9 +193,13 @@ export class PedidosComponent implements OnInit {
   private readonly _svc    = inject(PedidoService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
+  private readonly _auth   = inject(AuthService);
 
   private clienteId = '';
   protected readonly Math = Math;
+  // Cliente (ou Admin atuando como Cliente) não tem uma "tela do cliente" pra voltar — pra esse
+  // perfil, Pedidos já é a raiz da navegação (não existe lista de Clientes no menu dele).
+  readonly isCliente = computed(() => this._auth.currentUser()?.perfil === 'Cliente');
 
   readonly pedidos       = signal<PedidoDto[]>([]);
   readonly loading       = signal(false);
@@ -240,11 +256,11 @@ export class PedidosComponent implements OnInit {
   }
 
   // "Emitido" sozinho é só o flip interno antigo (sem NF-e real). Quando o pedido tem um
-  // Documento vinculado (emitido via Focus ou uma NF-e importada/vinculada), deixa claro que
-  // virou uma nota fiscal de verdade, não só um status interno.
+  // Documento vinculado (emitido via Focus ou uma NF-e importada/vinculada), o Status já não
+  // precisa repetir "NF-e"/"Nota Fiscal" — a coluna Tipo já mostra isso, aqui só o estado importa.
   statusLabel(p: PedidoDto): string {
     if (p.status === 'Emitido' && p.documentoId) {
-      return p.documentoStatus === 'Cancelado' ? 'NF-e cancelada' : 'Nota Fiscal Emitida';
+      return p.documentoStatus === 'Cancelado' ? 'Cancelada' : 'Autorizada';
     }
     return p.status;
   }

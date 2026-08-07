@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VeloXML.Domain.Entities;
+using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 using VeloXML.Persistence.Context;
 using VeloXML.SharedKernel;
@@ -12,8 +13,22 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
     {
         var query = DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Where(p => p.ClienteId == clienteId).AsQueryable();
 
+        // "status" aqui reflete o que a tela realmente mostra na coluna Status, não o
+        // Pedido.Status cru — um Pedido "Emitido" cuja NF-e foi cancelada depois continua com
+        // Status="Emitido" no banco, mas a UI mostra "Cancelada" (vermelho), então o filtro
+        // "Cancelada" precisa enxergar esse caso, senão ele nunca aparece ao filtrar.
         if (!string.IsNullOrWhiteSpace(status))
-            query = query.Where(p => p.Status == status);
+        {
+            query = status switch
+            {
+                "Rascunho" => query.Where(p => p.Status == "Rascunho"),
+                "Autorizada" => query.Where(p => p.Status == "Emitido"
+                    && (p.Documento == null || p.Documento.Status != StatusDocumentoEnum.Cancelado)),
+                "Cancelada" => query.Where(p => p.Status == "Cancelado"
+                    || (p.Documento != null && p.Documento.Status == StatusDocumentoEnum.Cancelado)),
+                _ => query.Where(p => p.Status == status),
+            };
+        }
 
         if (!string.IsNullOrWhiteSpace(termo))
         {
@@ -68,6 +83,28 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
             .OrderByDescending(g => g.Count())
             .Select(g => g.Key)
             .Take(top)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<TopProdutoResumo>> GetTopProdutosAsync(Guid clienteId, DateTime de, DateTime ate, int limite, CancellationToken ct = default) =>
+        await context.Set<PedidoItem>()
+            .Where(i => i.Pedido!.ClienteId == clienteId && i.Pedido.Status != "Cancelado"
+                && i.Pedido.CreatedAt >= DateTime.SpecifyKind(de, DateTimeKind.Utc)
+                && i.Pedido.CreatedAt <= DateTime.SpecifyKind(ate, DateTimeKind.Utc))
+            .GroupBy(i => new { i.ProdutoId, i.Descricao })
+            .Select(g => new TopProdutoResumo(g.Key.ProdutoId, g.Key.Descricao, g.Sum(i => i.Quantidade), g.Sum(i => i.ValorTotal)))
+            .OrderByDescending(r => r.ValorTotal)
+            .Take(limite)
+            .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<TopDestinatarioResumo>> GetTopDestinatariosAsync(Guid clienteId, DateTime de, DateTime ate, int limite, CancellationToken ct = default) =>
+        await DbSet
+            .Where(p => p.ClienteId == clienteId && p.Status != "Cancelado"
+                && p.CreatedAt >= DateTime.SpecifyKind(de, DateTimeKind.Utc)
+                && p.CreatedAt <= DateTime.SpecifyKind(ate, DateTimeKind.Utc))
+            .GroupBy(p => new { p.DestinatarioId, p.Destinatario!.RazaoSocial })
+            .Select(g => new TopDestinatarioResumo(g.Key.DestinatarioId, g.Key.RazaoSocial, g.Count(), g.Sum(p => p.ValorTotal)))
+            .OrderByDescending(r => r.ValorTotal)
+            .Take(limite)
             .ToListAsync(ct);
 
     // Marca o estado de cada PedidoItem explicitamente (Remove/Add) em vez de

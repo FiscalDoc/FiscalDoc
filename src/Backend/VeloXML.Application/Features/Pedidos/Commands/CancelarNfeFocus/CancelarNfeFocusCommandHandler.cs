@@ -61,6 +61,7 @@ public sealed class CancelarNfeFocusCommandHandler(
                 documento.Status = StatusDocumentoEnum.Cancelado;
                 documento.MotivoCancelamento = justificativa;
                 documento.DataCancelamento = DateTime.UtcNow;
+                documento.ProtocoloCancelamento = resultado.ProtocoloCancelamento;
                 uow.Documentos.Update(documento);
 
                 // Guarda o XML de cancelamento junto do XML de autorização já existente — "Baixar"

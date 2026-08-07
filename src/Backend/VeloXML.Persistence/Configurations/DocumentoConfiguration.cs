@@ -34,6 +34,7 @@ public class DocumentoConfiguration : IEntityTypeConfiguration<Documento>
         b.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(256);
         b.Property(e => e.MotivoCancelamento).HasColumnName("motivo_cancelamento").HasMaxLength(255);
         b.Property(e => e.DataCancelamento).HasColumnName("data_cancelamento");
+        b.Property(e => e.ProtocoloCancelamento).HasColumnName("protocolo_cancelamento").HasMaxLength(50);
 
         b.Property(e => e.ValorBaseCalculoIcms).HasColumnName("valor_base_calculo_icms").HasColumnType("numeric(18,2)");
         b.Property(e => e.ValorProdutos).HasColumnName("valor_produtos").HasColumnType("numeric(18,2)");

@@ -113,8 +113,8 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
             p.ConsumidorFinal, p.PresencaComprador, p.ValorFrete, p.ValorSeguro, p.ValorOutrasDespesas,
             p.DocumentoId, p.Documento?.Numero, danfe?.Serie, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
-            p.Documento?.Status.ToString(), danfe?.ProtocoloAutorizacao, danfe?.DataAutorizacao,
-            p.Documento?.MotivoCancelamento, p.Documento?.DataCancelamento,
+            p.Documento?.Status.ToString(), p.Documento?.DataEmissao, danfe?.ProtocoloAutorizacao, danfe?.DataAutorizacao,
+            p.Documento?.MotivoCancelamento, p.Documento?.ProtocoloCancelamento, p.Documento?.DataCancelamento,
             p.Documento is null ? null : new DocumentoImpostosDto(
                 p.Documento.ValorBaseCalculoIcms,
                 p.Documento.ValorProdutos, p.Documento.ValorFrete, p.Documento.ValorSeguro, p.Documento.ValorDesconto,

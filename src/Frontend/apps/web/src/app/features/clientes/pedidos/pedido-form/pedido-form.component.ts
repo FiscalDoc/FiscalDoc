@@ -13,9 +13,11 @@ interface DocumentoVinculadoInfo {
   chaveAcesso?: string;
   origem?: string;
   status?: string;
+  dataEmissao?: string;
   protocoloAutorizacao?: string;
   dataAutorizacao?: string;
   motivoCancelamento?: string;
+  protocoloCancelamento?: string;
   dataCancelamento?: string;
 }
 
@@ -171,11 +173,14 @@ interface ConfirmState {
                 </span>
                 <div>
                   <p class="nfe-card-title">Nota Fiscal: {{ doc.numero }}{{ doc.serie ? '  Série: ' + doc.serie : '' }}</p>
-                  @if (doc.status === 'Cancelado') {
-                    <span class="badge badge-rejeitado">NF-e cancelada</span>
-                  } @else {
-                    <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Autorizado pelo SEFAZ' : 'Emitido externamente' }}</span>
-                  }
+                  <div class="nfe-card-badges">
+                    @if (doc.status === 'Cancelado') {
+                      <span class="badge badge-rejeitado">NF-e cancelada</span>
+                    } @else {
+                      <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Autorizado pelo SEFAZ' : 'Emitido externamente' }}</span>
+                    }
+                    @if (doc.dataEmissao) { <span class="nfe-card-date">Emitida em {{ doc.dataEmissao | date:'dd/MM/yyyy HH:mm' }}</span> }
+                  </div>
                 </div>
               </div>
               <div class="nfe-card-actions">
@@ -215,16 +220,25 @@ interface ConfirmState {
                     </span>
                   </div>
                 }
-                @if (doc.status === 'Cancelado') {
+                @if (doc.status === 'Cancelado' && doc.protocoloCancelamento) {
                   <div class="nfe-field nfe-field--alerta">
-                    <span class="nfe-field-label">Cancelamento</span>
+                    <span class="nfe-field-label">Protocolo de cancelamento</span>
                     <span class="nfe-field-value">
-                      {{ doc.motivoCancelamento }}
+                      <span class="mono">{{ doc.protocoloCancelamento }}</span>
                       @if (doc.dataCancelamento) { <span class="nfe-field-data">{{ doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
                     </span>
                   </div>
                 }
               </div>
+              @if (doc.status === 'Cancelado' && doc.motivoCancelamento) {
+                <div class="nfe-field nfe-field--alerta">
+                  <span class="nfe-field-label">Motivo do cancelamento</span>
+                  <span class="nfe-field-value">
+                    {{ doc.motivoCancelamento }}
+                    @if (!doc.protocoloCancelamento && doc.dataCancelamento) { <span class="nfe-field-data">{{ doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
+                  </span>
+                </div>
+              }
             </div>
           </div>
         } @else if (focusNfeDisponivel() && nfeEmissao()?.status === 'Processando') {
@@ -839,6 +853,8 @@ interface ConfirmState {
     }
     .nfe-status-icon.rejeitado { background: rgba(255,77,109,.12); color: var(--red); }
     .nfe-card-title { margin: 0 0 4px; font-size: 14.5px; font-weight: 700; color: var(--text); }
+    .nfe-card-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .nfe-card-date { font-size: 11.5px; color: var(--text2); }
     .nfe-card-chave { margin: 2px 0 0; font-size: 11px; color: var(--text2); word-break: break-all; }
     .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
     .btn-ghost-sm.danger { color: var(--red); border-color: rgba(255,77,109,.3); }
@@ -1269,8 +1285,10 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.documentoVinculado.set(p.documentoId
       ? {
           id: p.documentoId, numero: p.documentoNumero ?? '', serie: p.documentoSerie, chaveAcesso: p.documentoChaveAcesso, origem: p.documentoOrigem,
-          status: p.documentoStatus, protocoloAutorizacao: p.documentoProtocoloAutorizacao, dataAutorizacao: p.documentoDataAutorizacao,
-          motivoCancelamento: p.documentoMotivoCancelamento, dataCancelamento: p.documentoDataCancelamento,
+          status: p.documentoStatus, dataEmissao: p.documentoDataEmissao,
+          protocoloAutorizacao: p.documentoProtocoloAutorizacao, dataAutorizacao: p.documentoDataAutorizacao,
+          motivoCancelamento: p.documentoMotivoCancelamento, protocoloCancelamento: p.documentoProtocoloCancelamento,
+          dataCancelamento: p.documentoDataCancelamento,
         }
       : null);
     this.documentoImpostos.set(p.documentoImpostos ?? null);

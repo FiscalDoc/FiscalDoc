@@ -53,9 +53,11 @@ public record PedidoDto(
     string? DocumentoChaveAcesso,
     string? DocumentoOrigem,
     string? DocumentoStatus,
+    DateTime? DocumentoDataEmissao,
     string? DocumentoProtocoloAutorizacao,
     DateTime? DocumentoDataAutorizacao,
     string? DocumentoMotivoCancelamento,
+    string? DocumentoProtocoloCancelamento,
     DateTime? DocumentoDataCancelamento,
     DocumentoImpostosDto? DocumentoImpostos
 );

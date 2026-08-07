@@ -56,9 +56,11 @@ export interface PedidoDto {
   documentoChaveAcesso?: string;
   documentoOrigem?: 'Manual' | 'ImportacaoEmail' | 'ApiIngest' | 'FocusNfe';
   documentoStatus?: 'Pendente' | 'Valido' | 'Alerta' | 'Duplicado' | 'Cancelado';
+  documentoDataEmissao?: string;
   documentoProtocoloAutorizacao?: string;
   documentoDataAutorizacao?: string;
   documentoMotivoCancelamento?: string;
+  documentoProtocoloCancelamento?: string;
   documentoDataCancelamento?: string;
   documentoImpostos?: DocumentoImpostosDto;
 }
@@ -149,6 +151,8 @@ export interface PedidosResumoDto {
   faturamentoVariacaoPercentual?: number;
   notasAutorizadasMes: number;
   notasAutorizadasVariacaoPercentual?: number;
+  notasCanceladasMes: number;
+  notasCanceladasVariacaoPercentual?: number;
   percentualRejeicaoMes: number;
   percentualRejeicaoVariacaoPontos?: number;
 }

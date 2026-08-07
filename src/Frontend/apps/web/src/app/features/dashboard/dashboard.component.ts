@@ -118,13 +118,8 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
         </header>
 
         @if (clienteStats(); as c) {
-          <div class="kpis">
+          <div class="kpis kpis-cliente">
             <div class="kpi-card kpi-accent">
-              <span class="kpi-label">Total de Documentos</span>
-              <span class="kpi-value font-heading">{{ c.totalDocumentos }}</span>
-              <span class="kpi-sub">{{ c.valorTotalDocumentosMes | currency:'BRL':'symbol':'1.2-2':'pt-BR' }} no mês</span>
-            </div>
-            <div class="kpi-card">
               <span class="kpi-label">Notas Fiscais (NF-e)</span>
               <span class="kpi-value font-heading">{{ c.totalNotasFiscais }}</span>
               <span class="kpi-sub">de {{ c.totalDocumentos }} documentos</span>
@@ -133,11 +128,6 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
               <span class="kpi-label">Faturamento Total</span>
               <span class="kpi-value font-heading accent">{{ c.faturamentoTotalNotas | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
               <span class="kpi-sub">soma de todas as NF-e emitidas</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-label">Total de Pedidos</span>
-              <span class="kpi-value font-heading">{{ c.totalPedidos }}</span>
-              <span class="kpi-sub">{{ c.valorTotalPedidosMes | currency:'BRL':'symbol':'1.2-2':'pt-BR' }} no mês</span>
             </div>
             <div class="kpi-card">
               <span class="kpi-label">Alertas Ativos</span>
@@ -306,6 +296,8 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .loading { color: var(--text2); font-size: 14px; padding: 2rem; text-align: center; }
 
     .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .kpis-cliente { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 640px) { .kpis-cliente { grid-template-columns: 1fr; } }
     .kpi-card {
       background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
       padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem;

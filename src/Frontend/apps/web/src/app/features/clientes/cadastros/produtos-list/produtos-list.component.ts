@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ProdutoService } from '@veloxml/services';
+import { AuthService, ProdutoService } from '@veloxml/services';
 import { ProdutoDto } from '@veloxml/models';
 
 @Component({
@@ -12,12 +12,14 @@ import { ProdutoDto } from '@veloxml/models';
   template: `
     <div class="page">
       <div class="page-header">
-        <button class="back-btn" (click)="goBack()">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-          Voltar ao cliente
-        </button>
+        @if (!isCliente()) {
+          <button class="back-btn" (click)="goBack()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Voltar ao cliente
+          </button>
+        }
         <h2 class="page-title">Produtos</h2>
       </div>
 
@@ -97,8 +99,10 @@ export class ProdutosListComponent implements OnInit {
   private readonly _prodSvc = inject(ProdutoService);
   private readonly _route   = inject(ActivatedRoute);
   private readonly _router  = inject(Router);
+  private readonly _auth    = inject(AuthService);
 
   private clienteId = '';
+  readonly isCliente = computed(() => this._auth.currentUser()?.perfil === 'Cliente');
 
   readonly produtos = signal<ProdutoDto[]>([]);
   readonly loading  = signal(false);

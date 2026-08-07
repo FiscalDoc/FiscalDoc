@@ -14,10 +14,10 @@ public sealed class EnviarMensagemAssistenteCommandHandler(IUnitOfWork uow, IAss
     // à toa — 20 mensagens é mais que suficiente pro escopo de "me ajuda a entender o que falta".
     private const int MaxMensagens = 20;
 
-    // Limite de idas-e-voltas de ferramenta numa única requisição (ex.: pedido de confirmação →
-    // execução → resposta final = 2 rodadas). Evita loop infinito se o modelo insistir em chamar
-    // ferramentas sem nunca responder em texto.
-    private const int MaxRodadasFerramentas = 4;
+    // Limite de idas-e-voltas de ferramenta numa única requisição. Criar um pedido é o fluxo mais
+    // longo: buscar destinatário, buscar cada produto, pedir confirmação, criar — facilmente passa
+    // de 4 rodadas com poucos itens, por isso o limite é mais folgado que um cadastro simples.
+    private const int MaxRodadasFerramentas = 10;
 
     public async Task<Result<string>> Handle(EnviarMensagemAssistenteCommand request, CancellationToken ct)
     {
@@ -32,7 +32,9 @@ public sealed class EnviarMensagemAssistenteCommandHandler(IUnitOfWork uow, IAss
 
         var regraAcoes = ferramentas is not null
             ? """
-              - Você PODE executar 3 ações reais no sistema através de ferramentas: cadastrar produto, cadastrar destinatário (cliente da nota fiscal) e cadastrar usuário de acesso. Regra obrigatória: NUNCA cadastre nada sem confirmação explícita do usuário — sempre chame a ferramenta primeiro com confirmado=false, mostre o resumo dos dados em texto natural e pergunte se pode prosseguir; só chame a ferramenta de novo com confirmado=true depois de uma resposta afirmativa clara ("sim", "pode", "confirmo" etc.). Se faltar algum dado obrigatório pra ferramenta, pergunte ao usuário antes de chamar.
+              - Você tem ferramentas de CONSULTA (buscar_produtos, buscar_destinatarios, buscar_usuarios, buscar_pedidos, top_produtos, top_destinatarios, faturamento_periodo) — use-as sempre que a pergunta exigir dado real que não está no contexto abaixo (ex.: "qual o preço do produto X", "quantos pedidos do cliente Y", "quais os produtos mais vendidos em julho", "faturamento do trimestre passado"). Elas executam na hora, sem confirmação, e nunca alteram nada — chame quantas vezes precisar antes de responder.
+              - Você tem ferramentas de CADASTRO (cadastrar_produto, cadastrar_destinatario, cadastrar_usuario, cadastrar_pedido) que gravam dados de verdade. Regra obrigatória: NUNCA cadastre nada sem confirmação explícita do usuário — sempre chame a ferramenta primeiro com confirmado=false, mostre o resumo dos dados em texto natural e pergunte se pode prosseguir; só chame de novo com confirmado=true depois de uma resposta afirmativa clara ("sim", "pode", "confirmo" etc.). Se faltar algum dado obrigatório, pergunte ao usuário antes de chamar.
+              - cadastrar_pedido exige destinatarioId e produtoId de cada item — NUNCA invente esses ids: use buscar_destinatarios e buscar_produtos antes pra achar o id certo (se não achar, oriente o usuário a cadastrar o destinatário/produto primeiro).
               """
             : """
               - Você NÃO executa nenhuma ação no sistema — só orienta. Nunca diga que vai "fazer" ou "corrigir" algo, sempre diga ao usuário o que ELE precisa fazer e onde.
@@ -72,7 +74,9 @@ public sealed class EnviarMensagemAssistenteCommandHandler(IUnitOfWork uow, IAss
                 return Result.Failure<string>(ResultError.Validation("Assistente", "Não é possível executar essa ação sem um cliente selecionado."));
 
             var chamada = resposta.ChamadaFerramenta;
-            var resultadoFerramenta = await AssistenteAcaoExecutor.ExecutarAsync(mediator, chamada.Nome, chamada.ArgumentosJson, request.ClienteId.Value, ct);
+            var resultadoFerramenta = AssistenteConsultaExecutor.EhFerramentaDeConsulta(chamada.Nome)
+                ? await AssistenteConsultaExecutor.ExecutarAsync(mediator, uow, chamada.Nome, chamada.ArgumentosJson, request.ClienteId.Value, ct)
+                : await AssistenteAcaoExecutor.ExecutarAsync(mediator, chamada.Nome, chamada.ArgumentosJson, request.ClienteId.Value, ct);
 
             mensagens.Add(new ChatMensagem("assistant", null, new[] { chamada }));
             mensagens.Add(new ChatMensagem("tool", resultadoFerramenta, ToolCallId: chamada.Id));

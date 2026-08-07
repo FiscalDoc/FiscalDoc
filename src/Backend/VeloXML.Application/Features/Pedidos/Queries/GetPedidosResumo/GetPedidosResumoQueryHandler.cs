@@ -23,6 +23,8 @@ public sealed class GetPedidosResumoQueryHandler(IUnitOfWork uow, ICurrentUser c
         var documentos = await uow.Documentos.GetByClienteAsync(request.ClienteId, ct);
         var faturamentoMes = FaturamentoDoMes(documentos, hoje.Year, hoje.Month);
         var faturamentoMesAnterior = FaturamentoDoMes(documentos, mesAnterior.Year, mesAnterior.Month);
+        var canceladasMes = CanceladasDoMes(documentos, hoje.Year, hoje.Month);
+        var canceladasMesAnterior = CanceladasDoMes(documentos, mesAnterior.Year, mesAnterior.Month);
 
         var emissoesMes = await uow.NfeEmissoes.GetByClienteEPeriodoAsync(request.ClienteId, hoje.Month, hoje.Year, ct);
         var emissoesMesAnterior = await uow.NfeEmissoes.GetByClienteEPeriodoAsync(request.ClienteId, mesAnterior.Month, mesAnterior.Year, ct);
@@ -35,6 +37,8 @@ public sealed class GetPedidosResumoQueryHandler(IUnitOfWork uow, ICurrentUser c
             VariacaoPercentual(faturamentoMes, faturamentoMesAnterior),
             autorizadasMes,
             VariacaoPercentual(autorizadasMes, autorizadasMesAnterior),
+            canceladasMes,
+            VariacaoPercentual(canceladasMes, canceladasMesAnterior),
             rejeicaoMes,
             emissoesMesAnterior.Count > 0 ? Math.Round(rejeicaoMes - rejeicaoMesAnterior, 1) : null));
     }
@@ -44,6 +48,12 @@ public sealed class GetPedidosResumoQueryHandler(IUnitOfWork uow, ICurrentUser c
             .Where(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status != StatusDocumentoEnum.Cancelado
                 && d.DataEmissao.Year == ano && d.DataEmissao.Month == mes)
             .Sum(d => d.ValorTotal);
+
+    // Conta pela data do cancelamento, não da emissão original — "canceladas em agosto" deve
+    // contar quem foi cancelada em agosto, mesmo que tenha sido emitida num mês anterior.
+    private static int CanceladasDoMes(IReadOnlyList<Documento> documentos, int ano, int mes) =>
+        documentos.Count(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status == StatusDocumentoEnum.Cancelado
+            && d.DataCancelamento.HasValue && d.DataCancelamento.Value.Year == ano && d.DataCancelamento.Value.Month == mes);
 
     // "Concluídas" = tentativas de emissão que já chegaram num estado final (Autorizada,
     // Rejeitada, Erro ou Cancelada) — Enviada/Processando ainda estão em andamento e não contam

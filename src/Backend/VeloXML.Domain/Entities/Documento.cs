@@ -25,6 +25,10 @@ public class Documento : BaseEntity, IAuditableEntity
     // que "Pedido cancelado" — um Pedido pode ser cancelado sem nunca ter tido NF-e).
     public string? MotivoCancelamento { get; set; }
     public DateTime? DataCancelamento { get; set; }
+    // Protocolo do EVENTO de cancelamento na SEFAZ — diferente do protocolo de autorização
+    // original (a nota emitida e o cancelamento dela são dois eventos SEFAZ distintos, cada
+    // um com seu próprio número de protocolo).
+    public string? ProtocoloCancelamento { get; set; }
 
     // Totais de impostos extraídos de <total><ICMSTot> do XML — só preenchido pra NFe.
     public decimal? ValorBaseCalculoIcms { get; set; }
