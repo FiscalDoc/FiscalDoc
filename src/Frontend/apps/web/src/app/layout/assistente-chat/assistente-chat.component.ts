@@ -31,8 +31,8 @@ interface ChatMsg {
         <div class="chat-body" #chatBody>
           @if (mensagens().length === 0) {
             <div class="chat-empty">
-              <p>Oi! Eu ajudo você a entender o que falta pra emitir uma nota fiscal, ou explico termos fiscais (CST, CFOP, NCM, IBS/CBS).</p>
-              <p class="chat-empty-sub">Eu só oriento — não emito nem altero nada por conta própria.</p>
+              <p>Oi! Eu ajudo você a entender o que falta pra emitir uma nota fiscal, explico termos fiscais (CST, CFOP, NCM, IBS/CBS) e posso cadastrar produtos, destinatários e usuários pra você.</p>
+              <p class="chat-empty-sub">Antes de salvar qualquer coisa, eu sempre confirmo os dados com você.</p>
             </div>
           }
           @for (m of mensagens(); track $index) {

@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { from, concatMap, catchError, of } from 'rxjs';
@@ -13,6 +13,7 @@ interface UploadItem { file: File; tipo: string; }
   standalone: true,
   imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe],
   template: `
+    @if (!modoStandalone()) {
     <div class="page">
       <!-- Header -->
       <header class="page-header">
@@ -270,6 +271,7 @@ interface UploadItem { file: File; tipo: string; }
         </div>
       }
     </div>
+    }
 
     <!-- Modal de detalhes -->
     @if (detail()) {
@@ -812,6 +814,7 @@ export class DocumentosListComponent implements OnInit {
   private readonly _cliSvc = inject(ClienteService);
   private readonly _auth   = inject(AuthService);
   private readonly _route  = inject(ActivatedRoute);
+  private readonly _location = inject(Location);
 
   // Perfil Cliente só importa pro próprio cliente — não faz sentido escolher outro, então
   // a seleção nem aparece (o backend também ignora qualquer ClienteId enviado nesse caso).
@@ -823,6 +826,7 @@ export class DocumentosListComponent implements OnInit {
   readonly page             = signal(1);
   readonly totalPages       = signal(1);
   readonly termo            = signal('');
+  readonly modoStandalone   = signal(false);
   readonly detail           = signal<DocumentoDto | null>(null);
   readonly detailTab        = signal<'geral' | 'itens'>('geral');
   readonly impostosAbertos  = signal(false);
@@ -850,13 +854,18 @@ export class DocumentosListComponent implements OnInit {
   private _searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
-    this.load();
-    this._cliSvc.getAll({ pageSize: 200 }).subscribe(r => this.clientes.set(r.items));
-
     const id = this._route.snapshot.queryParamMap.get('id');
     if (id) {
+      // Aberto direto num documento específico (ex.: "Ver documento" a partir do Pedido) —
+      // mostra só o modal, sem carregar a lista inteira por baixo (gasto à toa e fica
+      // confuso: usuário clicou num documento, não pediu pra ver a lista).
+      this.modoStandalone.set(true);
       this._docSvc.getById(id).subscribe(d => this.detail.set(d));
+      return;
     }
+
+    this.load();
+    this._cliSvc.getAll({ pageSize: 200 }).subscribe(r => this.clientes.set(r.items));
   }
 
   load(): void {
@@ -903,7 +912,13 @@ export class DocumentosListComponent implements OnInit {
     const i = d.impostos;
     return !!i && Object.values(i).some(v => v != null);
   }
-  closeDetail(): void { this.detail.set(null); }
+  closeDetail(): void {
+    this.detail.set(null);
+    // Modo standalone (aberto direto num documento, sem a lista por baixo) — fechar o modal
+    // volta pra onde o usuário estava (ex.: o Pedido de origem), não faz sentido ficar numa
+    // tela de Documentos vazia.
+    if (this.modoStandalone()) this._location.back();
+  }
 
   // Documento emitido pelo FiscalDoc (via Focus NFe) tem o PDF oficial gerado pela SEFAZ
   // guardado — usa ele direto (via link pré-assinado). Documento importado de outro sistema

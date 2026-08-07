@@ -888,13 +888,13 @@ interface ConfirmState {
       content: ''; position: absolute; left: 5px; top: 14px; bottom: 0; width: 1px; background: var(--border);
     }
     .timeline-dot { flex-shrink: 0; width: 11px; height: 11px; border-radius: 50%; margin-top: 3px; background: var(--text2); }
-    .timeline-dot--criado { background: var(--accent); }
-    .timeline-dot--emitido { background: var(--accent); }
-    .timeline-dot--emitidonfefocus { background: var(--accent); }
+    /* Verde: a ação foi concluída com sucesso (criação, emissão, cancelamento de NF-e feito de propósito). */
+    .timeline-dot--criado, .timeline-dot--emitido, .timeline-dot--emitidonfefocus, .timeline-dot--nfecancelada { background: var(--green); }
     .timeline-dot--nfeprocessando { background: #ffc107; }
+    /* Vermelho: só quando algo deu errado de fato (rejeição da SEFAZ, falha ao emitir). */
     .timeline-dot--nferejeitada, .timeline-dot--erroemissaonfe { background: var(--red); }
-    .timeline-dot--cancelado { background: var(--red); }
-    .timeline-dot--vinculonfe, .timeline-dot--desvinculonfe { background: #7c8299; }
+    /* Cinza: ações administrativas/neutras — pedido cancelado não é um erro, é uma decisão. */
+    .timeline-dot--cancelado, .timeline-dot--vinculonfe, .timeline-dot--desvinculonfe { background: #7c8299; }
     .timeline-desc { margin: 0; font-size: 13px; color: var(--text); }
     .timeline-meta { margin: 2px 0 0; font-size: 11px; color: var(--text2); }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
