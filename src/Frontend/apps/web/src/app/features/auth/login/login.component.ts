@@ -184,6 +184,18 @@ import { AuthService } from '@veloxml/services';
     #totp { padding-left: 14px; letter-spacing: .3em; text-align: center; font-size: 18px; font-weight: 600; }
     input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.48 0.16 255 / 0.15); }
     input::placeholder { color: oklch(0.53 0.03 256 / 0.7); }
+    /* O Chrome ignora "background" em campo autopreenchido e pinta de branco por conta própria —
+       o único jeito de sobrescrever é com esse box-shadow inset gigante + atrasar a transição
+       que ele aplica na cor de fundo. */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--lg-fg);
+      -webkit-box-shadow: 0 0 0 1000px var(--lg-bg) inset;
+      box-shadow: 0 0 0 1000px var(--lg-bg) inset;
+      caret-color: var(--lg-fg);
+      transition: background-color 5000s ease-in-out 0s;
+    }
 
     .btn-primary {
       width: 100%; border: none; border-radius: 12px; cursor: pointer;

@@ -16,6 +16,14 @@ body {
   color: var(--text);
 }
 
+// app-root é um elemento desconhecido pro navegador, então por padrão vira "inline" — isso deixa
+// uma folga fantasma de poucos pixels abaixo dele (mesmo efeito de imagem solta num container),
+// suficiente pra criar uma barra de rolagem indesejada em telas com height: 100vh/100dvh.
+app-root {
+  display: block;
+  height: 100%;
+}
+
 a {
   color: var(--accent);
   text-decoration: none;
