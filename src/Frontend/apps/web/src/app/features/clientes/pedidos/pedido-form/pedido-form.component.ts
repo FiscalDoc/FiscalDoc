@@ -148,17 +148,6 @@ interface ConfirmState {
                   <span>{{ cancelando() ? 'Cancelando...' : 'Cancelar' }}</span>
                 </button>
               }
-              @if (documentoVinculado(); as doc) {
-                @if (doc.origem === 'FocusNfe' && doc.status !== 'Cancelado') {
-                  <button class="icon-btn danger" (click)="abrirCancelarNfe()" title="Cancelar NF-e">
-                    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6"/>
-                    </svg>
-                    <span>Cancelar NF-e</span>
-                  </button>
-                }
-              }
             }
           </div>
         </div>
@@ -173,12 +162,21 @@ interface ConfirmState {
           <div class="card section nfe-card-wrap">
             <div class="nfe-card-row">
               <div class="nfe-card-info">
-                @if (doc.status === 'Cancelado') {
-                  <span class="badge badge-rejeitado">NF-e cancelada</span>
-                } @else {
-                  <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Autorizado pelo SEFAZ' : 'Emitido externamente' }}</span>
-                }
-                <p class="nfe-card-title">Nota Fiscal: {{ doc.numero }}{{ doc.serie ? '  Série: ' + doc.serie : '' }}</p>
+                <span class="nfe-status-icon" [class.rejeitado]="doc.status === 'Cancelado'">
+                  @if (doc.status === 'Cancelado') {
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  } @else {
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  }
+                </span>
+                <div>
+                  <p class="nfe-card-title">Nota Fiscal: {{ doc.numero }}{{ doc.serie ? '  Série: ' + doc.serie : '' }}</p>
+                  @if (doc.status === 'Cancelado') {
+                    <span class="badge badge-rejeitado">NF-e cancelada</span>
+                  } @else {
+                    <span class="badge badge-emitido">{{ doc.origem === 'FocusNfe' ? 'Autorizado pelo SEFAZ' : 'Emitido externamente' }}</span>
+                  }
+                </div>
               </div>
               <div class="nfe-card-actions">
                 <button class="btn-ghost-sm" (click)="visualizarDanfe(doc.id, doc.origem)">Visualizar DANFE</button>
@@ -187,32 +185,46 @@ interface ConfirmState {
                   <button class="btn-ghost-sm" [disabled]="desvinculando()" (click)="desvincularDocumento()">
                     {{ desvinculando() ? 'Removendo...' : 'Desvincular' }}
                   </button>
+                  @if (doc.origem === 'FocusNfe') {
+                    <button class="btn-ghost-sm danger" (click)="abrirCancelarNfe()">Cancelar NF-e</button>
+                  }
                 }
               </div>
             </div>
             <div class="nfe-fields">
               <div class="nfe-field">
                 <span class="nfe-field-label">Chave de acesso</span>
-                <span class="nfe-field-value mono">{{ chaveFormatada(doc.chaveAcesso) }}</span>
+                <span class="nfe-field-value-row">
+                  <span class="nfe-field-value mono">{{ chaveFormatada(doc.chaveAcesso) }}</span>
+                  <button type="button" class="copy-btn" (click)="copiarChave(doc.chaveAcesso)" title="Copiar chave de acesso">
+                    @if (chaveCopiada()) {
+                      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/></svg>
+                    } @else {
+                      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    }
+                  </button>
+                </span>
               </div>
-              @if (doc.protocoloAutorizacao) {
-                <div class="nfe-field">
-                  <span class="nfe-field-label">Protocolo de autorização</span>
-                  <span class="nfe-field-value">
-                    <span class="mono">{{ doc.protocoloAutorizacao }}</span>
-                    @if (doc.dataAutorizacao) { <span class="nfe-field-data">{{ doc.dataAutorizacao | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
-                  </span>
-                </div>
-              }
-              @if (doc.status === 'Cancelado') {
-                <div class="nfe-field nfe-field--alerta">
-                  <span class="nfe-field-label">Cancelamento</span>
-                  <span class="nfe-field-value">
-                    {{ doc.motivoCancelamento }}
-                    @if (doc.dataCancelamento) { <span class="nfe-field-data">{{ doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
-                  </span>
-                </div>
-              }
+              <div class="nfe-fields-grid">
+                @if (doc.protocoloAutorizacao) {
+                  <div class="nfe-field">
+                    <span class="nfe-field-label">Protocolo de autorização</span>
+                    <span class="nfe-field-value">
+                      <span class="mono">{{ doc.protocoloAutorizacao }}</span>
+                      @if (doc.dataAutorizacao) { <span class="nfe-field-data">{{ doc.dataAutorizacao | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
+                    </span>
+                  </div>
+                }
+                @if (doc.status === 'Cancelado') {
+                  <div class="nfe-field nfe-field--alerta">
+                    <span class="nfe-field-label">Cancelamento</span>
+                    <span class="nfe-field-value">
+                      {{ doc.motivoCancelamento }}
+                      @if (doc.dataCancelamento) { <span class="nfe-field-data">{{ doc.dataCancelamento | date:'dd/MM/yyyy HH:mm:ss' }}</span> }
+                    </span>
+                  </div>
+                }
+              </div>
             </div>
           </div>
         } @else if (focusNfeDisponivel() && nfeEmissao()?.status === 'Processando') {
@@ -816,17 +828,33 @@ interface ConfirmState {
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
-    .nfe-card, .nfe-card-wrap { flex-direction: row; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; gap: 1rem; flex-wrap: wrap; }
+    .nfe-card, .nfe-card-wrap { flex-direction: row; align-items: center; justify-content: space-between; padding: 1.125rem 1.25rem; gap: 1rem; flex-wrap: wrap; }
     .nfe-card-wrap { flex-direction: column; align-items: stretch; }
     .nfe-card-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-    .nfe-card-info { display: flex; align-items: center; gap: 12px; }
-    .nfe-card-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
+    .nfe-card-info { display: flex; align-items: center; gap: 14px; }
+    .nfe-status-icon {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--green-dim); color: var(--green);
+    }
+    .nfe-status-icon.rejeitado { background: rgba(255,77,109,.12); color: var(--red); }
+    .nfe-card-title { margin: 0 0 4px; font-size: 14.5px; font-weight: 700; color: var(--text); }
     .nfe-card-chave { margin: 2px 0 0; font-size: 11px; color: var(--text2); word-break: break-all; }
-    .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .nfe-fields { display: flex; flex-direction: column; gap: 6px; margin-top: 1rem; padding-top: .875rem; border-top: 1px solid var(--border); }
+    .nfe-card-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+    .btn-ghost-sm.danger { color: var(--red); border-color: rgba(255,77,109,.3); }
+    .btn-ghost-sm.danger:hover { color: var(--red); border-color: var(--red); background: rgba(255,77,109,.08); }
+    .nfe-fields { display: flex; flex-direction: column; gap: 10px; margin-top: 1.125rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .nfe-fields-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
     .nfe-field { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
     .nfe-field-label { flex-shrink: 0; min-width: 160px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text2); }
     .nfe-field-value { font-size: 12.5px; color: var(--text); word-break: break-all; }
+    .nfe-field-value-row { display: flex; align-items: center; gap: 8px; }
+    .copy-btn {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--border);
+      background: none; color: var(--text2); cursor: pointer; transition: color 120ms, border-color 120ms;
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
     .nfe-field-data { margin-left: 8px; color: var(--text2); font-size: 11.5px; }
     .nfe-field--alerta .nfe-field-label, .nfe-field--alerta .nfe-field-value { color: var(--red); }
     .nfe-field--alerta .nfe-field-data { color: var(--red); opacity: .75; }
@@ -1412,6 +1440,15 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   chaveFormatada(chave?: string): string {
     if (!chave) return '—';
     return chave.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+
+  readonly chaveCopiada = signal(false);
+
+  copiarChave(chave?: string): void {
+    if (!chave) return;
+    navigator.clipboard?.writeText(chave);
+    this.chaveCopiada.set(true);
+    setTimeout(() => this.chaveCopiada.set(false), 1800);
   }
 
   // ── Destinatário: busca + quick-create ──────────────────────────────────
