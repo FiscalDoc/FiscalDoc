@@ -82,7 +82,7 @@ import { DestinatarioDto } from '@veloxml/models';
     .mono { font-family: monospace; font-size: 12px; }
     .sub-text { font-size: 11px; color: var(--text2); margin-top: 2px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-green { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-green { background: rgba(0, 229, 160, .12); color: var(--green); }
     .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }

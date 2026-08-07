@@ -323,7 +323,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
       font-size: 12.5px; font-weight: 500; padding: 6px 12px;
       border-radius: 999px; border: 1px solid var(--border); color: var(--text2);
     }
-    .status-ok  { background: oklch(0.62 0.17 254 / .07); border-color: oklch(0.62 0.17 254 / .25); color: var(--accent); }
+    .status-ok  { background: rgba(0, 229, 160, .07); border-color: rgba(0, 229, 160, .25); color: var(--green); }
     .status-warn{ background: rgba(255,209,102,.07); border-color: rgba(255,209,102,.25); color: var(--yellow); }
     .status-err { background: rgba(255,77,109,.07); border-color: rgba(255,77,109,.25); color: var(--red); }
     .red { color: var(--red); }
@@ -347,7 +347,7 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .mini-avatar-blocked { background: rgba(255,77,109,.12); color: var(--red); }
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-green   { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-green   { background: rgba(0, 229, 160, .12); color: var(--green); }
     .badge-red     { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-Pago    { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
     .badge-Pendente{ background: rgba(255,209,102,.15); color: var(--yellow); }

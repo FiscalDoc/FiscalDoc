@@ -259,7 +259,7 @@ import { Setup2faResponse } from '@veloxml/models';
     }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
-    .alert-ok { display: flex; align-items: center; gap: 8px; background: oklch(0.62 0.17 254 / .1); border: 1px solid oklch(0.62 0.17 254 / .3); color: var(--accent); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-ok { display: flex; align-items: center; gap: 8px; background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
     .form-actions { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); }
     .btn-primary {

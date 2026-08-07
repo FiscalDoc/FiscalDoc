@@ -747,7 +747,7 @@ interface ConfirmState {
     .icon-btn.danger:hover:not(:disabled) { background: rgba(255,77,109,.1); border-color: var(--red); color: var(--red); }
     .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-rascunho { background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-emitido  { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-emitido  { background: var(--green-dim); color: var(--green); }
     .badge-cancelado { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-processando { background: rgba(255,193,7,.12); color: #ffc107; }
     .badge-rejeitado { background: rgba(255,77,109,.12); color: var(--red); }

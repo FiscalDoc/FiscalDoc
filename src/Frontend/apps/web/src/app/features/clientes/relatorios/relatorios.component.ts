@@ -124,7 +124,7 @@ const MESES = [
     .table tr:last-child td { border-bottom: none; }
     .mono { font-family: monospace; font-size: 12px; }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-    .badge-autorizada { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-autorizada { background: rgba(0, 229, 160, .12); color: var(--green); }
     .badge-cancelada { background: rgba(255,77,109,.12); color: var(--red); }
 
     /* ── Tablet (iPad) e mobile ── */

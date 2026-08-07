@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CobrancaService, ContadorService, ClienteService, extractErrorMessage } from '@veloxml/services';
 import { CobrancaDto, CobrancasResumoDto, ContadorDto, ClienteDto } from '@veloxml/models';
+import { DecimalInputDirective } from '../../shared/decimal-input.directive';
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 @Component({
   selector: 'app-cobrancas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DecimalInputDirective],
   template: `
     <div class="page">
       <div class="page-header">
@@ -155,7 +156,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
             <div class="form-row">
               <div class="field">
                 <label class="label">Valor (R$) *</label>
-                <input class="input" type="number" min="0.01" step="0.01" [(ngModel)]="novoValor"/>
+                <input class="input" type="text" appDecimalInput [(ngModel)]="novoValor"/>
               </div>
               <div class="field">
                 <label class="label">Vencimento *</label>

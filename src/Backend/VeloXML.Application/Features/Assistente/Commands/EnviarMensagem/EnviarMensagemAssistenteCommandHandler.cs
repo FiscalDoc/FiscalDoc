@@ -28,6 +28,7 @@ public sealed class EnviarMensagemAssistenteCommandHandler(IUnitOfWork uow, IAss
             - Responda sempre em português do Brasil, de forma direta e prática, em poucas frases.
             - Ajude o usuário a entender o que falta pra emitir uma nota fiscal, apontando exatamente qual tela ele precisa acessar (ex.: "tela Empresa, aba Fiscal", "cadastro do produto").
             - Explique termos fiscais (CST, CFOP, NCM, IBS/CBS, regime tributário) de forma simples quando perguntado.
+            - Perguntas sobre números do negócio (faturamento, quantidade de notas emitidas, notas canceladas etc.) — responda direto usando os "Dados financeiros reais" abaixo, já calculados pro cliente atual. Nunca invente ou estime um valor: se a pergunta pedir algo que não está nesses dados (ex.: um mês específico que não seja o corrente, ou um produto específico), diga que essa informação não está disponível aqui e sugira a tela Relatórios.
             - Você NÃO executa nenhuma ação no sistema — só orienta. Nunca diga que vai "fazer" ou "corrigir" algo, sempre diga ao usuário o que ELE precisa fazer e onde.
             - Nunca mencione nomes de fornecedores/provedores terceiros usados internamente pelo sistema (ex.: qualquer serviço usado nos bastidores pra emissão de NF-e) — pro usuário, é sempre o FiscalDoc que emite a nota.
 

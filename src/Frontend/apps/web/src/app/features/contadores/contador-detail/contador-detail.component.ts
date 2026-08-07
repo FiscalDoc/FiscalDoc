@@ -5,13 +5,14 @@ import { FormsModule } from '@angular/forms';
 import { ContadorService, ClienteService, extractErrorMessage } from '@veloxml/services';
 import { ContadorDto, CobrancaDto, ClienteDto } from '@veloxml/models';
 import { environment } from '../../../../environments/environment';
+import { DecimalInputDirective } from '../../../shared/decimal-input.directive';
 
 type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
 
 @Component({
   selector: 'app-contador-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, RouterLink],
+  imports: [CommonModule, FormsModule, CurrencyPipe, DatePipe, RouterLink, DecimalInputDirective],
   template: `
 <div class="page">
 
@@ -291,7 +292,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
           <div class="form-row-3">
             <div class="field-sm">
               <label class="label-sm">Valor/cliente (R$)</label>
-              <input type="number" class="input-sm" min="0" step="0.01" [(ngModel)]="plano.valorPorCliente"/>
+              <input type="text" class="input-sm" appDecimalInput [(ngModel)]="plano.valorPorCliente"/>
             </div>
             <div class="field-sm">
               <label class="label-sm">Limite XMLs/cliente</label>
@@ -299,7 +300,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
             </div>
             <div class="field-sm">
               <label class="label-sm">XML excedente (R$)</label>
-              <input type="number" class="input-sm" min="0" step="0.01" [(ngModel)]="plano.valorXmlExcedente"/>
+              <input type="text" class="input-sm" appDecimalInput [(ngModel)]="plano.valorXmlExcedente"/>
             </div>
           </div>
           <div class="inline-actions">
@@ -530,7 +531,7 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     .license-badge {
       font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 10px; border-radius: 6px;
     }
-    .badge-ok    { background: oklch(0.62 0.17 254 / 0.12); color: var(--accent); }
+    .badge-ok    { background: rgba(0, 229, 160, 0.12); color: var(--green); }
     .badge-block { background: rgba(255,77,109,0.12); color: var(--red); }
     .badge-muted { background: var(--bg3); color: var(--text2); }
 

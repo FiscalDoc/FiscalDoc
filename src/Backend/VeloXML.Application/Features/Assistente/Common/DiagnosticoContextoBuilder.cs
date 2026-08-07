@@ -1,3 +1,4 @@
+using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 
 namespace VeloXML.Application.Features.Assistente.Common;
@@ -5,9 +6,13 @@ namespace VeloXML.Application.Features.Assistente.Common;
 // Monta um resumo em português do que está OK/faltando pro cliente/pedido atual, reaproveitando
 // as mesmas checagens já usadas nas validações de emissão (RegistrarCertificadoNfeCommandHandler,
 // EmitirNfeFocusCommandHandler) — o assistente só EXPLICA esse diagnóstico, nunca corrige nada
-// sozinho (v1 é orientação, não execução de ações).
+// sozinho (v1 é orientação, não execução de ações). Também injeta números financeiros reais
+// (mesmo cálculo do GetClienteDashboardQueryHandler) pra responder perguntas do tipo "quanto
+// faturei esse mês" sem precisar de function-calling — os dados já vêm prontos no prompt.
 internal static class DiagnosticoContextoBuilder
 {
+    private static readonly System.Globalization.CultureInfo PtBr = new("pt-BR");
+
     public static async Task<string> MontarAsync(IUnitOfWork uow, Guid? clienteId, Guid? pedidoId, CancellationToken ct)
     {
         if (clienteId is null)
@@ -27,6 +32,26 @@ internal static class DiagnosticoContextoBuilder
                 ? "Certificado digital já registrado e ativo."
                 : $"Certificado digital com status \"{cliente.FocusNfeStatus}\" — precisa concluir o registro na tela Empresa, aba Fiscal.",
         };
+
+        var documentos = await uow.Documentos.GetByClienteAsync(clienteId.Value, ct);
+        var hoje = DateTime.UtcNow;
+        var inicioMes = new DateTime(hoje.Year, hoje.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var faturamentoMes = documentos.Where(d => d.DataEmissao >= inicioMes).Sum(d => d.ValorTotal);
+        var faturamentoTotal = documentos
+            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status != StatusDocumentoEnum.Cancelado)
+            .Sum(d => d.ValorTotal);
+        var totalNotasFiscais = documentos.Count(d => d.Tipo == TipoDocumentoEnum.NFe);
+        var notasCanceladas = documentos.Count(d => d.Status == StatusDocumentoEnum.Cancelado);
+        var notasMes = documentos.Count(d => d.Tipo == TipoDocumentoEnum.NFe && d.DataEmissao >= inicioMes);
+
+        linhas.Add(
+            $"Dados financeiros reais (hoje é {hoje:dd/MM/yyyy}, mês corrente é {hoje.ToString("MMMM/yyyy", PtBr)}): " +
+            $"faturamento do mês corrente = R$ {faturamentoMes:N2}; " +
+            $"faturamento total histórico com NF-e autorizadas (excluindo canceladas) = R$ {faturamentoTotal:N2}; " +
+            $"total de NF-e emitidas (todos os status, histórico) = {totalNotasFiscais}; " +
+            $"NF-e emitidas no mês corrente = {notasMes}; " +
+            $"notas/documentos cancelados (histórico) = {notasCanceladas}. " +
+            "Use esses números diretamente pra responder perguntas sobre faturamento, quantidade de notas ou cancelamentos — não invente valores.");
 
         if (string.IsNullOrWhiteSpace(cliente.InscricaoEstadual)) linhas.Add("Falta preencher a Inscrição Estadual (tela Empresa, aba Fiscal).");
         if (string.IsNullOrWhiteSpace(cliente.RegimeTributario)) linhas.Add("Falta definir o Regime Tributário (tela Empresa, aba Fiscal).");
