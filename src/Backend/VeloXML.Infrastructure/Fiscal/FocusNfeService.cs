@@ -141,6 +141,41 @@ public sealed class FocusNfeService(
             : new FocusNfeCancelamentoResult(false, null, null, parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body);
     }
 
+    // POST /nfe/{ref}/carta_correcao com corpo {"correcao": "..."} — assim como o cancelamento,
+    // é síncrono: a resposta final (autorizada/rejeitada) já vem na volta, sem webhook/polling.
+    public async Task<FocusNfeCartaCorrecaoResult> EnviarCartaCorrecaoAsync(Cliente cliente, string refId, string correcao, CancellationToken ct = default)
+    {
+        var http = await CriarClienteEmpresaAsync(cliente);
+        if (http is null)
+            return new FocusNfeCartaCorrecaoResult(false, null, null, null, MensagemTokenEmpresaAusente, "");
+
+        var resp = await http.PostAsJsonAsync($"nfe/{Uri.EscapeDataString(refId)}/carta_correcao", new { correcao }, ct);
+        var body = await resp.Content.ReadAsStringAsync(ct);
+
+        CartaCorrecaoStatusResponse? parsed;
+        try
+        {
+            parsed = JsonSerializer.Deserialize<CartaCorrecaoStatusResponse>(body, JsonOpts);
+        }
+        catch (JsonException)
+        {
+            return new FocusNfeCartaCorrecaoResult(false, null, null, null, "Resposta inesperada ao enviar a carta de correção.", body);
+        }
+
+        return parsed?.Status == "autorizado"
+            ? new FocusNfeCartaCorrecaoResult(true, parsed.Sequencia, parsed.CaminhoXmlCartaCorrecao, parsed.NumeroProtocolo, null, body)
+            : new FocusNfeCartaCorrecaoResult(false, null, null, null, parsed?.MensagemSefaz ?? ExtrairMensagemErro(body), body);
+    }
+
+    private sealed record CartaCorrecaoStatusResponse(
+        [property: JsonPropertyName("status")] string? Status,
+        [property: JsonPropertyName("sequencia")] int? Sequencia,
+        [property: JsonPropertyName("mensagem_sefaz")] string? MensagemSefaz,
+        // Protocolo do EVENTO de carta de correção na SEFAZ — mesmo campo "numero_protocolo"
+        // usado nas demais respostas, aqui referente a esse evento específico.
+        [property: JsonPropertyName("numero_protocolo")] string? NumeroProtocolo,
+        [property: JsonPropertyName("caminho_xml_carta_correcao")] string? CaminhoXmlCartaCorrecao);
+
     private sealed record CancelamentoStatusResponse(
         [property: JsonPropertyName("status")] string? Status,
         [property: JsonPropertyName("status_sefaz")] string? StatusSefaz,

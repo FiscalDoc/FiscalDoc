@@ -194,6 +194,7 @@ interface ConfirmState {
                     {{ desvinculando() ? 'Removendo...' : 'Desvincular' }}
                   </button>
                   @if (doc.origem === 'FocusNfe') {
+                    <button class="btn-ghost-sm" (click)="abrirCartaCorrecao()">Carta de Correção</button>
                     <button class="btn-ghost-sm danger" (click)="abrirCancelarNfe()">Cancelar NF-e</button>
                   }
                 }
@@ -341,7 +342,7 @@ interface ConfirmState {
           </div>
           <div class="field">
             <label class="label">Tipo de Frete</label>
-            <select class="input" [disabled]="readonly()" [ngModel]="form.modalidadeFrete" (ngModelChange)="form.modalidadeFrete = $event; marcarSujo()">
+            <select class="input" [disabled]="readonly()" [ngModel]="form.modalidadeFrete" (ngModelChange)="onModalidadeFreteChange($event)">
               <option value="SemFrete">Sem frete</option>
               <option value="EmitenteContaFrete">Por conta do emitente</option>
               <option value="DestinatarioContaFrete">Por conta do destinatário</option>
@@ -352,7 +353,7 @@ interface ConfirmState {
             <label class="label">Transportadora</label>
             <div class="combo-row">
               <input
-                class="input" [disabled]="readonly()"
+                class="input" [disabled]="readonly() || form.modalidadeFrete === 'SemFrete'"
                 [ngModel]="transportadoraSearch"
                 (ngModelChange)="onTransportadoraInput($event)"
                 (focus)="transportadoraDropdownOpen.set(true)"
@@ -363,6 +364,9 @@ interface ConfirmState {
                 <button type="button" class="btn-inline" (click)="limparTransportadora()">Limpar</button>
               }
             </div>
+            @if (form.modalidadeFrete === 'SemFrete') {
+              <span class="field-hint">Selecione um tipo de frete diferente de "Sem frete" para escolher uma transportadora.</span>
+            }
             @if (transportadoraDropdownOpen() && !readonly()) {
               <div class="combo-dropdown">
                 @for (t of transportadoraResults(); track t.id) {
@@ -782,6 +786,28 @@ interface ConfirmState {
         </div>
       </div>
     }
+
+    @if (showCartaCorrecaoModal()) {
+      <div class="overlay" (click)="fecharCartaCorrecao()">
+        <div class="modal-quick" (click)="$event.stopPropagation()">
+          <h3 class="confirm-title">Carta de Correção</h3>
+          <p class="quick-hint">Corrige informações da NF-e já autorizada, sem cancelá-la — não pode alterar valores, impostos, datas ou os dados de emitente/destinatário. O texto precisa ter entre 15 e 1000 caracteres.</p>
+          <div class="field">
+            <label class="label">Correção *</label>
+            <textarea class="input" [(ngModel)]="textoCartaCorrecao" rows="4" placeholder="Descreva a correção (mín. 15 caracteres)" maxlength="1000"></textarea>
+            <span class="field-hint">{{ textoCartaCorrecao.trim().length }}/1000</span>
+          </div>
+          @if (erroCartaCorrecao()) { <div class="alert-error">{{ erroCartaCorrecao() }}</div> }
+          @if (sucessoCartaCorrecao()) { <div class="alert-ok">Carta de correção enviada e autorizada pela SEFAZ.</div> }
+          <div class="confirm-actions">
+            <button class="btn-ghost" (click)="fecharCartaCorrecao()">Voltar</button>
+            <button class="btn-primary" [disabled]="enviandoCartaCorrecao() || textoCartaCorrecao.trim().length < 15" (click)="confirmarCartaCorrecao()">
+              {{ enviandoCartaCorrecao() ? 'Enviando...' : 'Enviar Carta de Correção' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .page { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -877,6 +903,7 @@ interface ConfirmState {
     .detail-row td { background: var(--bg3); }
     .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .625rem; padding: 4px 0; }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-ok { background: rgba(0,196,140,.1); border: 1px solid rgba(0,196,140,.3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
     .nfe-card, .nfe-card-wrap { flex-direction: row; align-items: center; justify-content: space-between; padding: 1.125rem 1.25rem; gap: 1rem; flex-wrap: wrap; }
@@ -1055,6 +1082,12 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly cancelandoNfe = signal(false);
   readonly erroCancelarNfe = signal<string | null>(null);
   justificativaCancelamento = '';
+
+  readonly showCartaCorrecaoModal = signal(false);
+  readonly enviandoCartaCorrecao = signal(false);
+  readonly erroCartaCorrecao = signal<string | null>(null);
+  readonly sucessoCartaCorrecao = signal(false);
+  textoCartaCorrecao = '';
   private _nfeEmissaoPollTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Traduz cada {campo, mensagem} que a Focus devolveu numa explicação em português e, quando
@@ -1457,6 +1490,34 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     });
   }
 
+  abrirCartaCorrecao(): void {
+    this.textoCartaCorrecao = '';
+    this.erroCartaCorrecao.set(null);
+    this.sucessoCartaCorrecao.set(false);
+    this.showCartaCorrecaoModal.set(true);
+  }
+
+  fecharCartaCorrecao(): void {
+    this.showCartaCorrecaoModal.set(false);
+  }
+
+  confirmarCartaCorrecao(): void {
+    const correcao = this.textoCartaCorrecao.trim();
+    if (correcao.length < 15) return;
+    this.enviandoCartaCorrecao.set(true);
+    this.erroCartaCorrecao.set(null);
+    this._pedidoSvc.corrigirNfeFocus(this.clienteId, this.pedidoId, correcao).subscribe({
+      next: () => {
+        this.enviandoCartaCorrecao.set(false);
+        this.sucessoCartaCorrecao.set(true);
+        this.textoCartaCorrecao = '';
+        this._carregarHistorico();
+        setTimeout(() => this.showCartaCorrecaoModal.set(false), 1500);
+      },
+      error: err => { this.enviandoCartaCorrecao.set(false); this.erroCartaCorrecao.set(extractErrorMessage(err, 'Não foi possível enviar a carta de correção.')); },
+    });
+  }
+
   private _carregarProdutosFrequentes(destinatarioId: string): void {
     if (!destinatarioId) { this.produtosFrequentes.set([]); return; }
     this._pedidoSvc.getProdutosFrequentes(this.clienteId, destinatarioId).subscribe({
@@ -1580,6 +1641,14 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   limparTransportadora(): void {
     this.form.transportadoraId = '';
     this.transportadoraSearch = '';
+    this.marcarSujo();
+  }
+
+  onModalidadeFreteChange(valor: string): void {
+    this.form.modalidadeFrete = valor;
+    if (valor === 'SemFrete' && this.form.transportadoraId) {
+      this.limparTransportadora();
+    }
     this.marcarSujo();
   }
 

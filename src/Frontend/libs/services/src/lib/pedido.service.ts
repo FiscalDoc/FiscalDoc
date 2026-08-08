@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto, NfeEmissaoDto, PedidosResumoDto } from '@veloxml/models';
+import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto, NfeEmissaoDto, PedidosResumoDto, CartaCorrecaoDto } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -74,5 +74,9 @@ export class PedidoService {
 
   cancelarNfeFocus(clienteId: string, id: string, justificativa: string): Observable<NfeEmissaoDto> {
     return this._api.post<NfeEmissaoDto>(`/clientes/${clienteId}/pedidos/${id}/cancelar-nfe`, { justificativa });
+  }
+
+  corrigirNfeFocus(clienteId: string, id: string, correcao: string): Observable<CartaCorrecaoDto> {
+    return this._api.post<CartaCorrecaoDto>(`/clientes/${clienteId}/pedidos/${id}/carta-correcao`, { correcao });
   }
 }

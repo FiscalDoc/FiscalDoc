@@ -31,6 +31,11 @@ public record FocusNfeSubmissaoResult(
 // precisar de webhook/polling.
 public record FocusNfeCancelamentoResult(bool Sucesso, string? CaminhoXmlCancelamento, string? ProtocoloCancelamento, string? MensagemErro, string RespostaBrutaJson);
 
+// Carta de Correção também é síncrona na Focus, igual o cancelamento. Sequencia é o número de
+// ordem do evento pra essa NF-e (a SEFAZ aceita até 20 CC-e por nota, prevalecendo sempre a
+// última) — devolvido pela própria Focus na resposta, não calculado localmente.
+public record FocusNfeCartaCorrecaoResult(bool Sucesso, int? Sequencia, string? CaminhoXmlCartaCorrecao, string? ProtocoloCartaCorrecao, string? MensagemErro, string RespostaBrutaJson);
+
 public interface IFocusNfeService
 {
     // Registra/atualiza o Cliente como "empresa" na conta Focus NFe da plataforma, habilitando
@@ -41,5 +46,6 @@ public interface IFocusNfeService
     Task<FocusNfeSubmissaoResult> EmitirNfeAsync(Cliente cliente, string refId, object payload, CancellationToken ct = default);
     Task<FocusNfeSubmissaoResult> ConsultarNfeAsync(Cliente cliente, string refId, CancellationToken ct = default);
     Task<FocusNfeCancelamentoResult> CancelarNfeAsync(Cliente cliente, string refId, string justificativa, CancellationToken ct = default);
+    Task<FocusNfeCartaCorrecaoResult> EnviarCartaCorrecaoAsync(Cliente cliente, string refId, string correcao, CancellationToken ct = default);
     Task<byte[]> BaixarArquivoAsync(Cliente cliente, string caminhoOuUrl, CancellationToken ct = default);
 }

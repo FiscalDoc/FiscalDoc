@@ -9,6 +9,10 @@ public class UpdatePedidoCommandValidator : AbstractValidator<UpdatePedidoComman
         RuleFor(x => x.DestinatarioId).NotEqual(Guid.Empty).WithMessage("Selecione um destinatário.");
         RuleFor(x => x.Itens).NotEmpty().WithMessage("Adicione pelo menos um item ao pedido.");
         RuleFor(x => x.NaturezaOperacao).NotEmpty().WithMessage("Informe a natureza da operação.");
+        RuleFor(x => x.TransportadoraId)
+            .Null()
+            .When(x => x.ModalidadeFrete == "SemFrete")
+            .WithMessage("Não é possível selecionar uma transportadora quando o tipo de frete é \"Sem frete\".");
 
         RuleForEach(x => x.Itens).ChildRules(item =>
         {

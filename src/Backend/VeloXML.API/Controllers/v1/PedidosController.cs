@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VeloXML.Application.Features.Pedidos.Commands.CancelarNfeFocus;
 using VeloXML.Application.Features.Pedidos.Commands.CancelarPedido;
+using VeloXML.Application.Features.Pedidos.Commands.CorrigirNfeFocus;
 using VeloXML.Application.Features.Pedidos.Commands.CreatePedido;
 using VeloXML.Application.Features.Pedidos.Commands.DeletePedido;
 using VeloXML.Application.Features.Pedidos.Commands.DuplicarPedido;
@@ -153,7 +154,15 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new CancelarNfeFocusCommand(clienteId, id, body.Justificativa), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
+
+    [HttpPost("{id:guid}/carta-correcao")]
+    public async Task<IActionResult> CorrigirNfe(Guid clienteId, Guid id, [FromBody] CartaCorrecaoRequest body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CorrigirNfeFocusCommand(clienteId, id, body.Correcao), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
 }
 
 public record VincularDocumentoRequest(Guid DocumentoId);
 public record CancelarNfeRequest(string Justificativa);
+public record CartaCorrecaoRequest(string Correcao);

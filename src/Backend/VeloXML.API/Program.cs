@@ -152,10 +152,9 @@ try
         job => job.ExecuteAsync(CancellationToken.None),
         "0 6 * * *");
 
-    RecurringJob.AddOrUpdate<ConsultarNfePendentesJob>(
-        ConsultarNfePendentesJob.JobId,
-        job => job.ExecuteAsync(CancellationToken.None),
-        "*/2 * * * *");
+    // ConsultarNfePendentesJob já roda via ConsultarNfePendentesBackgroundService a cada 5s
+    // (o cron do Hangfire não expressa intervalo abaixo de 1 minuto), então não é registrado
+    // aqui como RecurringJob — evitaria só duplicar trabalho sem ganho de velocidade.
 
     app.MapControllers();
     app.MapHealthChecks("/health");

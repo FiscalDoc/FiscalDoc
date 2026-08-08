@@ -175,3 +175,10 @@ export interface NfeEmissaoDto {
   createdAt: string;
   errosDetalhados?: NfeCampoErroDto[];
 }
+
+export interface CartaCorrecaoDto {
+  sequencia?: number;
+  protocolo?: string;
+  correcao: string;
+  enviadaEm: string;
+}
