@@ -47,7 +47,7 @@ interface ConfirmState {
             @if (!isNew()) {
               <span class="badge" [class]="statusClass()">{{ pedidoStatus() }}</span>
             }
-            @if (!isNew() && (vizinhoAnteriorId() || vizinhoProximoId())) {
+            @if (!isNew() && vizinhoTotal()) {
               <div class="nav-vizinhos">
                 <button
                   type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId()" (click)="irParaAnterior()"
@@ -56,11 +56,14 @@ interface ConfirmState {
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                   </svg>
+                  Anterior
                 </button>
+                <span class="nav-posicao">{{ vizinhoPosicao() }} de {{ vizinhoTotal() }}</span>
                 <button
                   type="button" class="nav-btn" [disabled]="!vizinhoProximoId()" (click)="irParaProximo()"
                   [title]="vizinhoProximoNumero() ? 'Pedido nº ' + vizinhoProximoNumero() : 'Sem próximo pedido'"
                 >
+                  Próximo
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -789,10 +792,14 @@ interface ConfirmState {
     .title-row { display: flex; align-items: center; gap: .75rem; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .header-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-    .nav-vizinhos { display: flex; gap: 4px; }
-    .nav-btn { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text2); cursor: pointer; padding: 0; }
+    .nav-vizinhos { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 4px; height: 26px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg2); color: var(--text2); cursor: pointer; padding: 0 8px; font-size: 12px; white-space: nowrap;
+    }
     .nav-btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
     .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .nav-posicao { font-size: 11.5px; color: var(--text2); white-space: nowrap; }
     .autosave-note { font-size: 11.5px; color: var(--text2); font-style: italic; }
     .icon-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem .75rem; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .icon-btn:hover:not(:disabled) { border-color: var(--text2); color: var(--text); }
@@ -1127,6 +1134,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly vizinhoAnteriorNumero = signal<number | null>(null);
   readonly vizinhoProximoId = signal<string | null>(null);
   readonly vizinhoProximoNumero = signal<number | null>(null);
+  readonly vizinhoPosicao = signal<number | null>(null);
+  readonly vizinhoTotal = signal<number | null>(null);
 
   readonly autoSalvando = signal(false);
   readonly autoSalvo = signal(false);
@@ -1236,6 +1245,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.vizinhoAnteriorNumero.set(null);
     this.vizinhoProximoId.set(null);
     this.vizinhoProximoNumero.set(null);
+    this.vizinhoPosicao.set(null);
+    this.vizinhoTotal.set(null);
     this.autoSalvando.set(false);
     this.autoSalvo.set(false);
     this.rowErrors.set(new Set());
@@ -1265,6 +1276,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         this.vizinhoAnteriorNumero.set(v.anteriorNumero ?? null);
         this.vizinhoProximoId.set(v.proximoId ?? null);
         this.vizinhoProximoNumero.set(v.proximoNumero ?? null);
+        this.vizinhoPosicao.set(v.posicao);
+        this.vizinhoTotal.set(v.total);
       },
     });
   }

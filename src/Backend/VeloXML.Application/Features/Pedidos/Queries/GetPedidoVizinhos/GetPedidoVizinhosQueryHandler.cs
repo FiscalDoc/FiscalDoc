@@ -13,9 +13,9 @@ public sealed class GetPedidoVizinhosQueryHandler(IUnitOfWork uow)
         if (pedido is null || pedido.ClienteId != request.ClienteId)
             return Result.Failure<PedidoVizinhosDto>(ResultError.NotFound("Pedido"));
 
-        var (anteriorId, anteriorNumero, proximoId, proximoNumero) =
+        var (anteriorId, anteriorNumero, proximoId, proximoNumero, posicao, total) =
             await uow.Pedidos.GetVizinhosAsync(request.ClienteId, pedido.Numero, ct);
 
-        return Result.Success(new PedidoVizinhosDto(anteriorId, anteriorNumero, proximoId, proximoNumero));
+        return Result.Success(new PedidoVizinhosDto(anteriorId, anteriorNumero, proximoId, proximoNumero, posicao, total));
     }
 }

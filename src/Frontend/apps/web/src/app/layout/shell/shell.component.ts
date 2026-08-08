@@ -785,6 +785,13 @@ export class ShellComponent implements OnInit {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12.5 3.5a3.5 3.5 0 110 7 3.5 3.5 0 010-7zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
               </svg>`,
             },
+            {
+              label: 'Transportadoras',
+              route: `/clientes/${id}/cadastros/transportadoras`,
+              icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16V6a1 1 0 011-1h9a1 1 0 011 1v10M3 16h11m0 0h2.05M3 16a2 2 0 104 0m7 0a2 2 0 104 0m0 0h2v-4.5a1 1 0 00-.293-.707l-2.5-2.5A1 1 0 0016.5 8H14v8"/>
+              </svg>`,
+            },
           ],
         },
         {

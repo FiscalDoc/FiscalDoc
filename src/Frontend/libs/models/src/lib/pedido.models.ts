@@ -134,6 +134,8 @@ export interface PedidoVizinhosDto {
   anteriorNumero?: number;
   proximoId?: string;
   proximoNumero?: number;
+  posicao: number;
+  total: number;
 }
 
 export interface PedidoHistoricoDto {

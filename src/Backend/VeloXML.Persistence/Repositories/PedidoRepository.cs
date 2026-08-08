@@ -55,7 +55,7 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
     // "Anterior/Próximo" navega pelo número sequencial do pedido dentro do mesmo cliente —
     // mais previsível pro usuário do que ordenar por data de criação, já que o número é o
     // identificador visível no cabeçalho ("Pedido 1001").
-    public async Task<(Guid? AnteriorId, int? AnteriorNumero, Guid? ProximoId, int? ProximoNumero)> GetVizinhosAsync(
+    public async Task<(Guid? AnteriorId, int? AnteriorNumero, Guid? ProximoId, int? ProximoNumero, int Posicao, int Total)> GetVizinhosAsync(
         Guid clienteId, int numero, CancellationToken ct = default)
     {
         var anterior = await DbSet
@@ -70,7 +70,10 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
             .Select(p => new { p.Id, p.Numero })
             .FirstOrDefaultAsync(ct);
 
-        return (anterior?.Id, anterior?.Numero, proximo?.Id, proximo?.Numero);
+        var total = await DbSet.CountAsync(p => p.ClienteId == clienteId, ct);
+        var posicao = await DbSet.CountAsync(p => p.ClienteId == clienteId && p.Numero <= numero, ct);
+
+        return (anterior?.Id, anterior?.Numero, proximo?.Id, proximo?.Numero, posicao, total);
     }
 
     // Sugestão de "adicionar novamente" no formulário de pedido: produtos que esse

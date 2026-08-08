@@ -5,4 +5,4 @@ namespace VeloXML.Application.Features.Pedidos.Queries.GetPedidoVizinhos;
 
 public record GetPedidoVizinhosQuery(Guid ClienteId, Guid Id) : IRequest<Result<PedidoVizinhosDto>>;
 
-public record PedidoVizinhosDto(Guid? AnteriorId, int? AnteriorNumero, Guid? ProximoId, int? ProximoNumero);
+public record PedidoVizinhosDto(Guid? AnteriorId, int? AnteriorNumero, Guid? ProximoId, int? ProximoNumero, int Posicao, int Total);
