@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using MediatR;
+using VeloXML.Application.Common;
 using VeloXML.Application.Features.Destinatarios.Queries.GetDestinatarios;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
 using VeloXML.Application.Features.Produtos.Queries.GetProdutos;
@@ -136,10 +137,10 @@ internal static class AssistenteConsultaExecutor
 
         var documentos = await uow.Documentos.GetByClienteAsync(clienteId, ct);
         var faturamento = documentos
-            .Where(d => d.Tipo == Domain.Enums.TipoDocumentoEnum.NFe && d.Status != Domain.Enums.StatusDocumentoEnum.Cancelado
+            .Where(d => d.Tipo == Domain.Enums.TipoDocumentoEnum.NFe && DocumentoFaturamentoHelper.ContaComoFaturamento(d.Status)
                 && d.DataEmissao >= de.Value && d.DataEmissao <= ate.Value)
             .Sum(d => d.ValorTotal);
-        var quantidade = documentos.Count(d => d.Tipo == Domain.Enums.TipoDocumentoEnum.NFe && d.Status != Domain.Enums.StatusDocumentoEnum.Cancelado
+        var quantidade = documentos.Count(d => d.Tipo == Domain.Enums.TipoDocumentoEnum.NFe && DocumentoFaturamentoHelper.ContaComoFaturamento(d.Status)
             && d.DataEmissao >= de.Value && d.DataEmissao <= ate.Value);
 
         return $"Faturamento entre {de:dd/MM/yyyy} e {ate:dd/MM/yyyy}: R$ {faturamento:N2}, em {quantidade} NF-e autorizada(s).";

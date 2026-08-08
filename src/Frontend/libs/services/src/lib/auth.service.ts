@@ -28,6 +28,18 @@ export class AuthService {
   readonly avatarVersion = this._avatarVersion.asReadonly();
   bumpAvatarVersion(): void { this._avatarVersion.update(v => v + 1); }
 
+  // Sinaliza um login de verdade (credenciais/2FA) acabou de acontecer nesta aba — não uma
+  // sessão restaurada de um token salvo (restoreSession, refresh silencioso, troca de contexto
+  // admin↔cliente). É por isso que fica em memória, não em localStorage: um F5 na página não
+  // deve "reacender" o sinal. O modal de novidades consome esse flag uma única vez pra decidir
+  // se aparece sozinho.
+  private readonly _loginRecente = signal(false);
+  consumirLoginRecente(): boolean {
+    const v = this._loginRecente();
+    if (v) this._loginRecente.set(false);
+    return v;
+  }
+
   readonly isOnTrial = computed(() => this._currentUser()?.plano === 'Trial');
   readonly isImpersonating = computed(() => !!this._currentUser()?.actingAdminId);
 
@@ -213,6 +225,7 @@ export class AuthService {
       ? { ...user, plano: res.plano, planoExpiracao: res.planoExpiracao }
       : { id: '', nome: res.nome, email: res.email, perfil: res.perfil, tenantId: res.tenantId, plano: res.plano, planoExpiracao: res.planoExpiracao }
     );
+    this._loginRecente.set(true);
   }
 
   private _decodeToken(token: string): CurrentUser | null {

@@ -4,6 +4,7 @@ import { AuthService, ContadorService } from '@veloxml/services';
 import { ToastContainerComponent } from '../toast-container/toast-container.component';
 import { AssistenteChatComponent } from '../assistente-chat/assistente-chat.component';
 import { NovidadesModalComponent } from '../novidades-modal/novidades-modal.component';
+import { OnboardingTourComponent } from '../onboarding-tour/onboarding-tour.component';
 import { environment } from '../../../environments/environment';
 
 interface NavItem {
@@ -17,7 +18,7 @@ interface NavItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent, OnboardingTourComponent],
   template: `
     <div class="shell">
       <button type="button" class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)" aria-label="Abrir menu">
@@ -95,11 +96,27 @@ interface NavItem {
               </svg>
               Segurança / 2FA
             </a>
-            <a routerLink="/alertas" routerLinkActive="active" class="alertas-icon-link" title="Alertas">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-              </svg>
-            </a>
+            <div class="footer-icons">
+              @if (auth.currentUser()?.perfil === 'Cliente') {
+                <button type="button" class="novidades-icon-link" title="Tour guiado" (click)="tourGuiado.abrir()">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                  </svg>
+                </button>
+              }
+              <button type="button" class="novidades-icon-link" title="Novidades" (click)="novidadesModal.abrir()">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 11l18-6v14L3 15v-4z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.6 17.4a2 2 0 11-3.4 2L6 15.5"/>
+                </svg>
+              </button>
+              <a routerLink="/alertas" routerLinkActive="active" class="alertas-icon-link" title="Alertas">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+              </a>
+            </div>
           </div>
           <div class="user-row">
           <div class="user-info">
@@ -110,7 +127,7 @@ interface NavItem {
             }
             <div class="user-details">
               <span class="user-name">{{ auth.currentUser()?.nome }}</span>
-              <span class="user-role">{{ auth.currentUser()?.perfil }} · {{ appVersion }}</span>
+              <span class="user-role">{{ auth.currentUser()?.perfil }}</span>
             </div>
           </div>
           <button class="logout-btn" (click)="auth.logout()" title="Sair">
@@ -119,6 +136,7 @@ interface NavItem {
             </svg>
           </button>
           </div>
+          <div class="version-row">{{ appVersion }}</div>
         </div>
       </aside>
 
@@ -204,7 +222,8 @@ interface NavItem {
 
     <app-toast-container />
     <app-assistente-chat />
-    <app-novidades-modal />
+    <app-novidades-modal #novidadesModal />
+    <app-onboarding-tour #tourGuiado />
 
     <!-- ── Modal de upgrade de plano ── -->
     @if (showUpgradeModal()) {
@@ -473,13 +492,22 @@ interface NavItem {
     .nav-item-active.security-link { color: var(--accent); }
 
     .footer-links-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-    .alertas-icon-link {
+    .footer-icons { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+    .alertas-icon-link, .novidades-icon-link {
       display: flex; align-items: center; justify-content: center;
       width: 26px; height: 26px; flex-shrink: 0;
       color: var(--text2); border-radius: 6px; transition: color 120ms, background 120ms;
+      background: none; border: none; cursor: pointer; padding: 0;
     }
-    .alertas-icon-link:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .alertas-icon-link:hover, .novidades-icon-link:hover { color: var(--text); background: rgba(255,255,255,.05); }
     .alertas-icon-link.active { color: var(--accent); }
+
+    .version-row {
+      font-size: 10px;
+      color: var(--text3, var(--text2));
+      text-align: center;
+      padding-top: 2px;
+    }
 
     /* Main content */
     .content {

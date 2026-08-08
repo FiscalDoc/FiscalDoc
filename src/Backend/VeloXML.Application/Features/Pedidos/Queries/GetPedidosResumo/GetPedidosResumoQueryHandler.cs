@@ -1,4 +1,5 @@
 using MediatR;
+using VeloXML.Application.Common;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
@@ -45,7 +46,7 @@ public sealed class GetPedidosResumoQueryHandler(IUnitOfWork uow, ICurrentUser c
 
     private static decimal FaturamentoDoMes(IReadOnlyList<Documento> documentos, int ano, int mes) =>
         documentos
-            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status != StatusDocumentoEnum.Cancelado
+            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && DocumentoFaturamentoHelper.ContaComoFaturamento(d.Status)
                 && d.DataEmissao.Year == ano && d.DataEmissao.Month == mes)
             .Sum(d => d.ValorTotal);
 

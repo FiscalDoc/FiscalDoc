@@ -1,4 +1,5 @@
 using MediatR;
+using VeloXML.Application.Common;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
@@ -27,9 +28,10 @@ public sealed class GetClienteDashboardQueryHandler(IUnitOfWork uow, ICurrentUse
         var totalNotasFiscais = documentos.Count(d => d.Tipo == TipoDocumentoEnum.NFe);
         var valorDocumentosMes = documentos.Where(d => d.DataEmissao >= inicioMes).Sum(d => d.ValorTotal);
         // Faturamento total (histórico completo, não só o mês) das NF-e realmente autorizadas —
-        // exclui canceladas, senão o valor faturado incluiria notas que não valem mais nada.
+        // exclui canceladas e duplicadas, senão o valor faturado incluiria notas que não valem
+        // mais nada ou a mesma nota contada duas vezes.
         var faturamentoTotalNotas = documentos
-            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status != StatusDocumentoEnum.Cancelado)
+            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && DocumentoFaturamentoHelper.ContaComoFaturamento(d.Status))
             .Sum(d => d.ValorTotal);
 
         var porTipo = documentos

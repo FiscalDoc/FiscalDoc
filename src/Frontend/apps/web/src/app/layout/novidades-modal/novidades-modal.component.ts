@@ -1,4 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { AuthService } from '@veloxml/services';
+import { TOUR_KEY } from '../onboarding-tour/onboarding-tour.component';
 import { environment } from '../../../environments/environment';
 
 interface Novidade {
@@ -6,10 +8,9 @@ interface Novidade {
   descricao: string;
 }
 
-// Chave de localStorage carrega a versão — trocar o valor de appVersion já é suficiente pra
-// reabrir o modal pra todo mundo no próximo login, sem precisar de nenhum estado no backend.
-const VISTA_KEY = 'vx_novidades_vista';
-
+// Toda funcionalidade nova entregue no app deve ganhar uma entrada aqui (mais recente primeiro
+// ou por ordem de entrega) — é o que faz o modal reaparecer sozinho pros usuários, sem
+// depender da versão de build (ver comentário em VISTA_KEY acima).
 const NOVIDADES: Novidade[] = [
   {
     titulo: 'Webhook de NF-e para a transportadora',
@@ -92,17 +93,28 @@ const NOVIDADES: Novidade[] = [
   `],
 })
 export class NovidadesModalComponent implements OnInit {
+  private readonly _auth = inject(AuthService);
+
   readonly novidades = NOVIDADES;
   readonly versao = environment.appVersion;
   readonly visivel = signal(false);
 
+  // Aparece sozinho toda vez que o usuário efetua login de verdade (não em F5/refresh de
+  // sessão) — fora isso, fica disponível a qualquer momento pelo sininho de novidades no
+  // rodapé do menu, via abrir(). Exceção: se o tour guiado de onboarding ainda vai aparecer
+  // pra esse login (cliente novo), não empilha os dois modais ao mesmo tempo — o tour vem
+  // primeiro, as novidades ficam disponíveis no sininho pra depois.
   ngOnInit(): void {
-    const vistaAnteriormente = localStorage.getItem(VISTA_KEY);
-    if (vistaAnteriormente !== this.versao) this.visivel.set(true);
+    const loginRecente = this._auth.consumirLoginRecente();
+    const tourPendente = this._auth.currentUser()?.perfil === 'Cliente' && !localStorage.getItem(TOUR_KEY);
+    if (loginRecente && !tourPendente) this.visivel.set(true);
+  }
+
+  abrir(): void {
+    this.visivel.set(true);
   }
 
   fechar(): void {
-    localStorage.setItem(VISTA_KEY, this.versao);
     this.visivel.set(false);
   }
 }

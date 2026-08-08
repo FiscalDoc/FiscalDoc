@@ -1,3 +1,4 @@
+using VeloXML.Application.Common;
 using VeloXML.Domain.Enums;
 using VeloXML.Domain.Interfaces;
 
@@ -38,7 +39,7 @@ internal static class DiagnosticoContextoBuilder
         var inicioMes = new DateTime(hoje.Year, hoje.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var faturamentoMes = documentos.Where(d => d.DataEmissao >= inicioMes).Sum(d => d.ValorTotal);
         var faturamentoTotal = documentos
-            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && d.Status != StatusDocumentoEnum.Cancelado)
+            .Where(d => d.Tipo == TipoDocumentoEnum.NFe && DocumentoFaturamentoHelper.ContaComoFaturamento(d.Status))
             .Sum(d => d.ValorTotal);
         var totalNotasFiscais = documentos.Count(d => d.Tipo == TipoDocumentoEnum.NFe);
         var notasCanceladas = documentos.Count(d => d.Status == StatusDocumentoEnum.Cancelado);
