@@ -13,6 +13,9 @@ interface NavItem {
   route?: string;
   roles?: string[];
   children?: NavItem[];
+  // Âncora pro tour guiado (app-onboarding-tour) apontar a seta pra esse item no menu — só
+  // setado nos itens que o tour realmente usa (ver visibleNavItems, bloco Cliente).
+  tourId?: string;
 }
 
 @Component({
@@ -53,7 +56,7 @@ interface NavItem {
           @for (item of visibleNavItems; track item.label) {
             @if (item.children) {
               <div class="nav-group">
-                <button type="button" class="nav-item nav-group-toggle" [class.active]="isGroupActive(item)" (click)="toggleGroup(item.label)">
+                <button type="button" class="nav-item nav-group-toggle" [attr.data-tour]="item.tourId" [class.active]="isGroupActive(item)" (click)="toggleGroup(item.label)">
                   <span class="nav-icon" [innerHTML]="item.icon"></span>
                   <span class="nav-label">{{ item.label }}</span>
                   <svg class="nav-chevron" [class.open]="isGroupExpanded(item)" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -63,7 +66,7 @@ interface NavItem {
                 @if (isGroupExpanded(item)) {
                   <div class="nav-subitems">
                     @for (child of item.children; track child.route) {
-                      <a [routerLink]="child.route" routerLinkActive="active" class="nav-item nav-subitem" (click)="mobileMenuOpen.set(false)">
+                      <a [routerLink]="child.route" [attr.data-tour]="child.tourId" routerLinkActive="active" class="nav-item nav-subitem" (click)="mobileMenuOpen.set(false)">
                         <span class="nav-icon" [innerHTML]="child.icon"></span>
                         <span class="nav-label">{{ child.label }}</span>
                       </a>
@@ -72,7 +75,7 @@ interface NavItem {
                 }
               </div>
             } @else {
-              <a [routerLink]="item.route" routerLinkActive="active" class="nav-item" (click)="mobileMenuOpen.set(false)">
+              <a [routerLink]="item.route" [attr.data-tour]="item.tourId" routerLinkActive="active" class="nav-item" (click)="mobileMenuOpen.set(false)">
                 <span class="nav-icon" [innerHTML]="item.icon"></span>
                 <span class="nav-label">{{ item.label }}</span>
               </a>
@@ -797,6 +800,7 @@ export class ShellComponent implements OnInit {
       base.push(
         {
           label: 'Emissão',
+          tourId: 'grupo-emissao',
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>`,
@@ -804,6 +808,7 @@ export class ShellComponent implements OnInit {
             {
               label: 'Pedidos / NF-e',
               route: `/clientes/${id}/pedidos`,
+              tourId: 'nav-pedidos',
               icon: `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>`,
@@ -813,6 +818,7 @@ export class ShellComponent implements OnInit {
         {
           label: 'Cadastros',
           route: `/clientes/${id}/cadastros`,
+          tourId: 'grupo-cadastros',
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
           </svg>`,
@@ -850,6 +856,7 @@ export class ShellComponent implements OnInit {
         {
           label: 'Relatórios',
           route: `/clientes/${id}/relatorios`,
+          tourId: 'nav-relatorios',
           icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V9m4 8V5m4 12v-6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/>
           </svg>`,

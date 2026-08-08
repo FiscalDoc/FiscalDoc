@@ -22,7 +22,7 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
         }
         <div class="header-row">
           <h2 class="page-title">Pedidos / Nota Fiscal</h2>
-          <button class="btn-primary" (click)="novoPedido()">+ Novo Pedido</button>
+          <button class="btn-primary" data-tour="novo-pedido" (click)="novoPedido()">+ Novo Pedido</button>
         </div>
       </div>
 
