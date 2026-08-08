@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CobrancaService, ContadorService, ClienteService, extractErrorMessage } from '@veloxml/services';
+import { CobrancaService, ContadorService, ClienteService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
 import { CobrancaDto, CobrancasResumoDto, ContadorDto, ClienteDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../shared/decimal-input.directive';
 
@@ -267,6 +267,7 @@ export class CobrancasComponent implements OnInit {
   private readonly _svc = inject(CobrancaService);
   private readonly _contadorSvc = inject(ContadorService);
   private readonly _clienteSvc = inject(ClienteService);
+  private readonly _confirm = inject(ConfirmDialogService);
 
   readonly MESES = MESES;
 
@@ -333,16 +334,18 @@ export class CobrancasComponent implements OnInit {
     this._svc.getResumo().subscribe(r => this.resumo.set(r));
   }
 
-  marcarPaga(c: CobrancaDto): void {
-    if (!confirm(`Marcar a cobrança de ${c.entidadeNome} (${this.MESES[c.mes - 1]}/${c.ano}) como paga?`)) return;
+  async marcarPaga(c: CobrancaDto): Promise<void> {
+    const ok = await this._confirm.ask(`Marcar a cobrança de ${c.entidadeNome} (${this.MESES[c.mes - 1]}/${c.ano}) como paga?`, { confirmLabel: 'Marcar como paga', destrutivo: false });
+    if (!ok) return;
     this._svc.marcarPaga(c.id).subscribe({
       next: () => { this._carregar(); this.carregarResumo(); },
       error: err => this.erro.set(extractErrorMessage(err, 'Erro ao marcar cobrança como paga.')),
     });
   }
 
-  reabrir(c: CobrancaDto): void {
-    if (!confirm(`Reabrir a cobrança de ${c.entidadeNome} (${this.MESES[c.mes - 1]}/${c.ano})?`)) return;
+  async reabrir(c: CobrancaDto): Promise<void> {
+    const ok = await this._confirm.ask(`Reabrir a cobrança de ${c.entidadeNome} (${this.MESES[c.mes - 1]}/${c.ano})?`, { confirmLabel: 'Reabrir', destrutivo: false });
+    if (!ok) return;
     this._svc.reabrir(c.id).subscribe({
       next: () => { this._carregar(); this.carregarResumo(); },
       error: err => this.erro.set(extractErrorMessage(err, 'Erro ao reabrir cobrança.')),

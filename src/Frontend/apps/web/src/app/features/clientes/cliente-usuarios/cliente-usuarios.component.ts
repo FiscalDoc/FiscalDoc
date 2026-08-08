@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ClienteUsuarioService, extractErrorMessage } from '@veloxml/services';
+import { ClienteUsuarioService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
 import { UsuarioDto } from '@veloxml/models';
 
 @Component({
@@ -166,6 +166,7 @@ import { UsuarioDto } from '@veloxml/models';
 })
 export class ClienteUsuariosComponent implements OnInit {
   private readonly _svc    = inject(ClienteUsuarioService);
+  private readonly _confirm = inject(ConfirmDialogService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
 
@@ -205,8 +206,9 @@ export class ClienteUsuariosComponent implements OnInit {
 
   abrirUsuario(id: string): void { this._router.navigate(['/clientes', this.clienteId, 'usuarios', id]); }
 
-  excluir(u: UsuarioDto): void {
-    if (!confirm(`Excluir o usuário "${u.nome}"? Esta ação não pode ser desfeita.`)) return;
+  async excluir(u: UsuarioDto): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir o usuário "${u.nome}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._svc.delete(this.clienteId, u.id).subscribe({
       next: () => this.load(),
       error: err => alert(extractErrorMessage(err, 'Erro ao excluir usuário.')),

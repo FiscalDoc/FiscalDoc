@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinatarioService, CepService, CnpjService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { DestinatarioService, CepService, CnpjService, ConfirmDialogService, extractErrorMessage, extractFieldErrors, validarCpfCnpj, validarEmail } from '@veloxml/services';
 import { DestinatarioDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'endereco';
@@ -42,8 +42,10 @@ type Tab = 'cadastro' | 'endereco';
             <div class="form-grid">
               <div class="field col-2">
                 <label class="label">Razão Social *</label>
-                <input class="input" [class.error]="fieldErrors()['razaosocial']" [(ngModel)]="form.razaoSocial" placeholder="Empresa Ltda"/>
-                @if (fieldErrors()['razaosocial']) { <span class="field-error">{{ fieldErrors()['razaosocial'] }}</span> }
+                <input class="input" [class.error]="(tocado().has('razaoSocial') && erroRazaoSocial()) || fieldErrors()['razaosocial']"
+                  [(ngModel)]="form.razaoSocial" (blur)="marcarTocado('razaoSocial')" placeholder="Empresa Ltda"/>
+                @if (tocado().has('razaoSocial') && erroRazaoSocial()) { <span class="field-error">{{ erroRazaoSocial() }}</span> }
+                @else if (fieldErrors()['razaosocial']) { <span class="field-error">{{ fieldErrors()['razaosocial'] }}</span> }
               </div>
               <div class="field col-2">
                 <label class="label">Nome Fantasia</label>
@@ -52,14 +54,16 @@ type Tab = 'cadastro' | 'endereco';
               <div class="field">
                 <label class="label">CPF / CNPJ</label>
                 <div class="combo-row">
-                  <input class="input" [(ngModel)]="form.cpfCnpj" placeholder="00.000.000/0001-00"/>
+                  <input class="input" [class.error]="tocado().has('cpfCnpj') && erroCpfCnpjFormato()"
+                    [(ngModel)]="form.cpfCnpj" (blur)="marcarTocado('cpfCnpj')" placeholder="00.000.000/0001-00"/>
                   @if (ehCnpj()) {
                     <button type="button" class="btn-inline" [disabled]="buscandoCnpj()" (click)="buscarCnpj()">
                       {{ buscandoCnpj() ? 'Buscando...' : 'Buscar dados' }}
                     </button>
                   }
                 </div>
-                @if (erroCnpj()) { <span class="field-error">{{ erroCnpj() }}</span> }
+                @if (tocado().has('cpfCnpj') && erroCpfCnpjFormato()) { <span class="field-error">{{ erroCpfCnpjFormato() }}</span> }
+                @else if (erroCnpj()) { <span class="field-error">{{ erroCnpj() }}</span> }
               </div>
               <div class="field">
                 <label class="label">Inscrição Estadual</label>
@@ -67,8 +71,10 @@ type Tab = 'cadastro' | 'endereco';
               </div>
               <div class="field">
                 <label class="label">E-mail</label>
-                <input class="input" type="email" [class.error]="fieldErrors()['email']" [(ngModel)]="form.email" autocomplete="off"/>
-                @if (fieldErrors()['email']) { <span class="field-error">{{ fieldErrors()['email'] }}</span> }
+                <input class="input" type="email" [class.error]="(tocado().has('email') && erroEmailFormato()) || fieldErrors()['email']"
+                  [(ngModel)]="form.email" (blur)="marcarTocado('email')" autocomplete="off"/>
+                @if (tocado().has('email') && erroEmailFormato()) { <span class="field-error">{{ erroEmailFormato() }}</span> }
+                @else if (fieldErrors()['email']) { <span class="field-error">{{ fieldErrors()['email'] }}</span> }
               </div>
               <div class="field">
                 <label class="label">Telefone</label>
@@ -198,6 +204,7 @@ type Tab = 'cadastro' | 'endereco';
 })
 export class DestinatarioDetailComponent implements OnInit {
   private readonly _svc     = inject(DestinatarioService);
+  private readonly _confirm = inject(ConfirmDialogService);
   private readonly _cepSvc  = inject(CepService);
   private readonly _cnpjSvc = inject(CnpjService);
   private readonly _route   = inject(ActivatedRoute);
@@ -217,7 +224,31 @@ export class DestinatarioDetailComponent implements OnInit {
   readonly buscandoCnpj = signal(false);
   readonly erroCnpj = signal<string | null>(null);
 
+  // Campos que o usuário já visitou (blur) — evita mostrar "obrigatório"/"inválido" antes
+  // dele sequer ter chance de preencher o formulário.
+  readonly tocado = signal<Set<string>>(new Set());
+
   form = this._empty();
+
+  marcarTocado(campo: string): void {
+    this.tocado.update(s => new Set(s).add(campo));
+  }
+
+  erroRazaoSocial(): string | null {
+    return this.form.razaoSocial.trim() ? null : 'Obrigatório.';
+  }
+
+  erroCpfCnpjFormato(): string | null {
+    return validarCpfCnpj(this.form.cpfCnpj) ? null : 'CPF/CNPJ inválido — confira os dígitos.';
+  }
+
+  erroEmailFormato(): string | null {
+    return validarEmail(this.form.email) ? null : 'E-mail inválido.';
+  }
+
+  private _formValido(): boolean {
+    return !this.erroRazaoSocial() && !this.erroCpfCnpjFormato() && !this.erroEmailFormato();
+  }
 
   ehCnpj(): boolean {
     return (this.form.cpfCnpj || '').replace(/\D/g, '').length === 14;
@@ -293,6 +324,13 @@ export class DestinatarioDetailComponent implements OnInit {
 
   salvar(): void {
     if (this.salvando()) return;
+
+    this.tocado.set(new Set(['razaoSocial', 'cpfCnpj', 'email']));
+    if (!this._formValido()) {
+      this.erro.set('Corrija os campos destacados antes de salvar.');
+      return;
+    }
+
     this.salvando.set(true);
     this.erro.set(null);
     this.sucesso.set(false);
@@ -335,8 +373,9 @@ export class DestinatarioDetailComponent implements OnInit {
     });
   }
 
-  excluir(): void {
-    if (!confirm(`Excluir "${this.form.razaoSocial}"? Esta ação não pode ser desfeita.`)) return;
+  async excluir(): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir "${this.form.razaoSocial}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._svc.delete(this.clienteId, this.destinatarioId).subscribe({
       next: () => this.goBack(),
       error: err => this.erro.set(extractErrorMessage(err, 'Erro ao excluir destinatário.')),

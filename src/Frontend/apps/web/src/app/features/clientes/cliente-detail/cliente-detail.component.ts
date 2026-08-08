@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService, ClienteService, ConfiguracaoService, CepService, extractErrorMessage } from '@veloxml/services';
+import { AuthService, ClienteService, ConfiguracaoService, CepService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse, ImportacaoXmlClienteStatusDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
@@ -651,6 +651,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
 })
 export class ClienteDetailComponent implements OnInit {
   private readonly _svc    = inject(ClienteService);
+  private readonly _confirm = inject(ConfirmDialogService);
   private readonly _auth   = inject(AuthService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
@@ -819,9 +820,11 @@ export class ClienteDetailComponent implements OnInit {
     });
   }
 
-  confirmDelete(): void {
+  async confirmDelete(): Promise<void> {
     const c = this.cliente();
-    if (!c || !confirm(`Excluir "${c.razaoSocial}"? Esta ação não pode ser desfeita.`)) return;
+    if (!c) return;
+    const ok = await this._confirm.ask(`Excluir "${c.razaoSocial}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._svc.delete(c.id).subscribe({ next: () => this._router.navigate(['/clientes']) });
   }
 
@@ -856,9 +859,11 @@ export class ClienteDetailComponent implements OnInit {
     navigator.clipboard.writeText(key).then(() => { this.keyCopied.set(true); setTimeout(() => this.keyCopied.set(false), 2000); });
   }
 
-  regenerarKey(): void {
+  async regenerarKey(): Promise<void> {
     const c = this.cliente();
-    if (!c || !confirm('A chave atual deixará de funcionar. Confirmar?')) return;
+    if (!c) return;
+    const ok = await this._confirm.ask('A chave atual deixará de funcionar. Confirmar?', { confirmLabel: 'Regenerar' });
+    if (!ok) return;
     this.keyLoading.set(true);
     this._svc.regenerarAppKey(c.id).subscribe({
       next: res => { this.cliente.update(cur => cur ? { ...cur, appKey: res.appKey } : cur); this.keyLoading.set(false); },

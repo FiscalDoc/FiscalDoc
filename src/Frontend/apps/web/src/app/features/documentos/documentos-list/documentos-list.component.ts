@@ -3,7 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe, Location } from '@angular/common'
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { from, concatMap, catchError, of } from 'rxjs';
-import { AuthService, DocumentoService, ClienteService, extractErrorMessage, extractBlobErrorMessage } from '@veloxml/services';
+import { AuthService, DocumentoService, ClienteService, ConfirmDialogService, ToastService, extractErrorMessage, extractBlobErrorMessage } from '@veloxml/services';
 import { DocumentoDto, ClienteDto } from '@veloxml/models';
 
 interface UploadItem { file: File; tipo: string; }
@@ -811,6 +811,8 @@ interface UploadItem { file: File; tipo: string; }
 })
 export class DocumentosListComponent implements OnInit {
   private readonly _docSvc = inject(DocumentoService);
+  private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast = inject(ToastService);
   private readonly _cliSvc = inject(ClienteService);
   private readonly _auth   = inject(AuthService);
   private readonly _route  = inject(ActivatedRoute);
@@ -943,8 +945,9 @@ export class DocumentosListComponent implements OnInit {
     });
   }
 
-  excluirDocumento(doc: DocumentoDto): void {
-    if (!confirm(`Excluir a nota fiscal "${doc.numero || doc.id}"? Esta ação não pode ser desfeita.`)) return;
+  async excluirDocumento(doc: DocumentoDto): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir a nota fiscal "${doc.numero || doc.id}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._docSvc.delete(doc.id).subscribe({
       next: () => { this.closeDetail(); this.load(); },
       error: (err) => alert(extractErrorMessage(err, 'Erro ao excluir documento.')),
@@ -971,10 +974,11 @@ export class DocumentosListComponent implements OnInit {
 
   limparSelecao(): void { this.selecionados.set(new Set()); }
 
-  excluirSelecionados(): void {
+  async excluirSelecionados(): Promise<void> {
     const ids = [...this.selecionados()];
     if (ids.length === 0) return;
-    if (!confirm(`Excluir ${ids.length} nota(s) fiscal(is) selecionada(s)? Esta ação não pode ser desfeita.`)) return;
+    const ok = await this._confirm.ask(`Excluir ${ids.length} nota(s) fiscal(is) selecionada(s)? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._docSvc.deleteLote(ids).subscribe({
       next: () => { this.limparSelecao(); this.load(); },
       error: (err) => alert(extractErrorMessage(err, 'Erro ao excluir documentos selecionados.')),
@@ -1112,6 +1116,7 @@ export class DocumentosListComponent implements OnInit {
       document.execCommand('copy');
       document.body.removeChild(el);
     }
+    this._toast.success('Chave de acesso copiada!');
   }
 
   formatCnpj(cnpj?: string): string {

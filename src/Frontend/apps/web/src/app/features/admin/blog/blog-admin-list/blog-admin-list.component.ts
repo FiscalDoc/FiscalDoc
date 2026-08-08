@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { BlogAdminService, extractErrorMessage } from '@veloxml/services';
+import { BlogAdminService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
 import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
 
 @Component({
@@ -173,6 +173,7 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
 })
 export class BlogAdminListComponent implements OnInit {
   private readonly _svc = inject(BlogAdminService);
+  private readonly _confirm = inject(ConfirmDialogService);
   private readonly _router = inject(Router);
 
   readonly posts = signal<BlogPostDto[]>([]);
@@ -235,8 +236,9 @@ export class BlogAdminListComponent implements OnInit {
     });
   }
 
-  excluir(p: BlogPostDto): void {
-    if (!confirm(`Excluir a postagem "${p.titulo}"? Esta ação não pode ser desfeita.`)) return;
+  async excluir(p: BlogPostDto): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir a postagem "${p.titulo}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._svc.delete(p.id).subscribe({
       next: () => this._carregar(),
       error: err => this.erro.set(extractErrorMessage(err, 'Erro ao excluir postagem.')),
@@ -258,8 +260,9 @@ export class BlogAdminListComponent implements OnInit {
     });
   }
 
-  excluirCategoria(c: BlogCategoriaDto): void {
-    if (!confirm(`Excluir a categoria "${c.nome}"?`)) return;
+  async excluirCategoria(c: BlogCategoriaDto): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir a categoria "${c.nome}"?`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._svc.deleteCategoria(c.id).subscribe({
       next: () => this._carregarCategorias(),
       error: err => this.erroCategoria.set(extractErrorMessage(err, 'Erro ao excluir categoria.')),

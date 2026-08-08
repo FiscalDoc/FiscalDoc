@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ProdutoService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { ProdutoService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { ProdutoDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
@@ -249,6 +249,7 @@ type Tab = 'geral' | 'fiscal';
 })
 export class ProdutoDetailComponent implements OnInit {
   private readonly _svc    = inject(ProdutoService);
+  private readonly _confirm = inject(ConfirmDialogService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
 
@@ -365,8 +366,9 @@ export class ProdutoDetailComponent implements OnInit {
     });
   }
 
-  excluir(): void {
-    if (!confirm(`Excluir o produto "${this.form.descricao}"? Esta ação não pode ser desfeita.`)) return;
+  async excluir(): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir o produto "${this.form.descricao}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this._svc.delete(this.clienteId, this.produtoId).subscribe({
       next: () => this.goBack(),
       error: err => this.erro.set(extractErrorMessage(err, 'Erro ao excluir produto.')),

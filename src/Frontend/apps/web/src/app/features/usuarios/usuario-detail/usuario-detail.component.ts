@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UsuarioService, ContadorService, ClienteService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { UsuarioService, ContadorService, ClienteService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { UsuarioDto, ContadorDto, ClienteDto } from '@veloxml/models';
 
 type Tab = 'geral' | 'acesso';
@@ -227,6 +227,7 @@ type Tab = 'geral' | 'acesso';
 })
 export class UsuarioDetailComponent implements OnInit {
   private readonly _svc    = inject(UsuarioService);
+  private readonly _confirm = inject(ConfirmDialogService);
   private readonly _cntSvc = inject(ContadorService);
   private readonly _cliSvc = inject(ClienteService);
   private readonly _fb     = inject(FormBuilder);
@@ -299,9 +300,10 @@ export class UsuarioDetailComponent implements OnInit {
 
   goBack(): void { this._router.navigate(['/usuarios']); }
 
-  excluir(): void {
+  async excluir(): Promise<void> {
     const nome = this.usuario()?.nome ?? 'este usuário';
-    if (!confirm(`Excluir ${nome}? Esta ação não pode ser desfeita.`)) return;
+    const ok = await this._confirm.ask(`Excluir ${nome}? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
     this.excluindo.set(true);
     this.submitError.set(null);
     this._svc.delete(this.usuarioId).subscribe({

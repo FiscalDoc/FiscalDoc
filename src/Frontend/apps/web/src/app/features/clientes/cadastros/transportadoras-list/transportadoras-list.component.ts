@@ -37,7 +37,17 @@ import { TransportadoraDto } from '@veloxml/models';
         @if (loading()) {
           <div class="empty">Carregando...</div>
         } @else if (transportadoras().length === 0) {
-          <div class="empty">Nenhuma transportadora cadastrada.</div>
+          @if (termo) {
+            <div class="empty">
+              <p>Nenhuma transportadora encontrada pra "{{ termo }}".</p>
+              <button class="btn-ghost-sm" (click)="termo = ''; buscar()">Limpar busca</button>
+            </div>
+          } @else {
+            <div class="empty">
+              <p>Você ainda não tem nenhuma transportadora cadastrada.</p>
+              <button class="btn-primary" (click)="abrirTransportadora('novo')">+ Cadastrar a primeira transportadora</button>
+            </div>
+          }
         } @else {
           <div class="table-scroll">
           <table class="table">
@@ -75,6 +85,8 @@ import { TransportadoraDto } from '@veloxml/models';
     .search-box { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text2); flex: 1; max-width: 320px; }
     .search-input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; flex: 1; }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
+    .empty p { margin: 0 0 1rem; }
+    .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .45rem .875rem; font-size: 12.5px; cursor: pointer; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
     .table td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }

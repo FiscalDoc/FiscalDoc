@@ -99,7 +99,17 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
         @if (loading()) {
           <div class="empty">Carregando...</div>
         } @else if (pedidos().length === 0) {
-          <div class="empty">Nenhum pedido encontrado.</div>
+          @if (termo() || de || ate || statusFiltro()) {
+            <div class="empty">
+              <p>Nenhum pedido encontrado com esses filtros.</p>
+              <button class="btn-ghost-sm" (click)="limparFiltros()">Limpar filtros</button>
+            </div>
+          } @else {
+            <div class="empty">
+              <p>Você ainda não tem nenhum pedido.</p>
+              <button class="btn-primary" (click)="novoPedido()">+ Criar o primeiro pedido</button>
+            </div>
+          }
         } @else {
           <div class="table-scroll">
           <table class="table">
@@ -162,6 +172,7 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
+    .empty p { margin: 0 0 1rem; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
     .table td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }

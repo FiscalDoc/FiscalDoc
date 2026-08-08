@@ -5,6 +5,8 @@ import { ToastContainerComponent } from '../toast-container/toast-container.comp
 import { AssistenteChatComponent } from '../assistente-chat/assistente-chat.component';
 import { NovidadesModalComponent } from '../novidades-modal/novidades-modal.component';
 import { OnboardingTourComponent } from '../onboarding-tour/onboarding-tour.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { GlobalSearchComponent } from '../global-search/global-search.component';
 import { environment } from '../../../environments/environment';
 
 interface NavItem {
@@ -21,7 +23,7 @@ interface NavItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent, OnboardingTourComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent, OnboardingTourComponent, ConfirmDialogComponent, GlobalSearchComponent],
   template: `
     <div class="shell">
       <button type="button" class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)" aria-label="Abrir menu">
@@ -51,6 +53,14 @@ interface NavItem {
             </svg>
           </button>
         </div>
+
+        <button type="button" class="search-trigger" (click)="globalSearch.abrirPalette()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
+          </svg>
+          <span>Buscar...</span>
+          <kbd>Ctrl K</kbd>
+        </button>
 
         <nav class="sidebar-nav">
           @for (item of visibleNavItems; track item.label) {
@@ -224,6 +234,8 @@ interface NavItem {
     </div>
 
     <app-toast-container />
+    <app-confirm-dialog />
+    <app-global-search #globalSearch />
     <app-assistente-chat />
     <app-novidades-modal #novidadesModal />
     <app-onboarding-tour #tourGuiado />
@@ -326,6 +338,16 @@ interface NavItem {
       color: var(--text);
       letter-spacing: 0.02em;
     }
+
+    .search-trigger {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0.75rem 0.75rem 0; padding: 7px 10px;
+      background: var(--bg3, rgba(255,255,255,.04)); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text2); font-size: 12.5px; cursor: pointer; text-align: left; font-family: inherit;
+    }
+    .search-trigger:hover { color: var(--text); border-color: var(--text2); }
+    .search-trigger span { flex: 1; }
+    .search-trigger kbd { font-size: 10px; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
 
     /* Nav */
     .sidebar-nav {
