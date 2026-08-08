@@ -27,6 +27,9 @@ internal static class FocusNfePayloadBuilder
         var ieDestinatario = temIe ? destinatario.InscricaoEstadual : "ISENTO";
         var indicadorIeDestinatario = temIe ? 1 : 9;
 
+        var transportadora = pedido.Transportadora;
+        var cpfCnpjTransportadorDigitos = SoDigitos(transportadora?.CpfCnpj);
+
         // A SEFAZ exige que o total de frete/seguro/outras despesas (ICMSTot) seja igual à soma
         // desses mesmos valores item a item — sem distribuir aqui, o total vinha preenchido mas
         // a soma dos itens ficava em zero, gerando a rejeição "Total do Frete difere do
@@ -80,6 +83,17 @@ internal static class FocusNfePayloadBuilder
             telefone_destinatario = destinatario.Telefone,
             email_destinatario = destinatario.Email,
 
+            // Grupo "transp" — só faz sentido mandar quando o Pedido tem uma transportadora
+            // vinculada; sem ela, a Focus já resolve o transporte só com modalidade_frete
+            // (ex.: SemFrete/EmitenteContaFrete), sem exigir esse grupo.
+            cnpj_transportador = cpfCnpjTransportadorDigitos?.Length == 14 ? cpfCnpjTransportadorDigitos : null,
+            cpf_transportador = cpfCnpjTransportadorDigitos?.Length == 11 ? cpfCnpjTransportadorDigitos : null,
+            nome_transportador = transportadora?.RazaoSocial,
+            inscricao_estadual_transportador = string.IsNullOrWhiteSpace(transportadora?.InscricaoEstadual) ? null : transportadora.InscricaoEstadual,
+            endereco_transportador = transportadora?.Logradouro,
+            municipio_transportador = transportadora?.Cidade,
+            uf_transportador = transportadora?.Estado,
+
             items = pedido.Itens.Select((item, i) =>
             {
                 var valorFreteItem = freteItens[i];
@@ -108,7 +122,13 @@ internal static class FocusNfePayloadBuilder
                     unidade_comercial = item.Unidade,
                     quantidade_comercial = item.Quantidade,
                     valor_unitario_comercial = item.PrecoUnitario,
-                    valor_bruto = item.ValorTotal,
+                    // valor_bruto precisa ser o valor CHEIO do item (quantidade × valor unitário,
+                    // sem desconto) — a SEFAZ valida esse produto internamente, e um desconto
+                    // embutido aqui (como era antes) faz valor_bruto não bater com
+                    // quantidade_comercial × valor_unitario_comercial. O desconto vai separado,
+                    // no campo próprio pra isso.
+                    valor_bruto = item.Quantidade * item.PrecoUnitario,
+                    valor_desconto = item.Desconto > 0 ? item.Desconto : (decimal?)null,
                     valor_frete = valorFreteItem > 0 ? valorFreteItem : (decimal?)null,
                     valor_seguro = valorSeguroItem > 0 ? valorSeguroItem : (decimal?)null,
                     valor_outras_despesas = valorOutrasItem > 0 ? valorOutrasItem : (decimal?)null,
