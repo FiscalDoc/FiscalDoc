@@ -109,6 +109,9 @@ internal static class FocusNfePayloadBuilder
                 var cstPis = item.Produto?.CstPis ?? item.CstPis;
                 var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
                 var icmsOrigem = item.Produto?.IcmsOrigem ?? item.IcmsOrigem;
+                var aliquotaIcms = item.Produto?.AliquotaIcms ?? item.AliquotaIcms;
+                var aliquotaPis = item.Produto?.AliquotaPis ?? item.AliquotaPis;
+                var aliquotaCofins = item.Produto?.AliquotaCofins ?? item.AliquotaCofins;
                 var ibsCbsCst = item.Produto?.IbsCbsCst ?? item.IbsCbsCst;
                 var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
 
@@ -143,8 +146,15 @@ internal static class FocusNfePayloadBuilder
                     // (rejeição de schema). 3 = valor da operação, a modalidade padrão pra
                     // venda comum (não é cálculo de ICMS-ST por pauta/margem).
                     icms_modalidade_base_calculo = 3,
+                    // Faltava mandar as alíquotas — a Focus computa vBC/vICMS/vPIS/vCOFINS a
+                    // partir delas, sem isso a nota saía com todos os valores de imposto
+                    // zerados mesmo com CST/alíquota corretos cadastrados no produto (regime
+                    // normal, CST 00/10/20/70/90 etc. dependem 100% desse valor).
+                    icms_aliquota = aliquotaIcms > 0 ? aliquotaIcms : (decimal?)null,
                     pis_situacao_tributaria = cstPis,
+                    pis_aliquota = aliquotaPis > 0 ? aliquotaPis : (decimal?)null,
                     cofins_situacao_tributaria = cstCofins,
+                    cofins_aliquota = aliquotaCofins > 0 ? aliquotaCofins : (decimal?)null,
                     // IBS/CBS (reforma tributária, LC 214/2025) — cCST/cClassTrib vêm do cadastro
                     // do produto; as alíquotas do período de teste (2026) são FIXAS por lei (Art.
                     // 343 da LC 214/2025) pra todo mundo, não é dado de cadastro — SEFAZ chega a

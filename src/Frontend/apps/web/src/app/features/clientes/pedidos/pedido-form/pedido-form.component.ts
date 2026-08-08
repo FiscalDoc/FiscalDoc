@@ -497,6 +497,34 @@ interface ConfirmState {
             </div>
           }
         </div>
+      } @else if (!readonly() && itens().length > 0) {
+        <div class="accordion" [class.accordion--aberto]="impostosAbertos()">
+          <button type="button" class="accordion-header" (click)="impostosAbertos.set(!impostosAbertos())">
+            <span>Totais da Nota Fiscal (estimativa)</span>
+            <svg class="accordion-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          @if (impostosAbertos()) {
+            <div class="accordion-body">
+              <p class="quick-hint">Calculado a partir do CST/alíquota cadastrados nos itens — confira antes de emitir. Depois que a NF-e for autorizada, esse card mostra os valores reais que vieram na nota.</p>
+              @if (previewImpostos(); as prev) {
+                <div class="form-grid impostos-form-grid">
+                  <div class="field"><label class="label">Produtos</label><input class="input-sm" disabled [value]="prev.valorProdutos | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Base Cálc. ICMS</label><input class="input-sm" disabled [value]="prev.valorBaseCalculoIcms | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">ICMS</label><input class="input-sm" disabled [value]="prev.valorIcms | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">PIS</label><input class="input-sm" disabled [value]="prev.valorPis | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">COFINS</label><input class="input-sm" disabled [value]="prev.valorCofins | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Frete</label><input class="input-sm" disabled [value]="prev.valorFrete | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Seguro</label><input class="input-sm" disabled [value]="prev.valorSeguro | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Desconto</label><input class="input-sm" disabled [value]="prev.valorDesconto | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Outras Despesas</label><input class="input-sm" disabled [value]="prev.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Aprox. Tributos*</label><input class="input-sm imposto-destaque" disabled [value]="prev.valorAproxTributos | currency:'BRL':'symbol':'1.2-2'"/></div>
+                </div>
+              }
+            </div>
+          }
+        </div>
       }
 
       <div class="card section">
@@ -2201,6 +2229,33 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     const base = this.itemTotal(item);
     const aliquota = (+item.aliquotaIcms || 0) + (+item.aliquotaPis || 0) + (+item.aliquotaCofins || 0);
     return base * aliquota / 100;
+  }
+
+  // Prévia dos totais ANTES de emitir — mesma estrutura visual do card "Totais da Nota
+  // Fiscal" que aparece depois (vindo do XML autorizado), mas calculada aqui a partir do
+  // CST/alíquota cadastrados nos itens, pra dar pro cliente uma chance de conferir se os
+  // valores batem antes de mandar pra Focus/SEFAZ. Não é o cálculo oficial da SEFAZ (não
+  // reproduz modalidade de base de cálculo, ICMS-ST, arredondamento por item, etc.) — só uma
+  // estimativa de validação.
+  previewImpostos(): {
+    valorProdutos: number; valorBaseCalculoIcms: number; valorIcms: number;
+    valorPis: number; valorCofins: number; valorFrete: number; valorSeguro: number;
+    valorDesconto: number; valorOutrasDespesas: number; valorAproxTributos: number;
+  } {
+    const itens = this.itens();
+    const valorProdutos = itens.reduce((s, i) => s + (+i.quantidade * +i.precoUnitario), 0);
+    const valorBaseCalculoIcms = itens.reduce((s, i) => s + (+i.aliquotaIcms > 0 ? this.itemTotal(i) : 0), 0);
+    const valorIcms = itens.reduce((s, i) => s + this.itemTotal(i) * (+i.aliquotaIcms || 0) / 100, 0);
+    const valorPis = itens.reduce((s, i) => s + this.itemTotal(i) * (+i.aliquotaPis || 0) / 100, 0);
+    const valorCofins = itens.reduce((s, i) => s + this.itemTotal(i) * (+i.aliquotaCofins || 0) / 100, 0);
+    const valorDesconto = itens.reduce((s, i) => s + (+i.desconto || 0), 0);
+    return {
+      valorProdutos, valorBaseCalculoIcms, valorIcms, valorPis, valorCofins, valorDesconto,
+      valorFrete: +this.form.valorFrete || 0,
+      valorSeguro: +this.form.valorSeguro || 0,
+      valorOutrasDespesas: +this.form.valorOutrasDespesas || 0,
+      valorAproxTributos: valorIcms + valorPis + valorCofins,
+    };
   }
 
   private _validarItens(): boolean {
