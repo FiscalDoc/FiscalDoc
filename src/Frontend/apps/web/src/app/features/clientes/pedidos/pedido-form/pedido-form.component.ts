@@ -2,7 +2,7 @@ import { Component, HostListener, inject, OnDestroy, OnInit, signal, computed } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, extractErrorMessage } from '@veloxml/services';
+import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
@@ -33,7 +33,7 @@ interface ConfirmState {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, DecimalInputDirective],
   template: `
-    <div class="page">
+    <div class="page" [class.page-loading]="carregandoPedido()">
       <div class="page-header">
         <button class="back-btn" (click)="goBack()">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -43,27 +43,31 @@ interface ConfirmState {
         </button>
         <div class="header-top">
           <div class="title-row">
-            <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido ' + numero() }}</h2>
-            @if (!isNew()) {
+            @if (carregandoPedido()) {
+              <h2 class="page-title">Carregando...</h2>
+            } @else {
+              <h2 class="page-title">{{ isNew() ? 'Novo Pedido' : 'Pedido ' + numero() }}</h2>
+            }
+            @if (!isNew() && !carregandoPedido()) {
               <span class="badge" [class]="statusClass()">{{ pedidoStatus() }}</span>
             }
             @if (!isNew() && vizinhoTotal()) {
               <div class="nav-vizinhos">
                 <button
-                  type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId()" (click)="irParaAnterior()"
-                  [title]="vizinhoAnteriorNumero() ? 'Pedido nº ' + vizinhoAnteriorNumero() : 'Sem pedido anterior'"
+                  type="button" class="nav-btn" [disabled]="!vizinhoProximoId() || carregandoPedido()" (click)="irParaProximo()"
+                  [title]="vizinhoProximoNumero() ? 'Pedido nº ' + vizinhoProximoNumero() : 'Sem próximo pedido'"
                 >
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                   </svg>
-                  Anterior
-                </button>
-                <span class="nav-posicao">{{ vizinhoPosicao() }} de {{ vizinhoTotal() }}</span>
-                <button
-                  type="button" class="nav-btn" [disabled]="!vizinhoProximoId()" (click)="irParaProximo()"
-                  [title]="vizinhoProximoNumero() ? 'Pedido nº ' + vizinhoProximoNumero() : 'Sem próximo pedido'"
-                >
                   Próximo
+                </button>
+                <span class="nav-posicao">{{ carregandoPedido() ? '···' : vizinhoPosicao() }} de {{ vizinhoTotal() }}</span>
+                <button
+                  type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId() || carregandoPedido()" (click)="irParaAnterior()"
+                  [title]="vizinhoAnteriorNumero() ? 'Pedido nº ' + vizinhoAnteriorNumero() : 'Sem pedido anterior'"
+                >
+                  Anterior
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                   </svg>
@@ -299,16 +303,20 @@ interface ConfirmState {
                 (ngModelChange)="onDestinatarioInput($event)"
                 (focus)="destinatarioDropdownOpen.set(true)"
                 (blur)="onDestinatarioBlur()"
+                (keydown)="onDestinatarioKeydown($event)"
                 placeholder="Buscar destinatário por nome..."
               />
+              @if (form.destinatarioId) {
+                <a class="btn-inline" [routerLink]="['/clientes', clienteId, 'cadastros', 'destinatarios', form.destinatarioId]" target="_blank" title="Abrir cadastro do destinatário em nova aba">Editar</a>
+              }
               @if (!readonly()) {
                 <button type="button" class="btn-inline" (click)="abrirNovoDestinatario()">+ Novo</button>
               }
             </div>
             @if (destinatarioDropdownOpen() && !readonly()) {
               <div class="combo-dropdown">
-                @for (d of destinatarioResults(); track d.id) {
-                  <div class="combo-item" (mousedown)="selecionarDestinatario(d)">
+                @for (d of destinatarioResults(); track d.id; let idx = $index) {
+                  <div class="combo-item" [class.combo-item-active]="destinatarioHighlight() === idx" (mousedown)="selecionarDestinatario(d)" (mouseenter)="destinatarioHighlight.set(idx)">
                     {{ d.razaoSocial }}{{ d.nomeFantasia ? ' — ' + d.nomeFantasia : '' }}
                   </div>
                 }
@@ -358,8 +366,12 @@ interface ConfirmState {
                 (ngModelChange)="onTransportadoraInput($event)"
                 (focus)="transportadoraDropdownOpen.set(true)"
                 (blur)="onTransportadoraBlur()"
+                (keydown)="onTransportadoraKeydown($event)"
                 placeholder="Buscar transportadora (opcional)..."
               />
+              @if (form.transportadoraId) {
+                <a class="btn-inline" [routerLink]="['/clientes', clienteId, 'cadastros', 'transportadoras', form.transportadoraId]" target="_blank" title="Abrir cadastro da transportadora em nova aba">Editar</a>
+              }
               @if (!readonly() && form.transportadoraId) {
                 <button type="button" class="btn-inline" (click)="limparTransportadora()">Limpar</button>
               }
@@ -369,8 +381,8 @@ interface ConfirmState {
             }
             @if (transportadoraDropdownOpen() && !readonly()) {
               <div class="combo-dropdown">
-                @for (t of transportadoraResults(); track t.id) {
-                  <div class="combo-item" (mousedown)="selecionarTransportadora(t)">
+                @for (t of transportadoraResults(); track t.id; let idx = $index) {
+                  <div class="combo-item" [class.combo-item-active]="transportadoraHighlight() === idx" (mousedown)="selecionarTransportadora(t)" (mouseenter)="transportadoraHighlight.set(idx)">
                     {{ t.razaoSocial }}{{ t.nomeFantasia ? ' — ' + t.nomeFantasia : '' }}
                   </div>
                 }
@@ -533,12 +545,18 @@ interface ConfirmState {
                       (ngModelChange)="onProdutoInput(i, $event)"
                       (focus)="produtoDropdownIndex.set(i)"
                       (blur)="onProdutoBlur()"
+                      (keydown)="onProdutoKeydown(i, $event)"
                       placeholder="Buscar produto..."
                     />
                     @if (produtoDropdownIndex() === i && !readonly()) {
                       <div class="combo-dropdown">
-                        @for (p of produtoResults(); track p.id) {
-                          <div class="combo-item" (mousedown)="selecionarProduto(i, p)">{{ p.codigo }} — {{ p.descricao }}</div>
+                        @for (p of produtoResults(); track p.id; let idx = $index) {
+                          <div class="combo-item" [class.combo-item-active]="produtoHighlight() === idx" (mousedown)="selecionarProduto(i, p)" (mouseenter)="produtoHighlight.set(idx)">
+                            {{ p.codigo }} — {{ p.descricao }}
+                            @if (!p.ncm || !p.cfop) {
+                              <span class="combo-item-badge" title="Cadastro fiscal incompleto — falta NCM e/ou CFOP">⚠ incompleto</span>
+                            }
+                          </div>
                         }
                         @if ((produtoBusca[i] ?? '').trim().length > 0) {
                           <div class="combo-item combo-item-create" (mousedown)="abrirNovoProduto(i)">
@@ -573,6 +591,12 @@ interface ConfirmState {
                           <label class="label">Descrição</label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.descricao" (ngModelChange)="item.descricao = $event; marcarSujo()"/>
                         </div>
+                        @if (item.produtoId) {
+                          <div class="field">
+                            <label class="label">Cadastro do produto</label>
+                            <a class="btn-inline" [routerLink]="['/clientes', clienteId, 'cadastros', 'produtos', item.produtoId]" target="_blank" title="Abrir cadastro do produto em nova aba">Editar produto ↗</a>
+                          </div>
+                        }
                         <div class="field">
                           <label class="label">CFOP</label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cfop" (ngModelChange)="item.cfop = $event; marcarSujo()"/>
@@ -601,6 +625,13 @@ interface ConfirmState {
                           <label class="label">Classif. IBS/CBS</label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.ibsCbsClassificacaoTributaria" (ngModelChange)="item.ibsCbsClassificacaoTributaria = $event; marcarSujo()"/>
                         </div>
+                        @if (!readonly() && itens().length > 1) {
+                          <div class="field field-full">
+                            <button type="button" class="btn-inline" (click)="aplicarFiscalATodosOsItens(i)" title="Copia CFOP, CST ICMS/PIS/COFINS e IBS/CBS deste item para todos os outros — não mexe em NCM, descrição, preço nem quantidade">
+                              Aplicar CFOP/CST deste item a todos os itens
+                            </button>
+                          </div>
+                        }
                       </div>
                     </td>
                   </tr>
@@ -810,7 +841,8 @@ interface ConfirmState {
     }
   `,
   styles: [`
-    .page { display: flex; flex-direction: column; gap: 1.25rem; }
+    .page { display: flex; flex-direction: column; gap: 1.25rem; transition: opacity 120ms ease; }
+    .page-loading { opacity: .55; pointer-events: none; }
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
@@ -902,6 +934,7 @@ interface ConfirmState {
     .expand-btn:hover { color: var(--accent); }
     .detail-row td { background: var(--bg3); }
     .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .625rem; padding: 4px 0; }
+    .detail-grid .field-full { grid-column: 1 / -1; padding-top: 2px; border-top: 1px dashed var(--border); margin-top: 4px; }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0,196,140,.1); border: 1px solid rgba(0,196,140,.3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
@@ -995,11 +1028,16 @@ interface ConfirmState {
       background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
       box-shadow: 0 8px 24px rgba(0,0,0,.25); max-height: 220px; overflow-y: auto;
     }
-    .combo-item { padding: 7px 10px; font-size: 12.5px; color: var(--text); cursor: pointer; }
+    .combo-item { padding: 7px 10px; font-size: 12.5px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: space-between; }
     .combo-item:hover { background: var(--bg3); }
+    .combo-item-active { background: var(--bg3); }
     .combo-item-create { color: var(--accent); border-top: 1px solid var(--border); font-weight: 600; }
     .combo-item-hint { color: var(--text2); cursor: default; font-style: italic; }
     .combo-item-hint:hover { background: none; }
+    .combo-item-badge {
+      font-size: 10.5px; color: var(--red); background: rgba(255,77,109,.12);
+      border-radius: 4px; padding: 1px 6px; white-space: nowrap; flex-shrink: 0;
+    }
 
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
     .modal-confirm, .modal-quick {
@@ -1064,6 +1102,10 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   private pedidoId  = '';
 
   readonly isNew    = signal(true);
+  // Só fica true durante a busca do pedido disparada pelo paramMap (carga inicial ou troca via
+  // Anterior/Próximo) — não durante recargas pontuais depois de uma ação (emitir, vincular
+  // documento etc.), que já têm seus próprios spinners locais nos botões.
+  readonly carregandoPedido = signal(false);
   readonly salvando = signal(false);
   readonly salvandoEEmitindo = signal(false);
   readonly erro     = signal<string | null>(null);
@@ -1078,6 +1120,10 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly nfeEmissao = signal<NfeEmissaoDto | null>(null);
   readonly emitindoNfeFocus = signal(false);
   readonly showErroNfeModal = signal(false);
+  // Preenchido quando a EMISSÃO nem chega a ser tentada na Focus — a checagem prévia do
+  // próprio backend (NCM/CFOP/CST ausente ou inválido) já barra na hora, sem gastar uma
+  // chamada com a SEFAZ. Usa o mesmo modal/link de "erro de rejeição" pra não duplicar UI.
+  readonly preflightErroNfe = signal<{ campo?: string; mensagem: string } | null>(null);
   readonly showCancelarNfeModal = signal(false);
   readonly cancelandoNfe = signal(false);
   readonly erroCancelarNfe = signal<string | null>(null);
@@ -1094,6 +1140,9 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   // dá pra identificar onde corrigir (item de um produto, destinatário, dados fiscais da
   // empresa), aponta um link direto — em vez de só repetir o texto cru da API terceira.
   readonly erroNfeDetalhes = computed(() => {
+    const preflight = this.preflightErroNfe();
+    if (preflight) return [this._explicarErroNfe(preflight.campo, preflight.mensagem)];
+
     const ne = this.nfeEmissao();
     if (!ne) return [];
     const erros = ne.errosDetalhados;
@@ -1187,16 +1236,21 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   destinatarioSearch = '';
   readonly destinatarioResults = signal<DestinatarioDto[]>([]);
   readonly destinatarioDropdownOpen = signal(false);
+  // Índice destacado pra navegação por teclado (seta cima/baixo + Enter) — -1 é "nenhum".
+  readonly destinatarioHighlight = signal(-1);
   private _destSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Transportadora: opcional, mesmo padrão de busca do Destinatário.
   transportadoraSearch = '';
   readonly transportadoraResults = signal<TransportadoraDto[]>([]);
   readonly transportadoraDropdownOpen = signal(false);
+  readonly transportadoraHighlight = signal(-1);
   private _transSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // Produto por linha: mesmo padrão de busca, um dropdown por vez.
+  // Produto por linha: mesmo padrão de busca, um dropdown por vez — por isso um único
+  // highlight serve (só a linha em produtoDropdownIndex tem dropdown aberto).
   produtoBusca: string[] = [];
+  readonly produtoHighlight = signal(-1);
   readonly produtoResults = signal<ProdutoDto[]>([]);
   readonly produtoDropdownIndex = signal<number | null>(null);
   private _prodSearchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1253,8 +1307,10 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       this._clienteSvc.getById(this.clienteId).subscribe({ next: c => this.cliente.set(c) });
 
       if (!this.isNew()) {
+        this.carregandoPedido.set(true);
         this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({
-          next: p => { this._carregarPedido(p); this._carregarVizinhos(); },
+          next: p => { this._carregarPedido(p); this._carregarVizinhos(); this.carregandoPedido.set(false); },
+          error: () => this.carregandoPedido.set(false),
         });
       }
     });
@@ -1452,6 +1508,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     if (this.emitindoNfeFocus() || this.nfeEmissao()?.status === 'Processando') return;
     this.emitindoNfeFocus.set(true);
     this.erro.set(null);
+    this.preflightErroNfe.set(null);
     this._pedidoSvc.emitirNfeFocus(this.clienteId, this.pedidoId).subscribe({
       next: ne => {
         this.emitindoNfeFocus.set(false);
@@ -1460,7 +1517,20 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         if (ne.status === 'Processando') this._agendarPollNfeEmissao();
         else if (ne.status === 'Autorizada') this._pedidoSvc.getById(this.clienteId, this.pedidoId).subscribe({ next: p => this._carregarPedido(p) });
       },
-      error: err => { this.emitindoNfeFocus.set(false); this._erro(extractErrorMessage(err, 'Erro ao emitir NF-e.')); },
+      error: err => {
+        this.emitindoNfeFocus.set(false);
+        // Erro de pré-checagem (NCM/CFOP/CST ausente, transportadora x frete etc.) nem chega a
+        // acionar a Focus — vem direto do nosso backend com {campo, mensagem}. Mostra no mesmo
+        // modal com link pro cadastro, em vez de só um toast genérico.
+        const campoErros = extractFieldErrors(err);
+        const campo = campoErros ? Object.keys(campoErros)[0] : undefined;
+        if (campo && campoErros) {
+          this.preflightErroNfe.set({ campo, mensagem: campoErros[campo] });
+          this.showErroNfeModal.set(true);
+        } else {
+          this._erro(extractErrorMessage(err, 'Erro ao emitir NF-e.'));
+        }
+      },
     });
   }
 
@@ -1591,6 +1661,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.destinatarioSearch = value;
     this.form.destinatarioId = '';
     this.destinatarioDropdownOpen.set(true);
+    this.destinatarioHighlight.set(-1);
     if (this._destSearchTimer) clearTimeout(this._destSearchTimer);
     if (!value.trim()) { this.destinatarioResults.set([]); return; }
     this._destSearchTimer = setTimeout(() => {
@@ -1602,6 +1673,27 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
 
   onDestinatarioBlur(): void {
     setTimeout(() => this.destinatarioDropdownOpen.set(false), 150);
+  }
+
+  // Seta cima/baixo percorre os resultados da busca, Enter seleciona o destacado (ou o
+  // primeiro, se nenhum foi destacado ainda) e Escape fecha sem escolher — evita depender só
+  // do mouse pra quem prefere não tirar a mão do teclado.
+  onDestinatarioKeydown(event: KeyboardEvent): void {
+    const results = this.destinatarioResults();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.destinatarioDropdownOpen.set(true);
+      this.destinatarioHighlight.update(h => Math.min(h + 1, results.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.destinatarioHighlight.update(h => Math.max(h - 1, 0));
+    } else if (event.key === 'Enter') {
+      const idx = this.destinatarioHighlight() >= 0 ? this.destinatarioHighlight() : 0;
+      const alvo = results[idx];
+      if (alvo) { event.preventDefault(); this.selecionarDestinatario(alvo); }
+    } else if (event.key === 'Escape') {
+      this.destinatarioDropdownOpen.set(false);
+    }
   }
 
   selecionarDestinatario(d: DestinatarioDto): void {
@@ -1618,6 +1710,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.transportadoraSearch = value;
     this.form.transportadoraId = '';
     this.transportadoraDropdownOpen.set(true);
+    this.transportadoraHighlight.set(-1);
     if (this._transSearchTimer) clearTimeout(this._transSearchTimer);
     if (!value.trim()) { this.transportadoraResults.set([]); return; }
     this._transSearchTimer = setTimeout(() => {
@@ -1629,6 +1722,24 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
 
   onTransportadoraBlur(): void {
     setTimeout(() => this.transportadoraDropdownOpen.set(false), 150);
+  }
+
+  onTransportadoraKeydown(event: KeyboardEvent): void {
+    const results = this.transportadoraResults();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.transportadoraDropdownOpen.set(true);
+      this.transportadoraHighlight.update(h => Math.min(h + 1, results.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.transportadoraHighlight.update(h => Math.max(h - 1, 0));
+    } else if (event.key === 'Enter') {
+      const idx = this.transportadoraHighlight() >= 0 ? this.transportadoraHighlight() : 0;
+      const alvo = results[idx];
+      if (alvo) { event.preventDefault(); this.selecionarTransportadora(alvo); }
+    } else if (event.key === 'Escape') {
+      this.transportadoraDropdownOpen.set(false);
+    }
   }
 
   selecionarTransportadora(t: TransportadoraDto): void {
@@ -1688,6 +1799,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.produtoBusca[i] = value;
     this.itens.update(l => l.map((it, idx) => idx !== i ? it : { ...it, produtoId: '' }));
     this.produtoDropdownIndex.set(i);
+    this.produtoHighlight.set(-1);
     if (this._prodSearchTimer) clearTimeout(this._prodSearchTimer);
     if (!value.trim()) { this.produtoResults.set([]); return; }
     this._prodSearchTimer = setTimeout(() => {
@@ -1699,6 +1811,24 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
 
   onProdutoBlur(): void {
     setTimeout(() => this.produtoDropdownIndex.set(null), 150);
+  }
+
+  onProdutoKeydown(i: number, event: KeyboardEvent): void {
+    const results = this.produtoResults();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.produtoDropdownIndex.set(i);
+      this.produtoHighlight.update(h => Math.min(h + 1, results.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.produtoHighlight.update(h => Math.max(h - 1, 0));
+    } else if (event.key === 'Enter') {
+      const idx = this.produtoHighlight() >= 0 ? this.produtoHighlight() : 0;
+      const alvo = results[idx];
+      if (alvo) { event.preventDefault(); this.selecionarProduto(i, alvo); }
+    } else if (event.key === 'Escape') {
+      this.produtoDropdownIndex.set(null);
+    }
   }
 
   selecionarProduto(i: number, prod: ProdutoDto): void {
@@ -1907,6 +2037,27 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       }
       return next;
     });
+    this.marcarSujo();
+    this._agendarAutoSave();
+  }
+
+  // Copia só os códigos fiscais que costumam ser iguais pra todo item de uma mesma NF-e
+  // (CFOP, CST/CSOSN de ICMS/PIS/COFINS, IBS/CBS) do item "i" pros demais — NCM, descrição,
+  // preço e quantidade ficam de fora porque são específicos de cada produto.
+  aplicarFiscalATodosOsItens(i: number): void {
+    const origem = this.itens()[i];
+    if (!origem) return;
+    this.itens.update(l => l.map((it, idx) => idx === i ? it : {
+      ...it,
+      cfop: origem.cfop,
+      cstIcms: origem.cstIcms,
+      cstPis: origem.cstPis,
+      cstCofins: origem.cstCofins,
+      icmsOrigem: origem.icmsOrigem,
+      ibsCbsCst: origem.ibsCbsCst,
+      ibsCbsClassificacaoTributaria: origem.ibsCbsClassificacaoTributaria,
+    }));
+    this._toast.success('Códigos fiscais aplicados aos demais itens.');
     this.marcarSujo();
     this._agendarAutoSave();
   }

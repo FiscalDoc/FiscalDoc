@@ -66,32 +66,43 @@ public sealed class EmitirNfeFocusCommandHandler(
         // 214/2025). Não trava a emissão desses clientes por um campo que ainda não é exigível.
         var regimeNormalExigeIbsCbs = regimeNormal;
 
+        // Os nomes de campo abaixo ("itens.N.codigo_ncm" etc.) seguem de propósito a MESMA
+        // convenção que a Focus usa no array "erros" de uma rejeição real da SEFAZ — o
+        // frontend já sabe transformar esse formato num link direto pro cadastro do produto
+        // (ver _explicarErroNfe em pedido-form.component.ts), então essa checagem antecipada
+        // ganha o mesmo tratamento visual sem precisar de nenhum caso novo lá.
+        var i = 0;
         foreach (var item in pedido.Itens)
         {
+            i++;
+            var prefixo = $"itens.{i}";
             var ncm = item.Produto?.Ncm ?? item.Ncm;
             var cfop = item.Produto?.Cfop ?? item.Cfop;
             var cstIcms = item.Produto?.CstIcms ?? item.CstIcms;
             var cstPis = item.Produto?.CstPis ?? item.CstPis;
             var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
 
-            if (string.IsNullOrWhiteSpace(ncm) || string.IsNullOrWhiteSpace(cfop))
+            if (string.IsNullOrWhiteSpace(ncm))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                    "Itens", $"O produto \"{item.Descricao}\" está sem NCM ou CFOP — preencha no cadastro do produto antes de emitir."));
+                    $"{prefixo}.codigo_ncm", $"O produto \"{item.Descricao}\" está sem NCM — preencha no cadastro do produto antes de emitir."));
+            if (string.IsNullOrWhiteSpace(cfop))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    $"{prefixo}.cfop", $"O produto \"{item.Descricao}\" está sem CFOP — preencha no cadastro do produto antes de emitir."));
 
             if (!CodigoValido(cstIcms, tamanhoIcmsEsperado))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                    "Itens",
+                    $"{prefixo}.cst_icms",
                     $"O produto \"{item.Descricao}\" tem um {tipoIcmsEsperado} de ICMS inválido (\"{cstIcms}\") — " +
                     $"precisa ter {tamanhoIcmsEsperado} dígitos numéricos, já que a empresa é do regime " +
                     $"{(regimeNormal ? "Normal" : "Simples Nacional/MEI")}. Corrija no cadastro do produto."));
 
             if (!CodigoValido(cstPis, 2))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                    "Itens", $"O produto \"{item.Descricao}\" tem um CST de PIS inválido (\"{cstPis}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
+                    $"{prefixo}.cst_pis", $"O produto \"{item.Descricao}\" tem um CST de PIS inválido (\"{cstPis}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
 
             if (!CodigoValido(cstCofins, 2))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                    "Itens", $"O produto \"{item.Descricao}\" tem um CST de COFINS inválido (\"{cstCofins}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
+                    $"{prefixo}.cst_cofins", $"O produto \"{item.Descricao}\" tem um CST de COFINS inválido (\"{cstCofins}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
 
             if (regimeNormalExigeIbsCbs)
             {
@@ -99,7 +110,7 @@ public sealed class EmitirNfeFocusCommandHandler(
                 var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
                 if (string.IsNullOrWhiteSpace(ibsCbsCst) || string.IsNullOrWhiteSpace(ibsCbsClassificacao))
                     return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
-                        "Itens", $"O produto \"{item.Descricao}\" está sem a classificação de IBS/CBS — obrigatória pra empresas do regime Normal a partir de 03/08/2026. Preencha no cadastro do produto."));
+                        $"{prefixo}.ibs_cbs", $"O produto \"{item.Descricao}\" está sem a classificação de IBS/CBS — obrigatória pra empresas do regime Normal a partir de 03/08/2026. Preencha no cadastro do produto."));
             }
         }
 
