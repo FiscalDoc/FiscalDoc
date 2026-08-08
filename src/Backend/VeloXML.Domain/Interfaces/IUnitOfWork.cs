@@ -14,6 +14,7 @@ public interface IUnitOfWork : IDisposable
     IConfiguracaoRepository Configuracoes { get; }
     IProdutoRepository Produtos { get; }
     IDestinatarioRepository Destinatarios { get; }
+    ITransportadoraRepository Transportadoras { get; }
     IPedidoRepository Pedidos { get; }
     IPedidoHistoricoRepository PedidoHistoricos { get; }
     IBlogPostRepository BlogPosts { get; }

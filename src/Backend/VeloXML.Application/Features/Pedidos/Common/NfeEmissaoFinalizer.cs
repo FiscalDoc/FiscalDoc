@@ -20,6 +20,15 @@ public sealed class NfeEmissaoFinalizer(
 
     public async Task FinalizarAsync(NfeEmissao emissao, Cliente cliente, FocusNfeSubmissaoResult resultado, CancellationToken ct)
     {
+        // Idempotente de propósito: o webhook da Focus e o job de polling (ConsultarNfePendentesJob)
+        // podem chegar quase ao mesmo tempo pra essa mesma emissão — sem essa checagem, a segunda
+        // chamada duplicava Documento/PedidoHistorico inteiros (dois "NF-e nº X emitida" seguidos).
+        if (emissao.Status is NfeEmissaoStatusEnum.Autorizada or NfeEmissaoStatusEnum.Rejeitada or NfeEmissaoStatusEnum.Erro)
+        {
+            logger.LogInformation("NfeEmissao {Id} já finalizada (status {Status}) — ignorando chamada duplicada de finalização.", emissao.Id, emissao.Status);
+            return;
+        }
+
         emissao.UltimoPayloadRespostaJson = resultado.RespostaBrutaJson;
 
         if (!resultado.Sucesso)

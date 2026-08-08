@@ -22,6 +22,7 @@ public record UpdatePedidoCommand(
     decimal ValorFrete = 0,
     decimal ValorSeguro = 0,
     decimal ValorOutrasDespesas = 0,
+    Guid? TransportadoraId = null,
     // "auto" = auto-save silencioso (não gera entrada no histórico do pedido, senão o
     // histórico ficaria cheio de "editado" repetido a cada poucos segundos digitando).
     string Origem = "manual"

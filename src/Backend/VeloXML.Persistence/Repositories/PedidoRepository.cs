@@ -11,7 +11,7 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
 {
     public async Task<PagedResult<Pedido>> SearchAsync(Guid clienteId, string? status, string? termo, DateTime? de, DateTime? ate, int page, int pageSize, CancellationToken ct = default)
     {
-        var query = DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Where(p => p.ClienteId == clienteId).AsQueryable();
+        var query = DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Include(p => p.Transportadora).Where(p => p.ClienteId == clienteId).AsQueryable();
 
         // "status" aqui reflete o que a tela realmente mostra na coluna Status, não o
         // Pedido.Status cru — um Pedido "Emitido" cuja NF-e foi cancelada depois continua com
@@ -49,7 +49,7 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
     }
 
     public async Task<Pedido?> GetWithItensAsync(Guid id, CancellationToken ct = default) =>
-        await DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Include(p => p.Itens).ThenInclude(i => i.Produto)
+        await DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Include(p => p.Transportadora).Include(p => p.Itens).ThenInclude(i => i.Produto)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
     // "Anterior/Próximo" navega pelo número sequencial do pedido dentro do mesmo cliente —

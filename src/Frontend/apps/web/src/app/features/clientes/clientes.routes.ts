@@ -37,6 +37,16 @@ export const CLIENTES_ROUTES: Routes = [
     loadComponent: () => import('./cadastros/destinatario-detail/destinatario-detail.component').then((m) => m.DestinatarioDetailComponent),
   },
   {
+    path: ':id/cadastros/transportadoras',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./cadastros/transportadoras-list/transportadoras-list.component').then((m) => m.TransportadorasListComponent),
+  },
+  {
+    path: ':id/cadastros/transportadoras/:transportadoraId',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./cadastros/transportadora-detail/transportadora-detail.component').then((m) => m.TransportadoraDetailComponent),
+  },
+  {
     path: ':id/pedidos',
     canActivate: [clienteScopeGuard],
     loadComponent: () => import('./pedidos/pedidos.component').then((m) => m.PedidosComponent),

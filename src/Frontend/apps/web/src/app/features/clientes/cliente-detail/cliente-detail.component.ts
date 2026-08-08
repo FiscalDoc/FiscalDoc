@@ -71,6 +71,18 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
             </svg>
           </a>
+          <a [routerLink]="['/clientes', cliente()!.id, 'cadastros', 'transportadoras']" class="module-card">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16V6a1 1 0 011-1h9a1 1 0 011 1v10M3 16h11m0 0h2.05M3 16a2 2 0 104 0m7 0a2 2 0 104 0m0 0h2v-4.5a1 1 0 00-.293-.707l-2.5-2.5A1 1 0 0016.5 8H14v8"/>
+            </svg>
+            <div>
+              <div class="module-title">Transportadoras</div>
+              <div class="module-sub">Cadastrar transportadoras usadas nas NF-e</div>
+            </div>
+            <svg class="module-arrow" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
           <a [routerLink]="['/clientes', cliente()!.id, 'pedidos']" class="module-card" [class.module-disabled]="!cliente()!.nfeHabilitado">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>

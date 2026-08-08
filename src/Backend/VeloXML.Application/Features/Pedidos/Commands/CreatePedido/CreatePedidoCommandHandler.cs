@@ -22,6 +22,14 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             return Result.Failure<PedidoDto>(ResultError.Validation("DestinatarioId", "Destinatário não encontrado ou não pertence a este cliente."));
         }
 
+        if (request.TransportadoraId.HasValue)
+        {
+            var transportadoraValida = await uow.Transportadoras.ExistsAsync(
+                t => t.Id == request.TransportadoraId.Value && t.ClienteId == request.ClienteId, ct);
+            if (!transportadoraValida)
+                return Result.Failure<PedidoDto>(ResultError.Validation("TransportadoraId", "Transportadora não encontrada ou não pertence a este cliente."));
+        }
+
         var produtoIds = request.Itens.Select(i => i.ProdutoId).Distinct().ToList();
         var produtosValidos = await uow.Produtos.FindAsync(
             p => p.ClienteId == request.ClienteId && produtoIds.Contains(p.Id), ct);
@@ -77,6 +85,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             ValorFrete = request.ValorFrete,
             ValorSeguro = request.ValorSeguro,
             ValorOutrasDespesas = request.ValorOutrasDespesas,
+            TransportadoraId = request.TransportadoraId,
         };
 
         await uow.Pedidos.AddAsync(pedido, ct);
@@ -97,6 +106,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
         return new(
             p.Id, p.Numero, p.ClienteId, p.DestinatarioId,
             p.Destinatario?.RazaoSocial ?? string.Empty,
+            p.Destinatario?.CpfCnpj,
             p.Status, p.Observacoes, p.ValorTotal, p.CreatedAt,
             // Prioriza o cadastro ATUAL do Produto sobre a "foto" gravada no item quando ele foi
             // adicionado ao pedido — mesma lógica de EmitirNfeFocusCommandHandler/
@@ -112,6 +122,7 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             )).ToList(),
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
             p.ConsumidorFinal, p.PresencaComprador, p.ValorFrete, p.ValorSeguro, p.ValorOutrasDespesas,
+            p.TransportadoraId, p.Transportadora?.RazaoSocial,
             p.DocumentoId, p.Documento?.Numero, danfe?.Serie, p.Documento?.ChaveAcesso, p.Documento?.OrigemImportacao.ToString(),
             p.Documento?.Status.ToString(), p.Documento?.DataEmissao, danfe?.ProtocoloAutorizacao, danfe?.DataAutorizacao,
             p.Documento?.MotivoCancelamento, p.Documento?.ProtocoloCancelamento, p.Documento?.DataCancelamento,

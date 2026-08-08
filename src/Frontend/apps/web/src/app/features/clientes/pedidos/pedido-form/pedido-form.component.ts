@@ -2,8 +2,8 @@ import { Component, HostListener, inject, OnDestroy, OnInit, signal, computed } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PedidoService, ProdutoService, DestinatarioService, DocumentoService, ClienteService, ToastService, extractErrorMessage } from '@veloxml/services';
-import { PedidoDto, ProdutoDto, DestinatarioDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
+import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, extractErrorMessage } from '@veloxml/services';
+import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
 interface DocumentoVinculadoInfo {
@@ -344,6 +344,36 @@ interface ConfirmState {
               <option value="DestinatarioContaFrete">Por conta do destinatário</option>
               <option value="Terceiros">Por conta de terceiros</option>
             </select>
+          </div>
+          <div class="field col-2 combo-field">
+            <label class="label">Transportadora</label>
+            <div class="combo-row">
+              <input
+                class="input" [disabled]="readonly()"
+                [ngModel]="transportadoraSearch"
+                (ngModelChange)="onTransportadoraInput($event)"
+                (focus)="transportadoraDropdownOpen.set(true)"
+                (blur)="onTransportadoraBlur()"
+                placeholder="Buscar transportadora (opcional)..."
+              />
+              @if (!readonly() && form.transportadoraId) {
+                <button type="button" class="btn-inline" (click)="limparTransportadora()">Limpar</button>
+              }
+            </div>
+            @if (transportadoraDropdownOpen() && !readonly()) {
+              <div class="combo-dropdown">
+                @for (t of transportadoraResults(); track t.id) {
+                  <div class="combo-item" (mousedown)="selecionarTransportadora(t)">
+                    {{ t.razaoSocial }}{{ t.nomeFantasia ? ' — ' + t.nomeFantasia : '' }}
+                  </div>
+                }
+                @if (transportadoraResults().length === 0) {
+                  <div class="combo-item combo-item-hint">
+                    {{ transportadoraSearch.trim().length === 0 ? 'Digite para buscar...' : 'Nenhuma transportadora encontrada.' }}
+                  </div>
+                }
+              </div>
+            }
           </div>
           <div class="field">
             <label class="label">Presença do Comprador *</label>
@@ -990,6 +1020,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   private readonly _clienteSvc = inject(ClienteService);
   private readonly _prodSvc   = inject(ProdutoService);
   private readonly _destSvc   = inject(DestinatarioService);
+  private readonly _transSvc  = inject(TransportadoraService);
   private readonly _docSvc    = inject(DocumentoService);
   private readonly _route     = inject(ActivatedRoute);
   private readonly _router    = inject(Router);
@@ -1116,6 +1147,12 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly destinatarioDropdownOpen = signal(false);
   private _destSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Transportadora: opcional, mesmo padrão de busca do Destinatário.
+  transportadoraSearch = '';
+  readonly transportadoraResults = signal<TransportadoraDto[]>([]);
+  readonly transportadoraDropdownOpen = signal(false);
+  private _transSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Produto por linha: mesmo padrão de busca, um dropdown por vez.
   produtoBusca: string[] = [];
   readonly produtoResults = signal<ProdutoDto[]>([]);
@@ -1205,6 +1242,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.expandedRows.set(new Set());
     this.form = this._emptyForm();
     this.destinatarioSearch = '';
+    this.transportadoraSearch = '';
     this.itens.set([]);
     this.produtoBusca = [];
     this.produtosFrequentes.set([]);
@@ -1274,7 +1312,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     const hoje = new Date();
     const dataSaidaPadrao = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
     return {
-      destinatarioId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria', finalidadeEmissao: 'Normal',
+      destinatarioId: '', transportadoraId: '', observacoes: '', naturezaOperacao: 'Venda de mercadoria', finalidadeEmissao: 'Normal',
       modalidadeFrete: 'SemFrete',
       dataSaida: dataSaidaPadrao, formaPagamento: '', meioPagamento: '', informacoesComplementares: '',
       consumidorFinal: true, presencaComprador: 9,
@@ -1296,7 +1334,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       : null);
     this.documentoImpostos.set(p.documentoImpostos ?? null);
     this.form = {
-      destinatarioId: p.destinatarioId, observacoes: p.observacoes ?? '',
+      destinatarioId: p.destinatarioId, transportadoraId: p.transportadoraId ?? '', observacoes: p.observacoes ?? '',
       naturezaOperacao: p.naturezaOperacao || 'Venda de mercadoria',
       finalidadeEmissao: p.finalidadeEmissao || 'Normal',
       modalidadeFrete: p.modalidadeFrete || 'SemFrete',
@@ -1310,6 +1348,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       valorOutrasDespesas: p.valorOutrasDespesas ?? 0,
     };
     this.destinatarioSearch = p.destinatarioNome;
+    this.transportadoraSearch = p.transportadoraNome ?? '';
     this.itens.set(p.itens.map(i => ({
       produtoId: i.produtoId,
       descricao: i.descricao,
@@ -1497,6 +1536,38 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.destinatarioDropdownOpen.set(false);
     this.marcarSujo();
     this._carregarProdutosFrequentes(d.id);
+  }
+
+  // ── Transportadora: busca (opcional) ────────────────────────────────────
+
+  onTransportadoraInput(value: string): void {
+    this.transportadoraSearch = value;
+    this.form.transportadoraId = '';
+    this.transportadoraDropdownOpen.set(true);
+    if (this._transSearchTimer) clearTimeout(this._transSearchTimer);
+    if (!value.trim()) { this.transportadoraResults.set([]); return; }
+    this._transSearchTimer = setTimeout(() => {
+      this._transSvc.getAll(this.clienteId, { termo: value, pageSize: 20 }).subscribe({
+        next: r => this.transportadoraResults.set(r.items),
+      });
+    }, 300);
+  }
+
+  onTransportadoraBlur(): void {
+    setTimeout(() => this.transportadoraDropdownOpen.set(false), 150);
+  }
+
+  selecionarTransportadora(t: TransportadoraDto): void {
+    this.form.transportadoraId = t.id;
+    this.transportadoraSearch = t.razaoSocial;
+    this.transportadoraDropdownOpen.set(false);
+    this.marcarSujo();
+  }
+
+  limparTransportadora(): void {
+    this.form.transportadoraId = '';
+    this.transportadoraSearch = '';
+    this.marcarSujo();
   }
 
   abrirNovoDestinatario(): void {
@@ -1883,6 +1954,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       valorFrete: +this.form.valorFrete || 0,
       valorSeguro: +this.form.valorSeguro || 0,
       valorOutrasDespesas: +this.form.valorOutrasDespesas || 0,
+      transportadoraId: this.form.transportadoraId || undefined,
     };
   }
 

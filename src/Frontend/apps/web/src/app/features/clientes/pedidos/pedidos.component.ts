@@ -113,7 +113,7 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
                   <td>
                     <span class="badge-tipo" [class.badge-tipo--nf]="!!p.documentoId">{{ p.documentoId ? 'Nota Fiscal' : 'Pedido' }}</span>
                   </td>
-                  <td>{{ p.destinatarioNome }}</td>
+                  <td>{{ p.destinatarioCpfCnpj ? (p.destinatarioCpfCnpj + ' - ' + p.destinatarioNome) : p.destinatarioNome }}</td>
                   <td>{{ p.documentoDataEmissao ? (p.documentoDataEmissao | date:'dd/MM/yyyy') : '—' }}</td>
                   <td>{{ p.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</td>
                   <td>

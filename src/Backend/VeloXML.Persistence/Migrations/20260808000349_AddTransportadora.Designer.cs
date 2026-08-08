@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VeloXML.Persistence.Context;
@@ -12,9 +13,11 @@ using VeloXML.Persistence.Context;
 namespace VeloXML.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260808000349_AddTransportadora")]
+    partial class AddTransportadora
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1667,10 +1670,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
-                    b.Property<Guid?>("TransportadoraId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("transportadora_id");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -1720,8 +1719,6 @@ namespace VeloXML.Persistence.Migrations
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_pedidos_tenant_id");
-
-                    b.HasIndex("TransportadoraId");
 
                     b.ToTable("pedidos", (string)null);
                 });
@@ -2604,18 +2601,11 @@ namespace VeloXML.Persistence.Migrations
                         .HasForeignKey("DocumentoId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("VeloXML.Domain.Entities.Transportadora", "Transportadora")
-                        .WithMany()
-                        .HasForeignKey("TransportadoraId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Cliente");
 
                     b.Navigation("Destinatario");
 
                     b.Navigation("Documento");
-
-                    b.Navigation("Transportadora");
                 });
 
             modelBuilder.Entity("VeloXML.Domain.Entities.PedidoHistorico", b =>

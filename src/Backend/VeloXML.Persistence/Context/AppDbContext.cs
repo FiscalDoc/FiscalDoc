@@ -31,6 +31,7 @@ public class AppDbContext(
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Produto> Produtos => Set<Produto>();
     public DbSet<Destinatario> Destinatarios => Set<Destinatario>();
+    public DbSet<Transportadora> Transportadoras => Set<Transportadora>();
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<PedidoItem> PedidoItens => Set<PedidoItem>();
     public DbSet<PedidoHistorico> PedidoHistoricos => Set<PedidoHistorico>();
@@ -91,6 +92,10 @@ public class AppDbContext(
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
             && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
         builder.Entity<Destinatario>().HasQueryFilter(e =>
+            (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
+            && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
+        builder.Entity<Transportadora>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
             && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));

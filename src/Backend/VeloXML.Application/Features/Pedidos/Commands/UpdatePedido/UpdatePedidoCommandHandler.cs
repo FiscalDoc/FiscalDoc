@@ -29,6 +29,14 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
             return Result.Failure<PedidoDto>(ResultError.Validation("DestinatarioId", "Destinatário não encontrado ou não pertence a este cliente."));
         }
 
+        if (request.TransportadoraId.HasValue)
+        {
+            var transportadoraValida = await uow.Transportadoras.ExistsAsync(
+                t => t.Id == request.TransportadoraId.Value && t.ClienteId == pedido.ClienteId, ct);
+            if (!transportadoraValida)
+                return Result.Failure<PedidoDto>(ResultError.Validation("TransportadoraId", "Transportadora não encontrada ou não pertence a este cliente."));
+        }
+
         var produtoIds = request.Itens.Select(i => i.ProdutoId).Distinct().ToList();
         var produtosValidos = await uow.Produtos.FindAsync(
             p => p.ClienteId == pedido.ClienteId && produtoIds.Contains(p.Id), ct);
@@ -53,6 +61,7 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
         pedido.ValorFrete = request.ValorFrete;
         pedido.ValorSeguro = request.ValorSeguro;
         pedido.ValorOutrasDespesas = request.ValorOutrasDespesas;
+        pedido.TransportadoraId = request.TransportadoraId;
 
         var itensAntigos = pedido.Itens.ToList();
 

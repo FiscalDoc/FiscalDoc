@@ -11,6 +11,7 @@ export * from './lib/usuario.models';
 export * from './lib/configuracao.models';
 export * from './lib/produto.models';
 export * from './lib/destinatario.models';
+export * from './lib/transportadora.models';
 export * from './lib/pedido.models';
 export * from './lib/blog.models';
 export * from './lib/cep.models';

@@ -33,6 +33,7 @@ export interface PedidoDto {
   clienteId: string;
   destinatarioId: string;
   destinatarioNome: string;
+  destinatarioCpfCnpj?: string;
   status: 'Rascunho' | 'Emitido' | 'Cancelado';
   observacoes?: string;
   valorTotal: number;
@@ -50,6 +51,8 @@ export interface PedidoDto {
   valorFrete: number;
   valorSeguro: number;
   valorOutrasDespesas: number;
+  transportadoraId?: string;
+  transportadoraNome?: string;
   documentoId?: string;
   documentoNumero?: string;
   documentoSerie?: string;
@@ -102,6 +105,7 @@ export interface CreatePedidoRequest {
   valorFrete?: number;
   valorSeguro?: number;
   valorOutrasDespesas?: number;
+  transportadoraId?: string;
 }
 
 export interface UpdatePedidoRequest {
@@ -121,6 +125,7 @@ export interface UpdatePedidoRequest {
   valorFrete?: number;
   valorSeguro?: number;
   valorOutrasDespesas?: number;
+  transportadoraId?: string;
   origem?: 'manual' | 'auto';
 }
 

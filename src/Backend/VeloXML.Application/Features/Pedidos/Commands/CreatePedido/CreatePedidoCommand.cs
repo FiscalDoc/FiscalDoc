@@ -39,5 +39,6 @@ public record CreatePedidoCommand(
     int PresencaComprador = 9,
     decimal ValorFrete = 0,
     decimal ValorSeguro = 0,
-    decimal ValorOutrasDespesas = 0
+    decimal ValorOutrasDespesas = 0,
+    Guid? TransportadoraId = null
 ) : IRequest<Result<PedidoDto>>;

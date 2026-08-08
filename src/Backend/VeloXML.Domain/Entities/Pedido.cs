@@ -48,8 +48,15 @@ public class Pedido : BaseEntity, IAuditableEntity
     // emite nota fiscal internamente.
     public Guid? DocumentoId { get; set; }
 
+    // Opcional — só preenchido quando ModalidadeFrete indica que uma transportadora terceira
+    // está envolvida (grupo "transp" da NFe). SetNull ao excluir a transportadora, diferente de
+    // Destinatario/Produto (Restrict): não faz sentido travar a exclusão de uma transportadora
+    // por causa de um pedido antigo.
+    public Guid? TransportadoraId { get; set; }
+
     public Cliente? Cliente { get; set; }
     public Destinatario? Destinatario { get; set; }
     public Documento? Documento { get; set; }
+    public Transportadora? Transportadora { get; set; }
     public ICollection<PedidoItem> Itens { get; set; } = [];
 }
