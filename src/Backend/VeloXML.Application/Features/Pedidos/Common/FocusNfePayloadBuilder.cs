@@ -27,6 +27,15 @@ internal static class FocusNfePayloadBuilder
         var ieDestinatario = temIe ? destinatario.InscricaoEstadual : "ISENTO";
         var indicadorIeDestinatario = temIe ? 1 : 9;
 
+        // A SEFAZ exige que o total de frete/seguro/outras despesas (ICMSTot) seja igual à soma
+        // desses mesmos valores item a item — sem distribuir aqui, o total vinha preenchido mas
+        // a soma dos itens ficava em zero, gerando a rejeição "Total do Frete difere do
+        // somatório dos itens" mesmo com o valor certo no cabeçalho.
+        var pesos = pedido.Itens.Select(i => i.ValorTotal).ToList();
+        var freteItens = DistribuirProporcional(pedido.ValorFrete, pesos);
+        var seguroItens = DistribuirProporcional(pedido.ValorSeguro, pesos);
+        var outrasItens = DistribuirProporcional(pedido.ValorOutrasDespesas, pesos);
+
         return new
         {
             natureza_operacao = pedido.NaturezaOperacao,
@@ -73,6 +82,9 @@ internal static class FocusNfePayloadBuilder
 
             items = pedido.Itens.Select((item, i) =>
             {
+                var valorFreteItem = freteItens[i];
+                var valorSeguroItem = seguroItens[i];
+                var valorOutrasItem = outrasItens[i];
                 // Prioriza o cadastro ATUAL do Produto sobre a "foto" gravada no item quando
                 // ele foi adicionado ao pedido — completar o cadastro fiscal do produto depois
                 // precisa refletir aqui, mesma lógica da validação prévia em
@@ -97,6 +109,9 @@ internal static class FocusNfePayloadBuilder
                     quantidade_comercial = item.Quantidade,
                     valor_unitario_comercial = item.PrecoUnitario,
                     valor_bruto = item.ValorTotal,
+                    valor_frete = valorFreteItem > 0 ? valorFreteItem : (decimal?)null,
+                    valor_seguro = valorSeguroItem > 0 ? valorSeguroItem : (decimal?)null,
+                    valor_outras_despesas = valorOutrasItem > 0 ? valorOutrasItem : (decimal?)null,
                     unidade_tributavel = item.Unidade,
                     quantidade_tributavel = item.Quantidade,
                     valor_unitario_tributavel = item.PrecoUnitario,
@@ -145,6 +160,40 @@ internal static class FocusNfePayloadBuilder
 
     private static string? SoDigitos(string? valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : new string(valor.Where(char.IsDigit).ToArray());
+
+    // Distribui "total" proporcionalmente ao peso (valor bruto) de cada item, sempre batendo
+    // EXATO com o total (o resto do arredondamento de centavos vai pro último item que tem
+    // peso, senão a soma fica alguns centavos abaixo do total e a SEFAZ rejeita do mesmo jeito).
+    // Sem peso em nenhum item (ex.: todos a R$ 0), divide igualmente entre todos.
+    private static List<decimal> DistribuirProporcional(decimal total, List<decimal> pesos)
+    {
+        var resultado = new List<decimal>(new decimal[pesos.Count]);
+        if (total <= 0 || pesos.Count == 0) return resultado;
+
+        var somaPesos = pesos.Sum();
+        var baseIgualitaria = somaPesos <= 0;
+        var acumulado = 0m;
+        var ultimoIndiceValido = baseIgualitaria ? pesos.Count - 1 : pesos.FindLastIndex(p => p > 0);
+
+        for (var i = 0; i < pesos.Count; i++)
+        {
+            if (i == ultimoIndiceValido)
+            {
+                resultado[i] = Math.Round(total - acumulado, 2);
+                break;
+            }
+
+            if (!baseIgualitaria && pesos[i] <= 0) continue;
+
+            var parcela = baseIgualitaria
+                ? Math.Round(total / pesos.Count, 2)
+                : Math.Round(total * pesos[i] / somaPesos, 2);
+            resultado[i] = parcela;
+            acumulado += parcela;
+        }
+
+        return resultado;
+    }
 
     // Códigos da SEFAZ pro campo finalidade_emissao: 1=Normal, 2=Complementar, 3=Ajuste,
     // 4=Devolução/Retorno.
