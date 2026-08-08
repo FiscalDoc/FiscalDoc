@@ -43,14 +43,18 @@ type Tab = 'cadastro' | 'endereco';
               <div class="field col-2">
                 <label class="label">CNPJ / CPF</label>
                 <div class="combo-row">
-                  <input class="input" [(ngModel)]="form.cpfCnpj" placeholder="00.000.000/0001-00"/>
-                  @if (ehCnpj()) {
+                  <input class="input" [(ngModel)]="form.cpfCnpj" [disabled]="!isNew()" placeholder="00.000.000/0001-00"/>
+                  @if (isNew() && ehCnpj()) {
                     <button type="button" class="btn-inline" [disabled]="buscandoCnpj()" (click)="buscarCnpj()">
                       {{ buscandoCnpj() ? 'Buscando...' : 'Buscar dados' }}
                     </button>
                   }
                 </div>
-                <span class="field-hint">Digite o CNPJ primeiro pra preencher o resto automaticamente.</span>
+                @if (isNew()) {
+                  <span class="field-hint">Digite o CNPJ primeiro pra preencher o resto automaticamente.</span>
+                } @else {
+                  <span class="field-hint">O CNPJ/CPF não pode ser alterado depois de cadastrado.</span>
+                }
                 @if (erroCnpj()) { <span class="field-error">{{ erroCnpj() }}</span> }
               </div>
               <div class="field col-2">
