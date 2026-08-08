@@ -18,5 +18,7 @@ public record TransportadoraDto(
     string? Cep,
     string? CodigoIbgeCidade,
     bool Ativo,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    bool WebhookAtivo,
+    string? WebhookUrl
 );

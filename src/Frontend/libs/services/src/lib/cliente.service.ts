@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { ClienteDto, ConfigurarImapRequest, ConfigurarWebhookRequest, CriarContaClienteRequest, CriarContaClienteResponse, CreateClienteRequest, UpdateClienteRequest, UpdateClienteFiscalRequest } from '@veloxml/models';
+import { ClienteDto, ConfigurarImapRequest, ConfigurarWebhookRequest, ConfigurarEmailNfeRequest, CriarContaClienteRequest, CriarContaClienteResponse, CreateClienteRequest, UpdateClienteRequest, UpdateClienteFiscalRequest } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +38,10 @@ export class ClienteService {
 
   configurarWebhook(id: string, req: ConfigurarWebhookRequest): Observable<ClienteDto> {
     return this._api.put<ClienteDto>(`/clientes/${id}/webhook`, req);
+  }
+
+  configurarEmailNfe(id: string, req: ConfigurarEmailNfeRequest): Observable<ClienteDto> {
+    return this._api.put<ClienteDto>(`/clientes/${id}/email-nfe`, req);
   }
 
   criarConta(id: string, req: CriarContaClienteRequest): Observable<CriarContaClienteResponse> {

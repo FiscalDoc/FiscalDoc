@@ -23,5 +23,10 @@ public class Transportadora : BaseEntity, IAuditableEntity
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 
+    // Webhook: dispara um POST com o XML da NF-e (base64) sempre que uma nota de um pedido
+    // vinculado a esta transportadora é autorizada — ver TransportadoraWebhookJob.
+    public bool WebhookAtivo { get; set; }
+    public string? WebhookUrl { get; set; }
+
     public Cliente? Cliente { get; set; }
 }

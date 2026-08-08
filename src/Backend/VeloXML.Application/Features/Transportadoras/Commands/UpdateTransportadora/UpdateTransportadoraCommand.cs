@@ -21,5 +21,7 @@ public record UpdateTransportadoraCommand(
     string? Estado,
     string? Cep,
     string? CodigoIbgeCidade,
-    bool Ativo
+    bool Ativo,
+    bool WebhookAtivo = false,
+    string? WebhookUrl = null
 ) : IRequest<Result<TransportadoraDto>>;

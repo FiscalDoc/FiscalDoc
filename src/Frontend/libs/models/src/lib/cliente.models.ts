@@ -20,6 +20,8 @@ export interface ClienteDto {
   appKey: string;
   webhookHabilitado: boolean;
   webhookUrl?: string;
+  emailNfeDestinatarioHabilitado: boolean;
+  emailNfeDestinatarioGatilho: 'Pedido' | 'NotaFiscal';
   imapHabilitado: boolean;
   imapHost?: string;
   imapPort: number;
@@ -84,6 +86,11 @@ export interface ConfigurarImapRequest {
 export interface ConfigurarWebhookRequest {
   habilitado: boolean;
   url?: string;
+}
+
+export interface ConfigurarEmailNfeRequest {
+  habilitado: boolean;
+  gatilho: 'Pedido' | 'NotaFiscal';
 }
 
 export interface CriarContaClienteRequest {

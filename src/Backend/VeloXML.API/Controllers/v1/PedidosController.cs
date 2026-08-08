@@ -9,6 +9,8 @@ using VeloXML.Application.Features.Pedidos.Commands.DeletePedido;
 using VeloXML.Application.Features.Pedidos.Commands.DuplicarPedido;
 using VeloXML.Application.Features.Pedidos.Commands.EmitirNfeFocus;
 using VeloXML.Application.Features.Pedidos.Commands.EmitirPedido;
+using VeloXML.Application.Features.Pedidos.Commands.ReenviarEmailNfe;
+using VeloXML.Application.Features.Pedidos.Commands.ReenviarWebhookTransportadora;
 using VeloXML.Application.Features.Pedidos.Commands.UpdatePedido;
 using VeloXML.Application.Features.Pedidos.Commands.VincularDocumento;
 using VeloXML.Application.Features.Pedidos.Queries.GetNfeEmissao;
@@ -160,6 +162,20 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new CorrigirNfeFocusCommand(clienteId, id, body.Correcao), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/reenviar-webhook-transportadora")]
+    public async Task<IActionResult> ReenviarWebhookTransportadora(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ReenviarWebhookTransportadoraCommand(clienteId, id), ct);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpPost("{id:guid}/reenviar-email-nfe")]
+    public async Task<IActionResult> ReenviarEmailNfe(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ReenviarEmailNfeCommand(clienteId, id), ct);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 }
 

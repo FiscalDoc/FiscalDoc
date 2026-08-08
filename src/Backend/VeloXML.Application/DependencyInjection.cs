@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddAutoMapper(typeof(MappingProfile).Assembly);
         services.AddScoped<NfeEmissaoFinalizer>();
+        services.AddScoped<PedidoNotificationDispatcher>();
 
         return services;
     }

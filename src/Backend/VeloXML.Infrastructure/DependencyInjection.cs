@@ -58,6 +58,13 @@ public static class DependencyInjection
         services.AddHttpClient("webhook").ConfigurePrimaryHttpMessageHandler(() =>
             new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });
 
+        // Webhook de Transportadora (XML da NF-e) e e-mail automático ao destinatário — ambos
+        // rodam como job do Hangfire (retry automático se o endpoint/SMTP estiver fora do ar),
+        // disparados pelo IBackgroundJobDispatcher a partir da Application.
+        services.AddScoped<TransportadoraWebhookJob>();
+        services.AddScoped<EnviarEmailNfeDestinatarioJob>();
+        services.AddScoped<IBackgroundJobDispatcher, BackgroundJobDispatcher>();
+
         services.AddScoped<IFocusNfeService, FocusNfeService>();
         services.AddHttpClient("focus-nfe");
         services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();

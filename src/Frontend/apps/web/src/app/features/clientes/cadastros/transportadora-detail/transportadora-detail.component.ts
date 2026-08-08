@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TransportadoraService, CepService, CnpjService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { TransportadoraDto } from '@veloxml/models';
 
-type Tab = 'cadastro' | 'endereco';
+type Tab = 'cadastro' | 'endereco' | 'integracao';
 
 @Component({
   selector: 'app-transportadora-detail',
@@ -34,6 +34,7 @@ type Tab = 'cadastro' | 'endereco';
         <nav class="tabs">
           <button class="tab-btn" [class.active]="tab() === 'cadastro'" (click)="tab.set('cadastro')">Cadastro</button>
           <button class="tab-btn" [class.active]="tab() === 'endereco'" (click)="tab.set('endereco')">Endereço</button>
+          <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="tab.set('integracao')">Integração</button>
         </nav>
 
         @if (tab() === 'cadastro') {
@@ -128,6 +129,25 @@ type Tab = 'cadastro' | 'endereco';
               <div class="field">
                 <label class="label">Código IBGE</label>
                 <input class="input" [(ngModel)]="form.codigoIbgeCidade" placeholder="3550308"/>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (tab() === 'integracao') {
+          <div class="card section">
+            <h4 class="section-title">Webhook da NF-e</h4>
+            <p class="field-hint">Sempre que uma nota fiscal de um pedido vinculado a esta transportadora for autorizada, o XML é enviado automaticamente (POST, em JSON) para a URL abaixo.</p>
+            <div class="form-grid">
+              <div class="field col-2" style="flex-direction:row;align-items:center;gap:8px;">
+                <label class="toggle-row" style="margin-top:0;">
+                  <input type="checkbox" [(ngModel)]="form.webhookAtivo" style="width:16px;height:16px;accent-color:var(--accent);"/>
+                  Enviar XML automaticamente para esta transportadora
+                </label>
+              </div>
+              <div class="field col-2">
+                <label class="label">URL do Webhook</label>
+                <input class="input" [(ngModel)]="form.webhookUrl" [disabled]="!form.webhookAtivo" placeholder="https://sistema-da-transportadora.com/webhooks/nfe"/>
               </div>
             </div>
           </div>
@@ -291,6 +311,7 @@ export class TransportadoraDetailComponent implements OnInit {
       logradouro: t.logradouro ?? '', numero: t.numero ?? '', complemento: t.complemento ?? '',
       bairro: t.bairro ?? '', cep: t.cep ?? '', cidade: t.cidade ?? '', estado: t.estado ?? '',
       codigoIbgeCidade: t.codigoIbgeCidade ?? '', ativo: t.ativo,
+      webhookAtivo: t.webhookAtivo, webhookUrl: t.webhookUrl ?? '',
     };
   }
 
@@ -318,6 +339,8 @@ export class TransportadoraDetailComponent implements OnInit {
       cidade: this.form.cidade || undefined,
       estado: this.form.estado || undefined,
       codigoIbgeCidade: this.form.codigoIbgeCidade || undefined,
+      webhookAtivo: this.form.webhookAtivo,
+      webhookUrl: this.form.webhookAtivo ? (this.form.webhookUrl || undefined) : undefined,
     };
 
     const obs = this.isNew()
@@ -353,6 +376,7 @@ export class TransportadoraDetailComponent implements OnInit {
       razaoSocial: '', nomeFantasia: '', cpfCnpj: '', inscricaoEstadual: '', email: '', telefone: '',
       logradouro: '', numero: '', complemento: '', bairro: '', cep: '', cidade: '', estado: '',
       codigoIbgeCidade: '', ativo: true,
+      webhookAtivo: false, webhookUrl: '',
     };
   }
 }

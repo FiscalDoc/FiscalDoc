@@ -39,6 +39,9 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.Property(e => e.WebhookHabilitado).HasColumnName("webhook_habilitado").HasDefaultValue(false);
         b.Property(e => e.WebhookUrl).HasColumnName("webhook_url").HasMaxLength(1024);
 
+        b.Property(e => e.EmailNfeDestinatarioHabilitado).HasColumnName("email_nfe_destinatario_habilitado").HasDefaultValue(false);
+        b.Property(e => e.EmailNfeDestinatarioGatilho).HasColumnName("email_nfe_destinatario_gatilho").HasMaxLength(20).HasDefaultValue("NotaFiscal");
+
         b.Property(e => e.ImapHabilitado).HasColumnName("imap_habilitado").HasDefaultValue(false);
         b.Property(e => e.ImapHost).HasColumnName("imap_host").HasMaxLength(256);
         b.Property(e => e.ImapPort).HasColumnName("imap_port").HasDefaultValue(993);

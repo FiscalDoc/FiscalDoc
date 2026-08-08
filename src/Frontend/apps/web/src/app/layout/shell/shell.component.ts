@@ -3,6 +3,7 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/rou
 import { AuthService, ContadorService } from '@veloxml/services';
 import { ToastContainerComponent } from '../toast-container/toast-container.component';
 import { AssistenteChatComponent } from '../assistente-chat/assistente-chat.component';
+import { NovidadesModalComponent } from '../novidades-modal/novidades-modal.component';
 import { environment } from '../../../environments/environment';
 
 interface NavItem {
@@ -16,7 +17,7 @@ interface NavItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent],
   template: `
     <div class="shell">
       <button type="button" class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)" aria-label="Abrir menu">
@@ -80,7 +81,12 @@ interface NavItem {
 
         <div class="sidebar-footer">
           @if (auth.currentUser()?.empresa) {
-            <div class="empresa-badge">{{ auth.currentUser()?.empresa }}</div>
+            <div class="empresa-badge" [title]="auth.currentUser()?.empresa">
+              <span class="empresa-nome">{{ auth.currentUser()?.empresa }}</span>
+              @if (auth.currentUser()?.cnpj) {
+                <span class="empresa-cnpj">{{ formatCnpj(auth.currentUser()!.cnpj!) }}</span>
+              }
+            </div>
           }
           <div class="footer-links-row">
             <a routerLink="/perfil" routerLinkActive="nav-item-active" class="security-link">
@@ -104,7 +110,7 @@ interface NavItem {
             }
             <div class="user-details">
               <span class="user-name">{{ auth.currentUser()?.nome }}</span>
-              <span class="user-role">{{ auth.currentUser()?.perfil }}</span>
+              <span class="user-role">{{ auth.currentUser()?.perfil }} · {{ appVersion }}</span>
             </div>
           </div>
           <button class="logout-btn" (click)="auth.logout()" title="Sair">
@@ -198,6 +204,7 @@ interface NavItem {
 
     <app-toast-container />
     <app-assistente-chat />
+    <app-novidades-modal />
 
     <!-- ── Modal de upgrade de plano ── -->
     @if (showUpgradeModal()) {
@@ -361,20 +368,32 @@ interface NavItem {
     }
 
     .empresa-badge {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--accent);
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
       background: var(--accent-dim, oklch(0.62 0.17 254 / 0.1));
       border: 1px solid oklch(0.62 0.17 254 / 0.2);
-      border-radius: 4px;
-      padding: 2px 7px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      border-radius: 6px;
+      padding: 5px 8px;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .empresa-nome {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      width: fit-content;
-      max-width: 100%;
+    }
+    .empresa-cnpj {
+      font-size: 9.5px;
+      color: var(--text2);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .user-row {
@@ -594,6 +613,12 @@ export class ShellComponent implements OnInit {
 
   private readonly _whatsappNumber = '5511973982559';
   readonly whatsappNumberFormatted = '+55 11 97398-2559';
+  readonly appVersion = environment.appVersion;
+
+  formatCnpj(cnpj: string): string {
+    if (cnpj.length !== 14) return cnpj;
+    return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
 
   voltarParaAdmin(): void {
     this.auth.restoreAdminContext().subscribe({

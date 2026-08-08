@@ -30,6 +30,8 @@ public sealed class UpdateTransportadoraCommandHandler(IUnitOfWork uow)
         transportadora.Cep = request.Cep;
         transportadora.CodigoIbgeCidade = request.CodigoIbgeCidade;
         transportadora.Ativo = request.Ativo;
+        transportadora.WebhookAtivo = request.WebhookAtivo;
+        transportadora.WebhookUrl = request.WebhookUrl;
 
         uow.Transportadoras.Update(transportadora);
         await uow.SaveChangesAsync(ct);

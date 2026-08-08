@@ -14,7 +14,8 @@ namespace VeloXML.Application.Features.Pedidos.Common;
 // (quando a Focus responde 201/autorizado na hora) quanto pelo webhook público e pelo job de
 // polling (sem ICurrentUser/HttpContext), por isso nunca depende de ICurrentUser.
 public sealed class NfeEmissaoFinalizer(
-    IUnitOfWork uow, IStorageService storage, IFocusNfeService focusNfe, ILogger<NfeEmissaoFinalizer> logger)
+    IUnitOfWork uow, IStorageService storage, IFocusNfeService focusNfe,
+    PedidoNotificationDispatcher notificationDispatcher, ILogger<NfeEmissaoFinalizer> logger)
 {
     private const string BucketName = "documentos";
 
@@ -173,5 +174,7 @@ public sealed class NfeEmissaoFinalizer(
         uow.NfeEmissoes.Update(emissao);
 
         await uow.SaveChangesAsync(ct);
+
+        notificationDispatcher.AoEmitir(pedido, cliente, temDocumentoComXml: true);
     }
 }

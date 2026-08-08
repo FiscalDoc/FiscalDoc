@@ -27,6 +27,8 @@ public sealed class CreateTransportadoraCommandHandler(IUnitOfWork uow)
             Estado = request.Estado,
             Cep = request.Cep,
             CodigoIbgeCidade = request.CodigoIbgeCidade,
+            WebhookAtivo = request.WebhookAtivo,
+            WebhookUrl = request.WebhookUrl,
         };
 
         await uow.Transportadoras.AddAsync(transportadora, ct);
@@ -39,5 +41,5 @@ public sealed class CreateTransportadoraCommandHandler(IUnitOfWork uow)
         t.Id, t.ClienteId, t.RazaoSocial, t.NomeFantasia, t.CpfCnpj,
         t.InscricaoEstadual, t.Email, t.Telefone, t.Logradouro, t.Numero,
         t.Complemento, t.Bairro, t.Cidade, t.Estado, t.Cep,
-        t.CodigoIbgeCidade, t.Ativo, t.CreatedAt);
+        t.CodigoIbgeCidade, t.Ativo, t.CreatedAt, t.WebhookAtivo, t.WebhookUrl);
 }

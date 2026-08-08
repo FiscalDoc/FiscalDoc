@@ -295,7 +295,12 @@ interface ConfirmState {
         </div>
         <div class="form-grid">
           <div class="field col-2 combo-field">
-            <label class="label">Destinatário *</label>
+            <label class="label">
+              Destinatário *
+              @if (form.destinatarioId) {
+                <a class="label-link" [routerLink]="['/clientes', clienteId, 'cadastros', 'destinatarios', form.destinatarioId]" target="_blank" title="Abrir cadastro do destinatário em nova aba">Editar ↗</a>
+              }
+            </label>
             <div class="combo-row">
               <input
                 class="input" [disabled]="readonly()"
@@ -306,9 +311,6 @@ interface ConfirmState {
                 (keydown)="onDestinatarioKeydown($event)"
                 placeholder="Buscar destinatário por nome..."
               />
-              @if (form.destinatarioId) {
-                <a class="btn-inline" [routerLink]="['/clientes', clienteId, 'cadastros', 'destinatarios', form.destinatarioId]" target="_blank" title="Abrir cadastro do destinatário em nova aba">Editar</a>
-              }
               @if (!readonly()) {
                 <button type="button" class="btn-inline" (click)="abrirNovoDestinatario()">+ Novo</button>
               }
@@ -358,7 +360,12 @@ interface ConfirmState {
             </select>
           </div>
           <div class="field col-2 combo-field">
-            <label class="label">Transportadora</label>
+            <label class="label">
+              Transportadora
+              @if (form.transportadoraId) {
+                <a class="label-link" [routerLink]="['/clientes', clienteId, 'cadastros', 'transportadoras', form.transportadoraId]" target="_blank" title="Abrir cadastro da transportadora em nova aba">Editar ↗</a>
+              }
+            </label>
             <div class="combo-row">
               <input
                 class="input" [disabled]="readonly() || form.modalidadeFrete === 'SemFrete'"
@@ -369,9 +376,6 @@ interface ConfirmState {
                 (keydown)="onTransportadoraKeydown($event)"
                 placeholder="Buscar transportadora (opcional)..."
               />
-              @if (form.transportadoraId) {
-                <a class="btn-inline" [routerLink]="['/clientes', clienteId, 'cadastros', 'transportadoras', form.transportadoraId]" target="_blank" title="Abrir cadastro da transportadora em nova aba">Editar</a>
-              }
               @if (!readonly() && form.transportadoraId) {
                 <button type="button" class="btn-inline" (click)="limparTransportadora()">Limpar</button>
               }
@@ -588,15 +592,14 @@ interface ConfirmState {
                     <td [attr.colspan]="readonly() ? 5 : 6">
                       <div class="detail-grid">
                         <div class="field">
-                          <label class="label">Descrição</label>
+                          <label class="label">
+                            Descrição
+                            @if (item.produtoId) {
+                              <a class="label-link" [routerLink]="['/clientes', clienteId, 'cadastros', 'produtos', item.produtoId]" target="_blank" title="Abrir cadastro do produto em nova aba">Editar ↗</a>
+                            }
+                          </label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.descricao" (ngModelChange)="item.descricao = $event; marcarSujo()"/>
                         </div>
-                        @if (item.produtoId) {
-                          <div class="field">
-                            <label class="label">Cadastro do produto</label>
-                            <a class="btn-inline" [routerLink]="['/clientes', clienteId, 'cadastros', 'produtos', item.produtoId]" target="_blank" title="Abrir cadastro do produto em nova aba">Editar produto ↗</a>
-                          </div>
-                        }
                         <div class="field">
                           <label class="label">CFOP</label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cfop" (ngModelChange)="item.cfop = $event; marcarSujo()"/>
@@ -667,6 +670,12 @@ interface ConfirmState {
                   <p class="timeline-meta">
                     {{ h.createdAt | date:'dd/MM/yyyy HH:mm' }}
                     @if (h.usuarioNome) { · {{ h.usuarioNome }} }
+                    @if (historicoPodeReenviar(h)) {
+                      · <a class="timeline-action" (click)="historicoDetalhe.set(h)">Ver detalhes</a>
+                      · <a class="timeline-action" [class.timeline-action-disabled]="!!reenviandoHistoricoId()" (click)="reenviarHistorico(h)">
+                          {{ reenviandoHistoricoId() === h.id ? 'Reenviando...' : 'Tentar novamente' }}
+                        </a>
+                    }
                   </p>
                 </div>
               </div>
@@ -797,6 +806,28 @@ interface ConfirmState {
       </div>
     }
 
+    @if (historicoDetalhe(); as hd) {
+      <div class="overlay" (click)="historicoDetalhe.set(null)">
+        <div class="modal-quick" (click)="$event.stopPropagation()">
+          <h3 class="confirm-title">Detalhes do envio</h3>
+          <p class="quick-hint">
+            {{ hd.createdAt | date:'dd/MM/yyyy HH:mm' }}
+            @if (hd.usuarioNome) { · {{ hd.usuarioNome }} }
+          </p>
+          <p class="erro-nfe-explicacao">{{ hd.descricao }}</p>
+          <div class="confirm-actions">
+            <button class="btn-ghost" (click)="historicoDetalhe.set(null)">Fechar</button>
+            @if (historicoPodeReenviar(hd)) {
+              <button class="btn-primary" [disabled]="!!reenviandoHistoricoId()"
+                (click)="reenviarHistorico(hd); historicoDetalhe.set(null)">
+                {{ reenviandoHistoricoId() === hd.id ? 'Reenviando...' : 'Tentar novamente' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
     @if (showCancelarNfeModal()) {
       <div class="overlay" (click)="fecharCancelarNfe()">
         <div class="modal-quick" (click)="$event.stopPropagation()">
@@ -893,7 +924,12 @@ interface ConfirmState {
     .field { display: flex; flex-direction: column; gap: 3px; }
     .toggle-row { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--text); }
     .header-section .label { font-size: 10px; }
-    .label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+    .label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+    .label-link {
+      font-size: 10.5px; font-weight: 600; text-transform: none; letter-spacing: normal;
+      color: var(--accent); text-decoration: none; cursor: pointer;
+    }
+    .label-link:hover { text-decoration: underline; }
     .input, textarea.input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .5rem .75rem; font-size: 13.5px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
     .header-section .input, .header-section textarea.input { padding: .375rem .625rem; font-size: 13px; }
     .header-section textarea.input { min-height: 32px; resize: vertical; }
@@ -1002,14 +1038,19 @@ interface ConfirmState {
     }
     .timeline-dot { flex-shrink: 0; width: 11px; height: 11px; border-radius: 50%; margin-top: 3px; background: var(--text2); }
     /* Verde: a ação foi concluída com sucesso (criação, emissão, cancelamento de NF-e feito de propósito). */
-    .timeline-dot--criado, .timeline-dot--emitido, .timeline-dot--emitidonfefocus, .timeline-dot--nfecancelada { background: var(--green); }
+    .timeline-dot--criado, .timeline-dot--emitido, .timeline-dot--emitidonfefocus, .timeline-dot--nfecancelada,
+    .timeline-dot--webhooktransportadoraenviado, .timeline-dot--emailnfeenviado { background: var(--green); }
     .timeline-dot--nfeprocessando { background: #ffc107; }
-    /* Vermelho: só quando algo deu errado de fato (rejeição da SEFAZ, falha ao emitir). */
-    .timeline-dot--nferejeitada, .timeline-dot--erroemissaonfe { background: var(--red); }
+    /* Vermelho: só quando algo deu errado de fato (rejeição da SEFAZ, falha ao emitir, falha no envio do webhook/e-mail). */
+    .timeline-dot--nferejeitada, .timeline-dot--erroemissaonfe,
+    .timeline-dot--webhooktransportadorafalhou, .timeline-dot--emailnfefalhou { background: var(--red); }
     /* Cinza: ações administrativas/neutras — pedido cancelado não é um erro, é uma decisão. */
     .timeline-dot--cancelado, .timeline-dot--vinculonfe, .timeline-dot--desvinculonfe { background: #7c8299; }
     .timeline-desc { margin: 0; font-size: 13px; color: var(--text); }
     .timeline-meta { margin: 2px 0 0; font-size: 11px; color: var(--text2); }
+    .timeline-action { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .timeline-action:hover { text-decoration: underline; }
+    .timeline-action-disabled { opacity: .5; pointer-events: none; }
     .btn-ghost { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; cursor: pointer; }
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
     .btn-ghost-sm {
@@ -1204,6 +1245,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     !!this.cliente()?.nfeHabilitado && this.cliente()?.focusNfeStatus === 'Registrada');
   readonly documentoImpostos = signal<PedidoDto['documentoImpostos'] | null>(null);
   readonly historico = signal<PedidoHistoricoDto[]>([]);
+  readonly reenviandoHistoricoId = signal<string | null>(null);
+  readonly historicoDetalhe = signal<PedidoHistoricoDto | null>(null);
   readonly impostosAbertos = signal(false);
   readonly desvinculando = signal(false);
   readonly showVincularDocumento = signal(false);
@@ -1355,6 +1398,25 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this._pedidoSvc.getHistorico(this.clienteId, this.pedidoId).subscribe({
       next: h => this.historico.set(h),
       error: () => this.historico.set([]),
+    });
+  }
+
+  // Cada tipo de falha registrado no histórico (job do webhook da transportadora / do e-mail
+  // da NF-e) sabe reenfileirar a si mesmo — o botão "Tentar novamente" só precisa saber qual
+  // endpoint chamar a partir do `tipo` gravado pelo backend.
+  historicoPodeReenviar(h: PedidoHistoricoDto): boolean {
+    return h.tipo === 'WebhookTransportadoraFalhou' || h.tipo === 'EmailNfeFalhou';
+  }
+
+  reenviarHistorico(h: PedidoHistoricoDto): void {
+    if (this.reenviandoHistoricoId()) return;
+    this.reenviandoHistoricoId.set(h.id);
+    const req$ = h.tipo === 'WebhookTransportadoraFalhou'
+      ? this._pedidoSvc.reenviarWebhookTransportadora(this.clienteId, this.pedidoId)
+      : this._pedidoSvc.reenviarEmailNfe(this.clienteId, this.pedidoId);
+    req$.subscribe({
+      next: () => { this.reenviandoHistoricoId.set(null); this._carregarHistorico(); },
+      error: () => { this.reenviandoHistoricoId.set(null); this._carregarHistorico(); },
     });
   }
 

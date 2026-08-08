@@ -32,6 +32,13 @@ public class Cliente : BaseEntity, IAuditableEntity
     public bool WebhookHabilitado { get; set; }
     public string? WebhookUrl { get; set; }
 
+    // E-mail automático da NF-e ao destinatário. Gatilho "NotaFiscal" só dispara quando existe
+    // XML de verdade (Focus NFe ou XML importado/vinculado manualmente); "Pedido" dispara
+    // sempre que o pedido vira "Emitido", inclusive no fluxo antigo sem NF-e (nesse caso o
+    // job simplesmente não encontra XML pra anexar e não envia nada).
+    public bool EmailNfeDestinatarioHabilitado { get; set; }
+    public string EmailNfeDestinatarioGatilho { get; set; } = "NotaFiscal"; // Pedido|NotaFiscal
+
     // Importação de XML via e-mail (IMAP)
     public bool ImapHabilitado { get; set; }
     public string? ImapHost { get; set; }

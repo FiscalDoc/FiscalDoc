@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VeloXML.Application.Common.Interfaces;
+using VeloXML.Application.Features.Auth.Common;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 using RefreshTokenEntity = VeloXML.Domain.Entities.RefreshToken;
@@ -25,12 +26,7 @@ public sealed class LoginCommandHandler(
         var tenant = await db.Tenants.IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.Id == user.TenantId, ct);
 
-        string? empresa = null;
-        if (user.ContadorId.HasValue)
-        {
-            var contador = await uow.Contadores.GetByIdAsync(user.ContadorId.Value, ct);
-            empresa = contador?.Empresa ?? contador?.Nome;
-        }
+        var (empresa, cnpj) = await EmpresaClaimHelper.ResolverAsync(uow, user, ct);
 
         if (user.TwoFactorHabilitado)
         {
@@ -50,7 +46,7 @@ public sealed class LoginCommandHandler(
             ));
         }
 
-        var accessToken = tokenService.GenerateAccessToken(user, empresa);
+        var accessToken = tokenService.GenerateAccessToken(user, empresa, cnpj);
         var refreshTokenValue = tokenService.GenerateRefreshToken();
 
         var refreshToken = new RefreshTokenEntity

@@ -13,7 +13,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> opts) : ITokenService
 {
     private readonly JwtOptions _opts = opts.Value;
 
-    public string GenerateAccessToken(User user, string? empresa = null)
+    public string GenerateAccessToken(User user, string? empresa = null, string? cnpj = null)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -37,6 +37,9 @@ public sealed class JwtTokenService(IOptions<JwtOptions> opts) : ITokenService
         if (!string.IsNullOrEmpty(empresa))
             claimList.Add(new Claim("empresa", empresa));
 
+        if (!string.IsNullOrEmpty(cnpj))
+            claimList.Add(new Claim("cnpj", cnpj));
+
         var claims = claimList.ToArray();
 
         var token = new JwtSecurityToken(
@@ -50,7 +53,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> opts) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string GenerateContextToken(User admin, string perfil, Guid tenantId, Guid? contadorId, Guid? clienteId, string? empresa)
+    public string GenerateContextToken(User admin, string perfil, Guid tenantId, Guid? contadorId, Guid? clienteId, string? empresa, string? cnpj = null)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -74,6 +77,9 @@ public sealed class JwtTokenService(IOptions<JwtOptions> opts) : ITokenService
 
         if (!string.IsNullOrEmpty(empresa))
             claimList.Add(new Claim("empresa", empresa));
+
+        if (!string.IsNullOrEmpty(cnpj))
+            claimList.Add(new Claim("cnpj", cnpj));
 
         var token = new JwtSecurityToken(
             issuer: _opts.Issuer,

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Auth.Commands.Login;
+using VeloXML.Application.Features.Auth.Common;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
 using RefreshTokenEntity = VeloXML.Domain.Entities.RefreshToken;
@@ -27,14 +28,9 @@ public sealed class Verify2faCommandHandler(
         if (!totp.ValidateCode(user.TotpSecret, request.Code))
             return Result.Failure<LoginResponse>(ResultError.Unauthorized("Código inválido ou expirado."));
 
-        string? empresa = null;
-        if (user.ContadorId.HasValue)
-        {
-            var contador = await uow.Contadores.GetByIdAsync(user.ContadorId.Value, ct);
-            empresa = contador?.Empresa ?? contador?.Nome;
-        }
+        var (empresa, cnpj) = await EmpresaClaimHelper.ResolverAsync(uow, user, ct);
 
-        var accessToken    = tokenService.GenerateAccessToken(user, empresa);
+        var accessToken    = tokenService.GenerateAccessToken(user, empresa, cnpj);
         var refreshTokenValue = tokenService.GenerateRefreshToken();
 
         var refreshToken = new RefreshTokenEntity

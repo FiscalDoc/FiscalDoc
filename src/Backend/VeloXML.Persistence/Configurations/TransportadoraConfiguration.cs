@@ -34,6 +34,8 @@ public class TransportadoraConfiguration : IEntityTypeConfiguration<Transportado
         b.Property(e => e.Cep).HasColumnName("cep").HasMaxLength(9);
         b.Property(e => e.CodigoIbgeCidade).HasColumnName("codigo_ibge_cidade").HasMaxLength(10);
         b.Property(e => e.Ativo).HasColumnName("ativo").HasDefaultValue(true);
+        b.Property(e => e.WebhookAtivo).HasColumnName("webhook_ativo").HasDefaultValue(false);
+        b.Property(e => e.WebhookUrl).HasColumnName("webhook_url").HasMaxLength(500);
 
         b.HasIndex(e => e.ClienteId).HasDatabaseName("ix_transportadoras_cliente_id");
         b.HasIndex(e => e.TenantId).HasDatabaseName("ix_transportadoras_tenant_id");

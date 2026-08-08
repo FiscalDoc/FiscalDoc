@@ -393,6 +393,38 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
           <div class="card section">
             <div class="imap-header">
               <div>
+                <h4 class="section-title" style="margin-bottom:4px">E-mail da NF-e ao Destinatário</h4>
+                <p class="section-desc" style="margin:0">Quando habilitado, envia automaticamente a NF-e (XML + DANFE) por e-mail pro destinatário do pedido.</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="emailNfe.habilitado"/>
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            @if (emailNfe.habilitado) {
+              <div class="form-grid" style="margin-top:1rem">
+                <div class="field col-2">
+                  <label class="label">Enviar quando</label>
+                  <select class="input" [(ngModel)]="emailNfe.gatilho">
+                    <option value="NotaFiscal">A NF-e for autorizada (só quando existe XML de verdade)</option>
+                    <option value="Pedido">O pedido for emitido (mesmo sem NF-e real vinculada)</option>
+                  </select>
+                </div>
+              </div>
+            }
+            @if (erroEmailNfe()) { <div class="alert-error" style="margin-top:.75rem">{{ erroEmailNfe() }}</div> }
+            @if (sucessoEmailNfe()) { <div class="alert-ok" style="margin-top:.75rem">Configuração salva!</div> }
+            <div class="form-actions" style="margin-top:1rem">
+              <span></span>
+              <button class="btn-primary" [disabled]="salvandoEmailNfe()" (click)="salvarEmailNfe()">
+                {{ salvandoEmailNfe() ? 'Salvando...' : 'Salvar' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="card section">
+            <div class="imap-header">
+              <div>
                 <h4 class="section-title" style="margin-bottom:4px">Importação de XML por E-mail</h4>
                 <p class="section-desc" style="margin:0">Quando habilitado, o sistema lê a caixa de entrada configurada a cada 5 minutos e importa anexos XML automaticamente.</p>
               </div>
@@ -661,6 +693,10 @@ export class ClienteDetailComponent implements OnInit {
   readonly erroWebhook     = signal<string | null>(null);
   readonly sucessoWebhook  = signal(false);
 
+  readonly salvandoEmailNfe = signal(false);
+  readonly erroEmailNfe     = signal<string | null>(null);
+  readonly sucessoEmailNfe  = signal(false);
+
   readonly criandoConta  = signal(false);
   readonly erroConta     = signal<string | null>(null);
   readonly contaCriada   = signal<CriarContaClienteResponse | null>(null);
@@ -677,6 +713,7 @@ export class ClienteDetailComponent implements OnInit {
   fiscal  = { regimeTributario: '', inscricaoEstadual: '', inscricaoMunicipal: '', cnaePrincipal: '', serieNfe: '1', nfeHabilitado: false };
   imap    = { habilitado: false, host: '', port: 993, email: '', senha: '' };
   webhook = { habilitado: false, url: '' };
+  emailNfe = { habilitado: false, gatilho: 'NotaFiscal' as 'Pedido' | 'NotaFiscal' };
   conta   = { nome: '', email: '' };
 
   ngOnInit(): void {
@@ -688,6 +725,7 @@ export class ClienteDetailComponent implements OnInit {
         this._syncFiscal(c);
         this._syncImap(c);
         this._syncWebhook(c);
+        this._syncEmailNfe(c);
         this.loading.set(false);
         if (c.imapHabilitado) this.carregarLogImap(c.id);
       },
@@ -743,6 +781,10 @@ export class ClienteDetailComponent implements OnInit {
 
   private _syncWebhook(c: ClienteDto): void {
     this.webhook = { habilitado: c.webhookHabilitado, url: c.webhookUrl ?? '' };
+  }
+
+  private _syncEmailNfe(c: ClienteDto): void {
+    this.emailNfe = { habilitado: c.emailNfeDestinatarioHabilitado, gatilho: c.emailNfeDestinatarioGatilho };
   }
 
   initials(): string {
@@ -845,6 +887,18 @@ export class ClienteDetailComponent implements OnInit {
     this._svc.configurarWebhook(c.id, { habilitado: this.webhook.habilitado, url: this.webhook.url || undefined }).subscribe({
       next: updated => { this.cliente.set(updated); this._syncWebhook(updated); this.salvandoWebhook.set(false); this.sucessoWebhook.set(true); setTimeout(() => this.sucessoWebhook.set(false), 3000); },
       error: err => { this.salvandoWebhook.set(false); this.erroWebhook.set(extractErrorMessage(err, 'Erro ao salvar.')); },
+    });
+  }
+
+  salvarEmailNfe(): void {
+    const c = this.cliente();
+    if (!c || this.salvandoEmailNfe()) return;
+    this.salvandoEmailNfe.set(true);
+    this.erroEmailNfe.set(null);
+    this.sucessoEmailNfe.set(false);
+    this._svc.configurarEmailNfe(c.id, { habilitado: this.emailNfe.habilitado, gatilho: this.emailNfe.gatilho }).subscribe({
+      next: updated => { this.cliente.set(updated); this._syncEmailNfe(updated); this.salvandoEmailNfe.set(false); this.sucessoEmailNfe.set(true); setTimeout(() => this.sucessoEmailNfe.set(false), 3000); },
+      error: err => { this.salvandoEmailNfe.set(false); this.erroEmailNfe.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
 

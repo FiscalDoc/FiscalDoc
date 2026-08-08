@@ -17,6 +17,8 @@ export interface TransportadoraDto {
   codigoIbgeCidade?: string;
   ativo: boolean;
   createdAt: string;
+  webhookAtivo: boolean;
+  webhookUrl?: string;
 }
 
 export interface CreateTransportadoraRequest {
@@ -34,6 +36,8 @@ export interface CreateTransportadoraRequest {
   estado?: string;
   cep?: string;
   codigoIbgeCidade?: string;
+  webhookAtivo?: boolean;
+  webhookUrl?: string;
 }
 
 export interface UpdateTransportadoraRequest extends CreateTransportadoraRequest {

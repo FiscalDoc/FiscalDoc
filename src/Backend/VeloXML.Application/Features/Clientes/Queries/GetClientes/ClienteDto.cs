@@ -22,6 +22,8 @@ public record ClienteDto(
     string AppKey,
     bool WebhookHabilitado,
     string? WebhookUrl,
+    bool EmailNfeDestinatarioHabilitado,
+    string EmailNfeDestinatarioGatilho,
     bool ImapHabilitado,
     string? ImapHost,
     int ImapPort,

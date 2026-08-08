@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Auth.Commands.Login;
+using VeloXML.Application.Features.Auth.Common;
 using VeloXML.Domain.Entities;
 using VeloXML.Domain.Interfaces;
 using VeloXML.SharedKernel;
@@ -45,8 +46,12 @@ public sealed class RefreshTokenCommandHandler(
         var tenant = await db.Tenants.IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.Id == user.TenantId, ct);
 
+        // Sem isso, o refresh silencioso (a cada ~60min) apagava "empresa"/"cnpj" do token —
+        // o rodapé da sidebar perdia o nome da empresa até o próximo login manual.
+        var (empresa, cnpj) = await EmpresaClaimHelper.ResolverAsync(uow, user, ct);
+
         return Result.Success(new LoginResponse(
-            AccessToken: tokenService.GenerateAccessToken(user),
+            AccessToken: tokenService.GenerateAccessToken(user, empresa, cnpj),
             RefreshToken: newRefreshTokenValue,
             ExpiresAt: DateTime.UtcNow.AddMinutes(60),
             Nome: user.Nome,

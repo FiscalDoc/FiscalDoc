@@ -7,6 +7,7 @@ using VeloXML.Application.Features.Clientes.Commands.DeleteCliente;
 using VeloXML.Application.Features.Clientes.Commands.UpdateCliente;
 using VeloXML.Application.Features.Clientes.Commands.ConfigurarImap;
 using VeloXML.Application.Features.Clientes.Commands.ConfigurarWebhook;
+using VeloXML.Application.Features.Clientes.Commands.ConfigurarEmailNfe;
 using VeloXML.Application.Features.Clientes.Commands.CriarContaCliente;
 using VeloXML.Application.Features.Clientes.Commands.RegenerarAppKey;
 using VeloXML.Application.Features.Clientes.Commands.RegistrarCertificadoNfe;
@@ -78,6 +79,13 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
+    [HttpPut("{id:guid}/email-nfe")]
+    public async Task<IActionResult> ConfigurarEmailNfe(Guid id, [FromBody] ConfigurarEmailNfeRequest body, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ConfigurarEmailNfeCommand(id, body.Habilitado, body.Gatilho), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
+    }
+
     [HttpPut("{id:guid}/imap")]
     public async Task<IActionResult> ConfigurarImap(Guid id, [FromBody] ConfigurarImapRequest body, CancellationToken ct)
     {
@@ -109,6 +117,7 @@ public sealed class ClientesController(IMediator mediator) : ControllerBase
 }
 
 public record ConfigurarWebhookRequest(bool Habilitado, string? Url);
+public record ConfigurarEmailNfeRequest(bool Habilitado, string Gatilho);
 public record ConfigurarImapRequest(bool Habilitado, string? Host, int Port = 993, string? Email = null, string? Senha = null);
 public record CriarContaClienteRequest(string Nome, string Email);
 public record UpdateClienteFiscalRequest(

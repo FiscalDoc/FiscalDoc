@@ -7,7 +7,7 @@ using VeloXML.SharedKernel;
 
 namespace VeloXML.Application.Features.Pedidos.Commands.VincularDocumento;
 
-public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser)
+public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow, ICurrentUser currentUser, PedidoNotificationDispatcher notificationDispatcher)
     : IRequestHandler<VincularDocumentoCommand, Result<PedidoDto>>
 {
     public async Task<Result<PedidoDto>> Handle(VincularDocumentoCommand request, CancellationToken ct)
@@ -26,6 +26,10 @@ public sealed class VincularDocumentoCommandHandler(IUnitOfWork uow, ICurrentUse
         await uow.PedidoHistoricos.AddAsync(PedidoHistoricoHelper.Criar(
             pedido.Id, pedido.TenantId, "VinculoNfe", $"NF-e nº {documento.Numero} vinculada", currentUser), ct);
         await uow.SaveChangesAsync(ct);
+
+        var cliente = await uow.Clientes.GetByIdAsync(request.ClienteId, ct);
+        if (cliente is not null)
+            notificationDispatcher.AoEmitir(pedido, cliente, temDocumentoComXml: true);
 
         var atualizado = await uow.Pedidos.GetWithItensAsync(pedido.Id, ct);
         return Result.Success(CreatePedidoCommandHandler.ToDto(atualizado!));

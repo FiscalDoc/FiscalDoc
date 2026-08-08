@@ -18,5 +18,7 @@ public record CreateTransportadoraCommand(
     string? Cidade,
     string? Estado,
     string? Cep,
-    string? CodigoIbgeCidade
+    string? CodigoIbgeCidade,
+    bool WebhookAtivo = false,
+    string? WebhookUrl = null
 ) : IRequest<Result<TransportadoraDto>>;

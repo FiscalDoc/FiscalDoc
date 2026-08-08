@@ -35,7 +35,8 @@ public sealed class TransportadorasController(IMediator mediator) : ControllerBa
             clienteId, body.RazaoSocial, body.NomeFantasia, body.CpfCnpj,
             body.InscricaoEstadual, body.Email, body.Telefone,
             body.Logradouro, body.Numero, body.Complemento,
-            body.Bairro, body.Cidade, body.Estado, body.Cep, body.CodigoIbgeCidade), ct);
+            body.Bairro, body.Cidade, body.Estado, body.Cep, body.CodigoIbgeCidade,
+            body.WebhookAtivo, body.WebhookUrl), ct);
         return result.IsSuccess ? Created(string.Empty, result.Value) : BadRequest(result.Error);
     }
 
@@ -47,7 +48,7 @@ public sealed class TransportadorasController(IMediator mediator) : ControllerBa
             body.InscricaoEstadual, body.Email, body.Telefone,
             body.Logradouro, body.Numero, body.Complemento,
             body.Bairro, body.Cidade, body.Estado, body.Cep,
-            body.CodigoIbgeCidade, body.Ativo), ct);
+            body.CodigoIbgeCidade, body.Ativo, body.WebhookAtivo, body.WebhookUrl), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
@@ -73,7 +74,9 @@ public record CreateTransportadoraRequest(
     string? Cidade,
     string? Estado,
     string? Cep,
-    string? CodigoIbgeCidade
+    string? CodigoIbgeCidade,
+    bool WebhookAtivo = false,
+    string? WebhookUrl = null
 );
 
 public record UpdateTransportadoraRequest(
@@ -91,5 +94,7 @@ public record UpdateTransportadoraRequest(
     string? Estado,
     string? Cep,
     string? CodigoIbgeCidade,
-    bool Ativo
+    bool Ativo,
+    bool WebhookAtivo = false,
+    string? WebhookUrl = null
 );

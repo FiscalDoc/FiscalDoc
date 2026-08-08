@@ -33,6 +33,7 @@ export interface CurrentUser {
   perfil: string;
   tenantId: string;
   empresa?: string;
+  cnpj?: string;
   contadorId?: string;
   clienteId?: string;
   plano?: string;

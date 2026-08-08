@@ -79,4 +79,12 @@ export class PedidoService {
   corrigirNfeFocus(clienteId: string, id: string, correcao: string): Observable<CartaCorrecaoDto> {
     return this._api.post<CartaCorrecaoDto>(`/clientes/${clienteId}/pedidos/${id}/carta-correcao`, { correcao });
   }
+
+  reenviarWebhookTransportadora(clienteId: string, id: string): Observable<void> {
+    return this._api.post<void>(`/clientes/${clienteId}/pedidos/${id}/reenviar-webhook-transportadora`, {});
+  }
+
+  reenviarEmailNfe(clienteId: string, id: string): Observable<void> {
+    return this._api.post<void>(`/clientes/${clienteId}/pedidos/${id}/reenviar-email-nfe`, {});
+  }
 }

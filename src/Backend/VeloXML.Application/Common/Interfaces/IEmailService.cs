@@ -1,9 +1,12 @@
 namespace VeloXML.Application.Common.Interfaces;
 
+public record EmailAttachment(string FileName, byte[] Content, string MimeType);
+
 public interface IEmailService
 {
     Task SendAsync(string to, string subject, string htmlBody, CancellationToken ct = default);
     Task SendAsync(IEnumerable<string> to, string subject, string htmlBody, CancellationToken ct = default);
+    Task SendAsync(IEnumerable<string> to, string subject, string htmlBody, IEnumerable<EmailAttachment> attachments, CancellationToken ct = default);
 
     /// <summary>
     /// Envia um e-mail de teste usando os parâmetros informados diretamente (não os

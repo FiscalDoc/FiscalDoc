@@ -61,8 +61,9 @@ public sealed class SwitchContextCommandHandler(
 
         var tenantId = contador?.TenantId ?? cliente!.TenantId;
         var empresa = contador is not null ? (contador.Empresa ?? contador.Nome) : (cliente!.NomeFantasia ?? cliente.RazaoSocial);
+        var cnpj = cliente?.Cnpj;
         var accessToken = tokenService.GenerateContextToken(
-            admin, perfil.ToString(), tenantId, contador?.Id, cliente?.Id, empresa);
+            admin, perfil.ToString(), tenantId, contador?.Id, cliente?.Id, empresa, cnpj);
 
         logger.LogInformation(
             "[SwitchContext] Admin {AdminId} ({AdminEmail}) passou a atuar como {Perfil} — Contador {ContadorId} ({Empresa}){ClienteInfo}",

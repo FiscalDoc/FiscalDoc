@@ -31,6 +31,7 @@ public class MappingProfile : Profile
                 src.Cep, src.CodigoIbgeCidade, src.Cidade, src.Estado, src.Ativo, src.ContadorId,
                 src.Contador?.Nome, src.Documentos.Count, src.AppKey,
                 src.WebhookHabilitado, src.WebhookUrl,
+                src.EmailNfeDestinatarioHabilitado, src.EmailNfeDestinatarioGatilho,
                 src.ImapHabilitado, src.ImapHost, src.ImapPort, src.ImapEmail,
                 src.RegimeTributario, src.InscricaoEstadual, src.InscricaoMunicipal,
                 src.CnaePrincipal, src.SerieNfe, src.NfeHabilitado, src.CertificadoA1Validade,
@@ -39,6 +40,8 @@ public class MappingProfile : Profile
             .ForMember(d => d.TotalDocumentos, opt => opt.Ignore())
             .ForMember(d => d.WebhookHabilitado, opt => opt.Ignore())
             .ForMember(d => d.WebhookUrl, opt => opt.Ignore())
+            .ForMember(d => d.EmailNfeDestinatarioHabilitado, opt => opt.Ignore())
+            .ForMember(d => d.EmailNfeDestinatarioGatilho, opt => opt.Ignore())
             .ForMember(d => d.ImapHabilitado, opt => opt.Ignore())
             .ForMember(d => d.ImapHost, opt => opt.Ignore())
             .ForMember(d => d.ImapPort, opt => opt.Ignore())

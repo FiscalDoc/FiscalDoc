@@ -230,6 +230,7 @@ export class AuthService {
         id: payload.sub, nome: payload['name'] ?? '', email: payload['email'],
         perfil: payload['role'] ?? '', tenantId: payload['tenant_id'] ?? '',
         empresa: payload['empresa'] ?? undefined,
+        cnpj: payload['cnpj'] ?? undefined,
         contadorId: payload['contador_id'] ?? undefined,
         clienteId: payload['cliente_id'] ?? undefined,
         actingAdminId: payload['acting_admin_id'] ?? undefined,

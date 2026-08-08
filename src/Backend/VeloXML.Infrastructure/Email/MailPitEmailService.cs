@@ -11,9 +11,12 @@ public sealed class MailPitEmailService(IOptions<EmailOptions> opts, IUnitOfWork
     private readonly EmailOptions _opts = opts.Value;
 
     public Task SendAsync(string to, string subject, string htmlBody, CancellationToken ct = default)
-        => SendAsync([to], subject, htmlBody, ct);
+        => SendAsync([to], subject, htmlBody, [], ct);
 
-    public async Task SendAsync(IEnumerable<string> to, string subject, string htmlBody, CancellationToken ct = default)
+    public Task SendAsync(IEnumerable<string> to, string subject, string htmlBody, CancellationToken ct = default)
+        => SendAsync(to, subject, htmlBody, [], ct);
+
+    public async Task SendAsync(IEnumerable<string> to, string subject, string htmlBody, IEnumerable<EmailAttachment> attachments, CancellationToken ct = default)
     {
         var (host, port, from, fromName, username, password, enableSsl) = await ResolveSmtpAsync(ct);
 
@@ -36,6 +39,11 @@ public sealed class MailPitEmailService(IOptions<EmailOptions> opts, IUnitOfWork
 
         foreach (var address in to)
             msg.To.Add(address);
+
+        // MailMessage.Dispose() fecha os streams dos Attachment junto — não precisa dar
+        // Dispose manual em cada MemoryStream aberto aqui.
+        foreach (var attachment in attachments)
+            msg.Attachments.Add(new Attachment(new MemoryStream(attachment.Content), attachment.FileName, attachment.MimeType));
 
         await client.SendMailAsync(msg, ct);
     }
