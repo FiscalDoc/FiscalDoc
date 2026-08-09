@@ -4,18 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TransportadoraService, CepService, CnpjService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { TransportadoraDto } from '@veloxml/models';
+import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
 type Tab = 'cadastro' | 'endereco' | 'integracao';
 
 @Component({
   selector: 'app-transportadora-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="salvar()">
         <div class="page-header">
           <button class="back-btn" (click)="goBack()">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

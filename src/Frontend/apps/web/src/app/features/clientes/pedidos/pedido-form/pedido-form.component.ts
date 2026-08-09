@@ -6,6 +6,7 @@ import { PedidoService, ProdutoService, DestinatarioService, TransportadoraServi
 import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto, DocumentoImpostosDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 import { CodigoFiscalInputComponent } from '../../../../shared/codigo-fiscal-input.component';
+import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
 interface DocumentoVinculadoInfo {
   id: string;
@@ -32,9 +33,9 @@ interface ConfirmState {
 @Component({
   selector: 'app-pedido-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DecimalInputDirective, CodigoFiscalInputComponent],
+  imports: [CommonModule, FormsModule, RouterLink, DecimalInputDirective, CodigoFiscalInputComponent, SalvarAtalhoDirective],
   template: `
-    <div class="page" [class.page-loading]="carregandoPedido()">
+    <div class="page" [class.page-loading]="carregandoPedido()" appSalvarAtalho (appSalvarAtalho)="salvarAtalho()">
       <div class="page-header">
         <button class="back-btn" (click)="goBack()">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -2497,6 +2498,13 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       valorOutrasDespesas: +this.form.valorOutrasDespesas || 0,
       transportadoraId: this.form.transportadoraId || undefined,
     };
+  }
+
+  // Atalho Ctrl+S — o botão "Salvar" nem aparece quando o pedido está readonly() (emitido/
+  // cancelado), então o atalho precisa do mesmo guard, senão tentaria salvar um pedido fechado.
+  salvarAtalho(): void {
+    if (this.readonly()) return;
+    this.salvar();
   }
 
   salvar(): void {

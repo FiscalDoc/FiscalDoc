@@ -4,20 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, ClienteService, ConfiguracaoService, CepService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse, ImportacaoXmlClienteStatusDto } from '@veloxml/models';
+import { SalvarAtalhoDirective } from '../../../shared/salvar-atalho.directive';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
 @Component({
   selector: 'app-cliente-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else if (!cliente()) {
       <div class="loading-state">Cliente não encontrado.</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="salvarAtalho()">
         <!-- Header -->
         <div class="profile-header">
           <button class="back-btn" (click)="goBack()">
@@ -797,6 +798,14 @@ export class ClienteDetailComponent implements OnInit {
   }
 
   goBack(): void { this._router.navigate(['/clientes']); }
+
+  // Atalho Ctrl+S — decide qual "salvar" chamar pela aba ativa. Aba "integracao" fica de fora
+  // de propósito: tem mais de um formulário independente ali (webhook, e-mail de NF-e), então
+  // não dá pra saber qual o atalho deveria salvar sem ambiguidade.
+  salvarAtalho(): void {
+    if (this.tab() === 'cadastro') this.salvarCadastro();
+    else if (this.tab() === 'fiscal') this.salvarFiscal();
+  }
 
   salvarCadastro(): void {
     const c = this.cliente();

@@ -6,18 +6,19 @@ import { QuillModule } from 'ngx-quill';
 import { BlogAdminService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { BlogCategoriaDto, BlogPostDto, BlogStatus } from '@veloxml/models';
 import { environment } from '../../../../../environments/environment';
+import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
 type Tab = 'conteudo' | 'publicacao' | 'seo';
 
 @Component({
   selector: 'app-blog-post-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule],
+  imports: [CommonModule, FormsModule, QuillModule, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="salvar()">
         <div class="page-header">
           <button class="back-btn" (click)="goBack()">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

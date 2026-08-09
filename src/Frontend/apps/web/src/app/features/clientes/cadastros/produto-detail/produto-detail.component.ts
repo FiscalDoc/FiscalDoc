@@ -6,18 +6,19 @@ import { ProdutoService, ConfirmDialogService, ToastService, extractErrorMessage
 import { ProdutoDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 import { CodigoFiscalInputComponent } from '../../../../shared/codigo-fiscal-input.component';
+import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
 type Tab = 'geral' | 'fiscal';
 
 @Component({
   selector: 'app-produto-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalInputDirective, CodigoFiscalInputComponent],
+  imports: [CommonModule, FormsModule, DecimalInputDirective, CodigoFiscalInputComponent, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="salvar()">
         <div class="page-header">
           <button class="back-btn" (click)="goBack()">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

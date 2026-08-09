@@ -4,20 +4,21 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ClienteService, CepService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto } from '@veloxml/models';
+import { SalvarAtalhoDirective } from '../../../shared/salvar-atalho.directive';
 
 type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
 
 @Component({
   selector: 'app-cliente-empresa',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else if (!cliente()) {
       <div class="loading-state">Não foi possível carregar os dados da empresa.</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="salvarAtalho()">
         <div class="page-header">
           <h2 class="page-title">Empresa</h2>
           <p class="page-sub">Dados cadastrais da sua empresa</p>
@@ -580,6 +581,15 @@ export class ClienteEmpresaComponent implements OnInit {
         this.erroCertificado.set(extractErrorMessage(err, 'Erro ao enviar certificado.'));
       },
     });
+  }
+
+  // Atalho Ctrl+S — decide qual "salvar" chamar pela aba ativa. Na aba "fiscal" só salva o
+  // formulário de configuração fiscal, não o envio de certificado (ação explícita à parte, com
+  // senha — não deveria disparar sozinha por um atalho de teclado).
+  salvarAtalho(): void {
+    if (this.tab() === 'dados' || this.tab() === 'endereco') this.salvar();
+    else if (this.tab() === 'fiscal') this.salvarFiscal();
+    else if (this.tab() === 'parametros') this.salvarImap();
   }
 
   salvar(): void {

@@ -4,18 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DestinatarioService, CepService, CnpjService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors, validarCpfCnpj, validarEmail } from '@veloxml/services';
 import { DestinatarioDto } from '@veloxml/models';
+import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
 type Tab = 'cadastro' | 'endereco';
 
 @Component({
   selector: 'app-destinatario-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="salvar()">
         <div class="page-header">
           <button class="back-btn" (click)="goBack()">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

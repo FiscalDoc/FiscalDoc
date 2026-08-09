@@ -4,16 +4,17 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, ClienteUsuarioService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { environment } from '../../../../../environments/environment';
+import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
 @Component({
   selector: 'app-cliente-usuario-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SalvarAtalhoDirective],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
     } @else {
-      <div class="page">
+      <div class="page" appSalvarAtalho (appSalvarAtalho)="onSubmit()">
         <div class="page-header">
           <button class="back-btn" (click)="goBack()">
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

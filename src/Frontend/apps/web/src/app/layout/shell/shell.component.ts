@@ -664,7 +664,19 @@ interface NavItem {
         display: none;
       }
       .sidebar.collapsed .search-trigger { justify-content: center; padding: 7px; }
-      .sidebar.collapsed .nav-item { justify-content: center; padding: 0.5rem; }
+      /* Sem o rótulo do lado, o ícone é o ÚNICO jeito de reconhecer o item — cor apagada
+         (--text2, pensada pra não competir com o texto ao lado) e traço fino de 2px ficavam
+         quase invisíveis isolados numa caixa de 64px. Aqui: fundo em "chip" (limite visível
+         mesmo sem estar em hover/ativo), cor mais forte e traço um pouco mais grosso. */
+      .sidebar.collapsed .nav-item {
+        justify-content: center;
+        padding: 0.5rem;
+        background: var(--bg3);
+        color: var(--text);
+      }
+      .sidebar.collapsed .nav-item:hover { background: var(--bg4, var(--bg3)); }
+      .sidebar.collapsed .nav-item.active { background: var(--accent-dim, oklch(0.62 0.17 254 / 0.12)); }
+      .sidebar.collapsed .nav-icon svg { stroke-width: 2.25; }
       .sidebar.collapsed .nav-subitems { padding-left: 0; }
       .sidebar.collapsed .empresa-badge,
       .sidebar.collapsed .footer-links-row { justify-content: center; }
