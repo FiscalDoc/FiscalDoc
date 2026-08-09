@@ -140,3 +140,18 @@ input.input[readonly], input.input-sm[readonly], input.input-text[readonly] {
     color: var(--red);
   }
 }
+
+// Selo "Ctrl+S" ao lado de um botão de salvar, avisando que o atalho de teclado existe — sem
+// isso, o atalho (SalvarAtalhoDirective) funciona mas ninguém descobre sozinho que ele existe.
+// Global (não por componente) porque se repete em toda tela de cadastro que tem esse atalho.
+.kbd-hint {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-family: inherit;
+  color: var(--text3, var(--text2));
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}

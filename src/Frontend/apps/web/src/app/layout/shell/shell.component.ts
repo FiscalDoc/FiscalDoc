@@ -1,4 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService, ContadorService, ThemeService } from '@veloxml/services';
 import { ToastContainerComponent } from '../toast-container/toast-container.component';
@@ -72,7 +73,7 @@ interface NavItem {
             @if (item.children) {
               <div class="nav-group">
                 <button type="button" class="nav-item nav-group-toggle" [attr.data-tour]="item.tourId" [class.active]="isGroupActive(item)" [title]="sidebarCollapsed() ? item.label : ''" (click)="onGroupToggleClick(item)">
-                  <span class="nav-icon" [innerHTML]="item.icon"></span>
+                  <span class="nav-icon" [innerHTML]="trustIcon(item.icon)"></span>
                   <span class="nav-label">{{ item.label }}</span>
                   <svg class="nav-chevron" [class.open]="isGroupExpanded(item)" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
@@ -82,7 +83,7 @@ interface NavItem {
                   <div class="nav-subitems">
                     @for (child of item.children; track child.route) {
                       <a [routerLink]="child.route" [attr.data-tour]="child.tourId" routerLinkActive="active" class="nav-item nav-subitem" (click)="mobileMenuOpen.set(false)">
-                        <span class="nav-icon" [innerHTML]="child.icon"></span>
+                        <span class="nav-icon" [innerHTML]="trustIcon(child.icon)"></span>
                         <span class="nav-label">{{ child.label }}</span>
                       </a>
                     }
@@ -91,7 +92,7 @@ interface NavItem {
               </div>
             } @else {
               <a [routerLink]="item.route" [attr.data-tour]="item.tourId" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed() ? item.label : ''" (click)="mobileMenuOpen.set(false)">
-                <span class="nav-icon" [innerHTML]="item.icon"></span>
+                <span class="nav-icon" [innerHTML]="trustIcon(item.icon)"></span>
                 <span class="nav-label">{{ item.label }}</span>
               </a>
             }
@@ -421,6 +422,11 @@ interface NavItem {
       align-items: center;
       justify-content: center;
     }
+    /* O SVG do ícone entra via [innerHTML] (string crua, fora do template compilado) — sem
+       isso, o elemento <svg> injetado não herda um tamanho garantido do .nav-icon ao redor e
+       pode acabar invisível dependendo do navegador/contexto, mesmo com width/height no próprio
+       markup do ícone. */
+    .nav-icon svg { width: 100%; height: 100%; display: block; flex-shrink: 0; }
 
     .nav-label { flex: 1; }
 
@@ -728,6 +734,14 @@ export class ShellComponent implements OnInit {
   readonly theme = inject(ThemeService);
   private readonly _contSvc = inject(ContadorService);
   private readonly _router = inject(Router);
+  private readonly _sanitizer = inject(DomSanitizer);
+
+  // Os ícones do menu são strings de SVG fixas, definidas aqui mesmo no componente (nunca vêm
+  // de entrada do usuário) — bypassSecurityTrustHtml é seguro aqui e garante que o sanitizador
+  // padrão do Angular não mexa no conteúdo do SVG antes de inserir via [innerHTML].
+  trustIcon(html: string): SafeHtml {
+    return this._sanitizer.bypassSecurityTrustHtml(html);
+  }
 
   cobrancasAtrasadas = signal(0);
   isAdmin = signal(false);

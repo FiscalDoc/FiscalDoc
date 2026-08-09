@@ -13,6 +13,50 @@ interface Novidade {
 // depender da versão de build (ver comentário em VISTA_KEY acima).
 const NOVIDADES: Novidade[] = [
   {
+    titulo: 'Atalho Ctrl+S para salvar',
+    descricao: 'Nas telas de cadastro e no pedido/NF-e, Ctrl+S (Cmd+S no Mac) salva sem precisar tirar a mão do teclado pra clicar no botão.',
+  },
+  {
+    titulo: 'Menu lateral recolhível',
+    descricao: 'Um botão no topo do menu recolhe a barra lateral pra só ícones, ganhando espaço de tela — a escolha fica salva pra próxima vez que você entrar.',
+  },
+  {
+    titulo: 'Lucro estimado no relatório de notas',
+    descricao: 'O relatório de Notas Fiscais Emitidas agora mostra o lucro estimado por nota (com base no custo cadastrado em cada Produto), além do valor total já existente.',
+  },
+  {
+    titulo: 'Checklist "pronto pra emitir" no dashboard',
+    descricao: 'Um card no dashboard mostra o que falta pra emitir a primeira NF-e — certificado digital, produto com NCM/CFOP e destinatário cadastrado — com atalho pra resolver cada pendência.',
+  },
+  {
+    titulo: 'Aviso de validade do certificado digital',
+    descricao: 'Certificado vencido ou perto de vencer agora avisa na tela Empresa e também na tela de emissão do pedido, antes que a SEFAZ rejeite a nota.',
+  },
+  {
+    titulo: 'Busca de NCM e CFOP',
+    descricao: 'Os campos de NCM e CFOP agora têm busca por código ou descrição, no cadastro de Produto, nos itens do pedido e no cadastro rápido de produto direto na tela de emissão.',
+  },
+  {
+    titulo: 'Recalcular Impostos na emissão',
+    descricao: 'Antes de emitir, um botão mostra o cálculo real de ICMS, IPI, PIS, COFINS, DIFAL e FCP — os mesmos valores que o emissor de NF-e vai usar, não uma estimativa aproximada.',
+  },
+  {
+    titulo: 'Tema claro',
+    descricao: 'Um botão no rodapé do menu alterna entre tema escuro e claro — a escolha fica salva no navegador.',
+  },
+  {
+    titulo: 'Correções na tributação (IPI, DIFAL/FCP, CST/CSOSN)',
+    descricao: 'Emissão de NF-e passou a calcular e validar corretamente IPI, o diferencial de alíquota (DIFAL/FCP) em vendas interestaduais pra consumidor final, e os códigos de CST/CSOSN antes de tentar emitir.',
+  },
+  {
+    titulo: 'Busca global, confirmação e validação em tempo real',
+    descricao: 'Ctrl+K abre uma busca geral no sistema, exclusões agora pedem confirmação numa caixa própria (sem mais pop-up do navegador), e campos como CPF/CNPJ e e-mail avisam erro de formato enquanto você digita.',
+  },
+  {
+    titulo: 'Tour guiado para quem está começando',
+    descricao: 'No primeiro acesso, uma seta percorre o menu mostrando onde ficam Emissão, Cadastros e Relatórios — disponível a qualquer momento pelo ícone de alvo no rodapé do menu.',
+  },
+  {
     titulo: 'Webhook de NF-e para a transportadora',
     descricao: 'Cadastre uma URL na transportadora e o XML da nota fiscal é enviado automaticamente pra ela assim que a NF-e é autorizada.',
   },

@@ -71,9 +71,12 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
 
             <div class="form-actions">
-              <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-                {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
-              </button>
+              <div class="save-group">
+                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+                <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
+                  {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -119,9 +122,12 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
 
             <div class="form-actions">
-              <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-                {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
-              </button>
+              <div class="save-group">
+                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+                <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
+                  {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -161,9 +167,12 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
 
             <div class="form-actions">
               <span></span>
-              <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
-                {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
-              </button>
+              <div class="save-group">
+                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+                <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
+                  {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -260,9 +269,12 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (sucessoImap()) { <div class="alert-ok">Configuração de e-mail salva!</div> }
             <div class="form-actions">
               <a routerLink="/logs" class="link-ghost">Ver histórico em Logs</a>
-              <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
-                {{ salvandoImap() ? 'Salvando...' : 'Salvar configuração de e-mail' }}
-              </button>
+              <div class="save-group">
+                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+                <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
+                  {{ salvandoImap() ? 'Salvando...' : 'Salvar configuração de e-mail' }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -330,6 +342,7 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .alert-ok { background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-warn { background: rgba(255,209,102,.1); border: 1px solid rgba(255,209,102,.3); color: var(--yellow); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .form-actions { display: flex; align-items: center; justify-content: space-between; }
+    .save-group { display: flex; align-items: center; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }

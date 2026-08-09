@@ -152,6 +152,7 @@ type Tab = 'geral' | 'acesso';
 
           <div class="form-actions">
             <button type="button" class="btn-ghost" (click)="goBack()">Cancelar</button>
+            <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
             <button type="submit" class="btn-primary" [disabled]="submitting()">
               {{ submitting() ? 'Salvando...' : (isNew() ? 'Criar Usuário' : 'Salvar') }}
             </button>

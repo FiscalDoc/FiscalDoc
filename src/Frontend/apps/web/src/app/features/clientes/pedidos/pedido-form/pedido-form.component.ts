@@ -84,7 +84,7 @@ interface ConfirmState {
           </div>
           <div class="header-actions">
             @if (!readonly()) {
-              <button class="icon-btn primary" [disabled]="salvando() || salvandoEEmitindo()" (click)="salvar()" title="Salvar Pedido">
+              <button class="icon-btn primary" [disabled]="salvando() || salvandoEEmitindo()" (click)="salvar()" title="Salvar Pedido (Ctrl+S)">
                 <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-8H7v8"/>

@@ -140,6 +140,7 @@ type Tab = 'cadastro' | 'endereco';
 
         <div class="form-actions">
           <button class="btn-ghost" (click)="goBack()">Cancelar</button>
+          <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
           <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
             {{ salvando() ? 'Salvando...' : 'Salvar' }}
           </button>

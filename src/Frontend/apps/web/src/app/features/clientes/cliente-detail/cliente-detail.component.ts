@@ -175,9 +175,12 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
                 </svg>
                 Excluir cliente
               </button>
-              <button class="btn-primary" [disabled]="salvando()" (click)="salvarCadastro()">
-                {{ salvando() ? 'Salvando...' : 'Salvar alterações' }}
-              </button>
+              <div class="save-group">
+                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+                <button class="btn-primary" [disabled]="salvando()" (click)="salvarCadastro()">
+                  {{ salvando() ? 'Salvando...' : 'Salvar alterações' }}
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -241,9 +244,12 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
             @if (sucessoFiscal()) { <div class="alert-ok">Configuração fiscal salva!</div> }
             <div class="form-actions">
               <span></span>
-              <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
-                {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
-              </button>
+              <div class="save-group">
+                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+                <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
+                  {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -585,6 +591,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .field-hint { font-size: 11px; color: var(--text2); }
 
     .form-actions { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); }
+    .save-group { display: flex; align-items: center; gap: .75rem; }
 
     .nfe-info { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .75rem 0; }
 
