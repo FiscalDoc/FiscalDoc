@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ThemeService } from '@veloxml/services';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,8 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: '<router-outlet />',
 })
-export class AppComponent {}
+export class AppComponent {
+  // Só injetar já ativa o construtor do ThemeService (aplica o tema salvo) — não precisa
+  // chamar nada explicitamente, é o mesmo padrão de "serviço singleton ativado no boot".
+  private readonly _theme = inject(ThemeService);
+}

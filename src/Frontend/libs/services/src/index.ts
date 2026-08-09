@@ -23,4 +23,5 @@ export * from './lib/cnpj.service';
 export * from './lib/relatorio.service';
 export * from './lib/toast.service';
 export * from './lib/confirm-dialog.service';
+export * from './lib/theme.service';
 export * from './lib/assistente.service';

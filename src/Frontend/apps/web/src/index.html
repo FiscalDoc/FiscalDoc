@@ -6,6 +6,16 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- ── Tema (claro/escuro) aplicado ANTES do Angular carregar, pra não piscar o tema errado
+       no primeiro paint — ThemeService assume o controle a partir daí. ── -->
+  <script>
+    try {
+      if (localStorage.getItem('vx_theme') === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    } catch (e) {}
+  </script>
+
   <!-- ── SEO básico ── -->
   <meta name="description" content="FiscalDoc é o sistema para escritórios contábeis gerenciarem NF-e, CT-e, MDF-e e NFS-e de múltiplos clientes em um só lugar. Alertas automáticos, auditoria completa e trial grátis de 30 dias.">
   <meta name="keywords" content="sistema contabil, gestão fiscal, NF-e, CT-e, MDF-e, NFS-e, escritório contábil, contador, fiscal, XML fiscal">

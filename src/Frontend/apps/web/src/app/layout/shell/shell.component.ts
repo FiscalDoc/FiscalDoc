@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService, ContadorService } from '@veloxml/services';
+import { AuthService, ContadorService, ThemeService } from '@veloxml/services';
 import { ToastContainerComponent } from '../toast-container/toast-container.component';
 import { AssistenteChatComponent } from '../assistente-chat/assistente-chat.component';
 import { NovidadesModalComponent } from '../novidades-modal/novidades-modal.component';
@@ -110,6 +110,18 @@ interface NavItem {
               Segurança
             </a>
             <div class="footer-icons">
+              <button type="button" class="novidades-icon-link" [title]="theme.tema() === 'light' ? 'Mudar pro tema escuro' : 'Mudar pro tema claro'" (click)="theme.alternar()">
+                @if (theme.tema() === 'light') {
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                  </svg>
+                } @else {
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                  </svg>
+                }
+              </button>
               @if (auth.currentUser()?.perfil === 'Cliente') {
                 <button type="button" class="novidades-icon-link" title="Tour guiado" (click)="tourGuiado.abrir()">
                   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -655,6 +667,7 @@ interface NavItem {
 })
 export class ShellComponent implements OnInit {
   readonly auth = inject(AuthService);
+  readonly theme = inject(ThemeService);
   private readonly _contSvc = inject(ContadorService);
   private readonly _router = inject(Router);
 
