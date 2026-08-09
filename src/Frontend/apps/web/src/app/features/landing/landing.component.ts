@@ -606,7 +606,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
         </div>
 
         <div class="footer-bottom">
-          <p class="footer-copy">© 2025 FiscalDoc. Hub Fiscal para Contadores.</p>
+          <p class="footer-copy">© {{ anoAtual }} FiscalDoc. Hub Fiscal para Contadores.</p>
           <a href="https://app.fiscaldoc.com.br/auth/login" class="btn btn-outline btn-sm">Acessar sistema</a>
         </div>
       </div>
@@ -801,6 +801,38 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     }
     .section-title { font-size: clamp(1.6rem, 3.5vw, 2.4rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; color: var(--lg-brand-deep); letter-spacing: -0.02em; }
     .section-sub { font-size: 1rem; color: var(--lg-muted); line-height: 1.7; max-width: 560px; }
+    /* Cabeçalho de seção (selo + título + subtítulo) centralizado nas seções de introdução de
+       página inteira — de propósito NÃO inclui a seção Trial, onde esse mesmo bloco fica
+       dentro de .comparison-col, ao lado da tabela comparativa numa grade de 2 colunas, e
+       precisa continuar alinhado à esquerda ali. Alvo só nos elementos de texto (não em
+       .container inteiro) pra não herdar centralização indevida pros cards/listas de dentro
+       de cada seção. */
+    .audience > .container > .section-label,
+    .features > .container > .section-label,
+    .how > .container > .section-label,
+    .plans > .container > .section-label,
+    .faq > .container > .section-label {
+      display: flex; width: fit-content; margin-left: auto; margin-right: auto;
+    }
+    .audience > .container > .section-title,
+    .features > .container > .section-title,
+    .how > .container > .section-title,
+    .plans > .container > .section-title,
+    .faq > .container > .section-title,
+    .audience > .container > .section-sub,
+    .features > .container > .section-sub,
+    .how > .container > .section-sub,
+    .plans > .container > .section-sub,
+    .faq > .container > .section-sub {
+      text-align: center;
+    }
+    .audience > .container > .section-sub,
+    .features > .container > .section-sub,
+    .how > .container > .section-sub,
+    .plans > .container > .section-sub,
+    .faq > .container > .section-sub {
+      margin-left: auto; margin-right: auto;
+    }
 
     /* ─── PARA QUEM É ─────────────────────────── */
     .audience { padding: 5rem 0; background: var(--lg-surface); }
@@ -871,7 +903,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       box-shadow: var(--lg-shadow-soft);
     }
     .plan-single {
-      max-width: 480px; border-color: var(--lg-brand);
+      max-width: 480px; margin-left: auto; margin-right: auto; border-color: var(--lg-brand);
       box-shadow: var(--lg-shadow-lift), 0 0 0 1px oklch(0.62 0.17 254 / 25%);
       background: linear-gradient(145deg, var(--lg-brand-soft), var(--lg-surface));
     }
@@ -890,7 +922,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .faq { padding: 5rem 0; background: var(--lg-surface); }
     @media (min-width: 640px) { .faq { padding: 7rem 0; } }
     .faq .section-sub { margin-bottom: 3rem; }
-    .faq-list { display: flex; flex-direction: column; gap: 0.75rem; max-width: 780px; }
+    .faq-list { display: flex; flex-direction: column; gap: 0.75rem; max-width: 780px; margin-left: auto; margin-right: auto; }
     .faq-item { background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 16px; overflow: hidden; transition: border-color 200ms; }
     .faq-item.open { border-color: var(--lg-brand); }
     .faq-question { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; background: none; border: none; text-align: left; cursor: pointer; padding: 1.25rem 1.5rem; font-size: 15px; font-weight: 700; color: var(--lg-fg); font-family: inherit; }
@@ -1016,6 +1048,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 export class LandingComponent implements OnInit {
   readonly wpp = `https://wa.me/${WPP_NUMBER}?text=${WPP_MSG}`;
   readonly mobileMenuOpen = signal(false);
+  readonly anoAtual = new Date().getFullYear();
 
   private readonly _configSvc = inject(ConfiguracaoService);
   readonly social = signal<SocialConfigDto | null>(null);
