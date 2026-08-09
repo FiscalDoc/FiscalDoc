@@ -30,7 +30,11 @@ public record DocumentoImpostosDto(
     decimal? ValorOutrasDespesas,
     decimal? ValorAproxTributos,
     decimal? ValorIbs,
-    decimal? ValorCbs
+    decimal? ValorCbs,
+    // DIFAL/FCP só é calculado na prévia (ImpostosPreviewCalculator) — Documento não guarda
+    // esse detalhamento hoje, então fica sempre null pra documentos já emitidos.
+    decimal? ValorDifal = null,
+    decimal? ValorFcp = null
 );
 
 public record DanfeEnderecoDto(

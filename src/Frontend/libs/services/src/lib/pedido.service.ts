@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto, NfeEmissaoDto, PedidosResumoDto, CartaCorrecaoDto } from '@veloxml/models';
+import { PedidoDto, CreatePedidoRequest, UpdatePedidoRequest, PedidoVizinhosDto, ProdutoDto, PedidoHistoricoDto, NfeEmissaoDto, PedidosResumoDto, CartaCorrecaoDto, DocumentoImpostosDto } from '@veloxml/models';
 import { PagedResult, PaginationQuery } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +14,13 @@ export class PedidoService {
 
   getById(clienteId: string, id: string): Observable<PedidoDto> {
     return this._api.get<PedidoDto>(`/clientes/${clienteId}/pedidos/${id}`);
+  }
+
+  // Prévia real dos impostos — mesmo cálculo (base × alíquota, mesma regra de DIFAL) que o
+  // backend usa pra montar o payload de emissão de verdade, só que sem gastar uma tentativa
+  // de emissão. Pedido precisa já estar salvo (rascunho) pra ter um id.
+  previewImpostos(clienteId: string, id: string): Observable<DocumentoImpostosDto> {
+    return this._api.get<DocumentoImpostosDto>(`/clientes/${clienteId}/pedidos/${id}/preview-impostos`);
   }
 
   create(req: CreatePedidoRequest): Observable<PedidoDto> {

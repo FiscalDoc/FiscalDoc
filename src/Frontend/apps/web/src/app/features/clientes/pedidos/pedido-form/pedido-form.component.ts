@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
-import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
+import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto, DocumentoImpostosDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
 interface DocumentoVinculadoInfo {
@@ -503,27 +503,60 @@ interface ConfirmState {
       } @else if (!readonly() && itens().length > 0) {
         <div class="accordion" [class.accordion--aberto]="impostosAbertos()">
           <button type="button" class="accordion-header" (click)="impostosAbertos.set(!impostosAbertos())">
-            <span>Totais da Nota Fiscal (estimativa)</span>
+            <span>Totais da Nota Fiscal {{ impostosReais() ? '(calculado)' : '(estimativa rápida)' }}</span>
             <svg class="accordion-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
           @if (impostosAbertos()) {
             <div class="accordion-body">
-              <p class="quick-hint">Calculado a partir do CST/alíquota cadastrados nos itens — confira antes de emitir. Depois que a NF-e for autorizada, esse card mostra os valores reais que vieram na nota.</p>
-              @if (previewImpostos(); as prev) {
+              <div class="recalcular-row">
+                <p class="quick-hint" style="margin:0">
+                  @if (impostosReais()) {
+                    Calculado no servidor, com a mesma base/alíquota/regra de DIFAL que vai pra Focus na hora de emitir.
+                  } @else {
+                    Estimativa rápida (ICMS/PIS/COFINS) só pra ideia geral — clique em "Recalcular" pro valor exato, incluindo IPI e DIFAL quando se aplicar.
+                  }
+                </p>
+                <button type="button" class="btn-inline" [disabled]="calculandoImpostos() || isNew()" (click)="recalcularImpostos()" [title]="isNew() ? 'Salve o pedido primeiro' : 'Calcula os impostos com a mesma lógica da emissão real'">
+                  {{ calculandoImpostos() ? 'Calculando...' : 'Recalcular Impostos' }}
+                </button>
+              </div>
+              @if (erroCalculoImpostos()) { <p class="field-error">{{ erroCalculoImpostos() }}</p> }
+
+              @if (impostosReais(); as real) {
                 <div class="form-grid impostos-form-grid">
-                  <div class="field"><label class="label">Produtos</label><input class="input-sm" disabled [value]="prev.valorProdutos | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">Base Cálc. ICMS</label><input class="input-sm" disabled [value]="prev.valorBaseCalculoIcms | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">ICMS</label><input class="input-sm" disabled [value]="prev.valorIcms | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">PIS</label><input class="input-sm" disabled [value]="prev.valorPis | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">COFINS</label><input class="input-sm" disabled [value]="prev.valorCofins | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">Frete</label><input class="input-sm" disabled [value]="prev.valorFrete | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">Seguro</label><input class="input-sm" disabled [value]="prev.valorSeguro | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">Desconto</label><input class="input-sm" disabled [value]="prev.valorDesconto | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">Outras Despesas</label><input class="input-sm" disabled [value]="prev.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2'"/></div>
-                  <div class="field"><label class="label">Aprox. Tributos*</label><input class="input-sm imposto-destaque" disabled [value]="prev.valorAproxTributos | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Produtos</label><input class="input-sm" disabled [value]="real.valorProdutos ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Base Cálc. ICMS</label><input class="input-sm" disabled [value]="real.valorBaseCalculoIcms ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">ICMS</label><input class="input-sm" disabled [value]="real.valorIcms ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">IPI</label><input class="input-sm" disabled [value]="real.valorIpi ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">PIS</label><input class="input-sm" disabled [value]="real.valorPis ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">COFINS</label><input class="input-sm" disabled [value]="real.valorCofins ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  @if (real.valorDifal != null) {
+                    <div class="field"><label class="label">DIFAL</label><input class="input-sm" disabled [value]="real.valorDifal ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">FCP</label><input class="input-sm" disabled [value]="real.valorFcp ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  }
+                  <div class="field"><label class="label">Frete</label><input class="input-sm" disabled [value]="real.valorFrete ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Seguro</label><input class="input-sm" disabled [value]="real.valorSeguro ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Desconto</label><input class="input-sm" disabled [value]="real.valorDesconto ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Outras Despesas</label><input class="input-sm" disabled [value]="real.valorOutrasDespesas ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  <div class="field"><label class="label">Aprox. Tributos*</label><input class="input-sm imposto-destaque" disabled [value]="real.valorAproxTributos ?? 0 | currency:'BRL':'symbol':'1.2-2'"/></div>
                 </div>
+              } @else {
+                @if (previewImpostos(); as prev) {
+                  <div class="form-grid impostos-form-grid">
+                    <div class="field"><label class="label">Produtos</label><input class="input-sm" disabled [value]="prev.valorProdutos | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">Base Cálc. ICMS</label><input class="input-sm" disabled [value]="prev.valorBaseCalculoIcms | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">ICMS</label><input class="input-sm" disabled [value]="prev.valorIcms | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">PIS</label><input class="input-sm" disabled [value]="prev.valorPis | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">COFINS</label><input class="input-sm" disabled [value]="prev.valorCofins | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">Frete</label><input class="input-sm" disabled [value]="prev.valorFrete | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">Seguro</label><input class="input-sm" disabled [value]="prev.valorSeguro | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">Desconto</label><input class="input-sm" disabled [value]="prev.valorDesconto | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">Outras Despesas</label><input class="input-sm" disabled [value]="prev.valorOutrasDespesas | currency:'BRL':'symbol':'1.2-2'"/></div>
+                    <div class="field"><label class="label">Aprox. Tributos*</label><input class="input-sm imposto-destaque" disabled [value]="prev.valorAproxTributos | currency:'BRL':'symbol':'1.2-2'"/></div>
+                  </div>
+                }
               }
             </div>
           }
@@ -1126,6 +1159,7 @@ interface ConfirmState {
     .confirm-title { margin: 0; font-size: 15px; font-weight: 700; color: var(--text); }
     .confirm-msg { margin: 0; font-size: 13.5px; color: var(--text2); }
     .quick-hint { margin: 0; font-size: 12px; color: var(--text2); }
+    .recalcular-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; flex-wrap: wrap; }
     .modal-erro-nfe { max-width: 480px; }
     .erro-nfe-lista { display: flex; flex-direction: column; gap: .625rem; max-height: 340px; overflow-y: auto; }
     .erro-nfe-item { display: flex; flex-direction: column; gap: 4px; padding: .625rem .75rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; }
@@ -1295,6 +1329,12 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly reenviandoHistoricoId = signal<string | null>(null);
   readonly historicoDetalhe = signal<PedidoHistoricoDto | null>(null);
   readonly impostosAbertos = signal(false);
+  // Prévia REAL dos impostos (calculada no backend, mesma lógica da emissão de verdade) —
+  // null até o usuário clicar em "Recalcular Impostos"; qualquer edição no pedido depois
+  // invalida (ver marcarSujo), pra nunca mostrar um número que já não reflete o que está na tela.
+  readonly impostosReais = signal<DocumentoImpostosDto | null>(null);
+  readonly calculandoImpostos = signal(false);
+  readonly erroCalculoImpostos = signal<string | null>(null);
   readonly desvinculando = signal(false);
   readonly showVincularDocumento = signal(false);
   readonly documentoResults = signal<DocumentoDto[]>([]);
@@ -1501,7 +1541,28 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   // diretamente pelo ngModel, sem passar por um signal que dispararia um computed sozinho.
   private _dirty = false;
 
-  marcarSujo(): void { this._dirty = true; }
+  marcarSujo(): void {
+    this._dirty = true;
+    // Qualquer edição invalida a última prévia calculada — evita mostrar um número de imposto
+    // que já não reflete o que está na tela (item removido, alíquota trocada etc.).
+    this.impostosReais.set(null);
+  }
+
+  recalcularImpostos(): void {
+    if (this.isNew() || !this.pedidoId) {
+      this._toast.info('Salve o pedido antes de calcular os impostos.');
+      return;
+    }
+    this.calculandoImpostos.set(true);
+    this.erroCalculoImpostos.set(null);
+    this._pedidoSvc.previewImpostos(this.clienteId, this.pedidoId).subscribe({
+      next: r => { this.impostosReais.set(r); this.calculandoImpostos.set(false); },
+      error: err => {
+        this.calculandoImpostos.set(false);
+        this.erroCalculoImpostos.set(extractErrorMessage(err, 'Erro ao calcular impostos.'));
+      },
+    });
+  }
 
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {

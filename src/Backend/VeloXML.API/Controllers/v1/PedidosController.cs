@@ -19,6 +19,7 @@ using VeloXML.Application.Features.Pedidos.Queries.GetPedidoHistorico;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidoVizinhos;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidos;
 using VeloXML.Application.Features.Pedidos.Queries.GetPedidosResumo;
+using VeloXML.Application.Features.Pedidos.Queries.GetPreviewImpostos;
 using VeloXML.Application.Features.Pedidos.Queries.GetProdutosFrequentes;
 
 namespace VeloXML.API.Controllers.v1;
@@ -139,6 +140,13 @@ public sealed class PedidosController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> EmitirNfe(Guid clienteId, Guid id, CancellationToken ct)
     {
         var result = await mediator.Send(new EmitirNfeFocusCommand(id, clienteId), ct);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:guid}/preview-impostos")]
+    public async Task<IActionResult> PreviewImpostos(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetPreviewImpostosQuery(clienteId, id), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 

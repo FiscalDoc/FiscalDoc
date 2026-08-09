@@ -950,7 +950,8 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .cta-card h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; color: white; }
     .cta-card p  { font-size: 1.05rem; color: oklch(1 0 0 / 0.8); margin-bottom: 2rem; }
     .cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .cta-btns .btn-primary { background: white; color: var(--lg-brand-deep); }
+    .cta-btns .btn-primary { background: white; color: var(--lg-brand); }
+    .cta-btns .btn-primary:hover { filter: none; background: oklch(0.97 0.01 250); }
     .cta-btns .btn-ghost { color: oklch(1 0 0 / 0.85); }
     .cta-btns .btn-ghost:hover { color: white; }
 

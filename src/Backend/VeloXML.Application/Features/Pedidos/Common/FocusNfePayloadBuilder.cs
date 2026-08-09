@@ -36,21 +36,16 @@ internal static class FocusNfePayloadBuilder
         // a soma dos itens ficava em zero, gerando a rejeição "Total do Frete difere do
         // somatório dos itens" mesmo com o valor certo no cabeçalho.
         var pesos = pedido.Itens.Select(i => i.ValorTotal).ToList();
-        var freteItens = DistribuirProporcional(pedido.ValorFrete, pesos);
-        var seguroItens = DistribuirProporcional(pedido.ValorSeguro, pesos);
-        var outrasItens = DistribuirProporcional(pedido.ValorOutrasDespesas, pesos);
+        var freteItens = PedidoFiscalResolver.DistribuirProporcional(pedido.ValorFrete, pesos);
+        var seguroItens = PedidoFiscalResolver.DistribuirProporcional(pedido.ValorSeguro, pesos);
+        var outrasItens = PedidoFiscalResolver.DistribuirProporcional(pedido.ValorOutrasDespesas, pesos);
 
-        // DIFAL (EC 87/2015): operação interestadual destinada a consumidor final — desde 2019
-        // (EC 87/2015 + Convênio ICMS 236/21) a partilha é 100% pro estado de destino, então só
-        // manda o grupo icms_uf_dest quando as duas condições batem. Não depende de o
-        // destinatário ser contribuinte ou não (a partilha vale pros dois casos desde a EC).
-        var ufEmitente = cliente.Estado;
-        var ufDestinatario = destinatario.Estado;
-        var aplicaDifal = pedido.ConsumidorFinal
-            && !string.IsNullOrWhiteSpace(ufEmitente) && !string.IsNullOrWhiteSpace(ufDestinatario)
-            && !string.Equals(ufEmitente, ufDestinatario, StringComparison.OrdinalIgnoreCase);
-        var aliquotaInternaDestino = aplicaDifal && AliquotasEstaduaisIcms.AliquotaInterna.TryGetValue(ufDestinatario!, out var aliq) ? aliq : (decimal?)null;
-        var percentualFcpDestino = aplicaDifal && AliquotasEstaduaisIcms.PercentualFcp.TryGetValue(ufDestinatario!, out var fcp) ? fcp : 0m;
+        var difal = PedidoFiscalResolver.ResolverDifal(cliente, destinatario, pedido);
+        var aplicaDifal = difal.Aplica;
+        var ufEmitente = difal.UfEmitente;
+        var ufDestinatario = difal.UfDestinatario;
+        var aliquotaInternaDestino = difal.AliquotaInternaDestino;
+        var percentualFcpDestino = difal.PercentualFcpDestino;
 
         return new
         {
@@ -112,23 +107,23 @@ internal static class FocusNfePayloadBuilder
                 var valorFreteItem = freteItens[i];
                 var valorSeguroItem = seguroItens[i];
                 var valorOutrasItem = outrasItens[i];
-                // Prioriza o cadastro ATUAL do Produto sobre a "foto" gravada no item quando
-                // ele foi adicionado ao pedido — completar o cadastro fiscal do produto depois
-                // precisa refletir aqui, mesma lógica da validação prévia em
-                // EmitirNfeFocusCommandHandler (que já barra a emissão se faltar isso).
-                var ncm = item.Produto?.Ncm ?? item.Ncm;
-                var cfop = item.Produto?.Cfop ?? item.Cfop;
-                var cstIcms = item.Produto?.CstIcms ?? item.CstIcms;
-                var cstPis = item.Produto?.CstPis ?? item.CstPis;
-                var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
-                var icmsOrigem = item.Produto?.IcmsOrigem ?? item.IcmsOrigem;
-                var aliquotaIcms = item.Produto?.AliquotaIcms ?? item.AliquotaIcms;
-                var aliquotaPis = item.Produto?.AliquotaPis ?? item.AliquotaPis;
-                var aliquotaCofins = item.Produto?.AliquotaCofins ?? item.AliquotaCofins;
-                var ibsCbsCst = item.Produto?.IbsCbsCst ?? item.IbsCbsCst;
-                var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
-                var cstIpi = item.Produto?.CstIpi ?? item.CstIpi;
-                var aliquotaIpi = item.Produto?.AliquotaIpi ?? item.AliquotaIpi;
+                // Fonte única da resolução Produto-x-item e da regra de DIFAL — ver
+                // PedidoFiscalResolver (mesma classe usada pela prévia de impostos, pra nunca
+                // divergir do que é realmente enviado aqui pra Focus).
+                var f = PedidoFiscalResolver.Resolver(item);
+                var ncm = f.Ncm;
+                var cfop = f.Cfop;
+                var cstIcms = f.CstIcms;
+                var cstPis = f.CstPis;
+                var cstCofins = f.CstCofins;
+                var icmsOrigem = f.IcmsOrigem;
+                var aliquotaIcms = f.AliquotaIcms;
+                var aliquotaPis = f.AliquotaPis;
+                var aliquotaCofins = f.AliquotaCofins;
+                var ibsCbsCst = f.IbsCbsCst;
+                var ibsCbsClassificacao = f.IbsCbsClassificacaoTributaria;
+                var cstIpi = f.CstIpi;
+                var aliquotaIpi = f.AliquotaIpi;
 
                 return new
                 {
@@ -225,40 +220,6 @@ internal static class FocusNfePayloadBuilder
 
     private static string? SoDigitos(string? valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : new string(valor.Where(char.IsDigit).ToArray());
-
-    // Distribui "total" proporcionalmente ao peso (valor bruto) de cada item, sempre batendo
-    // EXATO com o total (o resto do arredondamento de centavos vai pro último item que tem
-    // peso, senão a soma fica alguns centavos abaixo do total e a SEFAZ rejeita do mesmo jeito).
-    // Sem peso em nenhum item (ex.: todos a R$ 0), divide igualmente entre todos.
-    private static List<decimal> DistribuirProporcional(decimal total, List<decimal> pesos)
-    {
-        var resultado = new List<decimal>(new decimal[pesos.Count]);
-        if (total <= 0 || pesos.Count == 0) return resultado;
-
-        var somaPesos = pesos.Sum();
-        var baseIgualitaria = somaPesos <= 0;
-        var acumulado = 0m;
-        var ultimoIndiceValido = baseIgualitaria ? pesos.Count - 1 : pesos.FindLastIndex(p => p > 0);
-
-        for (var i = 0; i < pesos.Count; i++)
-        {
-            if (i == ultimoIndiceValido)
-            {
-                resultado[i] = Math.Round(total - acumulado, 2);
-                break;
-            }
-
-            if (!baseIgualitaria && pesos[i] <= 0) continue;
-
-            var parcela = baseIgualitaria
-                ? Math.Round(total / pesos.Count, 2)
-                : Math.Round(total * pesos[i] / somaPesos, 2);
-            resultado[i] = parcela;
-            acumulado += parcela;
-        }
-
-        return resultado;
-    }
 
     // Códigos da SEFAZ pro campo finalidade_emissao: 1=Normal, 2=Complementar, 3=Ajuste,
     // 4=Devolução/Retorno.
