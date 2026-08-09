@@ -36,7 +36,7 @@ interface NavItem {
         <div class="sidebar-backdrop" (click)="mobileMenuOpen.set(false)"></div>
       }
 
-      <aside class="sidebar" [class.open]="mobileMenuOpen()">
+      <aside class="sidebar" [class.open]="mobileMenuOpen()" [class.collapsed]="sidebarCollapsed()">
         <div class="sidebar-header">
           <div class="brand-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -52,9 +52,14 @@ interface NavItem {
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
             </svg>
           </button>
+          <button type="button" class="collapse-toggle-btn" [title]="sidebarCollapsed() ? 'Expandir menu' : 'Recolher menu'" (click)="toggleSidebarCollapsed()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" [class.flipped]="sidebarCollapsed()">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
         </div>
 
-        <button type="button" class="search-trigger" (click)="globalSearch.abrirPalette()">
+        <button type="button" class="search-trigger" [title]="sidebarCollapsed() ? 'Buscar (Ctrl K)' : ''" (click)="globalSearch.abrirPalette()">
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
           </svg>
@@ -66,14 +71,14 @@ interface NavItem {
           @for (item of visibleNavItems; track item.label) {
             @if (item.children) {
               <div class="nav-group">
-                <button type="button" class="nav-item nav-group-toggle" [attr.data-tour]="item.tourId" [class.active]="isGroupActive(item)" (click)="toggleGroup(item.label)">
+                <button type="button" class="nav-item nav-group-toggle" [attr.data-tour]="item.tourId" [class.active]="isGroupActive(item)" [title]="sidebarCollapsed() ? item.label : ''" (click)="onGroupToggleClick(item)">
                   <span class="nav-icon" [innerHTML]="item.icon"></span>
                   <span class="nav-label">{{ item.label }}</span>
                   <svg class="nav-chevron" [class.open]="isGroupExpanded(item)" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                   </svg>
                 </button>
-                @if (isGroupExpanded(item)) {
+                @if (isGroupExpanded(item) && !sidebarCollapsed()) {
                   <div class="nav-subitems">
                     @for (child of item.children; track child.route) {
                       <a [routerLink]="child.route" [attr.data-tour]="child.tourId" routerLinkActive="active" class="nav-item nav-subitem" (click)="mobileMenuOpen.set(false)">
@@ -85,7 +90,7 @@ interface NavItem {
                 }
               </div>
             } @else {
-              <a [routerLink]="item.route" [attr.data-tour]="item.tourId" routerLinkActive="active" class="nav-item" (click)="mobileMenuOpen.set(false)">
+              <a [routerLink]="item.route" [attr.data-tour]="item.tourId" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed() ? item.label : ''" (click)="mobileMenuOpen.set(false)">
                 <span class="nav-icon" [innerHTML]="item.icon"></span>
                 <span class="nav-label">{{ item.label }}</span>
               </a>
@@ -103,11 +108,11 @@ interface NavItem {
             </div>
           }
           <div class="footer-links-row">
-            <a routerLink="/perfil" routerLinkActive="nav-item-active" class="security-link">
+            <a routerLink="/perfil" routerLinkActive="nav-item-active" class="security-link" [title]="sidebarCollapsed() ? 'Segurança' : ''">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
-              Segurança
+              <span class="security-link-label">Segurança</span>
             </a>
             <div class="footer-icons">
               <button type="button" class="novidades-icon-link" [title]="theme.tema() === 'light' ? 'Mudar pro tema escuro' : 'Mudar pro tema claro'" (click)="theme.alternar()">
@@ -144,7 +149,7 @@ interface NavItem {
             </div>
           </div>
           <div class="user-row">
-          <div class="user-info">
+          <div class="user-info" [title]="sidebarCollapsed() ? (auth.currentUser()?.nome ?? '') : ''">
             @if (auth.currentUser()?.avatarUrl) {
               <img class="user-avatar" [src]="userAvatarSrc()" alt="avatar"/>
             } @else {
@@ -290,7 +295,20 @@ interface NavItem {
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
+      transition: width 180ms ease;
     }
+
+    .collapse-toggle-btn {
+      display: none;
+      align-items: center; justify-content: center;
+      width: 24px; height: 24px; flex-shrink: 0;
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text2); cursor: pointer; padding: 0;
+      transition: color 120ms, background 120ms;
+    }
+    .collapse-toggle-btn:hover { color: var(--text); background: var(--bg3); }
+    .collapse-toggle-btn svg { transition: transform 180ms ease; }
+    .collapse-toggle-btn svg.flipped { transform: rotate(180deg); }
 
     .sidebar-header {
       display: flex;
@@ -627,6 +645,34 @@ interface NavItem {
     .btn-whatsapp:hover { opacity: .9; }
     .upgrade-hint { font-size: 12px; color: var(--text3); }
 
+    /* Desktop: sidebar recolhível (só ícones) — em telas menores a sidebar já vira gaveta
+       off-canvas (ver bloco abaixo), então o botão de recolher só faz sentido aqui. */
+    @media (min-width: 1025px) {
+      .collapse-toggle-btn { display: flex; }
+
+      .sidebar.collapsed { width: 64px; }
+      .sidebar.collapsed .sidebar-header { flex-direction: column; gap: 0.5rem; padding: 1rem 0.375rem; }
+      .sidebar.collapsed .brand-name,
+      .sidebar.collapsed .search-trigger span,
+      .sidebar.collapsed .search-trigger kbd,
+      .sidebar.collapsed .nav-label,
+      .sidebar.collapsed .nav-chevron,
+      .sidebar.collapsed .empresa-badge,
+      .sidebar.collapsed .user-details,
+      .sidebar.collapsed .version-row,
+      .sidebar.collapsed .security-link-label {
+        display: none;
+      }
+      .sidebar.collapsed .search-trigger { justify-content: center; padding: 7px; }
+      .sidebar.collapsed .nav-item { justify-content: center; padding: 0.5rem; }
+      .sidebar.collapsed .nav-subitems { padding-left: 0; }
+      .sidebar.collapsed .empresa-badge,
+      .sidebar.collapsed .footer-links-row { justify-content: center; }
+      .sidebar.collapsed .footer-links-row { flex-direction: column; gap: 8px; }
+      .sidebar.collapsed .user-row { justify-content: center; }
+      .sidebar.collapsed .user-info { flex: 0; }
+    }
+
     /* Tablet/iPad e mobile: sidebar vira gaveta (off-canvas) */
     @media (max-width: 1024px) {
       .mobile-menu-btn { display: flex; }
@@ -675,6 +721,10 @@ export class ShellComponent implements OnInit {
   isAdmin = signal(false);
   showUpgradeModal = signal(false);
   mobileMenuOpen = signal(false);
+  // Persistido pra não recolher/expandir sozinho a cada F5 — a mesma escolha do usuário vale
+  // pra próxima visita. Só tem efeito em desktop (ver CSS); em mobile a sidebar já é uma gaveta
+  // off-canvas full-size, então esse estado fica sem uso ali, sem conflito.
+  readonly sidebarCollapsed = signal(localStorage.getItem('vx_sidebar_collapsed') === '1');
   private readonly _expandedGroups = signal<Set<string>>(new Set());
 
   private readonly _whatsappNumber = '5511973982559';
@@ -930,6 +980,26 @@ export class ShellComponent implements OnInit {
       if (next.has(label)) next.delete(label); else next.add(label);
       return next;
     });
+  }
+
+  toggleSidebarCollapsed(): void {
+    this.sidebarCollapsed.update(v => {
+      const next = !v;
+      localStorage.setItem('vx_sidebar_collapsed', next ? '1' : '0');
+      return next;
+    });
+  }
+
+  // Com a sidebar recolhida (só ícones) não tem espaço pra mostrar a lista de subitens de um
+  // grupo — em vez de um flyout, clicar num grupo simplesmente expande a sidebar de volta com
+  // aquele grupo já aberto, mais simples e sem submenu flutuante pra manter.
+  onGroupToggleClick(item: NavItem): void {
+    if (this.sidebarCollapsed()) {
+      this.toggleSidebarCollapsed();
+      this._expandedGroups.update(s => new Set(s).add(item.label));
+      return;
+    }
+    this.toggleGroup(item.label);
   }
 
   isGroupActive(item: NavItem): boolean {
