@@ -64,7 +64,7 @@ type Tab = 'geral' | 'fiscal';
                 <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
                   <label class="label">Status</label>
                   <label class="toggle-row">
-                    <input type="checkbox" [(ngModel)]="form.ativo" style="width:16px;height:16px;accent-color:var(--accent);"/>
+                    <span class="toggle"><input type="checkbox" [(ngModel)]="form.ativo"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
                     Produto ativo
                   </label>
                 </div>
@@ -142,6 +142,14 @@ type Tab = 'geral' | 'fiscal';
               <div class="field">
                 <label class="label">CST COFINS</label>
                 <input class="input" [(ngModel)]="form.cstCofins" placeholder="07" maxlength="2"/>
+              </div>
+              <div class="field">
+                <label class="label">CST IPI (opcional)</label>
+                <input class="input" [(ngModel)]="form.cstIpi" placeholder="Só indústria/importador — deixe vazio se não se aplica" maxlength="2"/>
+              </div>
+              <div class="field">
+                <label class="label">Alíquota IPI (%)</label>
+                <input class="input" type="number" min="0" step="0.01" [(ngModel)]="form.aliquotaIpi"/>
               </div>
               <div class="field col-2">
                 <label class="label">Origem da Mercadoria</label>
@@ -303,6 +311,7 @@ export class ProdutoDetailComponent implements OnInit {
       icmsOrigem: p.icmsOrigem ?? 0,
       ibsCbsCst: p.ibsCbsCst ?? '', ibsCbsClassificacaoTributaria: p.ibsCbsClassificacaoTributaria ?? '',
       valorCusto: p.valorCusto ?? 0, percentualImposto: p.percentualImposto ?? 0,
+      cstIpi: p.cstIpi ?? '', aliquotaIpi: p.aliquotaIpi ?? 0,
     };
   }
 
@@ -344,6 +353,8 @@ export class ProdutoDetailComponent implements OnInit {
       ibsCbsClassificacaoTributaria: this.form.ibsCbsClassificacaoTributaria || undefined,
       valorCusto: +this.form.valorCusto || 0,
       percentualImposto: +this.form.percentualImposto || 0,
+      cstIpi: this.form.cstIpi || undefined,
+      aliquotaIpi: +this.form.aliquotaIpi || 0,
     };
 
     const obs = this.isNew()
@@ -382,6 +393,7 @@ export class ProdutoDetailComponent implements OnInit {
       cstIcms: '', cstPis: '', cstCofins: '', icmsOrigem: 0,
       ibsCbsCst: '', ibsCbsClassificacaoTributaria: '',
       valorCusto: 0, percentualImposto: 0,
+      cstIpi: '', aliquotaIpi: 0,
     };
   }
 }

@@ -13,13 +13,6 @@ export interface LoginResponse {
   tenantId: string;
   plano: string;
   planoExpiracao?: string;
-  requiresTwoFactor?: boolean;
-  twoFactorToken?: string;
-}
-
-export interface Setup2faResponse {
-  secret: string;
-  otpAuthUri: string;
 }
 
 export interface RefreshTokenRequest {

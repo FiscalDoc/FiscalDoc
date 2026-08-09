@@ -23,6 +23,11 @@ public class Produto : BaseEntity, IAuditableEntity
     public string? CstPis { get; set; }
     public string? CstCofins { get; set; }
 
+    // IPI — só relevante pra indústria/importador (a maioria dos clientes do sistema é
+    // comércio/serviço e deixa isso vazio). CST 50-55/99 (saída), alíquota em %.
+    public string? CstIpi { get; set; }
+    public decimal AliquotaIpi { get; set; }
+
     // Origem da mercadoria (tabela oficial SEFAZ, 0-8 — nacional/importada/conteúdo de
     // importação) — vai no campo icms_origem da Focus NFe, separado do CST/CSOSN.
     public int IcmsOrigem { get; set; } = 0;

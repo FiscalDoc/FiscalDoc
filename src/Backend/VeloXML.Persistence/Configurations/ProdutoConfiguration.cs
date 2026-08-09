@@ -31,6 +31,8 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         b.Property(e => e.CstIcms).HasColumnName("cst_icms").HasMaxLength(3);
         b.Property(e => e.CstPis).HasColumnName("cst_pis").HasMaxLength(2);
         b.Property(e => e.CstCofins).HasColumnName("cst_cofins").HasMaxLength(2);
+        b.Property(e => e.CstIpi).HasColumnName("cst_ipi").HasMaxLength(2);
+        b.Property(e => e.AliquotaIpi).HasColumnName("aliquota_ipi").HasPrecision(5, 2).HasDefaultValue(0);
         b.Property(e => e.IcmsOrigem).HasColumnName("icms_origem").HasDefaultValue(0);
         b.Property(e => e.ValorCusto).HasColumnName("valor_custo").HasPrecision(18, 4).HasDefaultValue(0);
         b.Property(e => e.PercentualImposto).HasColumnName("percentual_imposto").HasPrecision(5, 2).HasDefaultValue(0);

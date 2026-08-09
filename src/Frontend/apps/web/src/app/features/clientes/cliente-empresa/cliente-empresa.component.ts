@@ -332,12 +332,7 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .link-ghost:hover { color: var(--accent); text-decoration: underline; }
 
     .section-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-    .toggle { display: inline-flex; cursor: pointer; flex-shrink: 0; }
-    .toggle input { display: none; }
-    .toggle-track { width: 40px; height: 22px; background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; position: relative; transition: background 200ms, border-color 200ms; }
-    .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
-    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--text2); border-radius: 50%; transition: transform 200ms, background 200ms; }
-    .toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); background: #0d0f14; }
+    /* .toggle/.toggle-track/.toggle-thumb agora vive no stylesheet global (styles/main.scss). */
 
     .appkey-box { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
     .appkey-value { font-family: monospace; font-size: 13px; color: var(--accent); flex: 1; word-break: break-all; }

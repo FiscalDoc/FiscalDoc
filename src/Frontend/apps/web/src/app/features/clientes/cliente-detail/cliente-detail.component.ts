@@ -618,12 +618,8 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
     .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
     .btn-sm { padding: .3rem .7rem; font-size: 12px; }
-    .toggle { display: inline-flex; cursor: pointer; flex-shrink: 0; }
-    .toggle input { display: none; }
-    .toggle-track { width: 40px; height: 22px; background: var(--bg3); border: 1px solid var(--border); border-radius: 999px; position: relative; transition: background 200ms, border-color 200ms; }
-    .toggle input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
-    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: var(--text2); border-radius: 50%; transition: transform 200ms, background 200ms; }
-    .toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(18px); background: #0d0f14; }
+    /* .toggle/.toggle-track/.toggle-thumb agora vive no stylesheet global (styles/main.scss) —
+       esse era o padrão original, promovido pra ser usado no sistema inteiro. */
 
     .docs-field { margin-bottom: 1rem; }
     .docs-field:last-child { margin-bottom: 0; }

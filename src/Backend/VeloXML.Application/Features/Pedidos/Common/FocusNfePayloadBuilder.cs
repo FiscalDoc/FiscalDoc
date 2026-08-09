@@ -1,3 +1,4 @@
+using VeloXML.Application.Common;
 using VeloXML.Domain.Entities;
 
 namespace VeloXML.Application.Features.Pedidos.Common;
@@ -38,6 +39,18 @@ internal static class FocusNfePayloadBuilder
         var freteItens = DistribuirProporcional(pedido.ValorFrete, pesos);
         var seguroItens = DistribuirProporcional(pedido.ValorSeguro, pesos);
         var outrasItens = DistribuirProporcional(pedido.ValorOutrasDespesas, pesos);
+
+        // DIFAL (EC 87/2015): operação interestadual destinada a consumidor final — desde 2019
+        // (EC 87/2015 + Convênio ICMS 236/21) a partilha é 100% pro estado de destino, então só
+        // manda o grupo icms_uf_dest quando as duas condições batem. Não depende de o
+        // destinatário ser contribuinte ou não (a partilha vale pros dois casos desde a EC).
+        var ufEmitente = cliente.Estado;
+        var ufDestinatario = destinatario.Estado;
+        var aplicaDifal = pedido.ConsumidorFinal
+            && !string.IsNullOrWhiteSpace(ufEmitente) && !string.IsNullOrWhiteSpace(ufDestinatario)
+            && !string.Equals(ufEmitente, ufDestinatario, StringComparison.OrdinalIgnoreCase);
+        var aliquotaInternaDestino = aplicaDifal && AliquotasEstaduaisIcms.AliquotaInterna.TryGetValue(ufDestinatario!, out var aliq) ? aliq : (decimal?)null;
+        var percentualFcpDestino = aplicaDifal && AliquotasEstaduaisIcms.PercentualFcp.TryGetValue(ufDestinatario!, out var fcp) ? fcp : 0m;
 
         return new
         {
@@ -114,6 +127,8 @@ internal static class FocusNfePayloadBuilder
                 var aliquotaCofins = item.Produto?.AliquotaCofins ?? item.AliquotaCofins;
                 var ibsCbsCst = item.Produto?.IbsCbsCst ?? item.IbsCbsCst;
                 var ibsCbsClassificacao = item.Produto?.IbsCbsClassificacaoTributaria ?? item.IbsCbsClassificacaoTributaria;
+                var cstIpi = item.Produto?.CstIpi ?? item.CstIpi;
+                var aliquotaIpi = item.Produto?.AliquotaIpi ?? item.AliquotaIpi;
 
                 return new
                 {
@@ -155,6 +170,14 @@ internal static class FocusNfePayloadBuilder
                     pis_aliquota = aliquotaPis > 0 ? aliquotaPis : (decimal?)null,
                     cofins_situacao_tributaria = cstCofins,
                     cofins_aliquota = aliquotaCofins > 0 ? aliquotaCofins : (decimal?)null,
+                    // IPI é opcional de propósito — só indústria/importador tributa isso, a
+                    // maioria dos produtos/clientes não tem CST de IPI cadastrado nenhum, e
+                    // nesse caso não manda o grupo (a Focus não exige IPI quando o produto não
+                    // é industrializado). "999" = código de enquadramento "Outros", padrão
+                    // quando não há uma classe específica de enquadramento legal cadastrada.
+                    ipi_situacao_tributaria = string.IsNullOrWhiteSpace(cstIpi) ? null : cstIpi,
+                    ipi_codigo_enquadramento = string.IsNullOrWhiteSpace(cstIpi) ? null : "999",
+                    ipi_aliquota = !string.IsNullOrWhiteSpace(cstIpi) && aliquotaIpi > 0 ? aliquotaIpi : (decimal?)null,
                     // IBS/CBS (reforma tributária, LC 214/2025) — cCST/cClassTrib vêm do cadastro
                     // do produto; as alíquotas do período de teste (2026) são FIXAS por lei (Art.
                     // 343 da LC 214/2025) pra todo mundo, não é dado de cadastro — SEFAZ chega a
@@ -166,6 +189,18 @@ internal static class FocusNfePayloadBuilder
                     ibs_uf_aliquota = ibsCbsCst is not null ? 0.1m : (decimal?)null,
                     ibs_mun_aliquota = ibsCbsCst is not null ? 0m : (decimal?)null,
                     cbs_aliquota = ibsCbsCst is not null ? 0.9m : (decimal?)null,
+
+                    // DIFAL/FCP — só manda o grupo quando a operação é interestadual pra
+                    // consumidor final E temos a alíquota interna do estado de destino
+                    // cadastrada (ver AliquotasEstaduaisIcms — sem isso, prefere NÃO mandar a
+                    // calcular com um valor possivelmente desatualizado).
+                    icms_uf_dest_base_calculo = aplicaDifal && aliquotaInternaDestino.HasValue
+                        ? item.Quantidade * item.PrecoUnitario : (decimal?)null,
+                    icms_uf_dest_percentual_fcp = aplicaDifal && aliquotaInternaDestino.HasValue ? percentualFcpDestino : (decimal?)null,
+                    icms_uf_dest_aliquota_interna = aplicaDifal ? aliquotaInternaDestino : null,
+                    icms_uf_dest_aliquota_interestadual = aplicaDifal && aliquotaInternaDestino.HasValue
+                        ? AliquotasEstaduaisIcms.AliquotaInterestadual(icmsOrigem, ufEmitente!, ufDestinatario!) : (decimal?)null,
+                    icms_uf_dest_percentual_partilha = aplicaDifal && aliquotaInternaDestino.HasValue ? 100m : (decimal?)null,
                 };
             }).ToList(),
 

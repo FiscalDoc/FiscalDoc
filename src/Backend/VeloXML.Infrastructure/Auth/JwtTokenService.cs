@@ -100,54 +100,6 @@ public sealed class JwtTokenService(IOptions<JwtOptions> opts) : ITokenService
         return Convert.ToBase64String(bytes);
     }
 
-    public string GenerateTwoFactorToken(Guid userId, Guid tenantId)
-    {
-        var key   = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Secret));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _opts.Issuer,
-            audience: _opts.Audience,
-            claims: [
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim("tenant_id", tenantId.ToString()),
-                new Claim("2fa_pending", "true"),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            ],
-            expires: DateTime.UtcNow.AddMinutes(5),
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public Guid? GetUserIdFromTwoFactorToken(string token)
-    {
-        var handler = new JwtSecurityTokenHandler();
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opts.Secret));
-
-        try
-        {
-            var principal = handler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            }, out _);
-
-            if (principal.FindFirstValue("2fa_pending") != "true") return null;
-            var sub = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            return Guid.TryParse(sub, out var id) ? id : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     public Guid? GetUserIdFromExpiredToken(string token)
     {
         var handler = new JwtSecurityTokenHandler();

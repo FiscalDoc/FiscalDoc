@@ -10,7 +10,6 @@ public record UsuarioDto(
     string? NomeContador,
     Guid? ClienteId,
     string? NomeCliente,
-    bool TwoFactorHabilitado,
     DateTime CreatedAt,
     DateTime? UltimoAcessoEm,
     string? AvatarUrl = null

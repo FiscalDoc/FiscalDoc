@@ -20,6 +20,8 @@ export interface PedidoItemDto {
   icmsOrigem?: number;
   ibsCbsCst?: string;
   ibsCbsClassificacaoTributaria?: string;
+  cstIpi?: string;
+  aliquotaIpi?: number;
 }
 
 export type FormaPagamento = 'AVista' | 'APrazo';
@@ -86,6 +88,8 @@ export interface PedidoItemInput {
   icmsOrigem?: number;
   ibsCbsCst?: string;
   ibsCbsClassificacaoTributaria?: string;
+  cstIpi?: string;
+  aliquotaIpi?: number;
 }
 
 export interface CreatePedidoRequest {

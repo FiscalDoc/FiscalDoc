@@ -15,9 +15,9 @@ namespace VeloXML.API.Controllers.v1;
 public sealed class DestinatariosController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(Guid clienteId, [FromQuery] string? termo, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    public async Task<IActionResult> GetAll(Guid clienteId, [FromQuery] string? termo, [FromQuery] bool? ativo, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, page, pageSize), ct);
+        var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, ativo, page, pageSize), ct);
         return Ok(result.Value);
     }
 

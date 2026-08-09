@@ -20,6 +20,8 @@ export interface ProdutoDto {
   ibsCbsClassificacaoTributaria?: string;
   valorCusto?: number;
   percentualImposto?: number;
+  cstIpi?: string;
+  aliquotaIpi?: number;
 }
 
 export interface CreateProdutoRequest {
@@ -40,6 +42,8 @@ export interface CreateProdutoRequest {
   ibsCbsClassificacaoTributaria?: string;
   valorCusto?: number;
   percentualImposto?: number;
+  cstIpi?: string;
+  aliquotaIpi?: number;
 }
 
 export interface UpdateProdutoRequest extends CreateProdutoRequest {

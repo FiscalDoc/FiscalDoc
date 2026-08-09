@@ -57,7 +57,7 @@ public sealed class GroqChatService(
             if (!resp.IsSuccessStatusCode)
             {
                 logger.LogWarning("Groq recusou a chamada do assistente: {Status} {Body}", (int)resp.StatusCode, body);
-                return null;
+                throw new AssistenteIndisponivelException($"Groq respondeu {(int)resp.StatusCode}.");
             }
 
             using var doc = JsonDocument.Parse(body);
@@ -77,10 +77,14 @@ public sealed class GroqChatService(
             var texto = message.TryGetProperty("content", out var contentEl) ? contentEl.GetString() : null;
             return new AssistenteResposta(texto, null);
         }
+        catch (AssistenteIndisponivelException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Falha ao chamar o assistente de IA");
-            return null;
+            throw new AssistenteIndisponivelException(ex.Message);
         }
     }
 

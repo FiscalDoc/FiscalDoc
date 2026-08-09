@@ -11,7 +11,7 @@ public sealed class GetDestinatariosQueryHandler(IUnitOfWork uow)
     public async Task<Result<PagedResult<DestinatarioDto>>> Handle(GetDestinatariosQuery request, CancellationToken ct)
     {
         var paged = await uow.Destinatarios.SearchAsync(
-            request.ClienteId, request.Termo, request.Page, request.PageSize, ct);
+            request.ClienteId, request.Termo, request.Ativo, request.Page, request.PageSize, ct);
 
         var dto = PagedResult<DestinatarioDto>.Create(
             paged.Items.Select(CreateDestinatarioCommandHandler.ToDto).ToList(),

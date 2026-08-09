@@ -89,6 +89,8 @@ public sealed class UpdatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 IcmsOrigem = i.IcmsOrigem,
                 IbsCbsCst = i.IbsCbsCst,
                 IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
+                CstIpi = i.CstIpi,
+                AliquotaIpi = i.AliquotaIpi,
             };
         }).ToList();
 

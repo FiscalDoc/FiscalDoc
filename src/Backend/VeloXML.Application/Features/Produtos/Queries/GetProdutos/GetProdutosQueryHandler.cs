@@ -11,7 +11,7 @@ public sealed class GetProdutosQueryHandler(IUnitOfWork uow)
     public async Task<Result<PagedResult<ProdutoDto>>> Handle(GetProdutosQuery request, CancellationToken ct)
     {
         var paged = await uow.Produtos.SearchAsync(
-            request.ClienteId, request.Termo, request.Page, request.PageSize, ct);
+            request.ClienteId, request.Termo, request.Ativo, request.Page, request.PageSize, ct);
 
         var dto = PagedResult<ProdutoDto>.Create(
             paged.Items.Select(CreateProdutoCommandHandler.ToDto).ToList(),

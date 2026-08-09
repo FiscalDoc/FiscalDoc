@@ -8,7 +8,6 @@ export interface UsuarioDto {
   nomeContador?: string;
   clienteId?: string;
   nomeCliente?: string;
-  twoFactorHabilitado: boolean;
   createdAt: string;
   ultimoAcessoEm?: string;
   avatarUrl?: string;

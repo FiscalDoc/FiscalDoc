@@ -201,7 +201,7 @@ internal static class AssistenteAcaoExecutor
     {
         if (string.IsNullOrWhiteSpace(codigo)) return null;
 
-        var result = await mediator.Send(new GetProdutosQuery(clienteId, codigo, 1, 20), ct);
+        var result = await mediator.Send(new GetProdutosQuery(clienteId, codigo, Page: 1, PageSize: 20), ct);
         return result.IsSuccess
             ? result.Value.Items.FirstOrDefault(p => string.Equals(p.Codigo, codigo, StringComparison.OrdinalIgnoreCase))
             : null;
@@ -212,7 +212,7 @@ internal static class AssistenteAcaoExecutor
         var termo = !string.IsNullOrWhiteSpace(cpfCnpj) ? cpfCnpj : razaoSocial;
         if (string.IsNullOrWhiteSpace(termo)) return null;
 
-        var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, 1, 20), ct);
+        var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, Page: 1, PageSize: 20), ct);
         if (!result.IsSuccess) return null;
 
         return !string.IsNullOrWhiteSpace(cpfCnpj)

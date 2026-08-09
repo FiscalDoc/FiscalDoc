@@ -5,5 +5,5 @@ namespace VeloXML.Domain.Interfaces;
 
 public interface ITransportadoraRepository : IRepository<Transportadora>
 {
-    Task<PagedResult<Transportadora>> SearchAsync(Guid clienteId, string? termo, int page, int pageSize, CancellationToken ct = default);
+    Task<PagedResult<Transportadora>> SearchAsync(Guid clienteId, string? termo, bool? ativo, int page, int pageSize, CancellationToken ct = default);
 }

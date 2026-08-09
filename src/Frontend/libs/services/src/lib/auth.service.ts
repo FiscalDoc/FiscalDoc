@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, of, tap } from 'rxjs';
 import { ApiService } from './api.service';
 import {
-  LoginRequest, LoginResponse, CurrentUser, Setup2faResponse,
+  LoginRequest, LoginResponse, CurrentUser,
   SwitchContextRequest, SwitchContextResponse, RestoreAdminContextResponse,
 } from '@veloxml/models';
 
@@ -102,15 +102,6 @@ export class AuthService {
   getToken(): string | null        { return localStorage.getItem(TOKEN_KEY); }
   getRefreshToken(): string | null { return localStorage.getItem(REFRESH_KEY); }
 
-  verify2fa(twoFactorToken: string, code: string): Observable<LoginResponse> {
-    return new Observable(observer => {
-      this._api.post<LoginResponse>('/auth/2fa/verify', { twoFactorToken, code }).subscribe({
-        next: (res) => { this._persistSession(res); observer.next(res); observer.complete(); },
-        error: (err) => observer.error(err),
-      });
-    });
-  }
-
   changePassword(senhaAtual: string, novaSenha: string): Observable<void> {
     return this._api.post<void>('/auth/change-password', { senhaAtual, novaSenha });
   }
@@ -160,14 +151,6 @@ export class AuthService {
         error: (err) => observer.error(err),
       });
     });
-  }
-
-  setup2fa(): Observable<Setup2faResponse> {
-    return this._api.post<Setup2faResponse>('/auth/2fa/setup', {});
-  }
-
-  verifySetup2fa(code: string): Observable<{ message: string }> {
-    return this._api.post<{ message: string }>('/auth/2fa/verify-setup', { code });
   }
 
   restoreSession(): Observable<void> {

@@ -33,6 +33,8 @@ public sealed class UpdateProdutoCommandHandler(IUnitOfWork uow)
         produto.IbsCbsClassificacaoTributaria = request.IbsCbsClassificacaoTributaria;
         produto.ValorCusto = request.ValorCusto;
         produto.PercentualImposto = request.PercentualImposto;
+        produto.CstIpi = request.CstIpi;
+        produto.AliquotaIpi = request.AliquotaIpi;
 
         uow.Produtos.Update(produto);
         await uow.SaveChangesAsync(ct);

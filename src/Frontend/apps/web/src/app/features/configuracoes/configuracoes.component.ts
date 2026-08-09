@@ -99,7 +99,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
             <div class="field field-center">
               <label class="label">Segurança</label>
               <label class="checkbox-label">
-                <input type="checkbox" formControlName="enableSsl" />
+                <span class="toggle"><input type="checkbox" formControlName="enableSsl" /><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
                 Usar SSL/TLS
               </label>
             </div>
@@ -478,7 +478,6 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
     .tag-ok { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; letter-spacing: 0; background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
 
     .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
-    .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
 
     .form-actions { display: flex; justify-content: flex-end; padding-top: 4px; }
 

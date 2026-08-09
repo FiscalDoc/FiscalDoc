@@ -63,6 +63,8 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 IcmsOrigem = i.IcmsOrigem,
                 IbsCbsCst = i.IbsCbsCst,
                 IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
+                CstIpi = i.CstIpi,
+                AliquotaIpi = i.AliquotaIpi,
             };
         }).ToList();
 
@@ -118,7 +120,8 @@ public sealed class CreatePedidoCommandHandler(IUnitOfWork uow, ICurrentUser cur
                 i.Produto?.Cfop ?? i.Cfop, i.Produto?.Ncm ?? i.Ncm, i.AliquotaIcms, i.AliquotaPis, i.AliquotaCofins,
                 i.Produto?.CstIcms ?? i.CstIcms, i.Produto?.CstPis ?? i.CstPis, i.Produto?.CstCofins ?? i.CstCofins,
                 i.Produto?.IcmsOrigem ?? i.IcmsOrigem,
-                i.Produto?.IbsCbsCst ?? i.IbsCbsCst, i.Produto?.IbsCbsClassificacaoTributaria ?? i.IbsCbsClassificacaoTributaria
+                i.Produto?.IbsCbsCst ?? i.IbsCbsCst, i.Produto?.IbsCbsClassificacaoTributaria ?? i.IbsCbsClassificacaoTributaria,
+                i.Produto?.CstIpi ?? i.CstIpi, i.Produto?.AliquotaIpi ?? i.AliquotaIpi
             )).ToList(),
             p.NaturezaOperacao, p.FinalidadeEmissao, p.ModalidadeFrete, p.DataSaida, p.FormaPagamento, p.MeioPagamento, p.InformacoesComplementares,
             p.ConsumidorFinal, p.PresencaComprador, p.ValorFrete, p.ValorSeguro, p.ValorOutrasDespesas,

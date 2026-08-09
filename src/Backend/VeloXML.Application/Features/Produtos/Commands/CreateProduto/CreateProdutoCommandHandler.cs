@@ -30,6 +30,8 @@ public sealed class CreateProdutoCommandHandler(IUnitOfWork uow)
             IbsCbsClassificacaoTributaria = request.IbsCbsClassificacaoTributaria,
             ValorCusto = request.ValorCusto,
             PercentualImposto = request.PercentualImposto,
+            CstIpi = request.CstIpi,
+            AliquotaIpi = request.AliquotaIpi,
         };
 
         await uow.Produtos.AddAsync(produto, ct);
@@ -44,5 +46,5 @@ public sealed class CreateProdutoCommandHandler(IUnitOfWork uow)
         p.AliquotaIcms, p.AliquotaPis, p.AliquotaCofins,
         p.Ativo, p.CreatedAt,
         p.CstIcms, p.CstPis, p.CstCofins, p.IcmsOrigem, p.IbsCbsCst, p.IbsCbsClassificacaoTributaria,
-        p.ValorCusto, p.PercentualImposto);
+        p.ValorCusto, p.PercentualImposto, p.CstIpi, p.AliquotaIpi);
 }

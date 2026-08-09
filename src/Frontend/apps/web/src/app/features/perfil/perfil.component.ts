@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, extractErrorMessage } from '@veloxml/services';
-import { Setup2faResponse } from '@veloxml/models';
 
 @Component({
   selector: 'app-perfil',
@@ -100,61 +99,6 @@ import { Setup2faResponse } from '@veloxml/models';
         </div>
       </div>
 
-      <div class="card section">
-        <h4 class="section-title">Autenticação em Dois Fatores (2FA)</h4>
-        <p class="section-desc">Proteja sua conta com um código TOTP gerado por um aplicativo como Google Authenticator ou Authy.</p>
-
-        @if (!setupData() && !ativado()) {
-          @if (erroSetup()) { <div class="alert-error">{{ erroSetup() }}</div> }
-          <div class="form-actions">
-            <span></span>
-            <button class="btn-primary" [disabled]="carregandoSetup()" (click)="iniciarSetup()">
-              {{ carregandoSetup() ? 'Gerando...' : 'Ativar 2FA' }}
-            </button>
-          </div>
-        }
-
-        @if (setupData(); as sd) {
-          <div class="setup-box">
-            <div class="setup-step">
-              <span class="step-num">1</span>
-              <p>Abra seu aplicativo autenticador e escaneie o QR code ou insira a chave manualmente.</p>
-            </div>
-            <div class="secret-box">
-              <span class="secret-label">Chave secreta:</span>
-              <code class="secret-value">{{ sd.secret }}</code>
-              <button class="copy-btn" (click)="copiarSecret(sd.secret)" [class.copied]="secretCopied()">
-                {{ secretCopied() ? 'Copiado!' : 'Copiar' }}
-              </button>
-            </div>
-            <div class="qr-link-box">
-              <a [href]="sd.otpAuthUri" class="qr-link">Abrir no autenticador</a>
-              <span class="qr-hint">ou use o link acima no autenticador</span>
-            </div>
-
-            <div class="setup-step">
-              <span class="step-num">2</span>
-              <p>Insira o código gerado pelo aplicativo para confirmar a ativação.</p>
-            </div>
-            <div class="verify-row">
-              <input class="input" [(ngModel)]="verifyCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000"/>
-              <button class="btn-primary" [disabled]="!verifyCode || verificando()" (click)="verificarSetup()">
-                {{ verificando() ? 'Verificando...' : 'Confirmar ativação' }}
-              </button>
-            </div>
-            @if (erroVerify()) { <div class="alert-error">{{ erroVerify() }}</div> }
-          </div>
-        }
-
-        @if (ativado()) {
-          <div class="alert-ok">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-            </svg>
-            2FA ativado com sucesso! Sua conta está protegida.
-          </div>
-        }
-      </div>
     </div>
 
     <!-- ── Modal de upgrade de plano ── -->
@@ -251,8 +195,6 @@ import { Setup2faResponse } from '@veloxml/models';
     @media (max-width: 640px) {
       .acesso-card { flex-direction: column; align-items: stretch; }
       .btn-upgrade { align-self: stretch; }
-      .secret-box { flex-direction: column; align-items: stretch; }
-      .verify-row { flex-direction: column; align-items: stretch; }
       .input { width: 100%; box-sizing: border-box; }
       .form-actions { flex-direction: column; align-items: stretch; gap: .5rem; }
       .form-actions .btn-primary { width: 100%; justify-content: center; }
@@ -270,22 +212,6 @@ import { Setup2faResponse } from '@veloxml/models';
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
 
-    .setup-box { display: flex; flex-direction: column; gap: 1rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
-    .setup-step { display: flex; align-items: flex-start; gap: .75rem; }
-    .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #0d0f14; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-    .setup-step p { margin: 0; font-size: 13px; color: var(--text2); }
-
-    .secret-box { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
-    .secret-label { font-size: 11px; color: var(--text2); white-space: nowrap; }
-    .secret-value { font-family: monospace; font-size: 13px; color: var(--accent); flex: 1; word-break: break-all; letter-spacing: 2px; }
-    .copy-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-    .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
-
-    .qr-link-box { display: flex; align-items: center; gap: 10px; font-size: 12px; }
-    .qr-link { color: var(--accent); text-decoration: underline; font-size: 13px; }
-    .qr-hint { color: var(--text2); }
-
-    .verify-row { display: flex; gap: 8px; align-items: center; }
     .input {
       background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
       color: var(--text); padding: .5rem .75rem; font-size: 1.125rem; outline: none; font-family: monospace;
@@ -297,13 +223,6 @@ import { Setup2faResponse } from '@veloxml/models';
 export class PerfilComponent {
   readonly auth = inject(AuthService);
 
-  readonly setupData       = signal<Setup2faResponse | null>(null);
-  readonly carregandoSetup = signal(false);
-  readonly erroSetup       = signal<string | null>(null);
-  readonly verificando     = signal(false);
-  readonly erroVerify      = signal<string | null>(null);
-  readonly ativado         = signal(false);
-  readonly secretCopied    = signal(false);
   readonly showUpgradeModal = signal(false);
 
   readonly alterandoSenha = signal(false);
@@ -312,8 +231,6 @@ export class PerfilComponent {
   senhaAtual = '';
   novaSenha = '';
   confirmarSenha = '';
-
-  verifyCode = '';
 
   private readonly _whatsappNumber = '5511973982559';
   readonly whatsappNumberFormatted = '+55 11 97398-2559';
@@ -358,36 +275,4 @@ export class PerfilComponent {
     });
   }
 
-  iniciarSetup(): void {
-    this.carregandoSetup.set(true);
-    this.erroSetup.set(null);
-    this.auth.setup2fa().subscribe({
-      next: data => { this.setupData.set(data); this.carregandoSetup.set(false); },
-      error: () => { this.erroSetup.set('Erro ao iniciar setup do 2FA.'); this.carregandoSetup.set(false); },
-    });
-  }
-
-  verificarSetup(): void {
-    if (!this.verifyCode || this.verificando()) return;
-    this.verificando.set(true);
-    this.erroVerify.set(null);
-    this.auth.verifySetup2fa(this.verifyCode).subscribe({
-      next: () => {
-        this.verificando.set(false);
-        this.setupData.set(null);
-        this.ativado.set(true);
-      },
-      error: () => {
-        this.verificando.set(false);
-        this.erroVerify.set('Código inválido ou expirado. Tente novamente.');
-      },
-    });
-  }
-
-  copiarSecret(secret: string): void {
-    navigator.clipboard.writeText(secret).then(() => {
-      this.secretCopied.set(true);
-      setTimeout(() => this.secretCopied.set(false), 2000);
-    });
-  }
 }

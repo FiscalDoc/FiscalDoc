@@ -34,6 +34,12 @@ import { DestinatarioDto } from '@veloxml/models';
           <button class="btn-primary" (click)="abrirDestinatario('novo')">+ Novo Cliente</button>
         </div>
 
+        <div class="filter-bar">
+          <button class="filter-btn" [class.active]="filtroAtivo() === null" (click)="filtrarAtivo(null)">Todos</button>
+          <button class="filter-btn" [class.active]="filtroAtivo() === true" (click)="filtrarAtivo(true)">Ativos</button>
+          <button class="filter-btn" [class.active]="filtroAtivo() === false" (click)="filtrarAtivo(false)">Inativos</button>
+        </div>
+
         @if (loading()) {
           <div class="empty">Carregando...</div>
         } @else if (destinatarios().length === 0) {
@@ -87,6 +93,10 @@ import { DestinatarioDto } from '@veloxml/models';
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
     .empty p { margin: 0 0 1rem; }
     .btn-ghost-sm { background: none; border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .45rem .875rem; font-size: 12.5px; cursor: pointer; }
+    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .875rem; }
+    .filter-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); border-radius: 20px; padding: 4px 14px; font-size: 12px; cursor: pointer; }
+    .filter-btn:hover { border-color: var(--text2); color: var(--text); }
+    .filter-btn.active { background: var(--accent); color: #0d0f14; border-color: var(--accent); font-weight: 600; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .table th { text-align: left; color: var(--text2); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
     .table td { padding: 10px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
@@ -120,6 +130,7 @@ export class DestinatariosListComponent implements OnInit {
 
   readonly destinatarios = signal<DestinatarioDto[]>([]);
   readonly loading       = signal(false);
+  readonly filtroAtivo   = signal<boolean | null>(null);
   termo = '';
 
   ngOnInit(): void {
@@ -129,9 +140,15 @@ export class DestinatariosListComponent implements OnInit {
 
   goBack(): void { this._router.navigate(['/clientes', this.clienteId]); }
 
+  filtrarAtivo(v: boolean | null): void {
+    this.filtroAtivo.set(v);
+    this.buscar();
+  }
+
   buscar(): void {
     this.loading.set(true);
-    this._destSvc.getAll(this.clienteId, { termo: this.termo }).subscribe({
+    const ativo = this.filtroAtivo();
+    this._destSvc.getAll(this.clienteId, { termo: this.termo, ativo: ativo ?? undefined }).subscribe({
       next: r => { this.destinatarios.set(r.items as DestinatarioDto[]); this.loading.set(false); },
       error: () => this.loading.set(false),
     });

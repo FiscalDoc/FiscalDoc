@@ -7,6 +7,7 @@ namespace VeloXML.Application.Features.Produtos.Queries.GetProdutos;
 public record GetProdutosQuery(
     Guid ClienteId,
     string? Termo,
+    bool? Ativo = null,
     int Page = 1,
     int PageSize = 20
 ) : IRequest<Result<PagedResult<ProdutoDto>>>;

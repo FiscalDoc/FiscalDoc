@@ -38,6 +38,8 @@ public sealed class DuplicarPedidoCommandHandler(IUnitOfWork uow, ICurrentUser c
             IcmsOrigem = i.IcmsOrigem,
             IbsCbsCst = i.IbsCbsCst,
             IbsCbsClassificacaoTributaria = i.IbsCbsClassificacaoTributaria,
+            CstIpi = i.CstIpi,
+            AliquotaIpi = i.AliquotaIpi,
         }).ToList();
 
         // Numero é gerado pelo sequence do banco (ValueGeneratedOnAdd) — nunca copiado do original.

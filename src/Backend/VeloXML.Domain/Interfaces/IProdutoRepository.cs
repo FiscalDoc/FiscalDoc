@@ -5,7 +5,7 @@ namespace VeloXML.Domain.Interfaces;
 
 public interface IProdutoRepository : IRepository<Produto>
 {
-    Task<PagedResult<Produto>> SearchAsync(Guid clienteId, string? termo, int page, int pageSize, CancellationToken ct = default);
+    Task<PagedResult<Produto>> SearchAsync(Guid clienteId, string? termo, bool? ativo, int page, int pageSize, CancellationToken ct = default);
 
     // PedidoItem.ProdutoId é Restrict (nunca Cascade) — um produto usado em qualquer pedido,
     // mesmo antigo/cancelado, não pode ser excluído no banco. Checado antes de tentar apagar

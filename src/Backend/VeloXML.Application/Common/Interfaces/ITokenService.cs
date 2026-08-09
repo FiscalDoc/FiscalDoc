@@ -13,6 +13,4 @@ public interface ITokenService
 
     string GenerateRefreshToken();
     Guid? GetUserIdFromExpiredToken(string token);
-    string GenerateTwoFactorToken(Guid userId, Guid tenantId);
-    Guid? GetUserIdFromTwoFactorToken(string token);
 }

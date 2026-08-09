@@ -28,7 +28,7 @@ CT-e, MDF-e, NFS-e) de múltiplos clientes em uma única plataforma.
 
 - Backend: ASP.NET Core 10, PostgreSQL, Redis, MinIO (object storage)
 - Frontend: Angular 19 (standalone components, signals)
-- Autenticação: JWT + Refresh Token + 2FA (TOTP)
+- Autenticação: JWT + Refresh Token
 - Arquitetura: Clean Architecture + CQRS (MediatR)
 
 ## Planos

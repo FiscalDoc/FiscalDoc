@@ -34,7 +34,6 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUser, CurrentUserService>();
         services.AddScoped<ICurrentTenant, CurrentTenantService>();
         services.AddScoped<ITokenService, JwtTokenService>();
-        services.AddSingleton<ITotpService, TotpService>();
         services.AddSingleton<Storage.DocumentoDownloadTokenService>();
 
         // "Storage:Provider" ausente/"Minio" mantém o comportamento de sempre (dev local,

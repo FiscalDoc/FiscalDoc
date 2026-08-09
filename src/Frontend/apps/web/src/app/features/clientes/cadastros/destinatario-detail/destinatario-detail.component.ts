@@ -84,7 +84,7 @@ type Tab = 'cadastro' | 'endereco';
                 <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
                   <label class="label">Status</label>
                   <label class="toggle-row">
-                    <input type="checkbox" [(ngModel)]="form.ativo" style="width:16px;height:16px;accent-color:var(--accent);"/>
+                    <span class="toggle"><input type="checkbox" [(ngModel)]="form.ativo"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
                     Cliente ativo
                   </label>
                 </div>

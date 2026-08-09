@@ -59,11 +59,23 @@ public sealed class EnviarMensagemAssistenteCommandHandler(IUnitOfWork uow, IAss
 
         for (var rodada = 0; rodada < MaxRodadasFerramentas; rodada++)
         {
-            var resposta = await chat.EnviarAsync(systemPrompt, mensagens, ferramentas, ct);
+            AssistenteResposta? resposta;
+            try
+            {
+                resposta = await chat.EnviarAsync(systemPrompt, mensagens, ferramentas, ct);
+            }
+            catch (AssistenteIndisponivelException)
+            {
+                // Chave configurada, mas a chamada em si falhou agora (rate limit, timeout,
+                // erro do provedor) — diferente de "nunca configuraram", não adianta mandar o
+                // usuário pra tela de Configurações, o problema é passageiro.
+                return Result.Failure<string>(ResultError.Validation(
+                    "Assistente", "O assistente está temporariamente indisponível — tente novamente em alguns instantes."));
+            }
 
             if (resposta is null)
                 return Result.Failure<string>(ResultError.Validation(
-                    "Assistente", "O assistente ainda não está configurado ou está indisponível no momento. Peça pro Administrador configurar em Configurações."));
+                    "Assistente", "O assistente ainda não está configurado. Peça pro Administrador configurar em Configurações."));
 
             if (resposta.ChamadaFerramenta is null)
                 return Result.Success(resposta.Texto ?? "");

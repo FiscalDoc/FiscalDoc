@@ -84,7 +84,7 @@ type Tab = 'cadastro' | 'endereco' | 'integracao';
                 <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
                   <label class="label">Status</label>
                   <label class="toggle-row">
-                    <input type="checkbox" [(ngModel)]="form.ativo" style="width:16px;height:16px;accent-color:var(--accent);"/>
+                    <span class="toggle"><input type="checkbox" [(ngModel)]="form.ativo"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
                     Transportadora ativa
                   </label>
                 </div>
@@ -141,7 +141,7 @@ type Tab = 'cadastro' | 'endereco' | 'integracao';
             <div class="form-grid">
               <div class="field col-2" style="flex-direction:row;align-items:center;gap:8px;">
                 <label class="toggle-row" style="margin-top:0;">
-                  <input type="checkbox" [(ngModel)]="form.webhookAtivo" style="width:16px;height:16px;accent-color:var(--accent);"/>
+                  <span class="toggle"><input type="checkbox" [(ngModel)]="form.webhookAtivo"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
                   Enviar XML automaticamente para esta transportadora
                 </label>
               </div>

@@ -17,11 +17,17 @@ public record AssistenteResposta(string? Texto, ChatToolCall? ChamadaFerramenta)
 
 public interface IAssistenteChatService
 {
-    // Retorna null quando a chave não está configurada ou a chamada falha — o chamador decide
-    // a mensagem de erro amigável, esse serviço só sabe "deu certo ou não".
+    // Retorna null SÓ quando a chave não está configurada (estado esperado, não é erro) — pra
+    // falha de verdade (Groq recusou a chamada, timeout, exceção) usa AssistenteIndisponivelException,
+    // porque "não configurado" e "configurado mas falhou agora" pedem mensagens bem diferentes
+    // pro usuário (um aponta pro Administrador configurar, o outro só pede pra tentar de novo).
     Task<AssistenteResposta?> EnviarAsync(
         string systemPrompt,
         IReadOnlyList<ChatMensagem> historico,
         IReadOnlyList<AssistenteFerramenta>? ferramentas = null,
         CancellationToken ct = default);
 }
+
+// Chave configurada, mas a chamada em si falhou (Groq recusou, timeout, erro de rede etc.) —
+// diferente de "não configurado", que é um estado esperado e não uma falha.
+public sealed class AssistenteIndisponivelException(string motivo) : Exception(motivo);

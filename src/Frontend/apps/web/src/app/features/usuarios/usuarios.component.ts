@@ -56,7 +56,6 @@ import { UsuarioDto } from '@veloxml/models';
             <th>Perfil</th>
             <th>Contador</th>
             <th>Status</th>
-            <th>2FA</th>
             <th>Cadastro</th>
           </tr>
         </thead>
@@ -82,13 +81,6 @@ import { UsuarioDto } from '@veloxml/models';
                 <span class="badge" [class.badge-green]="u.ativo" [class.badge-red]="!u.ativo">
                   {{ u.ativo ? 'Ativo' : 'Inativo' }}
                 </span>
-              </td>
-              <td>
-                @if (u.twoFactorHabilitado) {
-                  <span class="badge badge-green">Ativo</span>
-                } @else {
-                  <span class="cell-muted">—</span>
-                }
               </td>
               <td class="cell-muted">{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
             </tr>

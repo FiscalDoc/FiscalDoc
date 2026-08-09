@@ -11,7 +11,7 @@ public sealed class GetTransportadorasQueryHandler(IUnitOfWork uow)
     public async Task<Result<PagedResult<TransportadoraDto>>> Handle(GetTransportadorasQuery request, CancellationToken ct)
     {
         var paged = await uow.Transportadoras.SearchAsync(
-            request.ClienteId, request.Termo, request.Page, request.PageSize, ct);
+            request.ClienteId, request.Termo, request.Ativo, request.Page, request.PageSize, ct);
 
         var dto = PagedResult<TransportadoraDto>.Create(
             paged.Items.Select(CreateTransportadoraCommandHandler.ToDto).ToList(),

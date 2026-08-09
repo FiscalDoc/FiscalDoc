@@ -21,7 +21,9 @@ public record PedidoItemDto(
     string? CstCofins,
     int IcmsOrigem,
     string? IbsCbsCst,
-    string? IbsCbsClassificacaoTributaria
+    string? IbsCbsClassificacaoTributaria,
+    string? CstIpi = null,
+    decimal AliquotaIpi = 0
 );
 
 public record PedidoDto(

@@ -59,7 +59,7 @@ internal static class AssistenteConsultaExecutor
     private static async Task<string> BuscarProdutosAsync(IMediator mediator, JsonElement root, Guid clienteId, CancellationToken ct)
     {
         var termo = Texto(root, "termo") ?? "";
-        var result = await mediator.Send(new GetProdutosQuery(clienteId, termo, 1, 10), ct);
+        var result = await mediator.Send(new GetProdutosQuery(clienteId, termo, Page: 1, PageSize: 10), ct);
         if (!result.IsSuccess || result.Value.Items.Count == 0)
             return $"Nenhum produto encontrado pra \"{termo}\".";
 
@@ -70,7 +70,7 @@ internal static class AssistenteConsultaExecutor
     private static async Task<string> BuscarDestinatariosAsync(IMediator mediator, JsonElement root, Guid clienteId, CancellationToken ct)
     {
         var termo = Texto(root, "termo") ?? "";
-        var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, 1, 10), ct);
+        var result = await mediator.Send(new GetDestinatariosQuery(clienteId, termo, Page: 1, PageSize: 10), ct);
         if (!result.IsSuccess || result.Value.Items.Count == 0)
             return $"Nenhum destinatário encontrado pra \"{termo}\".";
 

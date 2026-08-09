@@ -122,7 +122,7 @@ type Tab = 'geral' | 'acesso';
                   <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
                     <label class="label">Status</label>
                     <label class="toggle-row">
-                      <input type="checkbox" formControlName="ativo" style="width:16px;height:16px;accent-color:var(--accent);" />
+                      <span class="toggle"><input type="checkbox" formControlName="ativo" /><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
                       Usuário ativo
                     </label>
                   </div>
@@ -138,12 +138,6 @@ type Tab = 'geral' | 'acesso';
                 <div>
                   <span class="info-label">Último acesso</span>
                   {{ usuario()?.ultimoAcessoEm ? (usuario()!.ultimoAcessoEm | date:'dd/MM/yyyy HH:mm') : 'Nunca acessou' }}
-                </div>
-                <div>
-                  <span class="info-label">Autenticação em Dois Fatores</span>
-                  <span class="badge" [class.badge-green]="usuario()?.twoFactorHabilitado" [class.badge-gray]="!usuario()?.twoFactorHabilitado">
-                    {{ usuario()?.twoFactorHabilitado ? 'Ativo' : 'Não configurado' }}
-                  </span>
                 </div>
                 <div>
                   <span class="info-label">Cadastrado em</span>

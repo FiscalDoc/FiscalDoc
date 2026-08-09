@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VeloXML.Application.Common;
 using VeloXML.Application.Common.Interfaces;
 using VeloXML.Application.Features.Pedidos.Common;
 using VeloXML.Domain.Entities;
@@ -81,6 +82,7 @@ public sealed class EmitirNfeFocusCommandHandler(
             var cstIcms = item.Produto?.CstIcms ?? item.CstIcms;
             var cstPis = item.Produto?.CstPis ?? item.CstPis;
             var cstCofins = item.Produto?.CstCofins ?? item.CstCofins;
+            var cstIpi = item.Produto?.CstIpi ?? item.CstIpi;
 
             if (string.IsNullOrWhiteSpace(ncm))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
@@ -96,13 +98,40 @@ public sealed class EmitirNfeFocusCommandHandler(
                     $"precisa ter {tamanhoIcmsEsperado} dígitos numéricos, já que a empresa é do regime " +
                     $"{(regimeNormal ? "Normal" : "Simples Nacional/MEI")}. Corrija no cadastro do produto."));
 
+            // Não basta o tamanho bater — precisa ser um código que realmente existe na tabela
+            // oficial. "99" tem 2 dígitos mas não é CST de ICMS válido, por exemplo.
+            if (!CodigosFiscais.EhCstIcmsOuCsosnValido(cstIcms, regimeNormal))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    $"{prefixo}.cst_icms",
+                    $"O produto \"{item.Descricao}\" tem um {tipoIcmsEsperado} de ICMS que não existe na tabela oficial (\"{cstIcms}\") — corrija no cadastro do produto."));
+
             if (!CodigoValido(cstPis, 2))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
                     $"{prefixo}.cst_pis", $"O produto \"{item.Descricao}\" tem um CST de PIS inválido (\"{cstPis}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
+            if (!CodigosFiscais.CstPisCofinsValidos.Contains(cstPis!))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    $"{prefixo}.cst_pis", $"O produto \"{item.Descricao}\" tem um CST de PIS que não existe na tabela oficial (\"{cstPis}\"). Corrija no cadastro do produto."));
 
             if (!CodigoValido(cstCofins, 2))
                 return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
                     $"{prefixo}.cst_cofins", $"O produto \"{item.Descricao}\" tem um CST de COFINS inválido (\"{cstCofins}\") — precisa ter 2 dígitos numéricos (ex.: 07, 99). Corrija no cadastro do produto."));
+            if (!CodigosFiscais.CstPisCofinsValidos.Contains(cstCofins!))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    $"{prefixo}.cst_cofins", $"O produto \"{item.Descricao}\" tem um CST de COFINS que não existe na tabela oficial (\"{cstCofins}\"). Corrija no cadastro do produto."));
+
+            // IPI é opcional — só valida se o produto tiver um CST de IPI cadastrado (indústria/
+            // importador); a maioria dos clientes é comércio/serviço e deixa isso vazio de propósito.
+            if (!string.IsNullOrWhiteSpace(cstIpi) && !CodigosFiscais.CstIpiSaidaValidos.Contains(cstIpi))
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation(
+                    $"{prefixo}.cst_ipi", $"O produto \"{item.Descricao}\" tem um CST de IPI que não existe na tabela oficial de saída (\"{cstIpi}\") — precisa ser 50, 51, 52, 53, 54, 55 ou 99. Corrija no cadastro do produto."));
+
+            var erroCfopUf = CodigosFiscais.ValidarCfopUf(cfop, cliente.Estado, pedido.Destinatario.Estado);
+            if (erroCfopUf is not null)
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation($"{prefixo}.cfop", $"O produto \"{item.Descricao}\": {erroCfopUf}"));
+
+            var erroCstCfop = CodigosFiscais.ValidarCstCfop(cfop, cstIcms, regimeNormal);
+            if (erroCstCfop is not null)
+                return Result.Failure<NfeEmissaoDto>(ResultError.Validation($"{prefixo}.cfop", $"O produto \"{item.Descricao}\": {erroCstCfop}"));
 
             if (regimeNormalExigeIbsCbs)
             {

@@ -20,7 +20,9 @@ public record CreatePedidoItemInput(
     string? CstCofins = null,
     int IcmsOrigem = 0,
     string? IbsCbsCst = null,
-    string? IbsCbsClassificacaoTributaria = null
+    string? IbsCbsClassificacaoTributaria = null,
+    string? CstIpi = null,
+    decimal AliquotaIpi = 0
 );
 
 public record CreatePedidoCommand(

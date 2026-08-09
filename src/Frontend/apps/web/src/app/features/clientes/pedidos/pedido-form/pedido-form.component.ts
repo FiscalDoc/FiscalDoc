@@ -2,7 +2,7 @@ import { Component, HostListener, inject, OnDestroy, OnInit, signal, computed } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 
@@ -335,7 +335,10 @@ interface ConfirmState {
           </div>
           <div class="field col-2">
             <label class="label">Natureza da Operação *</label>
-            <input class="input" [disabled]="readonly()" [ngModel]="form.naturezaOperacao" (ngModelChange)="form.naturezaOperacao = $event; marcarSujo()" placeholder="Venda de mercadoria"/>
+            <input class="input" list="naturezaOperacaoOpcoes" [disabled]="readonly()" [ngModel]="form.naturezaOperacao" (ngModelChange)="form.naturezaOperacao = $event; marcarSujo()" placeholder="Venda de mercadoria"/>
+            <datalist id="naturezaOperacaoOpcoes">
+              @for (op of naturezasOperacaoComuns; track op) { <option [value]="op"></option> }
+            </datalist>
           </div>
         </div>
 
@@ -411,7 +414,7 @@ interface ConfirmState {
           <div class="field" style="justify-content:flex-end;padding-bottom:2px;">
             <label class="label">Consumidor Final *</label>
             <label class="toggle-row">
-              <input type="checkbox" [disabled]="readonly()" [ngModel]="form.consumidorFinal" (ngModelChange)="form.consumidorFinal = $event; marcarSujo()" style="width:16px;height:16px;accent-color:var(--accent);"/>
+              <span class="toggle"><input type="checkbox" [disabled]="readonly()" [ngModel]="form.consumidorFinal" (ngModelChange)="form.consumidorFinal = $event; marcarSujo()"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span>
               Venda para consumidor final
             </label>
           </div>
@@ -583,7 +586,7 @@ interface ConfirmState {
                     @if (produtoDropdownIndex() === i && !readonly()) {
                       <div class="combo-dropdown">
                         @for (p of produtoResults(); track p.id; let idx = $index) {
-                          <div class="combo-item" [class.combo-item-active]="produtoHighlight() === idx" (mousedown)="selecionarProduto(i, p)" (mouseenter)="produtoHighlight.set(idx)">
+                          <div class="combo-item" [class.combo-item-active]="produtoHighlight() === idx" (mousedown)="selecionarProdutoComCheck(i, p)" (mouseenter)="produtoHighlight.set(idx)">
                             {{ p.codigo }} — {{ p.descricao }}
                             @if (!p.ncm || !p.cfop) {
                               <span class="combo-item-badge" title="Cadastro fiscal incompleto — falta NCM e/ou CFOP">⚠ incompleto</span>
@@ -630,11 +633,13 @@ interface ConfirmState {
                         </div>
                         <div class="field">
                           <label class="label">CFOP</label>
-                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cfop" (ngModelChange)="item.cfop = $event; marcarSujo()"/>
+                          <input class="input-sm" [class.error]="erroCfop(item)" [disabled]="readonly()" [ngModel]="item.cfop" (ngModelChange)="item.cfop = $event; marcarSujo(); validarLinha(i)"/>
+                          @if (erroCfop(item)) { <span class="field-error">{{ erroCfop(item) }}</span> }
                         </div>
                         <div class="field">
                           <label class="label">NCM</label>
-                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.ncm" (ngModelChange)="item.ncm = $event; marcarSujo()"/>
+                          <input class="input-sm" [class.error]="erroNcm(item)" [disabled]="readonly()" [ngModel]="item.ncm" (ngModelChange)="item.ncm = $event; marcarSujo(); validarLinha(i)"/>
+                          @if (erroNcm(item)) { <span class="field-error">{{ erroNcm(item) }}</span> }
                         </div>
                         <div class="field">
                           <label class="label">CST/CSOSN ICMS</label>
@@ -647,6 +652,10 @@ interface ConfirmState {
                         <div class="field">
                           <label class="label">CST COFINS</label>
                           <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cstCofins" (ngModelChange)="item.cstCofins = $event; marcarSujo()"/>
+                        </div>
+                        <div class="field">
+                          <label class="label">CST IPI (opcional)</label>
+                          <input class="input-sm" [disabled]="readonly()" [ngModel]="item.cstIpi" (ngModelChange)="item.cstIpi = $event; marcarSujo()" placeholder="Só indústria/importador"/>
                         </div>
                         <div class="field">
                           <label class="label">CST IBS/CBS</label>
@@ -998,6 +1007,7 @@ interface ConfirmState {
     .expand-btn:hover { color: var(--accent); }
     .detail-row td { background: var(--bg3); }
     .detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .625rem; padding: 4px 0; }
+    .field-error { font-size: 11px; color: var(--red); }
     .detail-grid .field-full { grid-column: 1 / -1; padding-top: 2px; border-top: 1px dashed var(--border); margin-top: 4px; }
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0,196,140,.1); border: 1px solid rgba(0,196,140,.3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
@@ -1166,9 +1176,18 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   private readonly _route     = inject(ActivatedRoute);
   private readonly _router    = inject(Router);
   private readonly _toast     = inject(ToastService);
+  private readonly _confirm   = inject(ConfirmDialogService);
 
   private clienteId = '';
   private pedidoId  = '';
+
+  readonly naturezasOperacaoComuns = [
+    'Venda de mercadoria', 'Venda de mercadoria adquirida ou recebida de terceiros',
+    'Devolução de venda', 'Devolução de compra', 'Transferência de mercadoria',
+    'Remessa para conserto', 'Retorno de mercadoria remetida para conserto',
+    'Remessa em bonificação, doação ou brinde', 'Remessa para demonstração',
+    'Remessa para industrialização', 'Prestação de serviço',
+  ];
 
   readonly isNew    = signal(true);
   // Só fica true durante a busca do pedido disparada pelo paramMap (carga inicial ou troca via
@@ -1305,6 +1324,10 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
 
   // Destinatário: busca server-side em vez de carregar tudo de uma vez.
   destinatarioSearch = '';
+  // UF do destinatário selecionado — só pra sugerir o prefixo certo do CFOP (5 mesmo estado,
+  // 6 interestadual) quando o produto ainda não tem CFOP cadastrado. Não é persistido em
+  // nenhum lugar, é só um auxiliar de UI.
+  destinatarioEstadoAtual: string | null | undefined = undefined;
   readonly destinatarioResults = signal<DestinatarioDto[]>([]);
   readonly destinatarioDropdownOpen = signal(false);
   // Índice destacado pra navegação por teclado (seta cima/baixo + Enter) — -1 é "nenhum".
@@ -1559,6 +1582,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       icmsOrigem: i.icmsOrigem,
       ibsCbsCst: i.ibsCbsCst,
       ibsCbsClassificacaoTributaria: i.ibsCbsClassificacaoTributaria,
+      cstIpi: i.cstIpi,
+      aliquotaIpi: i.aliquotaIpi,
     })));
     this.produtoBusca = p.itens.map(i => i.descricao);
     this._dirty = false;
@@ -1790,6 +1815,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     this.form.destinatarioId = d.id;
     this.destinatarioSearch = d.razaoSocial;
     this.destinatarioDropdownOpen.set(false);
+    this.destinatarioEstadoAtual = d.estado;
     this.marcarSujo();
     this._carregarProdutosFrequentes(d.id);
   }
@@ -1915,10 +1941,24 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     } else if (event.key === 'Enter') {
       const idx = this.produtoHighlight() >= 0 ? this.produtoHighlight() : 0;
       const alvo = results[idx];
-      if (alvo) { event.preventDefault(); this.selecionarProduto(i, alvo); }
+      if (alvo) { event.preventDefault(); this.selecionarProdutoComCheck(i, alvo); }
     } else if (event.key === 'Escape') {
       this.produtoDropdownIndex.set(null);
     }
+  }
+
+  // Usado pela busca (clique/Enter no dropdown) — diferente de selecionarProduto() puro, que
+  // também é chamado depois de cadastrar um produto rápido (aí não faz sentido perguntar, o
+  // hint "complete depois" já deixou claro que vai faltar NCM/CFOP).
+  async selecionarProdutoComCheck(i: number, prod: ProdutoDto): Promise<void> {
+    if (!prod.ncm || !prod.cfop) {
+      const ok = await this._confirm.ask(
+        `O produto "${prod.descricao}" está com cadastro fiscal incompleto (falta NCM e/ou CFOP) — a emissão da NF-e vai falhar até isso ser completado. Adicionar ao pedido assim mesmo?`,
+        { confirmLabel: 'Adicionar assim mesmo', destrutivo: false },
+      );
+      if (!ok) return;
+    }
+    this.selecionarProduto(i, prod);
   }
 
   selecionarProduto(i: number, prod: ProdutoDto): void {
@@ -1929,7 +1969,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       descricao: prod.descricao,
       unidade: prod.unidade,
       precoUnitario: prod.precoUnitario,
-      cfop: prod.cfop,
+      cfop: prod.cfop || this.sugerirCfop(),
       ncm: prod.ncm,
       aliquotaIcms: prod.aliquotaIcms,
       aliquotaPis: prod.aliquotaPis,
@@ -1940,8 +1980,35 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       icmsOrigem: prod.icmsOrigem,
       ibsCbsCst: prod.ibsCbsCst,
       ibsCbsClassificacaoTributaria: prod.ibsCbsClassificacaoTributaria,
+      cstIpi: prod.cstIpi,
+      aliquotaIpi: prod.aliquotaIpi,
     }));
     this.produtoDropdownIndex.set(null);
+  }
+
+  // Sugestão de CFOP por natureza da operação, só pra dar um ponto de partida quando o produto
+  // ainda não tem CFOP cadastrado — nunca sobrescreve o que já existe, e o usuário pode trocar
+  // livremente depois. Mesma lista/lógica do backend (CodigosFiscais.SugerirCfop), duplicada
+  // aqui de propósito por ser só uma conveniência de UI, não uma regra que precisa ficar 100%
+  // sincronizada com o servidor.
+  private static readonly SUFIXO_CFOP_POR_NATUREZA: Record<string, string> = {
+    'Venda de mercadoria': '102',
+    'Venda de mercadoria adquirida ou recebida de terceiros': '102',
+    'Devolução de compra': '202',
+    'Transferência de mercadoria': '152',
+    'Remessa para conserto': '915',
+    'Retorno de mercadoria remetida para conserto': '916',
+    'Remessa em bonificação, doação ou brinde': '910',
+    'Remessa para demonstração': '912',
+    'Remessa para industrialização': '901',
+  };
+
+  private sugerirCfop(): string | undefined {
+    const sufixo = PedidoFormComponent.SUFIXO_CFOP_POR_NATUREZA[(this.form.naturezaOperacao || '').trim()];
+    if (!sufixo) return undefined;
+    const ufEmitente = this.cliente()?.estado;
+    const mesmoEstado = !this.destinatarioEstadoAtual || this.destinatarioEstadoAtual === ufEmitente;
+    return `${mesmoEstado ? '5' : '6'}${sufixo}`;
   }
 
   abrirNovoProduto(i: number): void {
@@ -2160,11 +2227,12 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  calcTotal(_i: number): void {
+  calcTotal(i: number): void {
     // ngModel muta o objeto do item diretamente (não passa por itens.set()),
     // então o signal "itens" nunca emite mudança sozinho. Recriar o array
     // força o computed valorTotal (e o total por linha) a recalcular na hora.
     this.itens.update(l => [...l]);
+    this.validarLinha(i);
     this.marcarSujo();
     this._agendarAutoSave();
   }
@@ -2258,17 +2326,52 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
     };
   }
 
+  // Compartilhado entre a validação no submit (_validarItens) e a validação ao vivo
+  // (validarLinha, chamada a cada edição de quantidade/preço/desconto/CFOP/NCM) — só formato,
+  // não presença: NCM/CFOP vazios continuam permitidos num rascunho (o badge "⚠ incompleto"
+  // já avisa disso), essa checagem é só pra pegar um valor digitado errado (dígitos a menos,
+  // prefixo de CFOP que não existe) antes de gastar uma tentativa real na Focus/SEFAZ.
+  private _mensagemErroItem(item: PedidoItemInput, i: number): string | null {
+    if (!item.produtoId) return `Selecione o produto do item ${i + 1}.`;
+    if (!item.quantidade || item.quantidade <= 0) return `Informe uma quantidade válida para o item ${i + 1}.`;
+    if (item.precoUnitario < 0) return `Preço unitário do item ${i + 1} não pode ser negativo.`;
+    if (item.desconto > item.quantidade * item.precoUnitario) return `Desconto do item ${i + 1} não pode ser maior que o valor do item.`;
+    if (item.ncm && !/^\d{8}$/.test(item.ncm.replace(/\D/g, ''))) return `NCM do item ${i + 1} deve ter 8 dígitos.`;
+    if (item.cfop && !/^[1235-7]\d{3}$/.test(item.cfop.replace(/\D/g, ''))) return `CFOP do item ${i + 1} inválido (deve ter 4 dígitos e começar com 1, 2, 3, 5, 6 ou 7).`;
+    return null;
+  }
+
+  erroCfop(item: PedidoItemInput): string | null {
+    if (!item.cfop) return null;
+    return /^[1235-7]\d{3}$/.test(item.cfop.replace(/\D/g, ''))
+      ? null
+      : 'CFOP inválido — 4 dígitos, começando com 1, 2, 3, 5, 6 ou 7.';
+  }
+
+  erroNcm(item: PedidoItemInput): string | null {
+    if (!item.ncm) return null;
+    return /^\d{8}$/.test(item.ncm.replace(/\D/g, '')) ? null : 'NCM deve ter 8 dígitos.';
+  }
+
+  // Reavalia só a linha que acabou de ser editada, sem esperar o clique em Salvar/Emitir — o
+  // input já fica vermelho na hora se o valor digitado for inválido.
+  validarLinha(i: number): void {
+    const item = this.itens()[i];
+    if (!item) return;
+    const invalida = !!this._mensagemErroItem(item, i);
+    this.rowErrors.update(s => {
+      const next = new Set(s);
+      if (invalida) next.add(i); else next.delete(i);
+      return next;
+    });
+  }
+
   private _validarItens(): boolean {
     const invalidas = new Set<number>();
     let primeiraMensagem: string | null = null;
 
     this.itens().forEach((item, i) => {
-      let msg: string | null = null;
-      if (!item.produtoId) msg = `Selecione o produto do item ${i + 1}.`;
-      else if (!item.quantidade || item.quantidade <= 0) msg = `Informe uma quantidade válida para o item ${i + 1}.`;
-      else if (item.precoUnitario < 0) msg = `Preço unitário do item ${i + 1} não pode ser negativo.`;
-      else if (item.desconto > item.quantidade * item.precoUnitario) msg = `Desconto do item ${i + 1} não pode ser maior que o valor do item.`;
-
+      const msg = this._mensagemErroItem(item, i);
       if (msg) {
         invalidas.add(i);
         primeiraMensagem ??= msg;

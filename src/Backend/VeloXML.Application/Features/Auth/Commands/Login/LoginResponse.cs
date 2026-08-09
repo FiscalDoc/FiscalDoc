@@ -9,7 +9,5 @@ public record LoginResponse(
     string Perfil,
     Guid TenantId,
     string Plano,
-    DateTime? PlanoExpiracao,
-    bool RequiresTwoFactor = false,
-    string? TwoFactorToken = null
+    DateTime? PlanoExpiracao
 );

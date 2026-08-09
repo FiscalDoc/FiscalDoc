@@ -15,9 +15,9 @@ namespace VeloXML.API.Controllers.v1;
 public sealed class ProdutosController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(Guid clienteId, [FromQuery] string? termo, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    public async Task<IActionResult> GetAll(Guid clienteId, [FromQuery] string? termo, [FromQuery] bool? ativo, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
-        var result = await mediator.Send(new GetProdutosQuery(clienteId, termo, page, pageSize), ct);
+        var result = await mediator.Send(new GetProdutosQuery(clienteId, termo, ativo, page, pageSize), ct);
         return Ok(result.Value);
     }
 
@@ -36,7 +36,7 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
             body.Unidade, body.PrecoUnitario, body.Cfop,
             body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins,
             body.CstIcms, body.CstPis, body.CstCofins, body.IcmsOrigem, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria,
-            body.ValorCusto, body.PercentualImposto), ct);
+            body.ValorCusto, body.PercentualImposto, body.CstIpi, body.AliquotaIpi), ct);
         return result.IsSuccess ? Created(string.Empty, result.Value) : BadRequest(result.Error);
     }
 
@@ -48,7 +48,7 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
             body.Unidade, body.PrecoUnitario, body.Cfop,
             body.AliquotaIcms, body.AliquotaPis, body.AliquotaCofins, body.Ativo,
             body.CstIcms, body.CstPis, body.CstCofins, body.IcmsOrigem, body.IbsCbsCst, body.IbsCbsClassificacaoTributaria,
-            body.ValorCusto, body.PercentualImposto), ct);
+            body.ValorCusto, body.PercentualImposto, body.CstIpi, body.AliquotaIpi), ct);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 
@@ -77,7 +77,9 @@ public record CreateProdutoRequest(
     string? IbsCbsCst = null,
     string? IbsCbsClassificacaoTributaria = null,
     decimal ValorCusto = 0,
-    decimal PercentualImposto = 0
+    decimal PercentualImposto = 0,
+    string? CstIpi = null,
+    decimal AliquotaIpi = 0
 );
 
 public record UpdateProdutoRequest(
@@ -98,5 +100,7 @@ public record UpdateProdutoRequest(
     string? IbsCbsCst = null,
     string? IbsCbsClassificacaoTributaria = null,
     decimal ValorCusto = 0,
-    decimal PercentualImposto = 0
+    decimal PercentualImposto = 0,
+    string? CstIpi = null,
+    decimal AliquotaIpi = 0
 );

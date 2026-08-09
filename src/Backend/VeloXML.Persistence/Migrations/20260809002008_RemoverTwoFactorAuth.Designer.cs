@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VeloXML.Persistence.Context;
@@ -12,9 +13,11 @@ using VeloXML.Persistence.Context;
 namespace VeloXML.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809002008_RemoverTwoFactorAuth")]
+    partial class RemoverTwoFactorAuth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1808,13 +1811,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("aliquota_icms");
 
-                    b.Property<decimal>("AliquotaIpi")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
-                        .HasDefaultValue(0m)
-                        .HasColumnName("aliquota_ipi");
-
                     b.Property<decimal>("AliquotaPis")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -1838,11 +1834,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
                         .HasColumnName("cst_icms");
-
-                    b.Property<string>("CstIpi")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)")
-                        .HasColumnName("cst_ipi");
 
                     b.Property<string>("CstPis")
                         .HasMaxLength(2)
@@ -1949,13 +1940,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("aliquota_icms");
 
-                    b.Property<decimal>("AliquotaIpi")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
-                        .HasDefaultValue(0m)
-                        .HasColumnName("aliquota_ipi");
-
                     b.Property<decimal>("AliquotaPis")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -1998,11 +1982,6 @@ namespace VeloXML.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
                         .HasColumnName("cst_icms");
-
-                    b.Property<string>("CstIpi")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)")
-                        .HasColumnName("cst_ipi");
 
                     b.Property<string>("CstPis")
                         .HasMaxLength(2)

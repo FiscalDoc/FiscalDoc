@@ -9,10 +9,7 @@ using VeloXML.Application.Features.Auth.Commands.RefreshToken;
 using VeloXML.Application.Features.Auth.Commands.Register;
 using VeloXML.Application.Features.Auth.Commands.ResetPassword;
 using VeloXML.Application.Features.Auth.Commands.RestoreAdminContext;
-using VeloXML.Application.Features.Auth.Commands.Setup2fa;
 using VeloXML.Application.Features.Auth.Commands.SwitchContext;
-using VeloXML.Application.Features.Auth.Commands.Verify2fa;
-using VeloXML.Application.Features.Auth.Commands.VerifySetup2fa;
 using VeloXML.Application.Features.Auth.Queries.GetCurrentUser;
 using VeloXML.Application.Features.Auth.Queries.ValidateResetToken;
 
@@ -104,30 +101,4 @@ public sealed class AuthController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new RestoreAdminContextCommand(), ct);
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
-
-    [HttpPost("2fa/setup")]
-    [Authorize]
-    public async Task<IActionResult> Setup2fa(CancellationToken ct)
-    {
-        var result = await mediator.Send(new Setup2faCommand(), ct);
-        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
-    }
-
-    [HttpPost("2fa/verify-setup")]
-    [Authorize]
-    public async Task<IActionResult> VerifySetup2fa([FromBody] VerifySetup2faRequest body, CancellationToken ct)
-    {
-        var result = await mediator.Send(new VerifySetup2faCommand(body.Code), ct);
-        return result.IsSuccess ? Ok(new { message = "2FA ativado com sucesso." }) : BadRequest(result.Error);
-    }
-
-    [HttpPost("2fa/verify")]
-    public async Task<IActionResult> Verify2fa([FromBody] Verify2faRequest body, CancellationToken ct)
-    {
-        var result = await mediator.Send(new Verify2faCommand(body.TwoFactorToken, body.Code), ct);
-        return result.IsSuccess ? Ok(result.Value) : Unauthorized(result.Error);
-    }
 }
-
-public record VerifySetup2faRequest(string Code);
-public record Verify2faRequest(string TwoFactorToken, string Code);

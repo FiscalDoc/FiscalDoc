@@ -223,10 +223,10 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
             </div>
           </div>
           <div class="notif-row">
-            <label class="check-label"><input type="checkbox" [(ngModel)]="edit.notifNovasNotas"/> Novas notas</label>
-            <label class="check-label"><input type="checkbox" [(ngModel)]="edit.notifAlertas"/> Alertas</label>
-            <label class="check-label"><input type="checkbox" [(ngModel)]="edit.notifResumoSemanal"/> Resumo semanal</label>
-            <label class="check-label"><input type="checkbox" [(ngModel)]="edit.notifConsolidadoMensal"/> Consolidado mensal</label>
+            <label class="check-label"><span class="toggle"><input type="checkbox" [(ngModel)]="edit.notifNovasNotas"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span> Novas notas</label>
+            <label class="check-label"><span class="toggle"><input type="checkbox" [(ngModel)]="edit.notifAlertas"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span> Alertas</label>
+            <label class="check-label"><span class="toggle"><input type="checkbox" [(ngModel)]="edit.notifResumoSemanal"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span> Resumo semanal</label>
+            <label class="check-label"><span class="toggle"><input type="checkbox" [(ngModel)]="edit.notifConsolidadoMensal"/><span class="toggle-track"><span class="toggle-thumb"></span></span></span> Consolidado mensal</label>
           </div>
           <div class="inline-actions">
             <button class="btn-primary-sm" (click)="salvarCadastro()" [disabled]="salvandoCadastro()">
@@ -626,7 +626,6 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .notif-row { display: flex; gap: 16px; flex-wrap: wrap; }
     .check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2); cursor: pointer; }
-    .check-label input { accent-color: var(--accent); width: 14px; height: 14px; }
 
     .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .field-sm { display: flex; flex-direction: column; gap: 4px; }

@@ -1,14 +1,13 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '@veloxml/services';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <main class="login-page">
       <section class="login-form-side">
@@ -24,79 +23,62 @@ import { AuthService } from '@veloxml/services';
         </a>
 
         <div class="form-wrap">
-          @if (twoFactorToken()) {
-            <h1 class="title">Verificação em duas etapas</h1>
-            <p class="subtitle">Insira o código de 6 dígitos do seu aplicativo autenticador.</p>
+          <h1 class="title">Acesse sua conta</h1>
+          <p class="subtitle">Entre para emitir notas, acompanhar cancelamentos e baixar seus relatórios fiscais.</p>
 
-            <div class="field" style="margin-top: 2rem;">
-              <label for="totp">Código TOTP</label>
-              <input id="totp" [(ngModel)]="totpCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code"/>
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="field">
+              <label for="email">E-mail</label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16v16H4z" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="m3 7 9 6 9-6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <input id="email" formControlName="email" type="email" placeholder="voce@empresa.com.br" autocomplete="email"/>
+              </div>
             </div>
+
+            <div class="field">
+              <div class="label-row">
+                <label for="password">Senha</label>
+                <a routerLink="/auth/esqueci-senha" class="link-sm">Esqueci minha senha</a>
+              </div>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="10" width="16" height="10" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M8 10V7a4 4 0 118 0v3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <input id="password" formControlName="password" type="password" placeholder="••••••••" autocomplete="current-password"/>
+              </div>
+            </div>
+
+            @if (blockedMsg()) {
+              <div class="blocked-banner">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+                <div>
+                  <strong>Acesso bloqueado</strong>
+                  @if (blockedMsg()) { <div class="blocked-motivo">{{ blockedMsg() }}</div> }
+                  <div class="blocked-sub">Entre em contato com o administrador do sistema.</div>
+                </div>
+              </div>
+            }
 
             @if (errorMsg()) { <p class="error-msg">{{ errorMsg() }}</p> }
 
-            <button type="button" class="btn-primary" [disabled]="!totpCode || loading()" (click)="onSubmit2fa()">
-              {{ loading() ? 'Verificando...' : 'Verificar código' }}
+            <button type="submit" class="btn-primary" [disabled]="form.invalid || loading()">
+              {{ loading() ? 'Entrando...' : 'Entrar' }}
             </button>
-            <button type="button" class="btn-back" (click)="twoFactorToken.set(null)">← Voltar para o login</button>
-          } @else {
-            <h1 class="title">Acesse sua conta</h1>
-            <p class="subtitle">Entre para emitir notas, acompanhar cancelamentos e baixar seus relatórios fiscais.</p>
+          </form>
 
-            <form [formGroup]="form" (ngSubmit)="onSubmit()">
-              <div class="field">
-                <label for="email">E-mail</label>
-                <div class="input-icon-wrap">
-                  <svg class="input-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16v16H4z" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
-                    <rect x="3" y="5" width="18" height="14" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="m3 7 9 6 9-6" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <input id="email" formControlName="email" type="email" placeholder="voce@empresa.com.br" autocomplete="email"/>
-                </div>
-              </div>
-
-              <div class="field">
-                <div class="label-row">
-                  <label for="password">Senha</label>
-                  <a routerLink="/auth/esqueci-senha" class="link-sm">Esqueci minha senha</a>
-                </div>
-                <div class="input-icon-wrap">
-                  <svg class="input-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="10" width="16" height="10" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M8 10V7a4 4 0 118 0v3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <input id="password" formControlName="password" type="password" placeholder="••••••••" autocomplete="current-password"/>
-                </div>
-              </div>
-
-              @if (blockedMsg()) {
-                <div class="blocked-banner">
-                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-                  </svg>
-                  <div>
-                    <strong>Acesso bloqueado</strong>
-                    @if (blockedMsg()) { <div class="blocked-motivo">{{ blockedMsg() }}</div> }
-                    <div class="blocked-sub">Entre em contato com o administrador do sistema.</div>
-                  </div>
-                </div>
-              }
-
-              @if (errorMsg()) { <p class="error-msg">{{ errorMsg() }}</p> }
-
-              <button type="submit" class="btn-primary" [disabled]="form.invalid || loading()">
-                {{ loading() ? 'Entrando...' : 'Entrar' }}
-              </button>
-            </form>
-
-            <p class="secure-note">
-              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-              </svg>
-              Conexão criptografada e certificado digital protegido.
-            </p>
-          }
+          <p class="secure-note">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Conexão criptografada e certificado digital protegido.
+          </p>
         </div>
       </section>
 
@@ -181,7 +163,6 @@ import { AuthService } from '@veloxml/services';
       transition: border-color 150ms, box-shadow 150ms;
       font-family: inherit;
     }
-    #totp { padding-left: 14px; letter-spacing: .3em; text-align: center; font-size: 18px; font-weight: 600; }
     input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.48 0.16 255 / 0.15); }
     input::placeholder { color: oklch(0.53 0.03 256 / 0.7); }
     /* O Chrome ignora "background" em campo autopreenchido e pinta de branco por conta própria —
@@ -207,9 +188,6 @@ import { AuthService } from '@veloxml/services';
     }
     .btn-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
     .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
-
-    .btn-back { background: none; border: none; color: var(--lg-muted); font-size: 12.5px; cursor: pointer; padding: 0; text-align: left; margin-top: 1rem; font-family: inherit; }
-    .btn-back:hover { color: var(--lg-fg); }
 
     .error-msg {
       font-size: 13px; color: var(--lg-red); margin: 0;
@@ -261,8 +239,6 @@ export class LoginComponent implements OnInit {
   loading       = signal(false);
   errorMsg      = signal<string | null>(null);
   blockedMsg    = signal<string | null>(null);
-  twoFactorToken = signal<string | null>(null);
-  totpCode      = '';
 
   ngOnInit(): void {
     this._route.queryParams.subscribe(params => {
@@ -281,33 +257,11 @@ export class LoginComponent implements OnInit {
 
     const { email, password } = this.form.getRawValue();
     this._auth.login({ email, password }).subscribe({
-      next: (res) => {
-        if (res.requiresTwoFactor && res.twoFactorToken) {
-          this.twoFactorToken.set(res.twoFactorToken);
-          this.loading.set(false);
-          return;
-        }
-        this._router.navigate([this._destinoAposLogin()]);
-      },
-      error: () => {
-        this.errorMsg.set('E-mail ou senha incorretos.');
-        this.loading.set(false);
-      },
-    });
-  }
-
-  onSubmit2fa(): void {
-    const token = this.twoFactorToken();
-    if (!token || !this.totpCode || this.loading()) return;
-    this.loading.set(true);
-    this.errorMsg.set(null);
-
-    this._auth.verify2fa(token, this.totpCode).subscribe({
       next: () => {
         this._router.navigate([this._destinoAposLogin()]);
       },
       error: () => {
-        this.errorMsg.set('Código inválido ou expirado.');
+        this.errorMsg.set('E-mail ou senha incorretos.');
         this.loading.set(false);
       },
     });

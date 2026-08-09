@@ -8,12 +8,15 @@ namespace VeloXML.Persistence.Repositories;
 
 public sealed class DestinatarioRepository(AppDbContext context) : BaseRepository<Destinatario>(context), IDestinatarioRepository
 {
-    public async Task<PagedResult<Destinatario>> SearchAsync(Guid clienteId, string? termo, int page, int pageSize, CancellationToken ct = default)
+    public async Task<PagedResult<Destinatario>> SearchAsync(Guid clienteId, string? termo, bool? ativo, int page, int pageSize, CancellationToken ct = default)
     {
         var query = DbSet.Where(d => d.ClienteId == clienteId).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(termo))
             query = query.Where(d => EF.Functions.ILike(d.RazaoSocial, $"%{termo}%") || (d.CpfCnpj != null && d.CpfCnpj.Contains(termo)));
+
+        if (ativo.HasValue)
+            query = query.Where(d => d.Ativo == ativo.Value);
 
         var total = await query.LongCountAsync(ct);
         var items = await query.OrderBy(d => d.RazaoSocial).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);

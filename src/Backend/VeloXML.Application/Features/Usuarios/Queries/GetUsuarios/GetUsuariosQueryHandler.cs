@@ -35,7 +35,7 @@ public sealed class GetUsuariosQueryHandler(IApplicationDbContext db)
                 u.Id, u.Nome, u.Email, u.Perfil.ToString(), u.Ativo,
                 u.ContadorId, u.Contador != null ? u.Contador.Nome : null,
                 u.ClienteId, null,
-                u.TwoFactorHabilitado, u.CreatedAt, u.UltimoAcessoEm,
+                u.CreatedAt, u.UltimoAcessoEm,
                 u.AvatarObjectKey))
             .ToListAsync(ct);
 

@@ -8,7 +8,7 @@ import { PagedResult, PaginationQuery } from '@veloxml/models';
 export class DestinatarioService {
   private readonly _api = inject(ApiService);
 
-  getAll(clienteId: string, q?: PaginationQuery & { termo?: string }): Observable<PagedResult<DestinatarioDto>> {
+  getAll(clienteId: string, q?: PaginationQuery & { termo?: string; ativo?: boolean }): Observable<PagedResult<DestinatarioDto>> {
     return this._api.get<PagedResult<DestinatarioDto>>(`/clientes/${clienteId}/destinatarios`, q as Record<string, unknown>);
   }
 

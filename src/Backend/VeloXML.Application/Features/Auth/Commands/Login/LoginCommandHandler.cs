@@ -28,24 +28,6 @@ public sealed class LoginCommandHandler(
 
         var (empresa, cnpj) = await EmpresaClaimHelper.ResolverAsync(uow, user, ct);
 
-        if (user.TwoFactorHabilitado)
-        {
-            var twoFactorToken = tokenService.GenerateTwoFactorToken(user.Id, user.TenantId);
-            return Result.Success(new LoginResponse(
-                AccessToken: string.Empty,
-                RefreshToken: string.Empty,
-                ExpiresAt: DateTime.UtcNow,
-                Nome: user.Nome,
-                Email: user.Email,
-                Perfil: user.Perfil.ToString(),
-                TenantId: user.TenantId,
-                Plano: tenant?.Plano ?? "Starter",
-                PlanoExpiracao: tenant?.PlanoExpiracao,
-                RequiresTwoFactor: true,
-                TwoFactorToken: twoFactorToken
-            ));
-        }
-
         var accessToken = tokenService.GenerateAccessToken(user, empresa, cnpj);
         var refreshTokenValue = tokenService.GenerateRefreshToken();
 
