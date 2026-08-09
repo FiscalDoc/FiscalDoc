@@ -24,9 +24,21 @@ public sealed class GetRelatorioNfeEmitidasQueryHandler(IUnitOfWork uow)
             ? new Dictionary<Guid, Documento>()
             : (await uow.Documentos.FindAsync(d => documentoIds.Contains(d.Id), ct)).ToDictionary(d => d.Id);
 
+        // Custo só existe quando dá pra saber quais Produtos foram vendidos (nota emitida a
+        // partir de um Pedido daqui) — nota importada de XML externo não tem Pedido nenhum, e o
+        // XML da NF-e em si não carrega custo interno de forma alguma.
+        var pedidos = documentoIds.Count == 0
+            ? []
+            : await uow.Pedidos.GetPorDocumentoIdsComItensAsync(documentoIds, ct);
+        var lucroPorDocumentoId = pedidos
+            .Where(p => p.DocumentoId.HasValue)
+            .ToDictionary(p => p.DocumentoId!.Value, p => p.Itens.Sum(i =>
+                i.ValorTotal - i.Quantidade * ((i.Produto?.ValorCusto ?? 0) + i.PrecoUnitario * (i.Produto?.PercentualImposto ?? 0) / 100)));
+
         var itens = emissoes.Select(e =>
         {
             Documento? doc = e.DocumentoId.HasValue && documentos.TryGetValue(e.DocumentoId.Value, out var d) ? d : null;
+            decimal? lucro = e.DocumentoId.HasValue && lucroPorDocumentoId.TryGetValue(e.DocumentoId.Value, out var l) ? l : null;
             return new RelatorioNfeItemDto(
                 e.SolicitadoPorNome,
                 e.CreatedAt,
@@ -34,7 +46,8 @@ public sealed class GetRelatorioNfeEmitidasQueryHandler(IUnitOfWork uow)
                 e.Serie,
                 e.Status.ToString(),
                 e.ChaveAcesso,
-                doc?.ValorTotal);
+                doc?.ValorTotal,
+                lucro);
         }).ToList();
 
         return Result.Success(new RelatorioNfeEmitidasDto(
@@ -42,6 +55,8 @@ public sealed class GetRelatorioNfeEmitidasQueryHandler(IUnitOfWork uow)
             itens.Count(i => i.Status == "Autorizada"),
             itens.Count(i => i.Status == "Cancelada"),
             itens.Sum(i => i.ValorTotal ?? 0),
+            itens.Sum(i => i.Lucro ?? 0),
+            itens.Count(i => i.Lucro.HasValue),
             itens));
     }
 }

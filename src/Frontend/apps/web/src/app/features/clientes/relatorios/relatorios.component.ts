@@ -66,7 +66,18 @@ const MESES = [
                 <span class="stat-label">Valor Total</span>
                 <span class="stat-value">{{ r.valorTotal | currency:'BRL':'symbol':'1.2-2' }}</span>
               </div>
+              <div class="stat-card">
+                <span class="stat-label">Lucro (estimado)</span>
+                <span class="stat-value" [class.stat-value--ok]="r.lucroTotal > 0" [class.stat-value--erro]="r.lucroTotal < 0">{{ r.lucroTotal | currency:'BRL':'symbol':'1.2-2' }}</span>
+              </div>
             </div>
+
+            @if (r.totalNotas > 0 && r.notasComLucroCalculado < r.totalNotas) {
+              <p class="field-hint">
+                Lucro calculado com base no custo cadastrado em Produtos, só considerando as {{ r.notasComLucroCalculado }} de {{ r.totalNotas }} nota(s) emitidas por um Pedido daqui
+                (notas importadas de XML externo não têm custo pra calcular). O valor real pode ser maior se produtos sem custo cadastrado entraram nessas notas.
+              </p>
+            }
 
             @if (r.itens.length === 0) {
               <div class="empty">Nenhuma nota fiscal emitida nesse mês.</div>
@@ -74,7 +85,7 @@ const MESES = [
               <div class="table-wrap">
                 <table class="table">
                   <thead>
-                    <tr><th>Usuário</th><th>Data</th><th>Número</th><th>Série</th><th>Status</th><th>Valor</th></tr>
+                    <tr><th>Usuário</th><th>Data</th><th>Número</th><th>Série</th><th>Status</th><th>Valor</th><th>Lucro</th></tr>
                   </thead>
                   <tbody>
                     @for (i of r.itens; track i.chaveAcesso ?? $index) {
@@ -85,6 +96,7 @@ const MESES = [
                         <td class="mono">{{ i.serie || '—' }}</td>
                         <td><span class="badge" [class]="statusClass(i.status)">{{ statusLabel(i.status) }}</span></td>
                         <td>{{ i.valorTotal != null ? (i.valorTotal | currency:'BRL':'symbol':'1.2-2') : '—' }}</td>
+                        <td [title]="i.lucro == null ? 'Nota sem Pedido vinculado — sem custo pra calcular' : ''">{{ i.lucro != null ? (i.lucro | currency:'BRL':'symbol':'1.2-2') : '—' }}</td>
                       </tr>
                     }
                   </tbody>
@@ -112,12 +124,13 @@ const MESES = [
     .input:focus { border-color: var(--accent); }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .875rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .875rem; }
     .stat-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: .875rem 1rem; display: flex; flex-direction: column; gap: 4px; }
     .stat-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text2); }
     .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
     .stat-value--ok { color: var(--accent); }
     .stat-value--erro { color: var(--red); }
+    .field-hint { font-size: 12px; color: var(--text2); margin: 0; }
 
     .table-wrap { overflow-x: auto; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
@@ -131,7 +144,7 @@ const MESES = [
 
     /* ── Tablet (iPad) e mobile ── */
     @media (max-width: 1024px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     @media (max-width: 640px) {

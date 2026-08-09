@@ -949,8 +949,8 @@ export class DocumentosListComponent implements OnInit {
     const ok = await this._confirm.ask(`Excluir a nota fiscal "${doc.numero || doc.id}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
     if (!ok) return;
     this._docSvc.delete(doc.id).subscribe({
-      next: () => { this.closeDetail(); this.load(); },
-      error: (err) => alert(extractErrorMessage(err, 'Erro ao excluir documento.')),
+      next: () => { this._toast.success('Documento excluído!'); this.closeDetail(); this.load(); },
+      error: (err) => this._toast.error(extractErrorMessage(err, 'Erro ao excluir documento.')),
     });
   }
 

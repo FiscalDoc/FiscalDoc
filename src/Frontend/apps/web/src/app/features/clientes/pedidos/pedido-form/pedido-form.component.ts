@@ -324,7 +324,7 @@ interface ConfirmState {
               <div class="combo-dropdown">
                 @for (d of destinatarioResults(); track d.id; let idx = $index) {
                   <div class="combo-item" [class.combo-item-active]="destinatarioHighlight() === idx" (mousedown)="selecionarDestinatario(d)" (mouseenter)="destinatarioHighlight.set(idx)">
-                    {{ d.razaoSocial }}{{ d.nomeFantasia ? ' — ' + d.nomeFantasia : '' }}
+                    {{ d.cpfCnpj || 'sem documento' }} — {{ d.razaoSocial }}
                   </div>
                 }
                 @if (destinatarioSearch.trim().length > 0) {
@@ -395,7 +395,7 @@ interface ConfirmState {
               <div class="combo-dropdown">
                 @for (t of transportadoraResults(); track t.id; let idx = $index) {
                   <div class="combo-item" [class.combo-item-active]="transportadoraHighlight() === idx" (mousedown)="selecionarTransportadora(t)" (mouseenter)="transportadoraHighlight.set(idx)">
-                    {{ t.razaoSocial }}{{ t.nomeFantasia ? ' — ' + t.nomeFantasia : '' }}
+                    {{ t.cpfCnpj || 'sem documento' }} — {{ t.razaoSocial }}
                   </div>
                 }
                 @if (transportadoraResults().length === 0) {
@@ -2205,7 +2205,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         this.excluindo.set(true);
         this.erro.set(null);
         this._pedidoSvc.delete(this.clienteId, this.pedidoId).subscribe({
-          next: () => { this.excluindo.set(false); this.goBack(); },
+          next: () => { this.excluindo.set(false); this._toast.success('Pedido excluído!'); this.goBack(); },
           error: err => { this.excluindo.set(false); this._erro(extractErrorMessage(err, 'Erro ao excluir pedido.')); },
         });
       },

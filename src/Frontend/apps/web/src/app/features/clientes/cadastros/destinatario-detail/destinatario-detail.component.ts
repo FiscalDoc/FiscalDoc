@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DestinatarioService, CepService, CnpjService, ConfirmDialogService, extractErrorMessage, extractFieldErrors, validarCpfCnpj, validarEmail } from '@veloxml/services';
+import { DestinatarioService, CepService, CnpjService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors, validarCpfCnpj, validarEmail } from '@veloxml/services';
 import { DestinatarioDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'endereco';
@@ -205,6 +205,7 @@ type Tab = 'cadastro' | 'endereco';
 export class DestinatarioDetailComponent implements OnInit {
   private readonly _svc     = inject(DestinatarioService);
   private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast   = inject(ToastService);
   private readonly _cepSvc  = inject(CepService);
   private readonly _cnpjSvc = inject(CnpjService);
   private readonly _route   = inject(ActivatedRoute);
@@ -377,8 +378,12 @@ export class DestinatarioDetailComponent implements OnInit {
     const ok = await this._confirm.ask(`Excluir "${this.form.razaoSocial}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
     if (!ok) return;
     this._svc.delete(this.clienteId, this.destinatarioId).subscribe({
-      next: () => this.goBack(),
-      error: err => this.erro.set(extractErrorMessage(err, 'Erro ao excluir destinatário.')),
+      next: () => { this._toast.success('Destinatário excluído!'); this.goBack(); },
+      error: err => {
+        const msg = extractErrorMessage(err, 'Erro ao excluir destinatário.');
+        this.erro.set(msg);
+        this._toast.error(msg);
+      },
     });
   }
 

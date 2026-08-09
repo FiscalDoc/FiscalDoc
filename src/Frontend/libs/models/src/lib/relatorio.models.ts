@@ -6,6 +6,9 @@ export interface RelatorioNfeItemDto {
   status: string;
   chaveAcesso?: string;
   valorTotal?: number;
+  // Só vem preenchido quando a nota tem um Pedido vinculado (dá pra saber o custo dos produtos
+  // vendidos) — null quando a nota foi importada de XML externo, sem Pedido no sistema.
+  lucro?: number;
 }
 
 export interface RelatorioNfeEmitidasDto {
@@ -13,6 +16,8 @@ export interface RelatorioNfeEmitidasDto {
   totalAutorizadas: number;
   totalCanceladas: number;
   valorTotal: number;
+  lucroTotal: number;
+  notasComLucroCalculado: number;
   itens: RelatorioNfeItemDto[];
 }
 

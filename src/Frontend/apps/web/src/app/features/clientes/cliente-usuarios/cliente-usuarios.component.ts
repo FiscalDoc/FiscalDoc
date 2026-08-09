@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ClienteUsuarioService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
+import { ClienteUsuarioService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { UsuarioDto } from '@veloxml/models';
 
 @Component({
@@ -167,6 +167,7 @@ import { UsuarioDto } from '@veloxml/models';
 export class ClienteUsuariosComponent implements OnInit {
   private readonly _svc    = inject(ClienteUsuarioService);
   private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast  = inject(ToastService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
 
@@ -210,8 +211,8 @@ export class ClienteUsuariosComponent implements OnInit {
     const ok = await this._confirm.ask(`Excluir o usuário "${u.nome}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
     if (!ok) return;
     this._svc.delete(this.clienteId, u.id).subscribe({
-      next: () => this.load(),
-      error: err => alert(extractErrorMessage(err, 'Erro ao excluir usuário.')),
+      next: () => { this._toast.success('Usuário excluído!'); this.load(); },
+      error: err => this._toast.error(extractErrorMessage(err, 'Erro ao excluir usuário.')),
     });
   }
 

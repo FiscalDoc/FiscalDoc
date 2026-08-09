@@ -22,4 +22,9 @@ public interface IPedidoRepository : IRepository<Pedido>
     // que na prática nunca viraram faturamento de verdade.
     Task<IReadOnlyList<TopProdutoResumo>> GetTopProdutosAsync(Guid clienteId, DateTime de, DateTime ate, int limite, CancellationToken ct = default);
     Task<IReadOnlyList<TopDestinatarioResumo>> GetTopDestinatariosAsync(Guid clienteId, DateTime de, DateTime ate, int limite, CancellationToken ct = default);
+
+    // Usado pelo relatório de lucro — só os Pedidos que viraram Documento (emitiram NF-e) têm
+    // como calcular custo/lucro, já que o custo vem do Produto vendido em cada item, não do XML
+    // (o XML da NF-e não carrega custo interno nenhum).
+    Task<IReadOnlyList<Pedido>> GetPorDocumentoIdsComItensAsync(IReadOnlyCollection<Guid> documentoIds, CancellationToken ct = default);
 }

@@ -1,4 +1,9 @@
 **/.git
+# O build do frontend precisa do .git da raiz pra calcular a versão automática (número de
+# commits) dentro do container — sem essa exceção, "**/.git" acima excluía até o .git raiz do
+# contexto de build, o script de versão nunca achava o git e a versão ficava travada no valor
+# commitado por último, mesmo com deploys novos.
+!/.git
 **/.vs
 **/.vscode
 **/.idea

@@ -6,13 +6,29 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const ENV_FILES = [
   path.join(__dirname, '..', 'apps', 'web', 'src', 'environments', 'environment.ts'),
   path.join(__dirname, '..', 'apps', 'web', 'src', 'environments', 'environment.prod.ts'),
 ];
 
+// Sobe diretórios a partir daqui até achar um ".git" — evita depender de quantos níveis existem
+// entre este script e a raiz do repo, que muda conforme o contexto (3 níveis localmente, 1 só
+// dentro da imagem Docker do frontend, onde só o conteúdo de src/Frontend/ é copiado pra /app).
+function findRepoRoot(startDir) {
+  let dir = startDir;
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(dir, '.git'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+  return null;
+}
+
+const REPO_ROOT = findRepoRoot(__dirname);
+
 function commitCount() {
+  if (!REPO_ROOT) return null;
   try {
     return execSync('git rev-list --count HEAD', { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
   } catch {

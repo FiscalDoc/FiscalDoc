@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { BlogAdminService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
+import { BlogAdminService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
 
 @Component({
@@ -174,6 +174,7 @@ import { BlogCategoriaDto, BlogPostDto } from '@veloxml/models';
 export class BlogAdminListComponent implements OnInit {
   private readonly _svc = inject(BlogAdminService);
   private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast = inject(ToastService);
   private readonly _router = inject(Router);
 
   readonly posts = signal<BlogPostDto[]>([]);
@@ -240,8 +241,12 @@ export class BlogAdminListComponent implements OnInit {
     const ok = await this._confirm.ask(`Excluir a postagem "${p.titulo}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
     if (!ok) return;
     this._svc.delete(p.id).subscribe({
-      next: () => this._carregar(),
-      error: err => this.erro.set(extractErrorMessage(err, 'Erro ao excluir postagem.')),
+      next: () => { this._toast.success('Postagem excluída!'); this._carregar(); },
+      error: err => {
+        const msg = extractErrorMessage(err, 'Erro ao excluir postagem.');
+        this.erro.set(msg);
+        this._toast.error(msg);
+      },
     });
   }
 
@@ -264,8 +269,12 @@ export class BlogAdminListComponent implements OnInit {
     const ok = await this._confirm.ask(`Excluir a categoria "${c.nome}"?`, { confirmLabel: 'Excluir' });
     if (!ok) return;
     this._svc.deleteCategoria(c.id).subscribe({
-      next: () => this._carregarCategorias(),
-      error: err => this.erroCategoria.set(extractErrorMessage(err, 'Erro ao excluir categoria.')),
+      next: () => { this._toast.success('Categoria excluída!'); this._carregarCategorias(); },
+      error: err => {
+        const msg = extractErrorMessage(err, 'Erro ao excluir categoria.');
+        this.erroCategoria.set(msg);
+        this._toast.error(msg);
+      },
     });
   }
 

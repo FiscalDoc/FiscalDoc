@@ -2,7 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService, ClienteService, ConfiguracaoService, CepService, ConfirmDialogService, extractErrorMessage } from '@veloxml/services';
+import { AuthService, ClienteService, ConfiguracaoService, CepService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { ClienteDto, CriarContaClienteResponse, ImportacaoXmlClienteStatusDto } from '@veloxml/models';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
@@ -648,6 +648,7 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
 export class ClienteDetailComponent implements OnInit {
   private readonly _svc    = inject(ClienteService);
   private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast  = inject(ToastService);
   private readonly _auth   = inject(AuthService);
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
@@ -821,7 +822,10 @@ export class ClienteDetailComponent implements OnInit {
     if (!c) return;
     const ok = await this._confirm.ask(`Excluir "${c.razaoSocial}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
     if (!ok) return;
-    this._svc.delete(c.id).subscribe({ next: () => this._router.navigate(['/clientes']) });
+    this._svc.delete(c.id).subscribe({
+      next: () => { this._toast.success('Cliente excluído!'); this._router.navigate(['/clientes']); },
+      error: err => this._toast.error(extractErrorMessage(err, 'Erro ao excluir cliente.')),
+    });
   }
 
   salvarFiscal(): void {

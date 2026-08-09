@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UsuarioService, ContadorService, ClienteService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { UsuarioService, ContadorService, ClienteService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { UsuarioDto, ContadorDto, ClienteDto } from '@veloxml/models';
 
 type Tab = 'geral' | 'acesso';
@@ -222,6 +222,7 @@ type Tab = 'geral' | 'acesso';
 export class UsuarioDetailComponent implements OnInit {
   private readonly _svc    = inject(UsuarioService);
   private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast  = inject(ToastService);
   private readonly _cntSvc = inject(ContadorService);
   private readonly _cliSvc = inject(ClienteService);
   private readonly _fb     = inject(FormBuilder);
@@ -301,10 +302,12 @@ export class UsuarioDetailComponent implements OnInit {
     this.excluindo.set(true);
     this.submitError.set(null);
     this._svc.delete(this.usuarioId).subscribe({
-      next: () => { this.excluindo.set(false); this.goBack(); },
+      next: () => { this.excluindo.set(false); this._toast.success('Usuário excluído!'); this.goBack(); },
       error: err => {
         this.excluindo.set(false);
-        this.submitError.set(extractErrorMessage(err, 'Erro ao excluir usuário.'));
+        const msg = extractErrorMessage(err, 'Erro ao excluir usuário.');
+        this.submitError.set(msg);
+        this._toast.error(msg);
       },
     });
   }

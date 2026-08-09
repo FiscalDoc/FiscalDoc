@@ -52,6 +52,11 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
         await DbSet.Include(p => p.Destinatario).Include(p => p.Documento).Include(p => p.Transportadora).Include(p => p.Itens).ThenInclude(i => i.Produto)
             .FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    public async Task<IReadOnlyList<Pedido>> GetPorDocumentoIdsComItensAsync(IReadOnlyCollection<Guid> documentoIds, CancellationToken ct = default) =>
+        await DbSet.Include(p => p.Itens).ThenInclude(i => i.Produto)
+            .Where(p => p.DocumentoId.HasValue && documentoIds.Contains(p.DocumentoId.Value))
+            .ToListAsync(ct);
+
     // "Anterior/Próximo" navega pelo número sequencial do pedido dentro do mesmo cliente —
     // mais previsível pro usuário do que ordenar por data de criação, já que o número é o
     // identificador visível no cabeçalho ("Pedido 1001").
