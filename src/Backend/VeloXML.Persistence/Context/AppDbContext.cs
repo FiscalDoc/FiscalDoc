@@ -90,15 +90,18 @@ public class AppDbContext(
         builder.Entity<Produto>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
-            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
+            && e.DeletedAt == null);
         builder.Entity<Destinatario>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
-            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
+            && e.DeletedAt == null);
         builder.Entity<Transportadora>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
-            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId));
+            && (currentUser.ClienteId == null || e.ClienteId == currentUser.ClienteId)
+            && e.DeletedAt == null);
         builder.Entity<Pedido>().HasQueryFilter(e =>
             (currentTenant.TenantId == null || e.TenantId == currentTenant.TenantId)
             && (currentUser.ContadorId == null || e.Cliente!.ContadorId == currentUser.ContadorId)
