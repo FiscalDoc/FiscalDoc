@@ -129,6 +129,7 @@ export class AuthService {
           localStorage.setItem(TOKEN_KEY, res.accessToken);
           const user = this._decodeToken(res.accessToken);
           if (user) this._currentUser.set({ ...user, plano: this._currentUser()?.plano, planoExpiracao: this._currentUser()?.planoExpiracao });
+          this.refreshMe();
           observer.next(res);
           observer.complete();
         },
@@ -145,6 +146,7 @@ export class AuthService {
           localStorage.setItem(REFRESH_KEY, res.refreshToken);
           const user = this._decodeToken(res.accessToken);
           if (user) this._currentUser.set({ ...user, plano: this._currentUser()?.plano, planoExpiracao: this._currentUser()?.planoExpiracao });
+          this.refreshMe();
           observer.next(res);
           observer.complete();
         },
@@ -209,6 +211,11 @@ export class AuthService {
       : { id: '', nome: res.nome, email: res.email, perfil: res.perfil, tenantId: res.tenantId, plano: res.plano, planoExpiracao: res.planoExpiracao }
     );
     this._loginRecente.set(true);
+
+    // O JWT não carrega avatarUrl (só vem de /auth/me) — sem isso, um login novo (sem passar
+    // por restoreSession, que já chama refreshMe) ficava sem foto até o usuário dar F5, porque
+    // nada mais disparava essa busca depois do login em si.
+    this.refreshMe();
   }
 
   private _decodeToken(token: string): CurrentUser | null {

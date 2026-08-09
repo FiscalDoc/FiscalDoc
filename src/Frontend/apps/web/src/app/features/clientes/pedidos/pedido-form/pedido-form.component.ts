@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto, DocumentoImpostosDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
+import { CodigoFiscalInputComponent } from '../../../../shared/codigo-fiscal-input.component';
 
 interface DocumentoVinculadoInfo {
   id: string;
@@ -31,7 +32,7 @@ interface ConfirmState {
 @Component({
   selector: 'app-pedido-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DecimalInputDirective],
+  imports: [CommonModule, FormsModule, RouterLink, DecimalInputDirective, CodigoFiscalInputComponent],
   template: `
     <div class="page" [class.page-loading]="carregandoPedido()">
       <div class="page-header">
@@ -164,6 +165,10 @@ interface ConfirmState {
 
       @if (readonly()) {
         <div class="alert-info">Este pedido está com status "{{ pedidoStatus() }}" e não pode mais ser editado.</div>
+      }
+
+      @if (!readonly() && pedidoStatus() === 'Rascunho' && certificadoAvisoTexto(); as avisoCert) {
+        <div class="alert-warn">{{ avisoCert }}</div>
       }
 
       @if (!isNew()) {
@@ -666,12 +671,12 @@ interface ConfirmState {
                         </div>
                         <div class="field">
                           <label class="label">CFOP</label>
-                          <input class="input-sm" [class.error]="erroCfop(item)" [disabled]="readonly()" [ngModel]="item.cfop" (ngModelChange)="item.cfop = $event; marcarSujo(); validarLinha(i)"/>
+                          <app-codigo-fiscal-input tipo="cfop" size="sm" [showError]="!!erroCfop(item)" [disabled]="readonly()" [value]="item.cfop || ''" (valueChange)="item.cfop = $event; marcarSujo(); validarLinha(i)"/>
                           @if (erroCfop(item)) { <span class="field-error">{{ erroCfop(item) }}</span> }
                         </div>
                         <div class="field">
                           <label class="label">NCM</label>
-                          <input class="input-sm" [class.error]="erroNcm(item)" [disabled]="readonly()" [ngModel]="item.ncm" (ngModelChange)="item.ncm = $event; marcarSujo(); validarLinha(i)"/>
+                          <app-codigo-fiscal-input tipo="ncm" size="sm" [showError]="!!erroNcm(item)" [disabled]="readonly()" [value]="item.ncm || ''" (valueChange)="item.ncm = $event; marcarSujo(); validarLinha(i)"/>
                           @if (erroNcm(item)) { <span class="field-error">{{ erroNcm(item) }}</span> }
                         </div>
                         <div class="field">
@@ -802,7 +807,7 @@ interface ConfirmState {
       <div class="overlay" (click)="fecharNovoProduto()">
         <div class="modal-quick" (click)="$event.stopPropagation()">
           <h3 class="confirm-title">Novo Produto</h3>
-          <p class="quick-hint">Cadastro rápido — complete NCM, CFOP e alíquotas depois em Cadastros &gt; Produtos, se precisar.</p>
+          <p class="quick-hint">Cadastro rápido — se souber o NCM/CFOP já preencha aqui, senão complete depois em Cadastros &gt; Produtos. Sem eles a emissão da NF-e vai falhar.</p>
           <div class="field">
             <label class="label">Descrição *</label>
             <input class="input" [(ngModel)]="novoProdutoForm.descricao" placeholder="Descrição do produto/serviço"/>
@@ -810,6 +815,14 @@ interface ConfirmState {
           <div class="field">
             <label class="label">Preço Unitário *</label>
             <input class="input" type="text" appDecimalInput [(ngModel)]="novoProdutoForm.precoUnitario"/>
+          </div>
+          <div class="field">
+            <label class="label">NCM (opcional aqui, obrigatório pra emitir)</label>
+            <app-codigo-fiscal-input tipo="ncm" [(value)]="novoProdutoForm.ncm" placeholder="0000.00.00"/>
+          </div>
+          <div class="field">
+            <label class="label">CFOP (opcional aqui, obrigatório pra emitir)</label>
+            <app-codigo-fiscal-input tipo="cfop" [(value)]="novoProdutoForm.cfop" placeholder="5102"/>
           </div>
           @if (erroNovoProduto()) { <div class="alert-error">{{ erroNovoProduto() }}</div> }
           <div class="confirm-actions">
@@ -1045,6 +1058,7 @@ interface ConfirmState {
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0,196,140,.1); border: 1px solid rgba(0,196,140,.3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-info { background: rgba(124,130,153,.1); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-warn { background: rgba(255,209,102,.1); border: 1px solid rgba(255,209,102,.3); color: var(--yellow); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
     .nfe-card, .nfe-card-wrap { flex-direction: row; align-items: center; justify-content: space-between; padding: 1.125rem 1.25rem; gap: 1rem; flex-wrap: wrap; }
     .nfe-card-wrap { flex-direction: column; align-items: stretch; }
@@ -1324,6 +1338,17 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   // (só a opção de vincular uma NF-e importada de outro sistema).
   readonly focusNfeDisponivel = computed(() =>
     !!this.cliente()?.nfeHabilitado && this.cliente()?.focusNfeStatus === 'Registrada');
+  // Mesmo aviso de validade do certificado que existe na tela Empresa, reaproveitado aqui — é
+  // exatamente na tela de emissão que esse alerta importa mais (evita descobrir "certificado
+  // vencido" só depois de tentar emitir e a SEFAZ rejeitar).
+  readonly certificadoAvisoTexto = computed(() => {
+    const validade = this.cliente()?.certificadoA1Validade;
+    if (!validade) return null;
+    const dias = Math.ceil((new Date(validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (dias <= 0) return 'O certificado digital da empresa está vencido — a emissão de NF-e vai falhar até um novo certificado ser enviado.';
+    if (dias <= 30) return `O certificado digital da empresa vence em ${dias} dia(s) — providencie a renovação em Empresa > Fiscal.`;
+    return null;
+  });
   readonly documentoImpostos = signal<PedidoDto['documentoImpostos'] | null>(null);
   readonly historico = signal<PedidoHistoricoDto[]>([]);
   readonly reenviandoHistoricoId = signal<string | null>(null);
@@ -1400,7 +1425,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
   readonly erroNovoDestinatario = signal<string | null>(null);
 
   readonly showNovoProduto = signal(false);
-  novoProdutoForm = { descricao: '', precoUnitario: 0 };
+  novoProdutoForm = { descricao: '', precoUnitario: 0, ncm: '', cfop: '' };
   private _novoProdutoRowIndex: number | null = null;
   readonly salvandoNovoProduto = signal(false);
   readonly erroNovoProduto = signal<string | null>(null);
@@ -2074,7 +2099,7 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
 
   abrirNovoProduto(i: number): void {
     this._novoProdutoRowIndex = i;
-    this.novoProdutoForm = { descricao: (this.produtoBusca[i] ?? '').trim(), precoUnitario: 0 };
+    this.novoProdutoForm = { descricao: (this.produtoBusca[i] ?? '').trim(), precoUnitario: 0, ncm: '', cfop: this.sugerirCfop() ?? '' };
     this.erroNovoProduto.set(null);
     this.showNovoProduto.set(true);
     this.produtoDropdownIndex.set(null);
@@ -2094,6 +2119,8 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
       descricao,
       unidade: 'UN',
       precoUnitario: +this.novoProdutoForm.precoUnitario,
+      ncm: this.novoProdutoForm.ncm.trim() || undefined,
+      cfop: this.novoProdutoForm.cfop.trim() || undefined,
       aliquotaIcms: 0,
       aliquotaPis: 0,
       aliquotaCofins: 0,

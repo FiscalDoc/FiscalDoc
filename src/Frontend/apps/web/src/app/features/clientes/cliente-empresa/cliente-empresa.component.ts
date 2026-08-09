@@ -185,6 +185,9 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (cliente()!.certificadoA1Validade) {
               <p class="field-hint">Certificado válido até {{ formatDate(cliente()!.certificadoA1Validade!) }}.</p>
             }
+            @if (certificadoAvisoTexto(); as aviso) {
+              <div class="alert-warn" [class.alert-error]="certificadoVencido()">{{ aviso }}</div>
+            }
 
             <div class="form-grid">
               <div class="field">
@@ -324,6 +327,7 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
+    .alert-warn { background: rgba(255,209,102,.1); border: 1px solid rgba(255,209,102,.3); color: var(--yellow); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .form-actions { display: flex; align-items: center; justify-content: space-between; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
@@ -406,6 +410,28 @@ export class ClienteEmpresaComponent implements OnInit {
       case 'ErroRegistro': return 'badge badge-red';
       default: return 'badge badge-gray';
     }
+  });
+
+  // Dias até o certificado vencer (negativo = já vencido) — a validade em si já era exibida,
+  // mas nada comparava com hoje pra alertar o usuário antes que a emissão comece a falhar.
+  readonly certificadoDiasRestantes = computed(() => {
+    const validade = this.cliente()?.certificadoA1Validade;
+    if (!validade) return null;
+    const diff = new Date(validade).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  });
+
+  readonly certificadoVencido = computed(() => {
+    const dias = this.certificadoDiasRestantes();
+    return dias !== null && dias <= 0;
+  });
+
+  readonly certificadoAvisoTexto = computed(() => {
+    const dias = this.certificadoDiasRestantes();
+    if (dias === null) return null;
+    if (dias <= 0) return 'O certificado digital está vencido — a emissão de NF-e vai falhar até um novo certificado ser enviado.';
+    if (dias <= 30) return `O certificado digital vence em ${dias} dia(s) — providencie a renovação pra não interromper a emissão de notas.`;
+    return null;
   });
 
   readonly curlExemplo = computed(() => {

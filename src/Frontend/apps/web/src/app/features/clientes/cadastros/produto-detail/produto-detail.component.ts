@@ -5,13 +5,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ProdutoService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
 import { ProdutoDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
+import { CodigoFiscalInputComponent } from '../../../../shared/codigo-fiscal-input.component';
 
 type Tab = 'geral' | 'fiscal';
 
 @Component({
   selector: 'app-produto-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalInputDirective],
+  imports: [CommonModule, FormsModule, DecimalInputDirective, CodigoFiscalInputComponent],
   template: `
     @if (loading()) {
       <div class="loading-state">Carregando...</div>
@@ -103,11 +104,11 @@ type Tab = 'geral' | 'fiscal';
             <div class="form-grid">
               <div class="field">
                 <label class="label">NCM (p/ NF-e)</label>
-                <input class="input" [(ngModel)]="form.ncm" placeholder="0000.00.00"/>
+                <app-codigo-fiscal-input tipo="ncm" [(value)]="form.ncm" placeholder="0000.00.00"/>
               </div>
               <div class="field">
                 <label class="label">CFOP (p/ NF-e)</label>
-                <input class="input" [(ngModel)]="form.cfop" placeholder="5102"/>
+                <app-codigo-fiscal-input tipo="cfop" [(value)]="form.cfop" placeholder="5102"/>
               </div>
               <div class="field">
                 <label class="label">Alíquota ICMS (%)</label>

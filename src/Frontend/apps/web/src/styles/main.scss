@@ -73,6 +73,24 @@ a {
   &.badge-blue   { background: var(--accent2-dim); color: var(--accent2); }
 }
 
+// Aparência de campo desabilitado/readonly — cada tela define seu próprio ".input"/".input-sm"
+// localmente (por causa do encapsulamento do Angular), mas nenhuma tinha um estilo pra quando
+// o campo vem [disabled] (ex.: CNPJ travado depois de cadastrado) — ficava com a MESMA cor de
+// um campo editável, só mudava o cursor. Corrigido aqui uma vez só, pra valer em toda tela.
+// Usa opacity (não troca de --bg) de propósito: no tema escuro os tons de fundo ficam mais
+// CLAROS a cada passo (bg→bg2→bg3→bg4), no claro ficam mais ESCUROS — não existe um único
+// token "um passo nessa direção" que funcione igual nos dois; opacity funciona nos dois sem
+// precisar de regra por tema. Seletor com o tipo do elemento (input.input, não só .input) de
+// propósito, pra especificidade vencer o atributo que o Angular injeta no CSS de cada
+// componente (senão essa regra global perde a "queda de braço" de especificidade).
+input.input:disabled, input.input-sm:disabled, input.input-text:disabled,
+select.input:disabled, select.input-sm:disabled,
+textarea.input:disabled, textarea.input-sm:disabled,
+input.input[readonly], input.input-sm[readonly], input.input-text[readonly] {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
 // Toggle switch (pílula) — substitui os checkboxes de "ativar/desativar algo" no sistema
 // inteiro. Padrão promovido daqui pro global: já existia (e funcionava bem) isolado dentro de
 // cliente-detail.component.ts; em vez de inventar outro, virou o padrão pra tudo, pra não ter

@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { DashboardService, ContadorService, AuthService } from '@veloxml/services';
+import { forkJoin } from 'rxjs';
+import { DashboardService, ContadorService, AuthService, ClienteService, ProdutoService, DestinatarioService } from '@veloxml/services';
 import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPorMesDto, DocumentoPorMesClienteDto } from '@veloxml/models';
 
 @Component({
@@ -116,6 +117,31 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
           <h2 class="font-heading">Dashboard</h2>
           <p class="page-sub">Visão geral da sua empresa</p>
         </header>
+
+        @if (checklist(); as ck) {
+          @if (!checklistCompleto()) {
+            <div class="card checklist-card">
+              <h3 class="card-title">Checklist pra emitir sua primeira NF-e</h3>
+              <div class="checklist-list">
+                <div class="checklist-item" [class.checklist-ok]="ck.certificado">
+                  <span class="checklist-icon">{{ ck.certificado ? '✓' : '○' }}</span>
+                  <span class="checklist-text">Certificado digital A1 configurado e válido</span>
+                  @if (!ck.certificado) { <button type="button" class="checklist-action" (click)="irParaEmpresa()">Configurar</button> }
+                </div>
+                <div class="checklist-item" [class.checklist-ok]="ck.produto">
+                  <span class="checklist-icon">{{ ck.produto ? '✓' : '○' }}</span>
+                  <span class="checklist-text">Ao menos um produto com NCM e CFOP preenchidos</span>
+                  @if (!ck.produto) { <button type="button" class="checklist-action" (click)="irParaProdutos()">Cadastrar</button> }
+                </div>
+                <div class="checklist-item" [class.checklist-ok]="ck.destinatario">
+                  <span class="checklist-icon">{{ ck.destinatario ? '✓' : '○' }}</span>
+                  <span class="checklist-text">Ao menos um destinatário cadastrado</span>
+                  @if (!ck.destinatario) { <button type="button" class="checklist-action" (click)="irParaDestinatarios()">Cadastrar</button> }
+                </div>
+              </div>
+            </div>
+          }
+        }
 
         @if (clienteStats(); as c) {
           <div class="kpis kpis-cliente">
@@ -396,6 +422,16 @@ import { DashboardStatsDto, AdminDashboardDto, ClienteDashboardDto, DocumentoPor
     .status-dot-err { background: var(--red); }
     .status-name { flex: 1; font-size: 13.5px; color: var(--text); }
     .status-qty { font-size: 14px; font-weight: 700; color: var(--text); }
+
+    .checklist-card { display: flex; flex-direction: column; gap: .875rem; border-color: rgba(255,209,102,.25); background: rgba(255,209,102,.03); }
+    .checklist-list { display: flex; flex-direction: column; gap: .625rem; }
+    .checklist-item { display: flex; align-items: center; gap: 10px; }
+    .checklist-icon { width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--border2); color: var(--text2); font-size: 11px; display: flex; align-items: center; justify-content: center; }
+    .checklist-item.checklist-ok .checklist-icon { border-color: var(--green); color: var(--green); background: rgba(0,229,160,.1); }
+    .checklist-text { flex: 1; font-size: 13.5px; color: var(--text); }
+    .checklist-item.checklist-ok .checklist-text { color: var(--text2); text-decoration: line-through; }
+    .checklist-action { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .checklist-action:hover { background: var(--accent-dim); }
   `],
 })
 export class DashboardComponent implements OnInit {
@@ -403,6 +439,9 @@ export class DashboardComponent implements OnInit {
   private readonly _contSvc = inject(ContadorService);
   private readonly _auth    = inject(AuthService);
   private readonly _router  = inject(Router);
+  private readonly _clienteSvc = inject(ClienteService);
+  private readonly _prodSvc    = inject(ProdutoService);
+  private readonly _destSvc    = inject(DestinatarioService);
 
   private clienteId = '';
 
@@ -413,6 +452,39 @@ export class DashboardComponent implements OnInit {
   readonly stats        = signal<DashboardStatsDto | null>(null);
   readonly adminStats   = signal<AdminDashboardDto | null>(null);
   readonly clienteStats = signal<ClienteDashboardDto | null>(null);
+
+  // Checklist "pronto pra emitir" — junta 3 sinais que já existem espalhados pelo sistema
+  // (certificado em Empresa, cadastro fiscal em Produtos, cadastro de Destinatários) num só
+  // lugar, pra um cliente novo não descobrir o que falta só na hora que a emissão falha.
+  readonly checklist = signal<{ certificado: boolean; produto: boolean; destinatario: boolean } | null>(null);
+  readonly checklistCompleto = computed(() => {
+    const c = this.checklist();
+    return !!c && c.certificado && c.produto && c.destinatario;
+  });
+
+  private _carregarChecklist(): void {
+    if (!this.clienteId) return;
+    forkJoin({
+      cliente: this._clienteSvc.getById(this.clienteId),
+      produtos: this._prodSvc.getAll(this.clienteId, { ativo: true, pageSize: 50 }),
+      destinatarios: this._destSvc.getAll(this.clienteId, { ativo: true, pageSize: 1 }),
+    }).subscribe({
+      next: ({ cliente, produtos, destinatarios }) => {
+        const certificadoValido = !cliente.certificadoA1Validade
+          || new Date(cliente.certificadoA1Validade).getTime() > Date.now();
+        this.checklist.set({
+          certificado: cliente.focusNfeStatus === 'Registrada' && certificadoValido,
+          produto: produtos.items.some(p => !!p.ncm && !!p.cfop),
+          destinatario: destinatarios.totalCount > 0,
+        });
+      },
+      error: () => {},
+    });
+  }
+
+  irParaEmpresa(): void { this._router.navigate(['/clientes', this.clienteId, 'empresa']); }
+  irParaProdutos(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'produtos']); }
+  irParaDestinatarios(): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'destinatarios']); }
 
   maxQtd(months: DocumentoPorMesDto[]): number {
     return Math.max(...months.map(m => m.quantidade), 1);
@@ -443,6 +515,7 @@ export class DashboardComponent implements OnInit {
         next: s => { this.clienteStats.set(s); this.loading.set(false); },
         error: () => this.loading.set(false),
       });
+      this._carregarChecklist();
     } else {
       this._dash.getStats(this.dias).subscribe({
         next: s => { this.stats.set(s); this.loading.set(false); },
