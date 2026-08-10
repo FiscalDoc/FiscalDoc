@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, ClienteUsuarioService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { environment } from '../../../../../environments/environment';
 import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
 
@@ -176,7 +177,7 @@ import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directiv
     }
   `],
 })
-export class ClienteUsuarioDetailComponent implements OnInit {
+export class ClienteUsuarioDetailComponent implements OnInit, HasUnsavedChanges {
   private readonly _svc    = inject(ClienteUsuarioService);
   private readonly _auth   = inject(AuthService);
   private readonly _fb     = inject(FormBuilder);
@@ -294,7 +295,7 @@ export class ClienteUsuarioDetailComponent implements OnInit {
 
     if (this.isNew()) {
       this._svc.create(this.clienteId, { nome: v.nome!, email: v.email! }).subscribe({
-        next: () => { this.submitting.set(false); this.goBack(); },
+        next: () => { this.submitting.set(false); this.form.markAsPristine(); this.goBack(); },
         error: err => {
           this.submitting.set(false);
           this.submitError.set(extractErrorMessage(err, 'Erro ao criar usuário.'));
@@ -303,7 +304,7 @@ export class ClienteUsuarioDetailComponent implements OnInit {
       });
     } else {
       this._svc.update(this.clienteId, this.usuarioId, { nome: v.nome!, ativo: v.ativo ?? true }).subscribe({
-        next: () => { this.submitting.set(false); this.goBack(); },
+        next: () => { this.submitting.set(false); this.form.markAsPristine(); this.goBack(); },
         error: err => {
           this.submitting.set(false);
           this.submitError.set(extractErrorMessage(err, 'Erro ao atualizar.'));
@@ -311,5 +312,9 @@ export class ClienteUsuarioDetailComponent implements OnInit {
         },
       });
     }
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty;
   }
 }

@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProdutoService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { ProdutoDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 import { CodigoFiscalInputComponent } from '../../../../shared/codigo-fiscal-input.component';
 import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
+import { DirtyTracker } from '../../../../shared/dirty-tracker';
 
 type Tab = 'geral' | 'fiscal';
 
@@ -287,7 +289,8 @@ type Tab = 'geral' | 'fiscal';
     }
   `],
 })
-export class ProdutoDetailComponent implements OnInit {
+export class ProdutoDetailComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty  = new DirtyTracker();
   private readonly _svc    = inject(ProdutoService);
   private readonly _confirm = inject(ConfirmDialogService);
   private readonly _toast  = inject(ToastService);
@@ -345,13 +348,14 @@ export class ProdutoDetailComponent implements OnInit {
 
       if (this.isNew()) {
         this.form = this._empty();
+        this._dirty.snapshot('form', this.form);
         this.loading.set(false);
         return;
       }
 
       this.loading.set(true);
       this._svc.getById(this.clienteId, this.produtoId).subscribe({
-        next: p => { this._sync(p); this.loading.set(false); this._carregarVizinhos(); },
+        next: p => { this._sync(p); this._dirty.snapshot('form', this.form); this.loading.set(false); this._carregarVizinhos(); },
         error: () => { this.loading.set(false); this.erro.set('Produto não encontrado.'); },
       });
     });
@@ -445,6 +449,7 @@ export class ProdutoDetailComponent implements OnInit {
         this.sucesso.set(true);
         if (this.isNew()) { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'produtos', p.id]); }
         else { this._sync(p); }
+        this._dirty.snapshot('form', this.form);
         setTimeout(() => this.sucesso.set(false), 3000);
       },
       error: err => {
@@ -453,6 +458,10 @@ export class ProdutoDetailComponent implements OnInit {
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isDirty('form', this.form);
   }
 
   duplicar(): void {

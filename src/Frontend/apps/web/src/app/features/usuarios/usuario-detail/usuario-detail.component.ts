@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UsuarioService, ContadorService, ClienteService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { UsuarioDto, ContadorDto, ClienteDto } from '@veloxml/models';
 import { SalvarAtalhoDirective } from '../../../shared/salvar-atalho.directive';
 
@@ -220,7 +221,7 @@ type Tab = 'geral' | 'acesso';
     }
   `],
 })
-export class UsuarioDetailComponent implements OnInit {
+export class UsuarioDetailComponent implements OnInit, HasUnsavedChanges {
   private readonly _svc    = inject(UsuarioService);
   private readonly _confirm = inject(ConfirmDialogService);
   private readonly _toast  = inject(ToastService);
@@ -325,7 +326,7 @@ export class UsuarioDetailComponent implements OnInit {
         nome: v.nome!, email: v.email!, perfil: v.perfil!,
         contadorId: v.contadorId || undefined, clienteId: v.clienteId || undefined,
       }).subscribe({
-        next: () => { this.submitting.set(false); this.goBack(); },
+        next: () => { this.submitting.set(false); this.form.markAsPristine(); this.goBack(); },
         error: err => {
           this.submitting.set(false);
           this.submitError.set(extractErrorMessage(err, 'Erro ao criar usuário.'));
@@ -334,7 +335,7 @@ export class UsuarioDetailComponent implements OnInit {
       });
     } else {
       this._svc.update(this.usuarioId, { nome: v.nome!, ativo: v.ativo ?? true, novaSenha: v.novaSenha || undefined }).subscribe({
-        next: () => { this.submitting.set(false); this.goBack(); },
+        next: () => { this.submitting.set(false); this.form.markAsPristine(); this.goBack(); },
         error: err => {
           this.submitting.set(false);
           this.submitError.set(extractErrorMessage(err, 'Erro ao atualizar.'));
@@ -342,5 +343,9 @@ export class UsuarioDetailComponent implements OnInit {
         },
       });
     }
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty;
   }
 }

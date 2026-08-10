@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DestinatarioService, CepService, CnpjService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors, validarCpfCnpj, validarEmail } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { DestinatarioDto } from '@veloxml/models';
 import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
+import { DirtyTracker } from '../../../../shared/dirty-tracker';
 
 type Tab = 'cadastro' | 'endereco';
 
@@ -233,7 +235,8 @@ type Tab = 'cadastro' | 'endereco';
     }
   `],
 })
-export class DestinatarioDetailComponent implements OnInit {
+export class DestinatarioDetailComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty   = new DirtyTracker();
   private readonly _svc     = inject(DestinatarioService);
   private readonly _confirm = inject(ConfirmDialogService);
   private readonly _toast   = inject(ToastService);
@@ -352,13 +355,14 @@ export class DestinatarioDetailComponent implements OnInit {
 
       if (this.isNew()) {
         this.form = this._empty();
+        this._dirty.snapshot('form', this.form);
         this.loading.set(false);
         return;
       }
 
       this.loading.set(true);
       this._svc.getById(this.clienteId, this.destinatarioId).subscribe({
-        next: d => { this._sync(d); this.loading.set(false); this._carregarVizinhos(); },
+        next: d => { this._sync(d); this._dirty.snapshot('form', this.form); this.loading.set(false); this._carregarVizinhos(); },
         error: () => { this.loading.set(false); this.erro.set('Cliente não encontrado.'); },
       });
     });
@@ -440,6 +444,7 @@ export class DestinatarioDetailComponent implements OnInit {
         this.sucesso.set(true);
         if (this.isNew()) { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'destinatarios', d.id]); }
         else { this._sync(d); }
+        this._dirty.snapshot('form', this.form);
         setTimeout(() => this.sucesso.set(false), 3000);
       },
       error: err => {
@@ -448,6 +453,10 @@ export class DestinatarioDetailComponent implements OnInit {
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isDirty('form', this.form);
   }
 
   duplicar(): void {

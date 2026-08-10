@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService, ConfiguracaoService, extractErrorMessage } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { FocusNfeConfigDto, GroqConfigDto } from '@veloxml/models';
 
 type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe' | 'assistenteIa';
@@ -505,7 +506,7 @@ type Tab = 'email' | 'social' | 'convite' | 'importacao' | 'storage' | 'focusNfe
     }
   `]
 })
-export class ConfiguracoesComponent implements OnInit {
+export class ConfiguracoesComponent implements OnInit, HasUnsavedChanges {
   private readonly _svc  = inject(ConfiguracaoService);
   private readonly _fb   = inject(FormBuilder);
   private readonly _auth = inject(AuthService);
@@ -679,6 +680,7 @@ export class ConfiguracoesComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.savingSmtp.set(false);
+        this.smtpForm.markAsPristine();
         this.smtpSuccess.set(true);
         setTimeout(() => this.smtpSuccess.set(false), 4000);
       },
@@ -702,6 +704,7 @@ export class ConfiguracoesComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.savingSocial.set(false);
+        this.socialForm.markAsPristine();
         this.socialSuccess.set(true);
         setTimeout(() => this.socialSuccess.set(false), 4000);
       },
@@ -838,6 +841,7 @@ export class ConfiguracoesComponent implements OnInit {
       next: c => {
         this.focusNfeConfig.set(c);
         this.focusNfeForm.patchValue({ tokenHomologacao: '', tokenProducao: '' });
+        this.focusNfeForm.markAsPristine();
         this.savingFocusNfe.set(false);
         this.focusNfeSuccess.set(true);
         setTimeout(() => this.focusNfeSuccess.set(false), 4000);
@@ -875,6 +879,7 @@ export class ConfiguracoesComponent implements OnInit {
       next: c => {
         this.groqConfig.set(c);
         this.groqForm.patchValue({ apiKey: '' });
+        this.groqForm.markAsPristine();
         this.savingGroq.set(false);
         this.groqSuccess.set(true);
         setTimeout(() => this.groqSuccess.set(false), 4000);
@@ -884,5 +889,9 @@ export class ConfiguracoesComponent implements OnInit {
         this.groqError.set(extractErrorMessage(err, 'Erro ao salvar configurações.'));
       },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.smtpForm.dirty || this.socialForm.dirty || this.focusNfeForm.dirty || this.groqForm.dirty;
   }
 }

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from '@veloxml/guards';
+import { roleGuard, unsavedChangesGuard } from '@veloxml/guards';
 
 export const BLOG_ADMIN_ROUTES: Routes = [
   {
@@ -12,6 +12,7 @@ export const BLOG_ADMIN_ROUTES: Routes = [
   {
     path: 'nova-postagem',
     canActivate: [roleGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: { roles: ['Administrador'] },
     loadComponent: () =>
       import('./blog-post-form/blog-post-form.component').then((m) => m.BlogPostFormComponent),
@@ -19,6 +20,7 @@ export const BLOG_ADMIN_ROUTES: Routes = [
   {
     path: 'editar/:id',
     canActivate: [roleGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: { roles: ['Administrador'] },
     loadComponent: () =>
       import('./blog-post-form/blog-post-form.component').then((m) => m.BlogPostFormComponent),

@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, ClienteService, ConfiguracaoService, CepService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { ClienteDto, CriarContaClienteResponse, ImportacaoXmlClienteStatusDto } from '@veloxml/models';
 import { SalvarAtalhoDirective } from '../../../shared/salvar-atalho.directive';
+import { DirtyTracker } from '../../../shared/dirty-tracker';
 
 type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
@@ -650,7 +652,8 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     }
   `],
 })
-export class ClienteDetailComponent implements OnInit {
+export class ClienteDetailComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty  = new DirtyTracker();
   private readonly _svc    = inject(ClienteService);
   private readonly _confirm = inject(ConfirmDialogService);
   private readonly _toast  = inject(ToastService);
@@ -729,6 +732,12 @@ export class ClienteDetailComponent implements OnInit {
         this._syncImap(c);
         this._syncWebhook(c);
         this._syncEmailNfe(c);
+        this._dirty.snapshot('edit', this.edit);
+        this._dirty.snapshot('fiscal', this.fiscal);
+        this._dirty.snapshot('imap', this.imap);
+        this._dirty.snapshot('webhook', this.webhook);
+        this._dirty.snapshot('emailNfe', this.emailNfe);
+        this._dirty.snapshot('conta', this.conta);
         this.loading.set(false);
         if (c.imapHabilitado) this.carregarLogImap(c.id);
       },
@@ -831,7 +840,7 @@ export class ClienteDetailComponent implements OnInit {
       bairro: this.edit.bairro || undefined, codigoIbgeCidade: this.edit.codigoIbgeCidade || undefined,
       cidade: this.edit.cidade || undefined, estado: this.edit.estado || undefined, ativo: this.edit.ativo,
     }).subscribe({
-      next: updated => { this.cliente.set(updated); this._syncEdit(updated); this.salvando.set(false); this.sucessoSave.set(true); setTimeout(() => this.sucessoSave.set(false), 3000); },
+      next: updated => { this.cliente.set(updated); this._syncEdit(updated); this._dirty.snapshot('edit', this.edit); this.salvando.set(false); this.sucessoSave.set(true); setTimeout(() => this.sucessoSave.set(false), 3000); },
       error: err => { this.salvando.set(false); this.erroSave.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
@@ -864,6 +873,7 @@ export class ClienteDetailComponent implements OnInit {
       next: updated => {
         this.cliente.set(updated);
         this._syncFiscal(updated);
+        this._dirty.snapshot('fiscal', this.fiscal);
         this.salvandoFiscal.set(false);
         this.sucessoFiscal.set(true);
         setTimeout(() => this.sucessoFiscal.set(false), 3000);
@@ -897,7 +907,7 @@ export class ClienteDetailComponent implements OnInit {
     this.erroImap.set(null);
     this.sucessoImap.set(false);
     this._svc.configurarImap(c.id, { habilitado: this.imap.habilitado, host: this.imap.host || undefined, port: this.imap.port || 993, email: this.imap.email || undefined, senha: this.imap.senha || undefined }).subscribe({
-      next: updated => { this.cliente.set(updated); this._syncImap(updated); this.salvandoImap.set(false); this.sucessoImap.set(true); setTimeout(() => this.sucessoImap.set(false), 3000); },
+      next: updated => { this.cliente.set(updated); this._syncImap(updated); this._dirty.snapshot('imap', this.imap); this.salvandoImap.set(false); this.sucessoImap.set(true); setTimeout(() => this.sucessoImap.set(false), 3000); },
       error: err => { this.salvandoImap.set(false); this.erroImap.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
@@ -909,7 +919,7 @@ export class ClienteDetailComponent implements OnInit {
     this.erroWebhook.set(null);
     this.sucessoWebhook.set(false);
     this._svc.configurarWebhook(c.id, { habilitado: this.webhook.habilitado, url: this.webhook.url || undefined }).subscribe({
-      next: updated => { this.cliente.set(updated); this._syncWebhook(updated); this.salvandoWebhook.set(false); this.sucessoWebhook.set(true); setTimeout(() => this.sucessoWebhook.set(false), 3000); },
+      next: updated => { this.cliente.set(updated); this._syncWebhook(updated); this._dirty.snapshot('webhook', this.webhook); this.salvandoWebhook.set(false); this.sucessoWebhook.set(true); setTimeout(() => this.sucessoWebhook.set(false), 3000); },
       error: err => { this.salvandoWebhook.set(false); this.erroWebhook.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
@@ -921,7 +931,7 @@ export class ClienteDetailComponent implements OnInit {
     this.erroEmailNfe.set(null);
     this.sucessoEmailNfe.set(false);
     this._svc.configurarEmailNfe(c.id, { habilitado: this.emailNfe.habilitado, gatilho: this.emailNfe.gatilho }).subscribe({
-      next: updated => { this.cliente.set(updated); this._syncEmailNfe(updated); this.salvandoEmailNfe.set(false); this.sucessoEmailNfe.set(true); setTimeout(() => this.sucessoEmailNfe.set(false), 3000); },
+      next: updated => { this.cliente.set(updated); this._syncEmailNfe(updated); this._dirty.snapshot('emailNfe', this.emailNfe); this.salvandoEmailNfe.set(false); this.sucessoEmailNfe.set(true); setTimeout(() => this.sucessoEmailNfe.set(false), 3000); },
       error: err => { this.salvandoEmailNfe.set(false); this.erroEmailNfe.set(extractErrorMessage(err, 'Erro ao salvar.')); },
     });
   }
@@ -936,8 +946,19 @@ export class ClienteDetailComponent implements OnInit {
     this.criandoConta.set(true);
     this.erroConta.set(null);
     this._svc.criarConta(c.id, { nome: this.conta.nome, email: this.conta.email }).subscribe({
-      next: res => { this.contaCriada.set(res); this.criandoConta.set(false); },
+      next: res => { this.contaCriada.set(res); this._dirty.snapshot('conta', this.conta); this.criandoConta.set(false); },
       error: err => { this.criandoConta.set(false); this.erroConta.set(extractErrorMessage(err, 'Erro ao criar conta. Verifique se o e-mail já está em uso.')); },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isAnyDirty([
+      ['edit', this.edit],
+      ['fiscal', this.fiscal],
+      ['imap', this.imap],
+      ['webhook', this.webhook],
+      ['emailNfe', this.emailNfe],
+      ['conta', this.conta],
+    ]);
   }
 }

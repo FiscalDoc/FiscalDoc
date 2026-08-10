@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ClienteService, CepService, extractErrorMessage } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { ClienteDto } from '@veloxml/models';
 import { SalvarAtalhoDirective } from '../../../shared/salvar-atalho.directive';
+import { DirtyTracker } from '../../../shared/dirty-tracker';
 
 type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
 
@@ -354,7 +356,8 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     }
   `],
 })
-export class ClienteEmpresaComponent implements OnInit {
+export class ClienteEmpresaComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty  = new DirtyTracker();
   private readonly _svc    = inject(ClienteService);
   private readonly _cepSvc = inject(CepService);
   private readonly _route  = inject(ActivatedRoute);
@@ -462,6 +465,9 @@ export class ClienteEmpresaComponent implements OnInit {
           regimeTributario: c.regimeTributario ?? '', inscricaoEstadual: c.inscricaoEstadual ?? '',
           inscricaoMunicipal: c.inscricaoMunicipal ?? '', cnaePrincipal: c.cnaePrincipal ?? '',
         };
+        this._dirty.snapshot('form', this.form);
+        this._dirty.snapshot('fiscal', this.fiscal);
+        this._dirty.snapshot('imap', this.imap);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -505,6 +511,7 @@ export class ClienteEmpresaComponent implements OnInit {
       next: updated => {
         this.cliente.set(updated);
         this._syncImap(updated);
+        this._dirty.snapshot('imap', this.imap);
         this.salvandoImap.set(false);
         this.sucessoImap.set(true);
         setTimeout(() => this.sucessoImap.set(false), 3000);
@@ -621,6 +628,7 @@ export class ClienteEmpresaComponent implements OnInit {
     }).subscribe({
       next: updated => {
         this.cliente.set(updated);
+        this._dirty.snapshot('form', this.form);
         this.salvando.set(false);
         this.sucesso.set(true);
         setTimeout(() => this.sucesso.set(false), 3000);
@@ -648,6 +656,7 @@ export class ClienteEmpresaComponent implements OnInit {
     }).subscribe({
       next: updated => {
         this.cliente.set(updated);
+        this._dirty.snapshot('fiscal', this.fiscal);
         this.salvandoFiscal.set(false);
         this.sucessoFiscal.set(true);
         setTimeout(() => this.sucessoFiscal.set(false), 3000);
@@ -657,5 +666,13 @@ export class ClienteEmpresaComponent implements OnInit {
         this.erroFiscal.set(extractErrorMessage(err, 'Erro ao salvar configuração fiscal.'));
       },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isAnyDirty([
+      ['form', this.form],
+      ['fiscal', this.fiscal],
+      ['imap', this.imap],
+    ]);
   }
 }

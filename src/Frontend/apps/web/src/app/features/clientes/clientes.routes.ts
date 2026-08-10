@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { clienteScopeGuard } from '@veloxml/guards';
+import { clienteScopeGuard, unsavedChangesGuard } from '@veloxml/guards';
 
 export const CLIENTES_ROUTES: Routes = [
   {
@@ -9,11 +9,13 @@ export const CLIENTES_ROUTES: Routes = [
   {
     path: ':id',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./cliente-detail/cliente-detail.component').then((m) => m.ClienteDetailComponent),
   },
   {
     path: ':id/empresa',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./cliente-empresa/cliente-empresa.component').then((m) => m.ClienteEmpresaComponent),
   },
   {
@@ -24,6 +26,7 @@ export const CLIENTES_ROUTES: Routes = [
   {
     path: ':id/cadastros/produtos/:produtoId',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./cadastros/produto-detail/produto-detail.component').then((m) => m.ProdutoDetailComponent),
   },
   {
@@ -34,6 +37,7 @@ export const CLIENTES_ROUTES: Routes = [
   {
     path: ':id/cadastros/destinatarios/:destinatarioId',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./cadastros/destinatario-detail/destinatario-detail.component').then((m) => m.DestinatarioDetailComponent),
   },
   {
@@ -44,6 +48,7 @@ export const CLIENTES_ROUTES: Routes = [
   {
     path: ':id/cadastros/transportadoras/:transportadoraId',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./cadastros/transportadora-detail/transportadora-detail.component').then((m) => m.TransportadoraDetailComponent),
   },
   {
@@ -54,6 +59,7 @@ export const CLIENTES_ROUTES: Routes = [
   {
     path: ':id/pedidos/:pedidoId',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./pedidos/pedido-form/pedido-form.component').then((m) => m.PedidoFormComponent),
   },
   {
@@ -74,6 +80,7 @@ export const CLIENTES_ROUTES: Routes = [
   {
     path: ':id/usuarios/:usuarioId',
     canActivate: [clienteScopeGuard],
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./cliente-usuarios/cliente-usuario-detail/cliente-usuario-detail.component').then((m) => m.ClienteUsuarioDetailComponent),
   },
 ];

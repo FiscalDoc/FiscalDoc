@@ -3,9 +3,11 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ContadorService, ClienteService, extractErrorMessage } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { ContadorDto, CobrancaDto, ClienteDto } from '@veloxml/models';
 import { environment } from '../../../../environments/environment';
 import { DecimalInputDirective } from '../../../shared/decimal-input.directive';
+import { DirtyTracker } from '../../../shared/dirty-tracker';
 
 type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
 
@@ -711,7 +713,8 @@ type Tab = 'visao-geral' | 'cadastro' | 'clientes' | 'financeiro' | 'acesso';
     }
   `]
 })
-export class ContadorDetailComponent implements OnInit {
+export class ContadorDetailComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty      = new DirtyTracker();
   private readonly _route      = inject(ActivatedRoute);
   private readonly _contSvc    = inject(ContadorService);
   private readonly _clienteSvc = inject(ClienteService);
@@ -774,6 +777,8 @@ export class ContadorDetailComponent implements OnInit {
         this.loading.set(false);
         this._syncEdit(c);
         this.plano = { valorPorCliente: c.valorPorCliente, limiteXmlPorCliente: c.limiteXmlPorCliente, valorXmlExcedente: c.valorXmlExcedente };
+        this._dirty.snapshot('edit', this.edit);
+        this._dirty.snapshot('plano', this.plano);
         this._loadClientes(id);
         this._loadHistorico(id);
       },
@@ -827,6 +832,7 @@ export class ContadorDetailComponent implements OnInit {
       next: (c) => {
         this.salvandoCadastro.set(false);
         this.contador.set(c);
+        this._dirty.snapshot('edit', this.edit);
         this.sucessoCadastro.set('Cadastro atualizado com sucesso!');
         setTimeout(() => this.sucessoCadastro.set(null), 3000);
       },
@@ -927,12 +933,20 @@ export class ContadorDetailComponent implements OnInit {
     this._contSvc.atualizarPlano(id, { contadorId: id, ...this.plano }).subscribe({
       next: () => {
         this.salvandoPlano.set(false);
+        this._dirty.snapshot('plano', this.plano);
         this.sucessoPlano.set('Plano atualizado com sucesso!');
         this._reload();
         setTimeout(() => this.sucessoPlano.set(null), 3000);
       },
       error: (e) => { this.salvandoPlano.set(false); this.erroPlano.set(extractErrorMessage(e, 'Erro ao salvar o plano.')); },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isAnyDirty([
+      ['edit', this.edit],
+      ['plano', this.plano],
+    ]);
   }
 
   gerarCobranca(): void {

@@ -4,9 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QuillModule } from 'ngx-quill';
 import { BlogAdminService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { BlogCategoriaDto, BlogPostDto, BlogStatus } from '@veloxml/models';
 import { environment } from '../../../../../environments/environment';
 import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
+import { DirtyTracker } from '../../../../shared/dirty-tracker';
 
 type Tab = 'conteudo' | 'publicacao' | 'seo';
 
@@ -211,7 +213,8 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     }
   `],
 })
-export class BlogPostFormComponent implements OnInit {
+export class BlogPostFormComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty = new DirtyTracker();
   private readonly _svc = inject(BlogAdminService);
   private readonly _route = inject(ActivatedRoute);
   private readonly _router = inject(Router);
@@ -242,13 +245,20 @@ export class BlogPostFormComponent implements OnInit {
 
     if (this.isNew()) {
       this.loading.set(false);
+      this._snapshot();
       return;
     }
 
     this._svc.getById(this.postId).subscribe({
-      next: p => { this._sync(p); this.loading.set(false); },
+      next: p => { this._sync(p); this.loading.set(false); this._snapshot(); },
       error: () => { this.loading.set(false); this.erro.set('Postagem não encontrada.'); },
     });
+  }
+
+  private _snapshot(): void {
+    this._dirty.snapshot('form', this.form);
+    this._dirty.snapshot('tagsTexto', this.tagsTexto);
+    this._dirty.snapshot('dataPublicacaoTexto', this.dataPublicacaoTexto);
   }
 
   private _sync(p: BlogPostDto): void {
@@ -319,6 +329,7 @@ export class BlogPostFormComponent implements OnInit {
         this.sucesso.set(true);
         if (this.isNew()) { this._router.navigate(['/admin/blog/editar', p.id]); }
         else { this._sync(p); }
+        this._snapshot();
         setTimeout(() => this.sucesso.set(false), 3000);
       },
       error: err => {
@@ -327,6 +338,14 @@ export class BlogPostFormComponent implements OnInit {
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isAnyDirty([
+      ['form', this.form],
+      ['tagsTexto', this.tagsTexto],
+      ['dataPublicacaoTexto', this.dataPublicacaoTexto],
+    ]);
   }
 
   private _empty() {

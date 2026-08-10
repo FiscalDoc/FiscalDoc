@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PedidoService, ProdutoService, DestinatarioService, TransportadoraService, DocumentoService, ClienteService, ToastService, ConfirmDialogService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { PedidoDto, ProdutoDto, DestinatarioDto, TransportadoraDto, PedidoItemInput, CreatePedidoRequest, DocumentoDto, PedidoHistoricoDto, NfeEmissaoDto, ClienteDto, DocumentoImpostosDto } from '@veloxml/models';
 import { DecimalInputDirective } from '../../../../shared/decimal-input.directive';
 import { CodigoFiscalInputComponent } from '../../../../shared/codigo-fiscal-input.component';
@@ -1215,7 +1216,7 @@ interface ConfirmState {
     }
   `],
 })
-export class PedidoFormComponent implements OnInit, OnDestroy {
+export class PedidoFormComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   private readonly _pedidoSvc = inject(PedidoService);
   private readonly _clienteSvc = inject(ClienteService);
   private readonly _prodSvc   = inject(ProdutoService);
@@ -1588,6 +1589,12 @@ export class PedidoFormComponent implements OnInit, OnDestroy {
         this.erroCalculoImpostos.set(extractErrorMessage(err, 'Erro ao calcular impostos.'));
       },
     });
+  }
+
+  // Usado pelo unsavedChangesGuard (CanDeactivate) — cobre navegação in-app (sidebar, browser
+  // back) que os wrappers manuais de goBack/anterior/próximo abaixo não alcançavam.
+  hasUnsavedChanges(): boolean {
+    return this._dirty && !this.readonly();
   }
 
   @HostListener('window:beforeunload', ['$event'])

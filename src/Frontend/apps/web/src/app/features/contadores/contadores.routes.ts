@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from '@veloxml/guards';
+import { roleGuard, unsavedChangesGuard } from '@veloxml/guards';
 
 export const CONTADORES_ROUTES: Routes = [
   {
@@ -12,6 +12,7 @@ export const CONTADORES_ROUTES: Routes = [
   {
     path: ':id',
     canActivate: [roleGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: { roles: ['Administrador'] },
     loadComponent: () =>
       import('./contador-detail/contador-detail.component').then((m) => m.ContadorDetailComponent),

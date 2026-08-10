@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TransportadoraService, CepService, CnpjService, ConfirmDialogService, ToastService, extractErrorMessage, extractFieldErrors } from '@veloxml/services';
+import { HasUnsavedChanges } from '@veloxml/guards';
 import { TransportadoraDto } from '@veloxml/models';
 import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directive';
+import { DirtyTracker } from '../../../../shared/dirty-tracker';
 
 type Tab = 'cadastro' | 'endereco' | 'integracao';
 
@@ -252,7 +254,8 @@ type Tab = 'cadastro' | 'endereco' | 'integracao';
     }
   `],
 })
-export class TransportadoraDetailComponent implements OnInit {
+export class TransportadoraDetailComponent implements OnInit, HasUnsavedChanges {
+  private readonly _dirty   = new DirtyTracker();
   private readonly _svc     = inject(TransportadoraService);
   private readonly _confirm = inject(ConfirmDialogService);
   private readonly _toast   = inject(ToastService);
@@ -347,13 +350,14 @@ export class TransportadoraDetailComponent implements OnInit {
 
       if (this.isNew()) {
         this.form = this._empty();
+        this._dirty.snapshot('form', this.form);
         this.loading.set(false);
         return;
       }
 
       this.loading.set(true);
       this._svc.getById(this.clienteId, this.transportadoraId).subscribe({
-        next: t => { this._sync(t); this.loading.set(false); this._carregarVizinhos(); },
+        next: t => { this._sync(t); this._dirty.snapshot('form', this.form); this.loading.set(false); this._carregarVizinhos(); },
         error: () => { this.loading.set(false); this.erro.set('Transportadora não encontrada.'); },
       });
     });
@@ -431,6 +435,7 @@ export class TransportadoraDetailComponent implements OnInit {
         this.sucesso.set(true);
         if (this.isNew()) { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'transportadoras', t.id]); }
         else { this._sync(t); }
+        this._dirty.snapshot('form', this.form);
         setTimeout(() => this.sucesso.set(false), 3000);
       },
       error: err => {
@@ -439,6 +444,10 @@ export class TransportadoraDetailComponent implements OnInit {
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
     });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this._dirty.isDirty('form', this.form);
   }
 
   duplicar(): void {

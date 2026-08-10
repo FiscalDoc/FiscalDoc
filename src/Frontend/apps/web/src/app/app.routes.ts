@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, clienteScopeGuard, landingDomainGuard, roleGuard } from '@veloxml/guards';
+import { authGuard, clienteScopeGuard, landingDomainGuard, roleGuard, unsavedChangesGuard } from '@veloxml/guards';
 
 export const routes: Routes = [
   {
@@ -78,6 +78,7 @@ export const routes: Routes = [
       },
       {
         path: 'configuracoes',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./features/configuracoes/configuracoes.component').then((m) => m.ConfiguracoesComponent),
       },
