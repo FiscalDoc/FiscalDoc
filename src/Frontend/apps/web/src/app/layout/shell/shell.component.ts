@@ -696,9 +696,10 @@ interface NavItem {
       .sidebar.collapsed .empresa-badge,
       .sidebar.collapsed .footer-links-row { justify-content: center; }
       .sidebar.collapsed .footer-links-row { flex-direction: column; gap: 8px; }
-      /* Os ícones do rodapé (tema, atalhos, tour, novidades, alertas) não cabem numa fileira
-         horizontal em 64px de largura — empilha em coluna igual o resto do rodapé recolhido. */
-      .sidebar.collapsed .footer-icons { flex-direction: column; gap: 4px; }
+      /* Tema/atalhos/tour/novidades são baixa frequência e ficam empilhados demais em 64px —
+         some com eles no recolhido (ainda dá pra acessar expandindo a sidebar, e atalhos
+         continua abrindo por Ctrl+/); só Alertas fica visível, por ter contador de não lidos. */
+      .sidebar.collapsed .footer-icons .novidades-icon-link { display: none; }
       .sidebar.collapsed .user-row { justify-content: center; }
       .sidebar.collapsed .user-info { flex: 0; }
     }
