@@ -26,13 +26,22 @@ type Tab = 'geral' | 'acesso';
           </button>
           <div class="header-top">
             <h2 class="page-title">{{ isNew() ? 'Novo Usuário' : (form.get('nome')?.value || 'Usuário') }}</h2>
-            @if (!isNew() && usuario()?.perfil !== 'Administrador') {
-              <button class="btn-danger-outline" [disabled]="excluindo()" (click)="excluir()">
-                {{ excluindo() ? 'Excluindo...' : 'Excluir' }}
+            <div class="header-actions">
+              <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+              <button type="button" class="btn-ghost" (click)="goBack()">Cancelar</button>
+              <button type="button" class="btn-primary" [disabled]="submitting()" (click)="onSubmit()">
+                {{ submitting() ? 'Salvando...' : (isNew() ? 'Criar Usuário' : 'Salvar') }}
               </button>
-            }
+              @if (!isNew() && usuario()?.perfil !== 'Administrador') {
+                <button class="btn-danger-outline" [disabled]="excluindo()" (click)="excluir()">
+                  {{ excluindo() ? 'Excluindo...' : 'Excluir' }}
+                </button>
+              }
+            </div>
           </div>
         </div>
+
+        @if (submitError()) { <div class="alert-error">{{ submitError() }}</div> }
 
         <nav class="tabs">
           <button class="tab-btn" [class.active]="tab() === 'geral'" (click)="tab.set('geral')">Dados Gerais</button>
@@ -148,15 +157,6 @@ type Tab = 'geral' | 'acesso';
             </div>
           }
 
-          @if (submitError()) { <div class="alert-error">{{ submitError() }}</div> }
-
-          <div class="form-actions">
-            <button type="button" class="btn-ghost" (click)="goBack()">Cancelar</button>
-            <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-            <button type="submit" class="btn-primary" [disabled]="submitting()">
-              {{ submitting() ? 'Salvando...' : (isNew() ? 'Criar Usuário' : 'Salvar') }}
-            </button>
-          </div>
         </form>
       </div>
     }
@@ -167,8 +167,9 @@ type Tab = 'geral' | 'acesso';
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
-    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .header-actions { display: flex; align-items: center; gap: .75rem; }
     .btn-danger-outline { background: none; border: 1px solid rgba(255,77,109,.4); color: var(--red); border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: pointer; }
     .btn-danger-outline:hover:not(:disabled) { background: rgba(255,77,109,.1); }
     .btn-danger-outline:disabled { opacity: .5; cursor: not-allowed; }
@@ -199,8 +200,7 @@ type Tab = 'geral' | 'acesso';
     .badge-green { background: rgba(0, 229, 160, .12); color: var(--green); }
     .badge-gray  { background: var(--bg3); color: var(--text2); }
 
-    .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; margin-bottom: 1.25rem; }
-    .form-actions { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; }
+    .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -215,9 +215,8 @@ type Tab = 'geral' | 'acesso';
       .form-grid { grid-template-columns: 1fr; }
       .info-grid { grid-template-columns: 1fr; }
       .header-top { flex-direction: column; align-items: stretch; gap: .5rem; }
-      .btn-danger-outline { width: 100%; }
-      .form-actions { flex-direction: column-reverse; align-items: stretch; }
-      .form-actions button { width: 100%; }
+      .header-actions { flex-wrap: wrap; }
+      .header-actions .btn-primary, .header-actions .btn-ghost, .header-actions .btn-danger-outline { flex: 1; }
     }
   `],
 })

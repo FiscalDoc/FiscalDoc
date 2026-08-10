@@ -26,11 +26,21 @@ type Tab = 'cadastro' | 'endereco';
           </button>
           <div class="header-top">
             <h2 class="page-title">{{ isNew() ? 'Novo Cliente' : form.razaoSocial || 'Cliente' }}</h2>
-            @if (!isNew()) {
-              <button class="btn-danger-outline" (click)="excluir()">Excluir</button>
-            }
+            <div class="header-actions">
+              <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+              <button class="btn-ghost" (click)="goBack()">Cancelar</button>
+              <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
+                {{ salvando() ? 'Salvando...' : 'Salvar' }}
+              </button>
+              @if (!isNew()) {
+                <button class="btn-danger-outline" (click)="excluir()">Excluir</button>
+              }
+            </div>
           </div>
         </div>
+
+        @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
+        @if (sucesso()) { <div class="alert-ok">Cliente salvo!</div> }
 
         <nav class="tabs">
           <button class="tab-btn" [class.active]="tab() === 'cadastro'" (click)="tab.set('cadastro')">Cadastro</button>
@@ -135,16 +145,6 @@ type Tab = 'cadastro' | 'endereco';
           </div>
         }
 
-        @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
-        @if (sucesso()) { <div class="alert-ok">Cliente salvo!</div> }
-
-        <div class="form-actions">
-          <button class="btn-ghost" (click)="goBack()">Cancelar</button>
-          <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-          <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-            {{ salvando() ? 'Salvando...' : 'Salvar' }}
-          </button>
-        </div>
       </div>
     }
   `,
@@ -154,8 +154,9 @@ type Tab = 'cadastro' | 'endereco';
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
-    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .header-actions { display: flex; align-items: center; gap: .75rem; }
     .btn-danger-outline { background: none; border: 1px solid rgba(255,77,109,.4); color: var(--red); border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: pointer; }
     .btn-danger-outline:hover { background: rgba(255,77,109,.1); }
 
@@ -186,7 +187,6 @@ type Tab = 'cadastro' | 'endereco';
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
-    .form-actions { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -196,11 +196,11 @@ type Tab = 'cadastro' | 'endereco';
     /* Tablet/iPad e mobile */
     @media (max-width: 640px) {
       .header-top { flex-direction: column; align-items: stretch; }
+      .header-actions { flex-wrap: wrap; }
+      .header-actions .btn-primary, .header-actions .btn-ghost, .header-actions .btn-danger-outline { flex: 1; }
       .form-grid { grid-template-columns: 1fr; }
       .col-2 { grid-column: span 1; }
       .combo-row { flex-direction: column; align-items: stretch; }
-      .form-actions { flex-direction: column-reverse; }
-      .form-actions button { width: 100%; }
     }
   `],
 })

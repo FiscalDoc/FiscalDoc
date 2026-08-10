@@ -2,15 +2,16 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService, TransportadoraService } from '@veloxml/services';
+import { AuthService, TransportadoraService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { TransportadoraDto } from '@veloxml/models';
+import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-atalho.directive';
 
 @Component({
   selector: 'app-transportadoras-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NovoRegistroAtalhoDirective],
   template: `
-    <div class="page">
+    <div class="page" appNovoAtalho (appNovoAtalho)="abrirTransportadora('novo')">
       <div class="page-header">
         @if (!isCliente()) {
           <button class="back-btn" (click)="goBack()">
@@ -31,7 +32,7 @@ import { TransportadoraDto } from '@veloxml/models';
             </svg>
             <input class="search-input" [(ngModel)]="termo" (input)="buscar()" placeholder="Buscar transportadora..."/>
           </div>
-          <button class="btn-primary" (click)="abrirTransportadora('novo')">+ Nova Transportadora</button>
+          <button class="btn-primary" title="Atalho: Ctrl+Alt+N" (click)="abrirTransportadora('novo')">+ Nova Transportadora</button>
         </div>
 
         <div class="filter-bar">
@@ -58,7 +59,7 @@ import { TransportadoraDto } from '@veloxml/models';
           <div class="table-scroll">
           <table class="table">
             <thead>
-              <tr><th>Razão Social</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th></tr>
+              <tr><th>Razão Social</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               @for (t of transportadoras(); track t.id) {
@@ -70,6 +71,13 @@ import { TransportadoraDto } from '@veloxml/models';
                   <td class="mono">{{ t.cpfCnpj ?? '-' }}</td>
                   <td>{{ t.cidade ? (t.cidade + '/' + t.estado) : '-' }}</td>
                   <td><span class="badge" [class.badge-green]="t.ativo" [class.badge-red]="!t.ativo">{{ t.ativo ? 'Ativo' : 'Inativo' }}</span></td>
+                  <td class="actions-cell">
+                    <button class="icon-btn danger" title="Excluir" (click)="$event.stopPropagation(); excluir(t)">
+                      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
+                      </svg>
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -108,6 +116,13 @@ import { TransportadoraDto } from '@veloxml/models';
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-green { background: rgba(0, 229, 160, .12); color: var(--green); }
     .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
+    .actions-cell { display: flex; gap: 6px; }
+    .icon-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      border-radius: 6px; padding: 5px; cursor: pointer; display: flex; align-items: center;
+      transition: color 120ms, background 120ms, border-color 120ms;
+    }
+    .icon-btn.danger:hover { color: var(--red); border-color: var(--red); background: rgba(255,77,109,.1); }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -124,6 +139,8 @@ export class TransportadorasListComponent implements OnInit {
   private readonly _route  = inject(ActivatedRoute);
   private readonly _router = inject(Router);
   private readonly _auth   = inject(AuthService);
+  private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast   = inject(ToastService);
 
   private clienteId = '';
   readonly isCliente = computed(() => this._auth.currentUser()?.perfil === 'Cliente');
@@ -155,4 +172,13 @@ export class TransportadorasListComponent implements OnInit {
   }
 
   abrirTransportadora(id: string): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'transportadoras', id]); }
+
+  async excluir(t: TransportadoraDto): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir "${t.razaoSocial}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
+    this._svc.delete(this.clienteId, t.id).subscribe({
+      next: () => { this._toast.success('Transportadora excluída!'); this.buscar(); },
+      error: err => this._toast.error(extractErrorMessage(err, 'Erro ao excluir transportadora.')),
+    });
+  }
 }

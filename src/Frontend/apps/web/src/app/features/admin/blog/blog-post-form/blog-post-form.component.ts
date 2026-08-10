@@ -28,11 +28,21 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
           </button>
           <div class="header-top">
             <h2 class="page-title">{{ isNew() ? 'Nova Postagem' : form.titulo || 'Postagem' }}</h2>
-            @if (!isNew()) {
-              <button class="btn-ghost" (click)="visualizar()">Visualizar</button>
-            }
+            <div class="header-actions">
+              <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+              <button class="btn-ghost" (click)="goBack()">Cancelar</button>
+              @if (!isNew()) {
+                <button class="btn-ghost" (click)="visualizar()">Visualizar</button>
+              }
+              <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
+                {{ salvando() ? 'Salvando...' : 'Salvar' }}
+              </button>
+            </div>
           </div>
         </div>
+
+        @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
+        @if (sucesso()) { <div class="alert-ok">Postagem salva!</div> }
 
         <nav class="tabs">
           <button class="tab-btn" [class.active]="tab() === 'conteudo'" (click)="tab.set('conteudo')">Conteúdo</button>
@@ -129,16 +139,6 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
           </div>
         }
 
-        @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
-        @if (sucesso()) { <div class="alert-ok">Postagem salva!</div> }
-
-        <div class="form-actions">
-          <button class="btn-ghost" (click)="goBack()">Cancelar</button>
-          <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-          <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-            {{ salvando() ? 'Salvando...' : 'Salvar' }}
-          </button>
-        </div>
       </div>
     }
   `,
@@ -148,8 +148,9 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
-    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .header-actions { display: flex; align-items: center; gap: .75rem; }
 
     .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
     .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; }
@@ -194,7 +195,6 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
 
-    .form-actions { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -205,7 +205,8 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
       .form-grid { grid-template-columns: 1fr; }
       .col-2 { grid-column: span 1; }
       .header-top { flex-direction: column; align-items: stretch; gap: .5rem; }
-      .form-actions { flex-direction: column-reverse; align-items: stretch; }
+      .header-actions { flex-wrap: wrap; }
+      .header-actions .btn-primary, .header-actions .btn-ghost { flex: 1; }
       .status-toggle { flex-direction: column; }
     }
   `],

@@ -102,11 +102,27 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
         </div>
 
         <!-- Tabs -->
-        <nav class="tabs">
-          <button class="tab-btn" [class.active]="tab() === 'cadastro'" (click)="tab.set('cadastro')">Cadastro</button>
-          <button class="tab-btn" [class.active]="tab() === 'fiscal'" (click)="tab.set('fiscal')">Fiscal</button>
-          <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="tab.set('integracao')">Integração</button>
-        </nav>
+        <div class="tabs-row">
+          <nav class="tabs">
+            <button class="tab-btn" [class.active]="tab() === 'cadastro'" (click)="tab.set('cadastro')">Cadastro</button>
+            <button class="tab-btn" [class.active]="tab() === 'fiscal'" (click)="tab.set('fiscal')">Fiscal</button>
+            <button class="tab-btn" [class.active]="tab() === 'integracao'" (click)="tab.set('integracao')">Integração</button>
+          </nav>
+          <div class="header-actions">
+            @if (tab() === 'cadastro' || tab() === 'fiscal') {
+              <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+              <button class="btn-primary" [disabled]="salvandoAtual()" (click)="salvarAtalho()">
+                {{ salvandoAtual() ? 'Salvando...' : 'Salvar' }}
+              </button>
+            }
+            <button class="btn-danger-ghost" (click)="confirmDelete()">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Excluir cliente
+            </button>
+          </div>
+        </div>
 
         <!-- ── Cadastro ── -->
         @if (tab() === 'cadastro') {
@@ -168,20 +184,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
             </div>
             @if (erroSave()) { <div class="alert-error">{{ erroSave() }}</div> }
             @if (sucessoSave()) { <div class="alert-ok">Salvo com sucesso!</div> }
-            <div class="form-actions">
-              <button class="btn-danger-ghost" (click)="confirmDelete()">
-                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-                Excluir cliente
-              </button>
-              <div class="save-group">
-                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-                <button class="btn-primary" [disabled]="salvando()" (click)="salvarCadastro()">
-                  {{ salvando() ? 'Salvando...' : 'Salvar alterações' }}
-                </button>
-              </div>
-            </div>
           </div>
         }
 
@@ -242,15 +244,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
 
             @if (erroFiscal()) { <div class="alert-error">{{ erroFiscal() }}</div> }
             @if (sucessoFiscal()) { <div class="alert-ok">Configuração fiscal salva!</div> }
-            <div class="form-actions">
-              <span></span>
-              <div class="save-group">
-                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-                <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
-                  {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
-                </button>
-              </div>
-            </div>
           </div>
         }
 
@@ -571,7 +564,9 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .badge-red { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-gray { background: rgba(124,130,153,.12); color: var(--text2); }
 
-    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+    .tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+    .tabs { display: flex; gap: 2px; }
+    .header-actions { display: flex; align-items: center; gap: .75rem; padding-bottom: .5rem; }
     .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms, border-color 120ms; }
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -591,7 +586,6 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
     .field-hint { font-size: 11px; color: var(--text2); }
 
     .form-actions { display: flex; align-items: center; justify-content: space-between; padding-top: .75rem; border-top: 1px solid var(--border); }
-    .save-group { display: flex; align-items: center; gap: .75rem; }
 
     .nfe-info { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .75rem 0; }
 
@@ -645,6 +639,9 @@ type Tab = 'cadastro' | 'fiscal' | 'integracao';
       .form-grid { grid-template-columns: 1fr; }
       .col-2 { grid-column: span 1; }
       .profile-top { flex-direction: column; align-items: stretch; }
+      .tabs-row { flex-direction: column; align-items: stretch; }
+      .header-actions { flex-wrap: wrap; padding-bottom: .75rem; }
+      .header-actions .btn-primary, .header-actions .btn-danger-ghost { flex: 1; }
       .form-actions { flex-direction: column-reverse; align-items: stretch; gap: .5rem; }
       .imap-header, .imap-log-header { flex-direction: column; align-items: stretch; }
       .appkey-box { flex-direction: column; align-items: stretch; }
@@ -812,6 +809,12 @@ export class ClienteDetailComponent implements OnInit {
   salvarAtalho(): void {
     if (this.tab() === 'cadastro') this.salvarCadastro();
     else if (this.tab() === 'fiscal') this.salvarFiscal();
+  }
+
+  // O botão "Salvar" único no topo (ao lado das abas) precisa saber de qual aba puxar o
+  // estado de "salvando" — cadastro e fiscal são chamadas independentes no backend.
+  salvandoAtual(): boolean {
+    return this.tab() === 'cadastro' ? this.salvando() : this.salvandoFiscal();
   }
 
   salvarCadastro(): void {

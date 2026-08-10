@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, PedidoService } from '@veloxml/services';
 import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
+import { NovoRegistroAtalhoDirective } from '../../../shared/novo-registro-atalho.directive';
 
 @Component({
   selector: 'app-pedidos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NovoRegistroAtalhoDirective],
   template: `
-    <div class="page">
+    <div class="page" appNovoAtalho (appNovoAtalho)="novoPedido()">
       <div class="page-header">
         @if (!isCliente()) {
           <button class="back-btn" (click)="goBack()">
@@ -22,7 +23,7 @@ import { PedidoDto, PedidosResumoDto } from '@veloxml/models';
         }
         <div class="header-row">
           <h2 class="page-title">Pedidos / Nota Fiscal</h2>
-          <button class="btn-primary" data-tour="novo-pedido" (click)="novoPedido()">+ Novo Pedido</button>
+          <button class="btn-primary" data-tour="novo-pedido" title="Atalho: Ctrl+Alt+N" (click)="novoPedido()">+ Novo Pedido</button>
         </div>
       </div>
 

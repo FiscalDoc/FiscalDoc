@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, inject, signal, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService, ContadorService, ThemeService } from '@veloxml/services';
@@ -37,7 +37,7 @@ interface NavItem {
         <div class="sidebar-backdrop" (click)="mobileMenuOpen.set(false)"></div>
       }
 
-      <aside class="sidebar" [class.open]="mobileMenuOpen()" [class.collapsed]="sidebarCollapsed()">
+      <aside #sidebarEl class="sidebar" [class.open]="mobileMenuOpen()" [class.collapsed]="sidebarCollapsed() && !sidebarTempExpanded()">
         <div class="sidebar-header">
           <div class="brand-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -79,10 +79,10 @@ interface NavItem {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                   </svg>
                 </button>
-                @if (isGroupExpanded(item) && !sidebarCollapsed()) {
+                @if (isGroupExpanded(item) && (!sidebarCollapsed() || sidebarTempExpanded())) {
                   <div class="nav-subitems">
                     @for (child of item.children; track child.route) {
-                      <a [routerLink]="child.route" [attr.data-tour]="child.tourId" routerLinkActive="active" class="nav-item nav-subitem" (click)="mobileMenuOpen.set(false)">
+                      <a [routerLink]="child.route" [attr.data-tour]="child.tourId" routerLinkActive="active" class="nav-item nav-subitem" (click)="onNavItemClick()">
                         <span class="nav-icon" [innerHTML]="trustIcon(child.icon)"></span>
                         <span class="nav-label">{{ child.label }}</span>
                       </a>
@@ -91,7 +91,7 @@ interface NavItem {
                 }
               </div>
             } @else {
-              <a [routerLink]="item.route" [attr.data-tour]="item.tourId" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed() ? item.label : ''" (click)="mobileMenuOpen.set(false)">
+              <a [routerLink]="item.route" [attr.data-tour]="item.tourId" routerLinkActive="active" class="nav-item" [title]="sidebarCollapsed() ? item.label : ''" (click)="onNavItemClick()">
                 <span class="nav-icon" [innerHTML]="trustIcon(item.icon)"></span>
                 <span class="nav-label">{{ item.label }}</span>
               </a>
@@ -746,12 +746,31 @@ export class ShellComponent implements OnInit {
   cobrancasAtrasadas = signal(0);
   isAdmin = signal(false);
   showUpgradeModal = signal(false);
+  @ViewChild('sidebarEl') sidebarRef?: ElementRef<HTMLElement>;
+
   mobileMenuOpen = signal(false);
   // Persistido pra não recolher/expandir sozinho a cada F5 — a mesma escolha do usuário vale
   // pra próxima visita. Só tem efeito em desktop (ver CSS); em mobile a sidebar já é uma gaveta
   // off-canvas full-size, então esse estado fica sem uso ali, sem conflito.
   readonly sidebarCollapsed = signal(localStorage.getItem('vx_sidebar_collapsed') === '1');
+  // Estado TEMPORÁRIO — quando o usuário clica num grupo com a sidebar recolhida, ela expande
+  // só visualmente pra mostrar os subitens, sem mudar a preferência salva. Clicar fora (ou
+  // escolher um item) desfaz isso sozinho, voltando a recolher — não fica expandida "de vez"
+  // só porque abriu um grupo uma vez.
+  readonly sidebarTempExpanded = signal(false);
   private readonly _expandedGroups = signal<Set<string>>(new Set());
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(e: MouseEvent): void {
+    if (!this.sidebarTempExpanded()) return;
+    const dentroDaSidebar = this.sidebarRef?.nativeElement.contains(e.target as Node);
+    if (!dentroDaSidebar) this.sidebarTempExpanded.set(false);
+  }
+
+  onNavItemClick(): void {
+    this.mobileMenuOpen.set(false);
+    this.sidebarTempExpanded.set(false);
+  }
 
   private readonly _whatsappNumber = '5511973982559';
   readonly whatsappNumberFormatted = '+55 11 97398-2559';
@@ -1009,6 +1028,7 @@ export class ShellComponent implements OnInit {
   }
 
   toggleSidebarCollapsed(): void {
+    this.sidebarTempExpanded.set(false);
     this.sidebarCollapsed.update(v => {
       const next = !v;
       localStorage.setItem('vx_sidebar_collapsed', next ? '1' : '0');
@@ -1017,11 +1037,12 @@ export class ShellComponent implements OnInit {
   }
 
   // Com a sidebar recolhida (só ícones) não tem espaço pra mostrar a lista de subitens de um
-  // grupo — em vez de um flyout, clicar num grupo simplesmente expande a sidebar de volta com
-  // aquele grupo já aberto, mais simples e sem submenu flutuante pra manter.
+  // grupo — clicar num grupo expande ela só temporariamente (sidebarTempExpanded), sem mudar
+  // a preferência salva. Clicar fora ou escolher um item (onNavItemClick) recolhe de volta
+  // sozinho — ver o @HostListener('document:click') acima.
   onGroupToggleClick(item: NavItem): void {
     if (this.sidebarCollapsed()) {
-      this.toggleSidebarCollapsed();
+      this.sidebarTempExpanded.set(true);
       this._expandedGroups.update(s => new Set(s).add(item.label));
       return;
     }

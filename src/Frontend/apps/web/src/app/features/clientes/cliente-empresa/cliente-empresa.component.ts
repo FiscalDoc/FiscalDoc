@@ -24,12 +24,20 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
           <p class="page-sub">Dados cadastrais da sua empresa</p>
         </div>
 
-        <nav class="tabs">
-          <button class="tab-btn" [class.active]="tab() === 'dados'" (click)="tab.set('dados')">Dados Principais</button>
-          <button class="tab-btn" [class.active]="tab() === 'endereco'" (click)="tab.set('endereco')">Endereço</button>
-          <button class="tab-btn" [class.active]="tab() === 'fiscal'" (click)="tab.set('fiscal')">Fiscal</button>
-          <button class="tab-btn" [class.active]="tab() === 'parametros'" (click)="tab.set('parametros')">Parâmetros</button>
-        </nav>
+        <div class="tabs-row">
+          <nav class="tabs">
+            <button class="tab-btn" [class.active]="tab() === 'dados'" (click)="tab.set('dados')">Dados Principais</button>
+            <button class="tab-btn" [class.active]="tab() === 'endereco'" (click)="tab.set('endereco')">Endereço</button>
+            <button class="tab-btn" [class.active]="tab() === 'fiscal'" (click)="tab.set('fiscal')">Fiscal</button>
+            <button class="tab-btn" [class.active]="tab() === 'parametros'" (click)="tab.set('parametros')">Parâmetros</button>
+          </nav>
+          <div class="header-actions">
+            <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+            <button class="btn-primary" [disabled]="salvandoAtual()" (click)="salvarAtalho()">
+              {{ salvandoAtual() ? 'Salvando...' : 'Salvar' }}
+            </button>
+          </div>
+        </div>
 
         <!-- ── Dados Principais ── -->
         @if (tab() === 'dados') {
@@ -70,14 +78,6 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
             @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
 
-            <div class="form-actions">
-              <div class="save-group">
-                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-                <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-                  {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
-                </button>
-              </div>
-            </div>
           </div>
         }
 
@@ -121,14 +121,6 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (erro()) { <div class="alert-error">{{ erro() }}</div> }
             @if (sucesso()) { <div class="alert-ok">Dados da empresa salvos!</div> }
 
-            <div class="form-actions">
-              <div class="save-group">
-                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-                <button class="btn-primary" [disabled]="salvando()" (click)="salvar()">
-                  {{ salvando() ? 'Salvando...' : 'Salvar Alterações' }}
-                </button>
-              </div>
-            </div>
           </div>
         }
 
@@ -164,16 +156,6 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
 
             @if (erroFiscal()) { <div class="alert-error">{{ erroFiscal() }}</div> }
             @if (sucessoFiscal()) { <div class="alert-ok">Configuração fiscal salva!</div> }
-
-            <div class="form-actions">
-              <span></span>
-              <div class="save-group">
-                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-                <button class="btn-primary" [disabled]="salvandoFiscal()" (click)="salvarFiscal()">
-                  {{ salvandoFiscal() ? 'Salvando...' : 'Salvar configuração fiscal' }}
-                </button>
-              </div>
-            </div>
           </div>
 
           <div class="card section">
@@ -269,12 +251,6 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
             @if (sucessoImap()) { <div class="alert-ok">Configuração de e-mail salva!</div> }
             <div class="form-actions">
               <a routerLink="/logs" class="link-ghost">Ver histórico em Logs</a>
-              <div class="save-group">
-                <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-                <button class="btn-primary" [disabled]="salvandoImap()" (click)="salvarImap()">
-                  {{ salvandoImap() ? 'Salvando...' : 'Salvar configuração de e-mail' }}
-                </button>
-              </div>
             </div>
           </div>
 
@@ -309,7 +285,9 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .page-sub { color: var(--text2); font-size: 13px; margin: 0; }
 
-    .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+    .tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+    .tabs { display: flex; gap: 2px; }
+    .header-actions { display: flex; align-items: center; gap: .75rem; padding-bottom: .5rem; }
     .tab-btn { background: none; border: none; color: var(--text2); font-size: 13.5px; cursor: pointer; padding: .625rem 1rem; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms, border-color 120ms; }
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -342,7 +320,6 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     .alert-ok { background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-warn { background: rgba(255,209,102,.1); border: 1px solid rgba(255,209,102,.3); color: var(--yellow); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .form-actions { display: flex; align-items: center; justify-content: space-between; }
-    .save-group { display: flex; align-items: center; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -366,6 +343,9 @@ type Tab = 'dados' | 'endereco' | 'fiscal' | 'parametros';
     @media (max-width: 640px) {
       .form-grid { grid-template-columns: 1fr; }
       .col-2 { grid-column: span 1; }
+      .tabs-row { flex-direction: column; align-items: stretch; }
+      .header-actions { flex-wrap: wrap; padding-bottom: .75rem; }
+      .header-actions .btn-primary { flex: 1; }
       .form-actions { flex-direction: column-reverse; align-items: stretch; gap: .5rem; }
       .section-header-row { flex-direction: column; align-items: stretch; }
       .appkey-box { flex-direction: column; align-items: stretch; }
@@ -603,6 +583,17 @@ export class ClienteEmpresaComponent implements OnInit {
     if (this.tab() === 'dados' || this.tab() === 'endereco') this.salvar();
     else if (this.tab() === 'fiscal') this.salvarFiscal();
     else if (this.tab() === 'parametros') this.salvarImap();
+  }
+
+  // O botão "Salvar" único ao lado das abas precisa saber de qual aba puxar o estado de
+  // "salvando" — cada aba chama um endpoint independente no backend.
+  salvandoAtual(): boolean {
+    switch (this.tab()) {
+      case 'dados':
+      case 'endereco': return this.salvando();
+      case 'fiscal': return this.salvandoFiscal();
+      case 'parametros': return this.salvandoImap();
+    }
   }
 
   salvar(): void {

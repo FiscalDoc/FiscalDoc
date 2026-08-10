@@ -22,8 +22,19 @@ import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directiv
             </svg>
             Usuários
           </button>
-          <h2 class="page-title">{{ isNew() ? 'Novo Usuário' : (form.get('nome')?.value || 'Usuário') }}</h2>
+          <div class="header-top">
+            <h2 class="page-title">{{ isNew() ? 'Novo Usuário' : (form.get('nome')?.value || 'Usuário') }}</h2>
+            <div class="header-actions">
+              <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
+              <button type="button" class="btn-ghost" (click)="goBack()">Cancelar</button>
+              <button type="button" class="btn-primary" [disabled]="submitting()" (click)="onSubmit()">
+                {{ submitting() ? 'Salvando...' : (isNew() ? 'Criar Usuário' : 'Salvar') }}
+              </button>
+            </div>
+          </div>
         </div>
+
+        @if (submitError()) { <div class="alert-error">{{ submitError() }}</div> }
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card section">
           <h4 class="section-title">Dados do Usuário</h4>
@@ -96,15 +107,6 @@ import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directiv
             }
           }
 
-          @if (submitError()) { <div class="alert-error">{{ submitError() }}</div> }
-
-          <div class="form-actions">
-            <button type="button" class="btn-ghost" (click)="goBack()">Cancelar</button>
-            <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
-            <button type="submit" class="btn-primary" [disabled]="submitting()">
-              {{ submitting() ? 'Salvando...' : (isNew() ? 'Criar Usuário' : 'Salvar') }}
-            </button>
-          </div>
         </form>
       </div>
     }
@@ -115,7 +117,9 @@ import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directiv
     .page-header { display: flex; flex-direction: column; gap: .5rem; }
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
+    .header-actions { display: flex; align-items: center; gap: .75rem; }
 
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -134,7 +138,6 @@ import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directiv
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text); margin-top: 6px; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
-    .form-actions { display: flex; align-items: center; justify-content: flex-end; gap: .75rem; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1.25rem; font-size: 13.5px; font-weight: 600; cursor: pointer; }
     .btn-primary:hover { opacity: .88; }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
@@ -167,7 +170,9 @@ import { SalvarAtalhoDirective } from '../../../../shared/salvar-atalho.directiv
     @media (max-width: 640px) {
       .form-grid { grid-template-columns: 1fr; }
       .col-2 { grid-column: span 1; }
-      .form-actions { flex-direction: column-reverse; align-items: stretch; }
+      .header-top { flex-direction: column; align-items: stretch; }
+      .header-actions { flex-wrap: wrap; }
+      .header-actions .btn-primary, .header-actions .btn-ghost { flex: 1; }
     }
   `],
 })

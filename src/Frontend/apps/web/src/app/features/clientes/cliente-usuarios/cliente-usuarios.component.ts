@@ -3,20 +3,21 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClienteUsuarioService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { UsuarioDto } from '@veloxml/models';
+import { NovoRegistroAtalhoDirective } from '../../../shared/novo-registro-atalho.directive';
 
 @Component({
   selector: 'app-cliente-usuarios',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, NovoRegistroAtalhoDirective],
   template: `
-<div class="page">
+<div class="page" appNovoAtalho (appNovoAtalho)="abrirUsuario('novo')">
 
   <header class="page-header">
     <div>
       <h2 class="font-heading">Usuários</h2>
       <p class="page-sub">{{ total() }} usuário(s) da sua empresa</p>
     </div>
-    <button class="btn-primary" (click)="abrirUsuario('novo')">
+    <button class="btn-primary" title="Atalho: Ctrl+Alt+N" (click)="abrirUsuario('novo')">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>

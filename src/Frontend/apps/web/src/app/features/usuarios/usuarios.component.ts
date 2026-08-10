@@ -1,22 +1,23 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { UsuarioService } from '@veloxml/services';
+import { UsuarioService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { UsuarioDto } from '@veloxml/models';
+import { NovoRegistroAtalhoDirective } from '../../shared/novo-registro-atalho.directive';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, NovoRegistroAtalhoDirective],
   template: `
-<div class="page">
+<div class="page" appNovoAtalho (appNovoAtalho)="abrirUsuario('novo')">
 
   <header class="page-header">
     <div>
       <h2 class="font-heading">Usuários</h2>
       <p class="page-sub">{{ total() }} usuário(s) cadastrado(s)</p>
     </div>
-    <button class="btn-primary" (click)="abrirUsuario('novo')">
+    <button class="btn-primary" title="Atalho: Ctrl+Alt+N" (click)="abrirUsuario('novo')">
       <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
@@ -57,6 +58,7 @@ import { UsuarioDto } from '@veloxml/models';
             <th>Contador</th>
             <th>Status</th>
             <th>Cadastro</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -83,6 +85,15 @@ import { UsuarioDto } from '@veloxml/models';
                 </span>
               </td>
               <td class="cell-muted">{{ u.createdAt | date:'dd/MM/yyyy' }}</td>
+              <td class="actions-cell">
+                @if (u.perfil !== 'Administrador') {
+                  <button class="icon-btn danger" title="Excluir" (click)="$event.stopPropagation(); excluir(u)">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/>
+                    </svg>
+                  </button>
+                }
+              </td>
             </tr>
           }
         </tbody>
@@ -152,6 +163,14 @@ import { UsuarioDto } from '@veloxml/models';
     .badge-yellow { background: rgba(255,209,102,.15); color: var(--yellow); }
     .badge-gray   { background: var(--bg3); color: var(--text2); }
 
+    .actions-cell { display: flex; gap: 6px; }
+    .icon-btn {
+      background: none; border: 1px solid var(--border); color: var(--text2);
+      border-radius: 6px; padding: 5px; cursor: pointer; display: flex; align-items: center;
+      transition: color 120ms, background 120ms, border-color 120ms;
+    }
+    .icon-btn.danger:hover { color: var(--red); border-color: var(--red); background: rgba(255,77,109,.1); }
+
     .empty-state { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
     .pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: .875rem 1rem; border-top: 1px solid var(--border); }
     .page-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
@@ -173,6 +192,8 @@ import { UsuarioDto } from '@veloxml/models';
 export class UsuariosComponent implements OnInit {
   private readonly _svc    = inject(UsuarioService);
   private readonly _router = inject(Router);
+  private readonly _confirm = inject(ConfirmDialogService);
+  private readonly _toast   = inject(ToastService);
 
   usuarios      = signal<UsuarioDto[]>([]);
   loading       = signal(true);
@@ -213,6 +234,15 @@ export class UsuariosComponent implements OnInit {
   changePage(p: number): void { this.page.set(p); this.load(); }
 
   abrirUsuario(id: string): void { this._router.navigate(['/usuarios', id]); }
+
+  async excluir(u: UsuarioDto): Promise<void> {
+    const ok = await this._confirm.ask(`Excluir ${u.nome}? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
+    this._svc.delete(u.id).subscribe({
+      next: () => { this._toast.success('Usuário excluído!'); this.load(); },
+      error: err => this._toast.error(extractErrorMessage(err, 'Erro ao excluir usuário.')),
+    });
+  }
 
   initial(nome: string): string { return nome?.charAt(0)?.toUpperCase() ?? '?'; }
 
