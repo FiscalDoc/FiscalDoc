@@ -5,6 +5,7 @@ using VeloXML.Application.Features.Destinatarios.Commands.CreateDestinatario;
 using VeloXML.Application.Features.Destinatarios.Commands.DeleteDestinatario;
 using VeloXML.Application.Features.Destinatarios.Commands.UpdateDestinatario;
 using VeloXML.Application.Features.Destinatarios.Queries.GetDestinatarioById;
+using VeloXML.Application.Features.Destinatarios.Queries.GetDestinatarioVizinhos;
 using VeloXML.Application.Features.Destinatarios.Queries.GetDestinatarios;
 
 namespace VeloXML.API.Controllers.v1;
@@ -56,6 +57,13 @@ public sealed class DestinatariosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new DeleteDestinatarioCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
+    }
+
+    [HttpGet("{id:guid}/vizinhos")]
+    public async Task<IActionResult> GetVizinhos(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetDestinatarioVizinhosQuery(clienteId, id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 }
 

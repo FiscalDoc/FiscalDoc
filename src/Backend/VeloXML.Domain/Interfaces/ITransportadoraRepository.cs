@@ -6,4 +6,8 @@ namespace VeloXML.Domain.Interfaces;
 public interface ITransportadoraRepository : IRepository<Transportadora>
 {
     Task<PagedResult<Transportadora>> SearchAsync(Guid clienteId, string? termo, bool? ativo, int page, int pageSize, CancellationToken ct = default);
+
+    // "Anterior/Próximo" na tela de detalhe — mesma ordem alfabética (por Razão Social) que a
+    // grade usa, com Id como desempate pra ordem determinística entre itens de nome igual.
+    Task<(Guid? AnteriorId, string? AnteriorLabel, Guid? ProximoId, string? ProximoLabel, int Posicao, int Total)> GetVizinhosAsync(Guid clienteId, Guid id, CancellationToken ct = default);
 }

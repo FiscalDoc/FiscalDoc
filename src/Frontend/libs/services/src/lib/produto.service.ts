@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ProdutoDto, CreateProdutoRequest, UpdateProdutoRequest } from '@veloxml/models';
-import { PagedResult, PaginationQuery } from '@veloxml/models';
+import { PagedResult, PaginationQuery, VizinhosDto } from '@veloxml/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProdutoService {
@@ -26,5 +26,9 @@ export class ProdutoService {
 
   delete(clienteId: string, id: string): Observable<void> {
     return this._api.delete<void>(`/clientes/${clienteId}/produtos/${id}`);
+  }
+
+  getVizinhos(clienteId: string, id: string): Observable<VizinhosDto> {
+    return this._api.get<VizinhosDto>(`/clientes/${clienteId}/produtos/${id}/vizinhos`);
   }
 }

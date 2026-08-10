@@ -25,7 +25,26 @@ type Tab = 'cadastro' | 'endereco';
             Cadastros
           </button>
           <div class="header-top">
-            <h2 class="page-title">{{ isNew() ? 'Novo Cliente' : form.razaoSocial || 'Cliente' }}</h2>
+            <div class="title-row">
+              <h2 class="page-title">{{ isNew() ? 'Novo Cliente' : form.razaoSocial || 'Cliente' }}</h2>
+              @if (!isNew() && vizinhoTotal()) {
+                <div class="nav-vizinhos">
+                  <button type="button" class="nav-btn" [disabled]="!vizinhoProximoId()" (click)="irParaProximo()" [title]="vizinhoProximoLabel() || 'Sem próximo cliente'">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Próximo
+                  </button>
+                  <span class="nav-posicao">{{ vizinhoPosicao() }} de {{ vizinhoTotal() }}</span>
+                  <button type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId()" (click)="irParaAnterior()" [title]="vizinhoAnteriorLabel() || 'Sem cliente anterior'">
+                    Anterior
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
             <div class="header-actions">
               <kbd class="kbd-hint" title="Atalho de teclado pra salvar">Ctrl+S</kbd>
               <button class="btn-ghost" (click)="goBack()">Cancelar</button>
@@ -155,8 +174,17 @@ type Tab = 'cadastro' | 'endereco';
     .back-btn { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; color: var(--text2); font-size: 13px; cursor: pointer; padding: 0; align-self: flex-start; }
     .back-btn:hover { color: var(--accent); }
     .header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .title-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .header-actions { display: flex; align-items: center; gap: .75rem; }
+    .nav-vizinhos { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 4px; height: 26px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg2); color: var(--text2); cursor: pointer; padding: 0 8px; font-size: 12px; white-space: nowrap;
+    }
+    .nav-btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .nav-posicao { font-size: 11.5px; color: var(--text2); white-space: nowrap; }
     .btn-danger-outline { background: none; border: 1px solid rgba(255,77,109,.4); color: var(--red); border-radius: 8px; padding: .5rem 1rem; font-size: 13px; cursor: pointer; }
     .btn-danger-outline:hover { background: rgba(255,77,109,.1); }
 
@@ -297,20 +325,63 @@ export class DestinatarioDetailComponent implements OnInit {
     });
   }
 
+  readonly vizinhoAnteriorId    = signal<string | null>(null);
+  readonly vizinhoAnteriorLabel = signal<string | null>(null);
+  readonly vizinhoProximoId     = signal<string | null>(null);
+  readonly vizinhoProximoLabel  = signal<string | null>(null);
+  readonly vizinhoPosicao       = signal<number | null>(null);
+  readonly vizinhoTotal         = signal<number | null>(null);
+
   ngOnInit(): void {
-    this.clienteId = this._route.snapshot.paramMap.get('id')!;
-    this.destinatarioId = this._route.snapshot.paramMap.get('destinatarioId') ?? '';
-    this.isNew.set(!this.destinatarioId || this.destinatarioId === 'novo');
+    // Assina paramMap (em vez de ler o snapshot uma vez só) porque "Anterior/Próximo" navega
+    // pra outro :destinatarioId dentro da MESMA rota — o Angular reaproveita esta instância do
+    // componente nesse caso, então um ngOnInit que só rodasse uma vez nunca pegaria a troca.
+    this._route.paramMap.subscribe(params => {
+      this.clienteId = params.get('id')!;
+      this.destinatarioId = params.get('destinatarioId') ?? '';
+      this.isNew.set(!this.destinatarioId || this.destinatarioId === 'novo');
+      this.vizinhoAnteriorId.set(null);
+      this.vizinhoAnteriorLabel.set(null);
+      this.vizinhoProximoId.set(null);
+      this.vizinhoProximoLabel.set(null);
+      this.vizinhoPosicao.set(null);
+      this.vizinhoTotal.set(null);
 
-    if (this.isNew()) {
-      this.loading.set(false);
-      return;
-    }
+      if (this.isNew()) {
+        this.form = this._empty();
+        this.loading.set(false);
+        return;
+      }
 
-    this._svc.getById(this.clienteId, this.destinatarioId).subscribe({
-      next: d => { this._sync(d); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.erro.set('Cliente não encontrado.'); },
+      this.loading.set(true);
+      this._svc.getById(this.clienteId, this.destinatarioId).subscribe({
+        next: d => { this._sync(d); this.loading.set(false); this._carregarVizinhos(); },
+        error: () => { this.loading.set(false); this.erro.set('Cliente não encontrado.'); },
+      });
     });
+  }
+
+  private _carregarVizinhos(): void {
+    this._svc.getVizinhos(this.clienteId, this.destinatarioId).subscribe({
+      next: v => {
+        this.vizinhoAnteriorId.set(v.anteriorId ?? null);
+        this.vizinhoAnteriorLabel.set(v.anteriorLabel ?? null);
+        this.vizinhoProximoId.set(v.proximoId ?? null);
+        this.vizinhoProximoLabel.set(v.proximoLabel ?? null);
+        this.vizinhoPosicao.set(v.posicao);
+        this.vizinhoTotal.set(v.total);
+      },
+    });
+  }
+
+  irParaAnterior(): void {
+    const id = this.vizinhoAnteriorId();
+    if (id) this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'destinatarios', id]);
+  }
+
+  irParaProximo(): void {
+    const id = this.vizinhoProximoId();
+    if (id) this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'destinatarios', id]);
   }
 
   private _sync(d: DestinatarioDto): void {

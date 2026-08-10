@@ -5,6 +5,7 @@ using VeloXML.Application.Features.Transportadoras.Commands.CreateTransportadora
 using VeloXML.Application.Features.Transportadoras.Commands.DeleteTransportadora;
 using VeloXML.Application.Features.Transportadoras.Commands.UpdateTransportadora;
 using VeloXML.Application.Features.Transportadoras.Queries.GetTransportadoraById;
+using VeloXML.Application.Features.Transportadoras.Queries.GetTransportadoraVizinhos;
 using VeloXML.Application.Features.Transportadoras.Queries.GetTransportadoras;
 
 namespace VeloXML.API.Controllers.v1;
@@ -57,6 +58,13 @@ public sealed class TransportadorasController(IMediator mediator) : ControllerBa
     {
         var result = await mediator.Send(new DeleteTransportadoraCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:guid}/vizinhos")]
+    public async Task<IActionResult> GetVizinhos(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetTransportadoraVizinhosQuery(clienteId, id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 }
 

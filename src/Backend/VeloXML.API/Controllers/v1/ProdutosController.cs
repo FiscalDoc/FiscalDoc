@@ -5,6 +5,7 @@ using VeloXML.Application.Features.Produtos.Commands.CreateProduto;
 using VeloXML.Application.Features.Produtos.Commands.DeleteProduto;
 using VeloXML.Application.Features.Produtos.Commands.UpdateProduto;
 using VeloXML.Application.Features.Produtos.Queries.GetProdutoById;
+using VeloXML.Application.Features.Produtos.Queries.GetProdutoVizinhos;
 using VeloXML.Application.Features.Produtos.Queries.GetProdutos;
 
 namespace VeloXML.API.Controllers.v1;
@@ -57,6 +58,13 @@ public sealed class ProdutosController(IMediator mediator) : ControllerBase
     {
         var result = await mediator.Send(new DeleteProdutoCommand(id, clienteId), ct);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:guid}/vizinhos")]
+    public async Task<IActionResult> GetVizinhos(Guid clienteId, Guid id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetProdutoVizinhosQuery(clienteId, id), ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 }
 

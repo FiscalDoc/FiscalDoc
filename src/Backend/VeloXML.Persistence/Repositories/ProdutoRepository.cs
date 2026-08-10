@@ -25,4 +25,23 @@ public sealed class ProdutoRepository(AppDbContext context) : BaseRepository<Pro
 
     public async Task<bool> EstaEmUsoAsync(Guid produtoId, CancellationToken ct = default) =>
         await context.Set<PedidoItem>().AnyAsync(i => i.ProdutoId == produtoId, ct);
+
+    // Traz {Id, Descricao} de todos os produtos do cliente e acha os vizinhos em memória — o
+    // volume por cliente é pequeno o bastante (cadastro de produtos, não histórico de eventos)
+    // pra isso ser mais simples e confiável do que tentar traduzir comparação de string pro SQL.
+    public async Task<(Guid? AnteriorId, string? AnteriorLabel, Guid? ProximoId, string? ProximoLabel, int Posicao, int Total)> GetVizinhosAsync(
+        Guid clienteId, Guid id, CancellationToken ct = default)
+    {
+        var itens = await DbSet.Where(p => p.ClienteId == clienteId)
+            .OrderBy(p => p.Descricao).ThenBy(p => p.Id)
+            .Select(p => new { p.Id, p.Descricao })
+            .ToListAsync(ct);
+
+        var idx = itens.FindIndex(p => p.Id == id);
+        if (idx < 0) return (null, null, null, null, 0, itens.Count);
+
+        var anterior = idx > 0 ? itens[idx - 1] : null;
+        var proximo = idx < itens.Count - 1 ? itens[idx + 1] : null;
+        return (anterior?.Id, anterior?.Descricao, proximo?.Id, proximo?.Descricao, idx + 1, itens.Count);
+    }
 }
