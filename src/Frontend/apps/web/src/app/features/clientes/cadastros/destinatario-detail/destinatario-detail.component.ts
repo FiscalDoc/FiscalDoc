@@ -52,6 +52,7 @@ type Tab = 'cadastro' | 'endereco';
                 {{ salvando() ? 'Salvando...' : 'Salvar' }}
               </button>
               @if (!isNew()) {
+                <button class="btn-ghost" [disabled]="duplicando()" (click)="duplicar()">{{ duplicando() ? 'Duplicando...' : 'Duplicar' }}</button>
                 <button class="btn-danger-outline" (click)="excluir()">Excluir</button>
               }
             </div>
@@ -325,6 +326,8 @@ export class DestinatarioDetailComponent implements OnInit {
     });
   }
 
+  readonly duplicando = signal(false);
+
   readonly vizinhoAnteriorId    = signal<string | null>(null);
   readonly vizinhoAnteriorLabel = signal<string | null>(null);
   readonly vizinhoProximoId     = signal<string | null>(null);
@@ -444,6 +447,19 @@ export class DestinatarioDetailComponent implements OnInit {
         this.erro.set(extractErrorMessage(err, 'Erro ao salvar destinatário.'));
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
+    });
+  }
+
+  duplicar(): void {
+    if (this.duplicando()) return;
+    this.duplicando.set(true);
+    this._svc.duplicar(this.clienteId, this.destinatarioId).subscribe({
+      next: d => {
+        this.duplicando.set(false);
+        this._toast.success('Destinatário duplicado — revise o CPF/CNPJ antes de usar.');
+        this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'destinatarios', d.id]);
+      },
+      error: err => { this.duplicando.set(false); this._toast.error(extractErrorMessage(err, 'Erro ao duplicar destinatário.')); },
     });
   }
 

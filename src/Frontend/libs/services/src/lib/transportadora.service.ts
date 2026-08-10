@@ -31,4 +31,22 @@ export class TransportadoraService {
   getVizinhos(clienteId: string, id: string): Observable<VizinhosDto> {
     return this._api.get<VizinhosDto>(`/clientes/${clienteId}/transportadoras/${id}/vizinhos`);
   }
+
+  duplicar(clienteId: string, id: string): Observable<TransportadoraDto> {
+    return this._api.post<TransportadoraDto>(`/clientes/${clienteId}/transportadoras/${id}/duplicar`, {});
+  }
+
+  bulkAtivar(clienteId: string, ids: string[], ativo: boolean): Observable<void> {
+    return this._api.patch<void>(`/clientes/${clienteId}/transportadoras/ativo-lote`, { ids, ativo });
+  }
+
+  exportarXlsx(clienteId: string, termo?: string, ativo?: boolean): Observable<Blob> {
+    return this._api.getBlob(`/clientes/${clienteId}/transportadoras/exportar`, { termo, ativo });
+  }
+
+  importarXlsx(clienteId: string, arquivo: File): Observable<{ criados: number; erros: string[] }> {
+    const form = new FormData();
+    form.append('arquivo', arquivo);
+    return this._api.postForm<{ criados: number; erros: string[] }>(`/clientes/${clienteId}/transportadoras/importar`, form);
+  }
 }

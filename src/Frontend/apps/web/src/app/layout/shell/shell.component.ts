@@ -8,6 +8,7 @@ import { NovidadesModalComponent } from '../novidades-modal/novidades-modal.comp
 import { OnboardingTourComponent } from '../onboarding-tour/onboarding-tour.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { GlobalSearchComponent } from '../global-search/global-search.component';
+import { ShortcutsHelpModalComponent } from '../shortcuts-help-modal/shortcuts-help-modal.component';
 import { environment } from '../../../environments/environment';
 
 interface NavItem {
@@ -24,7 +25,7 @@ interface NavItem {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent, OnboardingTourComponent, ConfirmDialogComponent, GlobalSearchComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastContainerComponent, AssistenteChatComponent, NovidadesModalComponent, OnboardingTourComponent, ConfirmDialogComponent, GlobalSearchComponent, ShortcutsHelpModalComponent],
   template: `
     <div class="shell">
       <button type="button" class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)" aria-label="Abrir menu">
@@ -127,6 +128,13 @@ interface NavItem {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
                   </svg>
                 }
+              </button>
+              <button type="button" class="novidades-icon-link" title="Atalhos de teclado (Ctrl+/)" (click)="shortcutsModal.abrir()">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"/>
+                  <path stroke-linecap="round" d="M12 17h.01"/>
+                </svg>
               </button>
               @if (auth.currentUser()?.perfil === 'Cliente') {
                 <button type="button" class="novidades-icon-link" title="Tour guiado" (click)="tourGuiado.abrir()">
@@ -257,6 +265,7 @@ interface NavItem {
     <app-assistente-chat />
     <app-novidades-modal #novidadesModal />
     <app-onboarding-tour #tourGuiado />
+    <app-shortcuts-help-modal #shortcutsModal />
 
     <!-- ── Modal de upgrade de plano ── -->
     @if (showUpgradeModal()) {
@@ -982,6 +991,13 @@ export class ShellComponent implements OnInit {
               </svg>`,
             },
           ],
+        },
+        {
+          label: 'Financeiro',
+          route: `/clientes/${id}/financeiro`,
+          icon: `<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-6a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>`,
         },
         {
           label: 'Relatórios',

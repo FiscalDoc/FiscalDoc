@@ -25,3 +25,4 @@ export * from './lib/toast.service';
 export * from './lib/confirm-dialog.service';
 export * from './lib/theme.service';
 export * from './lib/assistente.service';
+export * from './lib/financeiro.service';

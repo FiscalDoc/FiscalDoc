@@ -54,6 +54,7 @@ type Tab = 'geral' | 'fiscal';
                 {{ salvando() ? 'Salvando...' : 'Salvar' }}
               </button>
               @if (!isNew()) {
+                <button class="btn-ghost" [disabled]="duplicando()" (click)="duplicar()">{{ duplicando() ? 'Duplicando...' : 'Duplicar' }}</button>
                 <button class="btn-danger-outline" (click)="excluir()">Excluir</button>
               }
             </div>
@@ -304,6 +305,8 @@ export class ProdutoDetailComponent implements OnInit {
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly tab      = signal<Tab>('geral');
 
+  readonly duplicando = signal(false);
+
   readonly vizinhoAnteriorId    = signal<string | null>(null);
   readonly vizinhoAnteriorLabel = signal<string | null>(null);
   readonly vizinhoProximoId     = signal<string | null>(null);
@@ -449,6 +452,19 @@ export class ProdutoDetailComponent implements OnInit {
         this.erro.set(extractErrorMessage(err, 'Erro ao salvar produto.'));
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
+    });
+  }
+
+  duplicar(): void {
+    if (this.duplicando()) return;
+    this.duplicando.set(true);
+    this._svc.duplicar(this.clienteId, this.produtoId).subscribe({
+      next: p => {
+        this.duplicando.set(false);
+        this._toast.success('Produto duplicado — revise código e dados fiscais antes de usar.');
+        this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'produtos', p.id]);
+      },
+      error: err => { this.duplicando.set(false); this._toast.error(extractErrorMessage(err, 'Erro ao duplicar produto.')); },
     });
   }
 

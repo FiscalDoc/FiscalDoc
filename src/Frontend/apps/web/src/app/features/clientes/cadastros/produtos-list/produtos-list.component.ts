@@ -2,6 +2,8 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService, ProdutoService, ConfirmDialogService, ToastService, extractErrorMessage } from '@veloxml/services';
 import { ProdutoDto } from '@veloxml/models';
 import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-atalho.directive';
@@ -32,7 +34,12 @@ import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-at
             </svg>
             <input class="search-input" [(ngModel)]="termo" (input)="buscar()" placeholder="Buscar produto..."/>
           </div>
-          <button class="btn-primary" title="Atalho: Ctrl+Alt+N" (click)="abrirProduto('novo')">+ Novo Produto</button>
+          <div class="header-btns">
+            <button class="btn-ghost-sm" [disabled]="exportando()" (click)="exportar()">{{ exportando() ? 'Exportando...' : 'Exportar XLSX' }}</button>
+            <button class="btn-ghost-sm" [disabled]="importando()" (click)="fileInput.click()">{{ importando() ? 'Importando...' : 'Importar XLSX' }}</button>
+            <input #fileInput type="file" accept=".xlsx" style="display:none" (change)="onImportarArquivo($event)"/>
+            <button class="btn-primary" title="Atalho: Ctrl+Alt+N" (click)="abrirProduto('novo')">+ Novo Produto</button>
+          </div>
         </div>
 
         <div class="filter-bar">
@@ -40,6 +47,18 @@ import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-at
           <button class="filter-btn" [class.active]="filtroAtivo() === true" (click)="filtrarAtivo(true)">Ativos</button>
           <button class="filter-btn" [class.active]="filtroAtivo() === false" (click)="filtrarAtivo(false)">Inativos</button>
         </div>
+
+        @if (selecionados().size > 0) {
+          <div class="bulk-bar">
+            <span class="bulk-count">{{ selecionados().size }} selecionado(s)</span>
+            <div class="bulk-actions">
+              <button class="btn-ghost-sm" [disabled]="processandoLote()" (click)="bulkAtivar(true)">Ativar</button>
+              <button class="btn-ghost-sm" [disabled]="processandoLote()" (click)="bulkAtivar(false)">Desativar</button>
+              <button class="btn-ghost-sm danger" [disabled]="processandoLote()" (click)="bulkExcluir()">Excluir</button>
+              <button class="btn-ghost-sm" (click)="limparSelecao()">Limpar seleção</button>
+            </div>
+          </div>
+        }
 
         @if (loading()) {
           <div class="empty">Carregando...</div>
@@ -59,11 +78,15 @@ import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-at
           <div class="table-scroll">
           <table class="table">
             <thead>
-              <tr><th>Código</th><th>Descrição</th><th>NCM</th><th>Unidade</th><th>Preço</th><th>Status</th><th></th></tr>
+              <tr>
+                <th class="checkbox-cell"><input type="checkbox" [checked]="todosSelecionados()" (change)="toggleSelecionarTodos()" (click)="$event.stopPropagation()"/></th>
+                <th>Código</th><th>Descrição</th><th>NCM</th><th>Unidade</th><th>Preço</th><th>Status</th><th></th>
+              </tr>
             </thead>
             <tbody>
               @for (p of produtos(); track p.id) {
-                <tr class="row-link" (click)="abrirProduto(p.id)">
+                <tr class="row-link" [class.row-selected]="selecionados().has(p.id)" (click)="abrirProduto(p.id)">
+                  <td class="checkbox-cell"><input type="checkbox" [checked]="selecionados().has(p.id)" (change)="toggleSelecionado(p.id)" (click)="$event.stopPropagation()"/></td>
                   <td class="mono">{{ p.codigo }}</td>
                   <td>{{ p.descricao }}</td>
                   <td class="mono">{{ p.ncm ?? '-' }}</td>
@@ -94,7 +117,8 @@ import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-at
     .page-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text); }
     .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
     .section { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .list-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .list-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .header-btns { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .search-box { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text2); flex: 1; max-width: 320px; }
     .search-input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; flex: 1; }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 2rem; }
@@ -121,6 +145,17 @@ import { NovoRegistroAtalhoDirective } from '../../../../shared/novo-registro-at
       transition: color 120ms, background 120ms, border-color 120ms;
     }
     .icon-btn.danger:hover { color: var(--red); border-color: var(--red); background: rgba(255,77,109,.1); }
+    .checkbox-cell { width: 32px; }
+    .row-selected td { background: var(--accent-dim, rgba(0,102,255,.08)); }
+    .bulk-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .625rem .875rem; margin-bottom: .875rem;
+    }
+    .bulk-count { font-size: 13px; color: var(--text); font-weight: 600; }
+    .bulk-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .btn-ghost-sm.danger { color: var(--red); border-color: rgba(255,77,109,.4); }
+    .btn-ghost-sm.danger:hover { background: rgba(255,77,109,.1); }
+    .btn-ghost-sm:disabled { opacity: .5; cursor: not-allowed; }
     .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); color: #0d0f14; border: none; border-radius: 8px; padding: .5rem 1rem; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }
     .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -148,6 +183,15 @@ export class ProdutosListComponent implements OnInit {
   readonly filtroAtivo = signal<boolean | null>(null);
   termo = '';
 
+  readonly selecionados = signal<Set<string>>(new Set());
+  readonly processandoLote = signal(false);
+  readonly exportando = signal(false);
+  readonly importando = signal(false);
+  readonly todosSelecionados = computed(() => {
+    const itens = this.produtos();
+    return itens.length > 0 && itens.every(p => this.selecionados().has(p.id));
+  });
+
   ngOnInit(): void {
     this.clienteId = this._route.snapshot.paramMap.get('id')!;
     this.buscar();
@@ -162,6 +206,7 @@ export class ProdutosListComponent implements OnInit {
 
   buscar(): void {
     this.loading.set(true);
+    this.limparSelecao();
     const ativo = this.filtroAtivo();
     this._prodSvc.getAll(this.clienteId, { termo: this.termo, ativo: ativo ?? undefined }).subscribe({
       next: r => { this.produtos.set(r.items as ProdutoDto[]); this.loading.set(false); },
@@ -169,7 +214,92 @@ export class ProdutosListComponent implements OnInit {
     });
   }
 
+  toggleSelecionado(id: string): void {
+    this.selecionados.update(s => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  toggleSelecionarTodos(): void {
+    if (this.todosSelecionados()) { this.limparSelecao(); return; }
+    this.selecionados.set(new Set(this.produtos().map(p => p.id)));
+  }
+
+  limparSelecao(): void { this.selecionados.set(new Set()); }
+
+  bulkAtivar(ativo: boolean): void {
+    if (this.processandoLote()) return;
+    const ids = Array.from(this.selecionados());
+    this.processandoLote.set(true);
+    this._prodSvc.bulkAtivar(this.clienteId, ids, ativo).subscribe({
+      next: () => {
+        this.processandoLote.set(false);
+        this._toast.success(`${ids.length} produto(s) ${ativo ? 'ativado(s)' : 'desativado(s)'}!`);
+        this.buscar();
+      },
+      error: err => { this.processandoLote.set(false); this._toast.error(extractErrorMessage(err, 'Erro ao atualizar produtos.')); },
+    });
+  }
+
+  async bulkExcluir(): Promise<void> {
+    if (this.processandoLote()) return;
+    const ids = Array.from(this.selecionados());
+    const ok = await this._confirm.ask(`Excluir ${ids.length} produto(s) selecionado(s)? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });
+    if (!ok) return;
+
+    this.processandoLote.set(true);
+    forkJoin(ids.map(id => this._prodSvc.delete(this.clienteId, id).pipe(catchError(() => of('erro' as const))))).subscribe(resultados => {
+      this.processandoLote.set(false);
+      const falhas = resultados.filter(r => r === 'erro').length;
+      const sucesso = resultados.length - falhas;
+      if (sucesso > 0) this._toast.success(`${sucesso} produto(s) excluído(s)!`);
+      if (falhas > 0) this._toast.error(`${falhas} produto(s) não puderam ser excluídos (provavelmente já usados em algum pedido).`);
+      this.buscar();
+    });
+  }
+
   abrirProduto(id: string): void { this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'produtos', id]); }
+
+  exportar(): void {
+    if (this.exportando()) return;
+    this.exportando.set(true);
+    const ativo = this.filtroAtivo();
+    this._prodSvc.exportarXlsx(this.clienteId, this.termo || undefined, ativo ?? undefined).subscribe({
+      next: blob => { this.exportando.set(false); this._triggerDownload(blob, 'produtos.xlsx'); },
+      error: err => { this.exportando.set(false); this._toast.error(extractErrorMessage(err, 'Erro ao exportar produtos.')); },
+    });
+  }
+
+  onImportarArquivo(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    input.value = '';
+    if (!arquivo || this.importando()) return;
+
+    this.importando.set(true);
+    this._prodSvc.importarXlsx(this.clienteId, arquivo).subscribe({
+      next: r => {
+        this.importando.set(false);
+        if (r.criados > 0) this._toast.success(`${r.criados} produto(s) importado(s)!`);
+        if (r.erros.length > 0) this._toast.error(`${r.erros.length} linha(s) com erro: ${r.erros[0]}${r.erros.length > 1 ? ' (e outras)' : ''}`);
+        this.buscar();
+      },
+      error: err => { this.importando.set(false); this._toast.error(extractErrorMessage(err, 'Erro ao importar planilha.')); },
+    });
+  }
+
+  private _triggerDownload(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 
   async excluir(p: ProdutoDto): Promise<void> {
     const ok = await this._confirm.ask(`Excluir o produto "${p.descricao}"? Esta ação não pode ser desfeita.`, { confirmLabel: 'Excluir' });

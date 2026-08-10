@@ -875,6 +875,100 @@ namespace VeloXML.Persistence.Migrations
                     b.ToTable("configuracoes", (string)null);
                 });
 
+            modelBuilder.Entity("VeloXML.Domain.Entities.ContaReceber", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ClienteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cliente_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DataPagamento")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_pagamento");
+
+                    b.Property<DateTime>("DataVencimento")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_vencimento");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("descricao");
+
+                    b.Property<Guid>("DestinatarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("destinatario_id");
+
+                    b.Property<string>("FormaPagamento")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("forma_pagamento");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("observacao");
+
+                    b.Property<Guid?>("PedidoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pedido_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<decimal>("ValorTotal")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("valor_total");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.HasIndex("DataVencimento");
+
+                    b.HasIndex("DestinatarioId");
+
+                    b.HasIndex("PedidoId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("contas_receber", (string)null);
+                });
+
             modelBuilder.Entity("VeloXML.Domain.Entities.Contador", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2571,6 +2665,32 @@ namespace VeloXML.Persistence.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("VeloXML.Domain.Entities.ContaReceber", b =>
+                {
+                    b.HasOne("VeloXML.Domain.Entities.Cliente", "Cliente")
+                        .WithMany("ContasReceber")
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VeloXML.Domain.Entities.Destinatario", "Destinatario")
+                        .WithMany()
+                        .HasForeignKey("DestinatarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VeloXML.Domain.Entities.Pedido", "Pedido")
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("Destinatario");
+
+                    b.Navigation("Pedido");
+                });
+
             modelBuilder.Entity("VeloXML.Domain.Entities.Contador", b =>
                 {
                     b.HasOne("VeloXML.Domain.Entities.Tenant", "Tenant")
@@ -2747,6 +2867,8 @@ namespace VeloXML.Persistence.Migrations
                     b.Navigation("Cobrancas");
 
                     b.Navigation("Configuracoes");
+
+                    b.Navigation("ContasReceber");
 
                     b.Navigation("Destinatarios");
 

@@ -57,6 +57,11 @@ export const CLIENTES_ROUTES: Routes = [
     loadComponent: () => import('./pedidos/pedido-form/pedido-form.component').then((m) => m.PedidoFormComponent),
   },
   {
+    path: ':id/financeiro',
+    canActivate: [clienteScopeGuard],
+    loadComponent: () => import('./financeiro/financeiro.component').then((m) => m.FinanceiroComponent),
+  },
+  {
     path: ':id/relatorios',
     canActivate: [clienteScopeGuard],
     loadComponent: () => import('./relatorios/relatorios.component').then((m) => m.RelatoriosComponent),

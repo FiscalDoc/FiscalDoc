@@ -18,3 +18,4 @@ export * from './lib/cep.models';
 export * from './lib/cnpj.models';
 export * from './lib/relatorio.models';
 export * from './lib/assistente.models';
+export * from './lib/financeiro.models';

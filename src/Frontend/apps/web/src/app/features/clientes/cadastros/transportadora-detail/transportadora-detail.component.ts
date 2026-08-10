@@ -52,6 +52,7 @@ type Tab = 'cadastro' | 'endereco' | 'integracao';
                 {{ salvando() ? 'Salvando...' : 'Salvar' }}
               </button>
               @if (!isNew()) {
+                <button class="btn-ghost" [disabled]="duplicando()" (click)="duplicar()">{{ duplicando() ? 'Duplicando...' : 'Duplicar' }}</button>
                 <button class="btn-danger-outline" (click)="excluir()">Excluir</button>
               }
             </div>
@@ -320,6 +321,8 @@ export class TransportadoraDetailComponent implements OnInit {
     });
   }
 
+  readonly duplicando = signal(false);
+
   readonly vizinhoAnteriorId    = signal<string | null>(null);
   readonly vizinhoAnteriorLabel = signal<string | null>(null);
   readonly vizinhoProximoId     = signal<string | null>(null);
@@ -435,6 +438,19 @@ export class TransportadoraDetailComponent implements OnInit {
         this.erro.set(extractErrorMessage(err, 'Erro ao salvar transportadora.'));
         this.fieldErrors.set(extractFieldErrors(err) ?? {});
       },
+    });
+  }
+
+  duplicar(): void {
+    if (this.duplicando()) return;
+    this.duplicando.set(true);
+    this._svc.duplicar(this.clienteId, this.transportadoraId).subscribe({
+      next: t => {
+        this.duplicando.set(false);
+        this._toast.success('Transportadora duplicada — revise o CPF/CNPJ e o webhook antes de usar.');
+        this._router.navigate(['/clientes', this.clienteId, 'cadastros', 'transportadoras', t.id]);
+      },
+      error: err => { this.duplicando.set(false); this._toast.error(extractErrorMessage(err, 'Erro ao duplicar transportadora.')); },
     });
   }
 
