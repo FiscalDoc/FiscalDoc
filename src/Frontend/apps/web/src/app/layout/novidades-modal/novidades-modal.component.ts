@@ -13,6 +13,42 @@ interface Novidade {
 // depender da versão de build (ver comentário em VISTA_KEY acima).
 const NOVIDADES: Novidade[] = [
   {
+    titulo: 'Financeiro: contas a receber',
+    descricao: 'Novo módulo Financeiro no menu do cliente — cadastre contas a receber dos seus clientes, dê baixa quando o pagamento entrar, cancele ou exclua, e acompanhe pendente, atrasado e recebido no mês em cards de resumo.',
+  },
+  {
+    titulo: 'Exportar e importar cadastros em XLSX',
+    descricao: 'Produtos, Clientes (destinatários) e Transportadoras agora exportam e importam planilhas Excel (.xlsx) — útil pra migrar de outro sistema ou fazer cadastro em massa.',
+  },
+  {
+    titulo: 'Seleção em lote nas listas de cadastro',
+    descricao: 'Marque vários produtos, clientes ou transportadoras de uma vez na lista e ative, desative ou exclua em lote, sem precisar entrar em cada cadastro.',
+  },
+  {
+    titulo: 'Botão Duplicar',
+    descricao: 'Produto, Cliente e Transportadora agora têm um botão Duplicar no cabeçalho, que cria uma cópia do cadastro (CPF/CNPJ e webhook não são copiados de propósito, por segurança).',
+  },
+  {
+    titulo: 'Anterior / Próximo nos cadastros',
+    descricao: 'Produto, Cliente e Transportadora ganharam a mesma navegação de Anterior/Próximo que já existia no Pedido, pra revisar vários cadastros em sequência sem voltar pra lista.',
+  },
+  {
+    titulo: 'Atalho Ctrl+Alt+N para novo cadastro',
+    descricao: 'Nas listas de cadastro e em Pedidos, Ctrl+Alt+N abre um novo registro direto, sem precisar clicar em "+ Novo".',
+  },
+  {
+    titulo: 'Exclusão direto na lista',
+    descricao: 'Produtos, Clientes, Transportadoras e Usuários agora têm um ícone de excluir direto na lista, sem precisar abrir o cadastro — respeitando as mesmas regras de negócio (ex: produto usado em pedido não pode ser excluído).',
+  },
+  {
+    titulo: 'Botões de ação no topo dos cadastros',
+    descricao: 'Salvar, Cancelar e Excluir agora ficam no cabeçalho de todas as telas de cadastro, no mesmo padrão já usado no Pedido/NF-e.',
+  },
+  {
+    titulo: 'Modal de atalhos de teclado (Ctrl+/)',
+    descricao: 'Ctrl+/ ou o ícone de "?" no rodapé do menu abrem a lista de atalhos disponíveis no sistema.',
+  },
+  {
     titulo: 'Atalho Ctrl+S para salvar',
     descricao: 'Nas telas de cadastro e no pedido/NF-e, Ctrl+S (Cmd+S no Mac) salva sem precisar tirar a mão do teclado pra clicar no botão.',
   },

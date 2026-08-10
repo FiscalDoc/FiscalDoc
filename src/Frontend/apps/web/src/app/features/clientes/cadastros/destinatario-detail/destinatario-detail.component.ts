@@ -29,15 +29,15 @@ type Tab = 'cadastro' | 'endereco';
               <h2 class="page-title">{{ isNew() ? 'Novo Cliente' : form.razaoSocial || 'Cliente' }}</h2>
               @if (!isNew() && vizinhoTotal()) {
                 <div class="nav-vizinhos">
-                  <button type="button" class="nav-btn" [disabled]="!vizinhoProximoId()" (click)="irParaProximo()" [title]="vizinhoProximoLabel() || 'Sem próximo cliente'">
+                  <button type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId()" (click)="irParaAnterior()" [title]="vizinhoAnteriorLabel() || 'Sem cliente anterior'">
                     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                     </svg>
-                    Próximo
+                    Anterior
                   </button>
                   <span class="nav-posicao">{{ vizinhoPosicao() }} de {{ vizinhoTotal() }}</span>
-                  <button type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId()" (click)="irParaAnterior()" [title]="vizinhoAnteriorLabel() || 'Sem cliente anterior'">
-                    Anterior
+                  <button type="button" class="nav-btn" [disabled]="!vizinhoProximoId()" (click)="irParaProximo()" [title]="vizinhoProximoLabel() || 'Sem próximo cliente'">
+                    Próximo
                     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>

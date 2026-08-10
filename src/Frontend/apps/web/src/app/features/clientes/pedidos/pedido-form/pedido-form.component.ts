@@ -56,20 +56,20 @@ interface ConfirmState {
             @if (!isNew() && vizinhoTotal()) {
               <div class="nav-vizinhos">
                 <button
-                  type="button" class="nav-btn" [disabled]="!vizinhoProximoId() || carregandoPedido()" (click)="irParaProximo()"
-                  [title]="vizinhoProximoNumero() ? 'Pedido nº ' + vizinhoProximoNumero() : 'Sem próximo pedido'"
+                  type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId() || carregandoPedido()" (click)="irParaAnterior()"
+                  [title]="vizinhoAnteriorNumero() ? 'Pedido nº ' + vizinhoAnteriorNumero() : 'Sem pedido anterior'"
                 >
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                   </svg>
-                  Próximo
+                  Anterior
                 </button>
                 <span class="nav-posicao">{{ carregandoPedido() ? '···' : vizinhoPosicao() }} de {{ vizinhoTotal() }}</span>
                 <button
-                  type="button" class="nav-btn" [disabled]="!vizinhoAnteriorId() || carregandoPedido()" (click)="irParaAnterior()"
-                  [title]="vizinhoAnteriorNumero() ? 'Pedido nº ' + vizinhoAnteriorNumero() : 'Sem pedido anterior'"
+                  type="button" class="nav-btn" [disabled]="!vizinhoProximoId() || carregandoPedido()" (click)="irParaProximo()"
+                  [title]="vizinhoProximoNumero() ? 'Pedido nº ' + vizinhoProximoNumero() : 'Sem próximo pedido'"
                 >
-                  Anterior
+                  Próximo
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                   </svg>
