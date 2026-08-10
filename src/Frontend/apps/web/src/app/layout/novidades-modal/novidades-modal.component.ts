@@ -164,7 +164,7 @@ const NOVIDADES: Novidade[] = [
     .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; }
     .modal-close:hover { color: var(--text); }
     .modal-body { padding: 1.25rem 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
-    .novidade-item { padding-left: .75rem; border-left: 2px solid var(--accent-dim, oklch(0.62 0.17 254 / 0.3)); }
+    .novidade-item { padding-left: .75rem; border-left: 2px solid var(--accent-dim, oklch(0.60 0.14 225 / 0.3)); }
     .novidade-titulo { margin: 0 0 2px; font-size: 13.5px; font-weight: 700; color: var(--text); }
     .novidade-descricao { margin: 0; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
     .modal-footer { padding: 1rem 1.5rem 1.25rem; display: flex; justify-content: flex-end; border-top: 1px solid var(--border); }

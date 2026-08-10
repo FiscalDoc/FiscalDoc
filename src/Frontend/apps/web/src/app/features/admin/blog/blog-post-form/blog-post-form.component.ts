@@ -192,7 +192,7 @@ type Tab = 'conteudo' | 'publicacao' | 'seo';
     .editor ::ng-deep .ql-editor a { color: var(--accent) !important; }
     .status-toggle { display: flex; gap: .5rem; }
     .status-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); border-radius: 8px; padding: .5rem 1.25rem; font-size: 13px; cursor: pointer; }
-    .status-btn.active { background: oklch(0.62 0.17 254 / .12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .status-btn.active { background: oklch(0.60 0.14 225 / .12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
     .alert-error { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--red); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }
     .alert-ok { background: rgba(0, 229, 160, .1); border: 1px solid rgba(0, 229, 160, .3); color: var(--green); border-radius: 8px; padding: .625rem .875rem; font-size: 13px; }

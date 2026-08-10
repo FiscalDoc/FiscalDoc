@@ -131,8 +131,8 @@ import { AuthService, extractErrorMessage } from '@veloxml/services';
     .acesso-card {
       display: flex; align-items: flex-start; gap: 1rem;
       padding: 1.25rem 1.5rem;
-      border-color: oklch(0.62 0.17 254 / 0.25);
-      background: oklch(0.62 0.17 254 / 0.05);
+      border-color: oklch(0.60 0.14 225 / 0.25);
+      background: oklch(0.60 0.14 225 / 0.05);
     }
     .acesso-card.acesso-critico {
       border-color: rgba(255,209,102,0.35);
@@ -144,7 +144,7 @@ import { AuthService, extractErrorMessage } from '@veloxml/services';
     }
     .acesso-icon {
       width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
-      background: oklch(0.62 0.17 254 / 0.12); color: var(--accent);
+      background: oklch(0.60 0.14 225 / 0.12); color: var(--accent);
       display: flex; align-items: center; justify-content: center;
     }
     .acesso-critico .acesso-icon { background: rgba(255,209,102,0.12); color: var(--yellow); }

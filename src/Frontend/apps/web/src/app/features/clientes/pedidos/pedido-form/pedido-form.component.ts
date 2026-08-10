@@ -996,7 +996,7 @@ interface ConfirmState {
     .section-title-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
     .form-subheading { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text2); border-top: 1px solid var(--border); padding-top: .75rem; margin-top: .125rem; }
     .badge-tipo { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; background: rgba(124,130,153,.15); color: var(--text2); }
-    .badge-tipo--nf { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-tipo--nf { background: oklch(0.60 0.14 225 / .12); color: var(--accent); }
     .list-header { display: flex; align-items: center; justify-content: space-between; }
     .frequentes-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .frequentes-label { font-size: 12px; color: var(--text2); flex-shrink: 0; }
@@ -1036,7 +1036,7 @@ interface ConfirmState {
     .impostos-form-grid { grid-template-columns: repeat(4, 1fr); gap: .75rem .875rem; }
     .imposto-destaque:disabled {
       color: var(--accent); -webkit-text-fill-color: var(--accent); font-weight: 700; opacity: 1;
-      background: var(--accent-dim); border-color: oklch(0.62 0.17 254 / .35);
+      background: var(--accent-dim); border-color: oklch(0.60 0.14 225 / .35);
     }
     .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 1.5rem; }
     .table { width: 100%; border-collapse: collapse; font-size: 13px; }

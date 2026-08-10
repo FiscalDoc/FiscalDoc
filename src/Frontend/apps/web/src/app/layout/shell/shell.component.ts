@@ -419,7 +419,7 @@ interface NavItem {
     }
 
     .nav-item.active {
-      background: var(--accent-dim, oklch(0.62 0.17 254 / 0.12));
+      background: var(--accent-dim, oklch(0.60 0.14 225 / 0.12));
       color: var(--accent);
     }
 
@@ -460,8 +460,8 @@ interface NavItem {
       display: flex;
       flex-direction: column;
       gap: 1px;
-      background: var(--accent-dim, oklch(0.62 0.17 254 / 0.1));
-      border: 1px solid oklch(0.62 0.17 254 / 0.2);
+      background: var(--accent-dim, oklch(0.60 0.14 225 / 0.1));
+      border: 1px solid oklch(0.60 0.14 225 / 0.2);
       border-radius: 6px;
       padding: 5px 8px;
       width: 100%;
@@ -503,7 +503,7 @@ interface NavItem {
       width: 30px;
       height: 30px;
       border-radius: 50%;
-      background: var(--accent-dim, oklch(0.62 0.17 254 / 0.15));
+      background: var(--accent-dim, oklch(0.60 0.14 225 / 0.15));
       color: var(--accent);
       font-size: 12px;
       font-weight: 700;
@@ -606,8 +606,8 @@ interface NavItem {
     /* Trial banner */
     .trial-banner {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-      background: linear-gradient(135deg, oklch(0.62 0.17 254 / 0.08) 0%, rgba(0,102,255,0.06) 100%);
-      border: 1px solid oklch(0.62 0.17 254 / 0.25); border-radius: var(--radius-sm, 8px);
+      background: linear-gradient(135deg, oklch(0.60 0.14 225 / 0.08) 0%, rgba(0,102,255,0.06) 100%);
+      border: 1px solid oklch(0.60 0.14 225 / 0.25); border-radius: var(--radius-sm, 8px);
       padding: 10px 16px; margin-bottom: 1rem; font-size: 13px; color: var(--text);
     }
     .trial-banner.trial-critico {
@@ -690,7 +690,7 @@ interface NavItem {
         color: var(--text);
       }
       .sidebar.collapsed .nav-item:hover { background: var(--bg4, var(--bg3)); }
-      .sidebar.collapsed .nav-item.active { background: var(--accent-dim, oklch(0.62 0.17 254 / 0.12)); }
+      .sidebar.collapsed .nav-item.active { background: var(--accent-dim, oklch(0.60 0.14 225 / 0.12)); }
       .sidebar.collapsed .nav-icon svg { stroke-width: 2.25; }
       .sidebar.collapsed .nav-subitems { padding-left: 0; }
       .sidebar.collapsed .empresa-badge,

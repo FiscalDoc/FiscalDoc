@@ -129,7 +129,7 @@ import { ClienteDto, ContadorDto } from '@veloxml/models';
       --lg-muted: oklch(0.74 0.025 256);
       --lg-border: oklch(1 0 0 / 12%);
       --lg-input: oklch(1 0 0 / 16%);
-      --lg-brand: oklch(0.62 0.17 254);
+      --lg-brand: oklch(0.60 0.14 225);
       --lg-brand-deep: oklch(0.97 0.01 250);
       --lg-brand-soft: oklch(0.29 0.06 256);
       --lg-cta: oklch(0.78 0.17 158);
@@ -187,7 +187,7 @@ import { ClienteDto, ContadorDto } from '@veloxml/models';
       transition: border-color 150ms, box-shadow 150ms;
       font-family: inherit;
     }
-    input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.62 0.17 254 / 0.2); }
+    input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.60 0.14 225 / 0.2); }
     input::placeholder { color: oklch(0.74 0.025 256 / 0.6); }
 
     .perfil-toggle { display: flex; gap: .5rem; }
@@ -196,7 +196,7 @@ import { ClienteDto, ContadorDto } from '@veloxml/models';
       background: transparent; color: var(--lg-muted); font-size: 13.5px; font-weight: 500; cursor: pointer;
       font-family: inherit; transition: border-color 150ms, color 150ms, background 150ms;
     }
-    .perfil-btn.active { border-color: var(--lg-brand); color: var(--lg-brand); background: oklch(0.62 0.17 254 / 0.12); }
+    .perfil-btn.active { border-color: var(--lg-brand); color: var(--lg-brand); background: oklch(0.60 0.14 225 / 0.12); }
 
     .error-msg {
       font-size: 13px; color: var(--lg-red); margin: 1.25rem 0 0;

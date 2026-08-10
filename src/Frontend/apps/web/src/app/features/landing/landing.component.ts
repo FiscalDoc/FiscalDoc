@@ -505,7 +505,6 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     <section class="cta-section" id="contact">
       <div class="container">
         <div class="cta-card">
-          <div class="cta-glow"></div>
           <h2>Pronto para organizar<br>sua contabilidade?</h2>
           <p>Fale com a gente agora pelo WhatsApp e receba acesso em minutos.</p>
           <div class="cta-btns">
@@ -627,7 +626,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       --lg-muted: oklch(0.74 0.025 256);
       --lg-border: oklch(1 0 0 / 12%);
       --lg-input: oklch(1 0 0 / 16%);
-      --lg-brand: oklch(0.62 0.17 254);
+      --lg-brand: oklch(0.60 0.14 225);
       --lg-brand-foreground: white;
       --lg-brand-deep: oklch(0.97 0.01 250);
       --lg-brand-soft: oklch(0.29 0.06 256);
@@ -723,7 +722,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .hero-copy { max-width: 42rem; }
     .badge-pill {
       display: inline-flex; align-items: center; gap: 8px;
-      background: oklch(1 0 0 / 10%); border: 1px solid oklch(1 0 0 / 20%); backdrop-filter: blur(4px);
+      background: oklch(0.16 0.03 262 / 55%); border: 1px solid oklch(1 0 0 / 20%);
       color: oklch(1 0 0 / 88%); border-radius: 999px; padding: 7px 16px; font-size: 12.5px; font-weight: 500;
       margin-bottom: 1.75rem; letter-spacing: 0.01em;
     }
@@ -851,7 +850,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .audience-icon.accent { background: var(--lg-brand-soft); color: var(--lg-brand-deep); }
-    .audience-icon.blue { background: oklch(0.62 0.17 254 / .16); color: var(--lg-brand); }
+    .audience-icon.blue { background: oklch(0.60 0.14 225 / .16); color: var(--lg-brand); }
     .audience-card h3 { font-size: 1.15rem; font-weight: 700; color: var(--lg-fg); }
     .audience-card p  { font-size: 14px; color: var(--lg-muted); line-height: 1.65; }
     .audience-list { display: flex; flex-direction: column; gap: 0.625rem; margin-top: .5rem; padding-top: 1.25rem; border-top: 1px solid var(--lg-border); }
@@ -904,14 +903,14 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     }
     .plan-single {
       max-width: 480px; margin-left: auto; margin-right: auto; border-color: var(--lg-brand);
-      box-shadow: var(--lg-shadow-lift), 0 0 0 1px oklch(0.62 0.17 254 / 25%);
+      box-shadow: var(--lg-shadow-lift), 0 0 0 1px oklch(0.60 0.14 225 / 25%);
       background: linear-gradient(145deg, var(--lg-brand-soft), var(--lg-surface));
     }
     .plan-badge {
       align-self: flex-start;
       background: var(--lg-brand-soft); color: var(--lg-brand); font-size: 11px; font-weight: 800;
       padding: 5px 14px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.04em;
-      border: 1px solid oklch(0.62 0.17 254 / 0.3);
+      border: 1px solid oklch(0.60 0.14 225 / 0.3);
     }
     .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--lg-border); padding-top: 1.5rem; }
     .plan-features li { font-size: 14px; color: var(--lg-fg); display: flex; align-items: center; gap: 8px; }
@@ -940,12 +939,6 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
       background: var(--lg-gradient-brand); border: none;
       border-radius: 24px; padding: 5rem 2rem; text-align: center;
       box-shadow: var(--lg-shadow-lift);
-    }
-    .cta-glow {
-      position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
-      width: 600px; height: 400px; border-radius: 50%;
-      background: radial-gradient(ellipse, oklch(1 0 0 / 0.12) 0%, transparent 70%);
-      pointer-events: none;
     }
     .cta-card h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; color: white; }
     .cta-card p  { font-size: 1.05rem; color: oklch(1 0 0 / 0.8); margin-bottom: 2rem; }
@@ -1003,7 +996,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .register-form .form-group { display: flex; flex-direction: column; gap: 6px; }
     .register-form label { font-size: 13px; font-weight: 600; color: var(--lg-fg); }
     .register-form input { background: var(--lg-bg); border: 1px solid var(--lg-input); border-radius: 10px; padding: 11px 14px; color: var(--lg-fg); font-size: 14px; outline: none; transition: border-color 150ms, box-shadow 150ms; font-family: inherit; }
-    .register-form input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.62 0.17 254 / 0.22); }
+    .register-form input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.60 0.14 225 / 0.22); }
     .register-form input.error { border-color: var(--lg-red); }
     .field-error { font-size: 12px; color: var(--lg-red); }
     .alert-form-error { background: oklch(0.62 0.2 25 / 0.1); border: 1px solid oklch(0.62 0.2 25 / 0.3); color: var(--lg-red); border-radius: 10px; padding: 10px 14px; font-size: 13px; }

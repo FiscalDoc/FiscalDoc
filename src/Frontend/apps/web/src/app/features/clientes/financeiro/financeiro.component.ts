@@ -210,7 +210,7 @@ import { SalvarAtalhoDirective } from '../../../shared/salvar-atalho.directive';
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-Pendente { background: rgba(255,209,102,.15); color: var(--yellow); }
-    .badge-Pago { background: oklch(0.62 0.17 254 / .12); color: var(--accent); }
+    .badge-Pago { background: oklch(0.60 0.14 225 / .12); color: var(--accent); }
     .badge-Atrasado { background: rgba(255,77,109,.12); color: var(--red); }
     .badge-Cancelado { background: rgba(124,130,153,.15); color: var(--text2); }
 

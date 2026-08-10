@@ -85,7 +85,7 @@ import { AuthService, extractErrorMessage } from '@veloxml/services';
       --lg-muted: oklch(0.74 0.025 256);
       --lg-border: oklch(1 0 0 / 12%);
       --lg-input: oklch(1 0 0 / 16%);
-      --lg-brand: oklch(0.62 0.17 254);
+      --lg-brand: oklch(0.60 0.14 225);
       --lg-brand-deep: oklch(0.97 0.01 250);
       --lg-brand-soft: oklch(0.29 0.06 256);
       --lg-cta: oklch(0.78 0.17 158);
@@ -131,7 +131,7 @@ import { AuthService, extractErrorMessage } from '@veloxml/services';
       transition: border-color 150ms, box-shadow 150ms;
       font-family: inherit;
     }
-    input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.62 0.17 254 / 0.2); }
+    input:focus { border-color: var(--lg-brand); box-shadow: 0 0 0 4px oklch(0.60 0.14 225 / 0.2); }
     input::placeholder { color: oklch(0.74 0.025 256 / 0.6); }
     /* O Chrome ignora "background" em campo autopreenchido e pinta de branco por conta própria —
        o único jeito de sobrescrever é com esse box-shadow inset gigante + atrasar a transição
