@@ -693,13 +693,12 @@ interface NavItem {
       .sidebar.collapsed .nav-item.active { background: var(--accent-dim, oklch(0.62 0.17 254 / 0.12)); }
       .sidebar.collapsed .nav-icon svg { stroke-width: 2.25; }
       .sidebar.collapsed .nav-subitems { padding-left: 0; }
-      /* Com só os ícones (sem rótulo), a nav ocupa pouca altura e o flex:1 empurra todo o
-         espaço vazio pra um bloco só entre os ícones e o rodapé (avatar/segurança) — fica
-         parecendo quebrado. Centralizando, o vazio se distribui em cima e embaixo. */
-      .sidebar.collapsed .sidebar-nav { justify-content: center; }
       .sidebar.collapsed .empresa-badge,
       .sidebar.collapsed .footer-links-row { justify-content: center; }
       .sidebar.collapsed .footer-links-row { flex-direction: column; gap: 8px; }
+      /* Os ícones do rodapé (tema, atalhos, tour, novidades, alertas) não cabem numa fileira
+         horizontal em 64px de largura — empilha em coluna igual o resto do rodapé recolhido. */
+      .sidebar.collapsed .footer-icons { flex-direction: column; gap: 4px; }
       .sidebar.collapsed .user-row { justify-content: center; }
       .sidebar.collapsed .user-info { flex: 0; }
     }
