@@ -57,28 +57,23 @@ public sealed class PedidoRepository(AppDbContext context) : BaseRepository<Pedi
             .Where(p => p.DocumentoId.HasValue && documentoIds.Contains(p.DocumentoId.Value))
             .ToListAsync(ct);
 
-    // "Anterior/Próximo" navega pelo número sequencial do pedido dentro do mesmo cliente —
-    // mais previsível pro usuário do que ordenar por data de criação, já que o número é o
-    // identificador visível no cabeçalho ("Pedido 1001").
+    // "Anterior/Próximo" segue a mesma ordem da listagem de Pedidos (mais recente primeiro) —
+    // abrir o pedido mais novo mostra "1 de N" e Próximo avança pros mais antigos, igual
+    // acontece com Produto/Destinatário/Transportadora em relação às respectivas listas.
     public async Task<(Guid? AnteriorId, int? AnteriorNumero, Guid? ProximoId, int? ProximoNumero, int Posicao, int Total)> GetVizinhosAsync(
-        Guid clienteId, int numero, CancellationToken ct = default)
+        Guid clienteId, Guid id, CancellationToken ct = default)
     {
-        var anterior = await DbSet
-            .Where(p => p.ClienteId == clienteId && p.Numero < numero)
-            .OrderByDescending(p => p.Numero)
+        var itens = await DbSet.Where(p => p.ClienteId == clienteId)
+            .OrderByDescending(p => p.CreatedAt).ThenBy(p => p.Id)
             .Select(p => new { p.Id, p.Numero })
-            .FirstOrDefaultAsync(ct);
+            .ToListAsync(ct);
 
-        var proximo = await DbSet
-            .Where(p => p.ClienteId == clienteId && p.Numero > numero)
-            .OrderBy(p => p.Numero)
-            .Select(p => new { p.Id, p.Numero })
-            .FirstOrDefaultAsync(ct);
+        var idx = itens.FindIndex(p => p.Id == id);
+        if (idx < 0) return (null, null, null, null, 0, itens.Count);
 
-        var total = await DbSet.CountAsync(p => p.ClienteId == clienteId, ct);
-        var posicao = await DbSet.CountAsync(p => p.ClienteId == clienteId && p.Numero <= numero, ct);
-
-        return (anterior?.Id, anterior?.Numero, proximo?.Id, proximo?.Numero, posicao, total);
+        var anterior = idx > 0 ? itens[idx - 1] : null;
+        var proximo = idx < itens.Count - 1 ? itens[idx + 1] : null;
+        return (anterior?.Id, anterior?.Numero, proximo?.Id, proximo?.Numero, idx + 1, itens.Count);
     }
 
     // Sugestão de "adicionar novamente" no formulário de pedido: produtos que esse

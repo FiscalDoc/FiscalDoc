@@ -606,7 +606,7 @@ interface NavItem {
     /* Trial banner */
     .trial-banner {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-      background: linear-gradient(135deg, oklch(0.60 0.14 225 / 0.08) 0%, rgba(0,102,255,0.06) 100%);
+      background: linear-gradient(135deg, oklch(0.60 0.14 225 / 0.08) 0%, oklch(0.63 0.12 224 / 0.06) 100%);
       border: 1px solid oklch(0.60 0.14 225 / 0.25); border-radius: var(--radius-sm, 8px);
       padding: 10px 16px; margin-bottom: 1rem; font-size: 13px; color: var(--text);
     }

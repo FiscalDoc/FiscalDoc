@@ -135,7 +135,7 @@ import { AuthService } from '@veloxml/services';
     .brand-link { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 3rem; width: fit-content; }
     .brand-icon {
       display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--lg-brand-deep), var(--lg-brand));
+      background: var(--lg-brand);
       color: white;
       box-shadow: var(--lg-shadow-soft);
     }
