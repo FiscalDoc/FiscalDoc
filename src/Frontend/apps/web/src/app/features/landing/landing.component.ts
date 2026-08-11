@@ -317,7 +317,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
 
         <div class="steps">
           <div class="step">
-            <div class="step-num">01</div>
+            <div class="step-num">1</div>
             <div class="step-content">
               <h3>Você cadastra seus clientes</h3>
               <p>Em minutos cadastre as empresas que você atende. O sistema gera automaticamente uma AppKey para cada uma.</p>
@@ -325,7 +325,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           </div>
           <div class="step-arrow">→</div>
           <div class="step">
-            <div class="step-num">02</div>
+            <div class="step-num">2</div>
             <div class="step-content">
               <h3>O cliente integra e envia</h3>
               <p>Com a AppKey em mãos, o sistema do cliente (ERP, emissor de NF) envia os XMLs automaticamente via API. Zero trabalho manual.</p>
@@ -333,7 +333,7 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
           </div>
           <div class="step-arrow">→</div>
           <div class="step">
-            <div class="step-num">03</div>
+            <div class="step-num">3</div>
             <div class="step-content">
               <h3>Você monitora tudo</h3>
               <p>Dashboard com totais, alertas em tempo real, download a qualquer hora. Você no controle, seus clientes tranquilos.</p>
@@ -887,7 +887,12 @@ const WPP_MSG   = encodeURIComponent('Olá! Gostaria de saber mais sobre o Fisca
     .how .section-title { margin-bottom: 3.5rem; }
     .steps { display: flex; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
     .step { flex: 1; min-width: 220px; background: var(--lg-bg); border: 1px solid var(--lg-border); border-radius: 16px; padding: 2rem; box-shadow: var(--lg-shadow-soft); }
-    .step-num { font-size: 3rem; font-weight: 900; color: var(--lg-brand-soft); line-height: 1; margin-bottom: 1rem; letter-spacing: -0.04em; }
+    .step-num {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 10px; margin-bottom: 1.25rem;
+      background: var(--lg-brand-soft); color: var(--lg-brand-deep);
+      font-size: 14px; font-weight: 700;
+    }
     .step-content h3 { font-size: 1rem; font-weight: 700; color: var(--lg-fg); margin-bottom: 0.5rem; }
     .step-content p  { font-size: 14px; color: var(--lg-muted); line-height: 1.65; }
     .step-arrow { font-size: 1.5rem; color: var(--lg-border); align-self: center; flex-shrink: 0; }
